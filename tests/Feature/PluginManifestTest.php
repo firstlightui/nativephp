@@ -17,8 +17,17 @@ it('declares the Firstlight package identity', function () {
         ->and($manifest['platforms'])->toBe(['android', 'ios']);
 });
 
-it('starts without a generated demonstration component', function () {
+it('contains only the production Segmented component', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
-    expect($manifest['components'])->toBe([]);
+    expect($manifest['components'])->toBe([
+        [
+            'type' => 'firstlight.segmented',
+            'element' => 'Clinically\\Firstlight\\Elements\\Segmented',
+            'blade' => 'Clinically\\Firstlight\\Components\\Segmented',
+            'android_renderer' => 'com.clinically.plugins.firstlight_ui.ui.SegmentedRenderer',
+            'ios_renderer' => 'SegmentedRenderer',
+            'self_closing' => true,
+        ],
+    ]);
 });

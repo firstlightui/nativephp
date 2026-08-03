@@ -7,7 +7,16 @@
         "android",
         "ios"
     ],
-    "components": [],
+    "components": [
+        {
+            "type": "firstlight.segmented",
+            "element": "Clinically\\Firstlight\\Elements\\Segmented",
+            "blade": "Clinically\\Firstlight\\Components\\Segmented",
+            "android_renderer": "com.clinically.plugins.firstlight_ui.ui.SegmentedRenderer",
+            "ios_renderer": "SegmentedRenderer",
+            "self_closing": true
+        }
+    ],
     "android": {
         "dependencies": {
             "implementation": []
