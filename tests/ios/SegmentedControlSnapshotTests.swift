@@ -122,9 +122,77 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         )
 
         XCTAssertGreaterThanOrEqual(fittingSize.height, 44)
-        XCTAssertEqual(control.accessibilityLabel, "Document queue")
+        XCTAssertEqual(control.accessibilityLabel, "Document queue, required")
         XCTAssertEqual(control.accessibilityHint, "Changes the active queue")
+        XCTAssertEqual(control.accessibilityValue, "Mine, selected. All")
         XCTAssertEqual(control.selectedSegmentTintColor, .systemTeal)
+        XCTAssertNotNil(control.titleTextAttributes(for: .normal)?[.font])
+        XCTAssertNotNil(control.titleTextAttributes(for: .selected)?[.font])
+    }
+
+    func testAccessibilityExposesEveryFullTitleAndState() {
+        let representable = FirstlightSegmentedControl(
+            labels: ["Mine", "All referrals", "Unassigned"],
+            optionEnabled: [true, true, false],
+            selectedIndex: 1,
+            disabled: false,
+            tintColor: .systemTeal,
+            required: true,
+            accessibilityLabel: "Document queue",
+            accessibilityHint: "Changes the active queue",
+            onSelection: { _ in }
+        )
+        let control = representable.makeControl()
+
+        XCTAssertTrue(control.isAccessibilityElement)
+        XCTAssertEqual(control.accessibilityLabel, "Document queue, required")
+        XCTAssertEqual(
+            control.accessibilityValue,
+            "Mine. All referrals, selected. Unassigned, disabled"
+        )
+    }
+
+    func testSelectionSemanticsDoNotDependOnUIViewAnimations() {
+        let animationsWereEnabled = UIView.areAnimationsEnabled
+        UIView.setAnimationsEnabled(false)
+        defer { UIView.setAnimationsEnabled(animationsWereEnabled) }
+
+        var changes: [Int] = []
+        let representable = makeRepresentable(onSelection: { changes.append($0) })
+        let coordinator = representable.makeCoordinator()
+        let control = representable.makeControl(coordinator: coordinator)
+
+        control.selectedSegmentIndex = 1
+        coordinator.changed(control)
+
+        XCTAssertEqual(changes, [1])
+        XCTAssertEqual(control.selectedSegmentIndex, 1)
+    }
+
+    func testCompactSystemTitlesGrowWithDynamicTypeAndFitAtStandardSize() {
+        let standardTraits = UITraitCollection(preferredContentSizeCategory: .large)
+        let accessibilityTraits = UITraitCollection(
+            preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge
+        )
+        let standardFont = FirstlightSegmentedControl.titleFont(
+            compatibleWith: standardTraits
+        )
+        let accessibilityFont = FirstlightSegmentedControl.titleFont(
+            compatibleWith: accessibilityTraits
+        )
+
+        XCTAssertEqual(
+            standardFont.fontDescriptor.object(forKey: .textStyle) as? String,
+            UIFont.TextStyle.footnote.rawValue
+        )
+        XCTAssertGreaterThan(accessibilityFont.pointSize, standardFont.pointSize)
+        XCTAssertLessThanOrEqual(accessibilityFont.pointSize, 24)
+
+        let titleWidth = ("Unassigned" as NSString).size(
+            withAttributes: [.font: standardFont]
+        ).width
+        let standardSegmentWidth = CGFloat(320 / 3)
+        XCTAssertLessThanOrEqual(titleWidth + 16, standardSegmentWidth)
     }
 
     func testLightDarkAndAccessibilitySnapshots() {
@@ -167,8 +235,7 @@ final class SegmentedControlSnapshotTests: XCTestCase {
             selectedIndex: selectedIndex,
             disabled: false,
             tintColor: .systemTeal,
-            unselectedTextColor: .label,
-            selectedTextColor: .white,
+            required: false,
             accessibilityLabel: "Document queue",
             accessibilityHint: "Changes the active queue",
             onSelection: { _ in }
@@ -186,8 +253,7 @@ final class SegmentedControlSnapshotTests: XCTestCase {
             selectedIndex: 0,
             disabled: false,
             tintColor: .systemTeal,
-            unselectedTextColor: .label,
-            selectedTextColor: .white,
+            required: true,
             accessibilityLabel: "Document queue",
             accessibilityHint: "Changes the active queue",
             onSelection: onSelection
@@ -228,8 +294,6 @@ final class SegmentedControlSnapshotTests: XCTestCase {
 private extension FirstlightSegmentedTokens {
     static let snapshot = FirstlightSegmentedTokens(
         tintColor: .firstlightSemantic(light: 0x0F766E, dark: 0x14B8A6),
-        unselectedTextColor: .firstlightSemantic(light: 0x0F172A, dark: 0xF8FAFC),
-        selectedTextColor: .white,
         labelColor: Color(uiColor: .firstlightSemantic(light: 0x0F172A, dark: 0xF8FAFC)),
         helperColor: Color(uiColor: .firstlightSemantic(light: 0x475569, dark: 0x94A3B8)),
         errorColor: Color(uiColor: .firstlightSemantic(light: 0xB91C1C, dark: 0xF87171))

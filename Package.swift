@@ -16,8 +16,7 @@ let package = Package(
     targets: [
         .target(
             name: "FirstlightIOSControls",
-            path: "resources/ios",
-            sources: ["SegmentedControl.swift"]
+            path: "resources/ios"
         ),
         .testTarget(
             name: "FirstlightIOSControlsTests",

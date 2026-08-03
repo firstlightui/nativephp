@@ -51,8 +51,6 @@ struct SegmentedSelectionState: Equatable {
 
 struct FirstlightSegmentedTokens {
     let tintColor: UIColor
-    let unselectedTextColor: UIColor
-    let selectedTextColor: UIColor
     let labelColor: Color
     let helperColor: Color
     let errorColor: Color
@@ -92,8 +90,7 @@ struct FirstlightSegmentedField: View {
                 selectedIndex: selectionState.selectedIndex,
                 disabled: disabled,
                 tintColor: tokens.tintColor,
-                unselectedTextColor: tokens.unselectedTextColor,
-                selectedTextColor: tokens.selectedTextColor,
+                required: required,
                 accessibilityLabel: accessibilityLabel,
                 accessibilityHint: accessibilityHint,
                 onSelection: onSelection
@@ -123,8 +120,7 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
     var selectedIndex: Int?
     let disabled: Bool
     let tintColor: UIColor
-    let unselectedTextColor: UIColor
-    let selectedTextColor: UIColor
+    let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
     let onSelection: (Int) -> Void
@@ -182,30 +178,45 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
 
         control.isEnabled = !disabled && !labels.isEmpty
         control.selectedSegmentTintColor = tintColor
-        control.accessibilityLabel = accessibilityLabel.nilIfEmpty
+        control.isAccessibilityElement = true
+        control.accessibilityLabel = required
+            ? "\(accessibilityLabel), required".nilIfEmpty
+            : accessibilityLabel.nilIfEmpty
         control.accessibilityHint = accessibilityHint.nilIfEmpty
+        control.accessibilityValue = labels.enumerated().map { index, label in
+            var statuses: [String] = []
+            if selectedIndex == index { statuses.append("selected") }
+            let isEnabled = !disabled
+                && optionEnabled.indices.contains(index)
+                && optionEnabled[index]
+            if !isEnabled { statuses.append("disabled") }
 
-        let font = UIFontMetrics(forTextStyle: .body).scaledFont(
-            for: UIFont.systemFont(ofSize: 17),
+            return statuses.isEmpty
+                ? label
+                : "\(label), \(statuses.joined(separator: ", "))"
+        }.joined(separator: ". ").nilIfEmpty
+
+        // Segmented controls use compact, single-line chrome typography.
+        // Derive the baseline from UIKit's public footnote text style, then
+        // scale it with Dynamic Type. The 24pt ceiling prevents accessibility
+        // categories from drawing outside this fixed-height native control;
+        // VoiceOver still exposes every full title and state.
+        let titleFont = Self.titleFont(compatibleWith: control.traitCollection)
+        control.setTitleTextAttributes([.font: titleFont], for: .normal)
+        control.setTitleTextAttributes([.font: titleFont], for: .selected)
+    }
+
+    static func titleFont(compatibleWith traits: UITraitCollection) -> UIFont {
+        let standardTraits = UITraitCollection(preferredContentSizeCategory: .large)
+        let systemBaseline = UIFont.preferredFont(
+            forTextStyle: .footnote,
+            compatibleWith: standardTraits
+        )
+
+        return UIFontMetrics(forTextStyle: .footnote).scaledFont(
+            for: systemBaseline,
             maximumPointSize: 24,
-            compatibleWith: control.traitCollection
-        )
-        control.setTitleTextAttributes(
-            [.font: font, .foregroundColor: unselectedTextColor],
-            for: .normal
-        )
-        let effectiveSelectedTextColor: UIColor
-        if #available(iOS 26.0, *) {
-            // iOS 26's native glass selection capsule does not necessarily
-            // paint `selectedSegmentTintColor`; keep text contrasted against
-            // the system-owned capsule while still supplying the theme tint.
-            effectiveSelectedTextColor = unselectedTextColor
-        } else {
-            effectiveSelectedTextColor = selectedTextColor
-        }
-        control.setTitleTextAttributes(
-            [.font: font, .foregroundColor: effectiveSelectedTextColor],
-            for: .selected
+            compatibleWith: traits
         )
     }
 
