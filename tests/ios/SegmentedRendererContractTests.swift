@@ -5,8 +5,18 @@ import XCTest
 
 @testable import FirstlightIOSControls
 
+private nonisolated func makeNativeRendererEvents() -> SegmentedRendererEvents {
+    .native
+}
+
 @MainActor
 final class SegmentedRendererContractTests: XCTestCase {
+    func testNativeEventTransportCanBeResolvedFromANonisolatedContext() {
+        let events = makeNativeRendererEvents()
+
+        XCTAssertNotNil(events)
+    }
+
     func testStringSelectionWaitsForServerAndEmitsEveryRejectedAttempt() {
         var state = SegmentedRendererState(node: makeNode(
             selectedValue: "mine",

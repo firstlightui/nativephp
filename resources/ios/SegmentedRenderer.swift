@@ -13,7 +13,6 @@ enum SegmentedRendererEvent: Equatable {
     }
 }
 
-@MainActor
 struct SegmentedRendererEvents {
     let send: @MainActor (SegmentedRendererEvent) -> Void
 
