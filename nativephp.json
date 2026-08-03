@@ -1,0 +1,22 @@
+{
+    "name": "clinically/firstlight-ui",
+    "version": "0.1.0-alpha.1",
+    "description": "Native controls for NativePHP, shaped for each platform.",
+    "namespace": "Firstlight",
+    "platforms": [
+        "android",
+        "ios"
+    ],
+    "components": [],
+    "android": {
+        "dependencies": {
+            "implementation": []
+        }
+    },
+    "ios": {
+        "dependencies": {
+            "swift_packages": [],
+            "pods": []
+        }
+    }
+}

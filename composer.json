@@ -1,0 +1,37 @@
+{
+    "name": "clinically/firstlight-ui",
+    "description": "Native controls for NativePHP, shaped for each platform.",
+    "type": "nativephp-ui-plugin",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "nativephp/mobile": "^4.0",
+        "nativephp/mobile-ui": "^0.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Clinically\\Firstlight\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Clinically\\Firstlight\\FirstlightServiceProvider"
+            ]
+        },
+        "nativephp": {
+            "manifest": "nativephp.json"
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0"
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
