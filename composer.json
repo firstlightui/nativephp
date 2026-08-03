@@ -24,6 +24,7 @@
         }
     },
     "require-dev": {
+        "illuminate/view": "^13.0",
         "pestphp/pest": "^5.0"
     },
     "scripts": {

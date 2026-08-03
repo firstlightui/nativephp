@@ -13,6 +13,8 @@ class FirstlightServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->app->make('blade.compiler')->precompiler(new FirstlightTagPrecompiler);
+        $this->app->make('blade.compiler')->prepareStringsForCompilationUsing(
+            new FirstlightTagPrecompiler
+        );
     }
 }

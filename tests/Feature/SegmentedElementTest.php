@@ -2,7 +2,15 @@
 
 use Clinically\Firstlight\Elements\Segmented;
 use Clinically\Firstlight\FirstlightServiceProvider;
-use Clinically\Firstlight\FirstlightTagPrecompiler;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use Illuminate\Events\Dispatcher;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\View\Compilers\BladeCompiler;
+use Illuminate\View\Engines\CompilerEngine;
+use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\Factory;
+use Illuminate\View\FileViewFinder;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -27,6 +35,94 @@ function collectSegmented(array $attributes, ?CallbackRegistry $registry = null)
     return NativeElementCollector::collect()->toArray($registry ?? new CallbackRegistry);
 }
 
+/**
+ * Compile and execute an authored Firstlight view through Laravel's real Blade
+ * component pipeline, then return the NativePHP tree produced by the standard
+ * NativeBladeComponent collector adapter.
+ *
+ * @return array{compiled: string, output: string, tree: ?array, registry: CallbackRegistry}
+ */
+function compileFirstlightSegmentedView(string $source, array $data, bool $native = true): array
+{
+    $filesystem = new Filesystem;
+    $temporaryPath = sys_get_temp_dir().'/firstlight-blade-'.bin2hex(random_bytes(8));
+    $compiledPath = $temporaryPath.'/compiled';
+    $viewsPath = $temporaryPath.'/views';
+    $filesystem->makeDirectory($compiledPath, 0755, true);
+    $filesystem->makeDirectory($viewsPath, 0755, true);
+
+    $previousContainer = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+
+    $container->instance('config', new class($compiledPath)
+    {
+        public function __construct(private string $compiledPath) {}
+
+        public function get(string $key, mixed $default = null): mixed
+        {
+            return $key === 'view.compiled' ? $this->compiledPath : $default;
+        }
+    });
+
+    $compiler = new BladeCompiler($filesystem, $compiledPath);
+    $resolver = new EngineResolver;
+    $resolver->register('blade', fn () => new CompilerEngine($compiler, $filesystem));
+
+    $factory = new Factory(
+        $resolver,
+        new FileViewFinder($filesystem, [$viewsPath]),
+        new Dispatcher($container),
+    );
+    $factory->setContainer($container);
+    $factory->addExtension('blade.php', 'blade');
+
+    $container->instance(ViewFactoryContract::class, $factory);
+    $container->instance('view', $factory);
+    $container->instance('blade.compiler', $compiler);
+
+    $compiler->component('native-firstlight-segmented', \Clinically\Firstlight\Components\Segmented::class);
+    $compiler->precompiler(new NativeTagPrecompiler);
+    (new FirstlightServiceProvider($container))->boot();
+
+    NativeElementCollector::reset();
+    NativeTagPrecompiler::setActive($native);
+
+    try {
+        $compiled = $compiler->compileString($source);
+        extract($data, EXTR_SKIP);
+        $__env = $factory;
+
+        ob_start();
+        try {
+            eval('?>'.$compiled);
+            $output = ob_get_clean();
+        } catch (Throwable $exception) {
+            ob_end_clean();
+            throw $exception;
+        }
+
+        $registry = new CallbackRegistry;
+
+        try {
+            $tree = NativeElementCollector::collect()->toArray($registry);
+        } catch (RuntimeException $exception) {
+            if ($exception->getMessage() !== 'No root element was built by the Blade template.') {
+                throw $exception;
+            }
+
+            $tree = null;
+        }
+
+        return compact('compiled', 'output', 'tree', 'registry');
+    } finally {
+        NativeTagPrecompiler::setActive(false);
+        NativeElementCollector::reset();
+        Container::setInstance($previousContainer);
+        $filesystem->deleteDirectory($temporaryPath);
+    }
+}
+
 it('publishes the string-valued element tree through a SELECT_CHANGE callback', function () {
     $registry = new CallbackRegistry;
     $tree = collectSegmented([
@@ -42,6 +138,7 @@ it('publishes the string-valued element tree through a SELECT_CHANGE callback', 
 
     expect($tree['type'])->toBe('firstlight.segmented')
         ->and($tree['props']['value_type'])->toBe('string')
+        ->and($tree['props']['has_selection'])->toBeTrue()
         ->and($tree['props']['selected_value'])->toBe('mine')
         ->and($tree['props']['option_values'])->toBe(['mine', 'all'])
         ->and($tree['props']['option_labels'])->toBe(['Mine', 'All'])
@@ -109,14 +206,23 @@ it('publishes per-option integer callbacks with original handler arguments intac
         ]);
 });
 
-it('represents null as no selection', function () {
-    $tree = collectSegmented([
-        'options' => ['mine' => 'Mine', 'all' => 'All'],
+it('distinguishes null from an authored empty-string selection', function () {
+    $unselected = collectSegmented([
+        'options' => ['' => 'None', 'mine' => 'Mine'],
         'value' => null,
         'label' => 'Queue',
     ]);
 
-    expect($tree['props']['selected_value'])->toBe('');
+    $selected = collectSegmented([
+        'options' => ['' => 'None', 'mine' => 'Mine'],
+        'value' => '',
+        'label' => 'Queue',
+    ]);
+
+    expect($unselected['props']['has_selection'])->toBeFalse()
+        ->and($unselected['props']['selected_value'])->toBe('')
+        ->and($selected['props']['has_selection'])->toBeTrue()
+        ->and($selected['props']['selected_value'])->toBe('');
 });
 
 it('publishes empty options as an inert disabled string control without an implicit choice', function () {
@@ -127,6 +233,7 @@ it('publishes empty options as an inert disabled string control without an impli
     ]);
 
     expect($tree['props']['value_type'])->toBe('string')
+        ->and($tree['props']['has_selection'])->toBeFalse()
         ->and($tree['props']['selected_value'])->toBe('')
         ->and($tree['props']['option_values'])->toBe([])
         ->and($tree['props']['option_labels'])->toBe([])
@@ -244,72 +351,33 @@ it('does not warn when an accessibility label is present', function () {
     expect($warnings)->toBe([]);
 });
 
-it('expands native:model then maps the public tag to the official NativePHP Blade alias', function () {
-    NativeTagPrecompiler::setActive(true);
-    $source = '<firstlight:segmented native:model="queue" :options="$options" label="Queue" />';
+it('compiles and executes the public native:model tag through the real Blade component pipeline', function () {
+    $result = compileFirstlightSegmentedView(
+        '<firstlight:segmented native:model="queue" :options="$options" label="Queue" />',
+        [
+            'queue' => 'mine',
+            'options' => ['mine' => 'Mine', 'all' => 'All'],
+        ],
+    );
 
-    $nativeCompiled = (new NativeTagPrecompiler)($source);
-    $firstlightCompiled = (new FirstlightTagPrecompiler)($nativeCompiled);
-
-    expect($nativeCompiled)->toContain('<firstlight:segmented')
-        ->and($nativeCompiled)->toContain(':value="$queue"')
-        ->and($nativeCompiled)->toContain('_change="__syncProperty(\'queue\')"')
-        ->and($nativeCompiled)->toContain('sync-mode="live"')
-        ->and($firstlightCompiled)->toContain('<x-native-firstlight-segmented')
-        ->and($firstlightCompiled)->toContain(':value="$queue"')
-        ->and($firstlightCompiled)->toContain('_change="__syncProperty(\'queue\')"')
-        ->and($firstlightCompiled)->toContain('sync-mode="live"');
-
-    $registry = new CallbackRegistry;
-    $tree = collectSegmented([
-        'options' => ['mine' => 'Mine', 'all' => 'All'],
-        'value' => 'mine',
-        'label' => 'Queue',
-        '_change' => "__syncProperty('queue')",
-        'sync-mode' => 'live',
-    ], $registry);
-
-    expect($tree['props']['selected_value'])->toBe('mine')
-        ->and($registry->resolve($tree['props']['on_change']))->toBe([
+    expect($result['tree'])->not->toBeNull()
+        ->and($result['tree']['type'])->toBe('firstlight.segmented')
+        ->and($result['tree']['props']['selected_value'])->toBe('mine')
+        ->and($result['tree']['props']['has_selection'])->toBeTrue()
+        ->and($result['registry']->resolve($result['tree']['props']['on_change']))->toBe([
             'method' => '__syncProperty',
             'args' => ['queue'],
-        ]);
+        ])
+        ->and($result['output'])->toBe('');
 });
 
-it('leaves the public tag untouched outside native compilation', function () {
-    NativeTagPrecompiler::setActive(false);
+it('leaves the authored public tag untouched through real web compilation', function () {
     $source = '<firstlight:segmented label="Queue" />';
+    $result = compileFirstlightSegmentedView($source, [], native: false);
 
-    expect((new FirstlightTagPrecompiler)($source))->toBe($source);
-});
-
-it('registers the public tag precompiler with the Blade compiler', function () {
-    $compiler = new class
-    {
-        public array $precompilers = [];
-
-        public function precompiler(callable $precompiler): void
-        {
-            $this->precompilers[] = $precompiler;
-        }
-    };
-
-    $app = new class($compiler)
-    {
-        public function __construct(private object $compiler) {}
-
-        public function make(string $abstract): object
-        {
-            expect($abstract)->toBe('blade.compiler');
-
-            return $this->compiler;
-        }
-    };
-
-    (new FirstlightServiceProvider($app))->boot();
-
-    expect($compiler->precompilers)->toHaveCount(1)
-        ->and($compiler->precompilers[0] ?? null)->toBeInstanceOf(FirstlightTagPrecompiler::class);
+    expect($result['compiled'])->toContain($source)
+        ->and($result['output'])->toBe($source)
+        ->and($result['tree'])->toBeNull();
 });
 
 it('declares the official Segmented renderer and Blade mappings', function () {

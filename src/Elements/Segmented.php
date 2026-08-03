@@ -149,6 +149,7 @@ class Segmented extends Element
 
         $props = array_merge($this->fieldProps, [
             'value_type' => $normalized->valueType,
+            'has_selection' => $this->rawValue !== null,
             'selected_value' => $this->rawValue === null ? '' : (string) $this->rawValue,
             'option_values' => $normalized->wireValues(),
             'option_labels' => $normalized->labels(),
