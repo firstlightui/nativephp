@@ -9,6 +9,7 @@ it('declares the Firstlight package identity', function () {
         ->and($composer['require']['php'])->toBe('^8.4')
         ->and($composer['require']['nativephp/mobile'])->toBe('^4.0')
         ->and($composer['require']['nativephp/mobile-ui'])->toBe('^0.3')
+        ->and($composer['require-dev']['pestphp/pest'])->toBe('^5.0')
         ->and($composer['autoload']['psr-4'])->toBe(['Clinically\\Firstlight\\' => 'src/'])
         ->and($manifest['name'])->toBe('clinically/firstlight-ui')
         ->and($manifest['version'])->toBe('0.1.0-alpha.1')
