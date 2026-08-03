@@ -18,11 +18,13 @@
         }
     ],
     "android": {
+        "min_version": 29,
         "dependencies": {
             "implementation": []
         }
     },
     "ios": {
+        "min_version": "18.0",
         "dependencies": {
             "swift_packages": [],
             "pods": []

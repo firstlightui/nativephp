@@ -14,7 +14,9 @@ it('declares the Firstlight package identity', function () {
         ->and($manifest['name'])->toBe('clinically/firstlight-ui')
         ->and($manifest['version'])->toBe('0.1.0-alpha.1')
         ->and($manifest['namespace'])->toBe('Firstlight')
-        ->and($manifest['platforms'])->toBe(['android', 'ios']);
+        ->and($manifest['platforms'])->toBe(['android', 'ios'])
+        ->and($manifest['android']['min_version'])->toBe(29)
+        ->and($manifest['ios']['min_version'])->toBe('18.0');
 });
 
 it('contains only the production Segmented component', function () {
