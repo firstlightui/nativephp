@@ -6,6 +6,7 @@ it('declares the Firstlight package identity', function () {
 
     expect($composer['name'])->toBe('clinically/firstlight-ui')
         ->and($composer['type'])->toBe('nativephp-ui-plugin')
+        ->and($composer['require']['php'])->toBe('^8.4')
         ->and($composer['require']['nativephp/mobile'])->toBe('^4.0')
         ->and($composer['require']['nativephp/mobile-ui'])->toBe('^0.3')
         ->and($composer['autoload']['psr-4'])->toBe(['Clinically\\Firstlight\\' => 'src/'])
