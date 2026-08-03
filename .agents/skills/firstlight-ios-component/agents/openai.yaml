@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight iOS Component"
+  short_description: "Build and verify a native Apple control"
+  default_prompt: "Use $firstlight-ios-component to implement the iOS half of a Firstlight control."

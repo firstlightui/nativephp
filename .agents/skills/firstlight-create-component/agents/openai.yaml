@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Create Component"
+  short_description: "Create a constitutional Firstlight control"
+  default_prompt: "Use $firstlight-create-component to add a new native control to Firstlight."

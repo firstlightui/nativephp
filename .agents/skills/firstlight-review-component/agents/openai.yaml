@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Review Component"
+  short_description: "Audit a control against the constitution"
+  default_prompt: "Use $firstlight-review-component to audit a Firstlight control for development or release."

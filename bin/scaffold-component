@@ -1,0 +1,126 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$arguments = array_slice($argv, 1);
+
+if (count($arguments) !== 1 || preg_match('/^[A-Z][A-Za-z0-9]*$/', $arguments[0]) !== 1) {
+    fwrite(STDERR, "Usage: bin/scaffold-component StudlyCaseName\n");
+    exit(2);
+}
+
+$name = $arguments[0];
+$root = dirname(__DIR__);
+$slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $name));
+$controlName = str_ends_with($name, 'Control') ? $name : $name.'Control';
+$rendererName = $name.'Renderer';
+$marker = 'FIRSTLIGHT_NOT_IMPLEMENTED';
+
+$files = [
+    "src/Components/{$name}.php" => <<<PHP
+        <?php
+
+        namespace Clinically\Firstlight\Components;
+
+        // {$marker}: define the public Blade adapter contract first.
+        final class {$name}
+        {
+        }
+        PHP,
+    "src/Elements/{$name}.php" => <<<PHP
+        <?php
+
+        namespace Clinically\Firstlight\Elements;
+
+        // {$marker}: publish primitive props through the official Element Tree.
+        final class {$name}
+        {
+        }
+        PHP,
+    "resources/ios/{$controlName}.swift" => <<<SWIFT
+        import SwiftUI
+
+        // {$marker}: wrap a genuine Apple control.
+        struct {$controlName}: View {
+            var body: some View { EmptyView() }
+        }
+        SWIFT,
+    "resources/ios/{$rendererName}.swift" => <<<SWIFT
+        import SwiftUI
+
+        // {$marker}: adapt the SuperNative node without a web bridge.
+        struct {$rendererName}: View {
+            var body: some View { EmptyView() }
+        }
+        SWIFT,
+    "resources/android/{$controlName}.kt" => <<<KOTLIN
+        package com.clinically.plugins.firstlight_ui.ui
+
+        // {$marker}: render the Material 3 control.
+        internal object {$controlName}
+        KOTLIN,
+    "resources/android/{$rendererName}.kt" => <<<KOTLIN
+        package com.clinically.plugins.firstlight_ui.ui
+
+        // {$marker}: adapt the SuperNative node without a web bridge.
+        internal object {$rendererName}
+        KOTLIN,
+    "tests/Feature/{$name}ElementTest.php" => <<<PHP
+        <?php
+
+        // {$marker}: describe the public Element Tree and callback contract.
+        it('publishes the {$name} contract', function () {
+            expect(false)->toBeTrue();
+        });
+        PHP,
+    "tests/ios/{$name}SnapshotTests.swift" => <<<SWIFT
+        import XCTest
+
+        // {$marker}: add light, dark, accessibility, and state snapshots.
+        final class {$name}SnapshotTests: XCTestCase {
+            func testNotImplemented() { XCTFail("{$marker}") }
+        }
+        SWIFT,
+    "tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/{$name}Test.kt" => <<<KOTLIN
+        package com.clinically.plugins.firstlight_ui.ui
+
+        import kotlin.test.Test
+        import kotlin.test.fail
+
+        // {$marker}: add Material 3 behavior and Paparazzi coverage.
+        class {$name}Test {
+            @Test fun notImplemented() = fail("{$marker}")
+        }
+        KOTLIN,
+    "docs/components/{$slug}.md" => <<<MARKDOWN
+        # {$name}
+
+        {$marker}: document the stable values, events, accessibility, and platform behavior.
+        MARKDOWN,
+];
+
+$existing = array_values(array_filter(
+    array_keys($files),
+    fn (string $path): bool => file_exists($root.'/'.$path),
+));
+
+if ($existing !== []) {
+    fwrite(STDERR, "Refusing to overwrite existing component files:\n");
+    foreach ($existing as $path) {
+        fwrite(STDERR, "- {$path}\n");
+    }
+    exit(1);
+}
+
+foreach ($files as $path => $contents) {
+    $absolutePath = $root.'/'.$path;
+    if (! is_dir(dirname($absolutePath))) {
+        mkdir(dirname($absolutePath), 0755, true);
+    }
+
+    file_put_contents($absolutePath, $contents."\n");
+}
+
+fwrite(STDOUT, "Scaffolded {$name}. Define its contract before registering it.\n");
+

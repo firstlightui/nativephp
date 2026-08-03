@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Android Component"
+  short_description: "Build and verify a Material native control"
+  default_prompt: "Use $firstlight-android-component to implement the Android half of a Firstlight control."

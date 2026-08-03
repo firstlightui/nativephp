@@ -1,0 +1,133 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$arguments = array_slice($argv, 1);
+$development = in_array('--development', $arguments, true);
+$names = array_values(array_filter($arguments, fn (string $argument): bool => $argument !== '--development'));
+
+if (count($names) !== 1 || preg_match('/^[A-Z][A-Za-z0-9]*$/', $names[0]) !== 1) {
+    fwrite(STDERR, "Usage: bin/check-component StudlyCaseName [--development]\n");
+    exit(2);
+}
+
+$name = $names[0];
+$root = dirname(__DIR__);
+$slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $name));
+$controlName = str_ends_with($name, 'Control') ? $name : $name.'Control';
+$rendererName = $name.'Renderer';
+$errors = [];
+
+$required = [
+    'Constitution.md',
+    "src/Components/{$name}.php",
+    "src/Elements/{$name}.php",
+    "resources/ios/{$controlName}.swift",
+    "resources/ios/{$rendererName}.swift",
+    "resources/android/{$controlName}.kt",
+    "resources/android/{$rendererName}.kt",
+    "tests/Feature/{$name}ElementTest.php",
+];
+
+foreach ($required as $path) {
+    if (! is_file($root.'/'.$path)) {
+        $errors[] = "Missing required path: {$path}";
+    }
+}
+
+$iosTests = glob($root."/tests/ios/{$name}*Test*.swift") ?: [];
+if ($iosTests === []) {
+    $errors[] = "Missing iOS tests matching: tests/ios/{$name}*Test*.swift";
+}
+
+$androidTestPattern = "tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/{$name}*Test*.kt";
+$androidTests = glob($root.'/'.$androidTestPattern) ?: [];
+if ($androidTests === []) {
+    $errors[] = "Missing Android tests matching: {$androidTestPattern}";
+}
+
+$manifestPath = $root.'/nativephp.json';
+$manifest = is_file($manifestPath) ? json_decode((string) file_get_contents($manifestPath), true) : null;
+if (! is_array($manifest)) {
+    $errors[] = 'Missing or invalid manifest: nativephp.json';
+} else {
+    $component = null;
+    foreach ($manifest['components'] ?? [] as $candidate) {
+        if (($candidate['element'] ?? null) === "Clinically\\Firstlight\\Elements\\{$name}") {
+            $component = $candidate;
+            break;
+        }
+    }
+
+    if (! is_array($component)) {
+        $errors[] = "Manifest does not register Clinically\\Firstlight\\Elements\\{$name}";
+    } else {
+        $expected = [
+            'blade' => "Clinically\\Firstlight\\Components\\{$name}",
+            'ios_renderer' => $rendererName,
+            'android_renderer' => "com.clinically.plugins.firstlight_ui.ui.{$rendererName}",
+        ];
+
+        foreach ($expected as $key => $value) {
+            if (($component[$key] ?? null) !== $value) {
+                $errors[] = "Manifest {$key} must be {$value}";
+            }
+        }
+    }
+}
+
+$componentFiles = array_values(array_filter(array_merge(
+    array_map(fn (string $path): string => $root.'/'.$path, $required),
+    $iosTests,
+    $androidTests,
+    glob($root."/docs/components/{$slug}.md") ?: [],
+), 'is_file'));
+
+foreach ($componentFiles as $path) {
+    $contents = (string) file_get_contents($path);
+    $relativePath = substr($path, strlen($root) + 1);
+
+    if (str_contains($contents, 'FIRSTLIGHT_NOT_IMPLEMENTED')) {
+        $errors[] = "Implementation marker remains: {$relativePath}";
+    }
+
+    if (str_starts_with($relativePath, 'src/') || str_starts_with($relativePath, 'resources/')) {
+        if (preg_match('/\bWebView\b|nativephp_call/', $contents) === 1) {
+            $errors[] = "Prohibited web bridge in component source: {$relativePath}";
+        }
+    }
+}
+
+if (! $development) {
+    $releasePaths = [
+        "docs/components/{$slug}.md",
+        "docs/screenshots/{$slug}/ios-light.png",
+        "docs/screenshots/{$slug}/ios-dark.png",
+        "docs/screenshots/{$slug}/android-light.png",
+        "docs/screenshots/{$slug}/android-dark.png",
+        "docs/review/{$slug}-alpha.md",
+    ];
+
+    foreach ($releasePaths as $path) {
+        if (! is_file($root.'/'.$path)) {
+            $errors[] = "Missing release evidence: {$path}";
+        }
+    }
+
+    $reviewPath = $root."/docs/review/{$slug}-alpha.md";
+    if (is_file($reviewPath) && str_contains((string) file_get_contents($reviewPath), '- [ ]')) {
+        $errors[] = "Release checklist is incomplete: docs/review/{$slug}-alpha.md";
+    }
+}
+
+if ($errors !== []) {
+    fwrite(STDERR, "Constitution checks failed for {$name}:\n");
+    foreach (array_values(array_unique($errors)) as $error) {
+        fwrite(STDERR, "- {$error}\n");
+    }
+    exit(1);
+}
+
+fwrite(STDOUT, "Constitution checks passed for {$name}.\n");
+
