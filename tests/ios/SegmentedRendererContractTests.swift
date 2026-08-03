@@ -7,7 +7,7 @@ import XCTest
 
 @MainActor
 final class SegmentedRendererContractTests: XCTestCase {
-    func testStringSelectionUsesExactSelectChangeWireEventOnce() {
+    func testStringSelectionWaitsForServerAndEmitsEveryRejectedAttempt() {
         var state = SegmentedRendererState(node: makeNode(
             selectedValue: "mine",
             valueType: "string",
@@ -17,13 +17,16 @@ final class SegmentedRendererContractTests: XCTestCase {
         let first = state.userSelected(1)
         let repeated = state.userSelected(1)
 
-        XCTAssertEqual(state.selectionState.selectedIndex, 1)
+        XCTAssertEqual(state.selectionState.selectedIndex, 0)
         XCTAssertEqual(first?.wireName, "SELECT_CHANGE")
         XCTAssertEqual(
             first,
             .selectChange(callbackId: 41, nodeId: 7, value: "all")
         )
-        XCTAssertNil(repeated)
+        XCTAssertEqual(
+            repeated,
+            .selectChange(callbackId: 41, nodeId: 7, value: "all")
+        )
     }
 
     func testIntegerSelectionUsesExactPressWireEvent() {
@@ -80,11 +83,11 @@ final class SegmentedRendererContractTests: XCTestCase {
         var emitted: [SegmentedRendererEvent] = []
 
         if let event = state.userSelected(1) { emitted.append(event) }
-        XCTAssertEqual(state.selectionState.selectedIndex, 1)
+        XCTAssertEqual(state.selectionState.selectedIndex, 0)
 
         let didReconcile = state.serverPublished(tree(root: unchangedServerNode))
 
-        XCTAssertTrue(didReconcile)
+        XCTAssertFalse(didReconcile)
         XCTAssertEqual(state.selectionState.selectedIndex, 0)
         XCTAssertEqual(emitted, [
             .selectChange(callbackId: 41, nodeId: 7, value: "all"),
@@ -100,7 +103,7 @@ final class SegmentedRendererContractTests: XCTestCase {
         _ = state.userSelected(1)
 
         let corrected = makeNode(
-            selectedValue: "mine",
+            selectedValue: "all",
             valueType: "string",
             onChange: 41
         )
@@ -116,7 +119,7 @@ final class SegmentedRendererContractTests: XCTestCase {
         )
 
         XCTAssertTrue(state.serverPublished(tree(root: root)))
-        XCTAssertEqual(state.selectionState.selectedIndex, 0)
+        XCTAssertEqual(state.selectionState.selectedIndex, 1)
     }
 
     func testRendererCompilesAgainstNativePHPContractShims() {
@@ -128,7 +131,7 @@ final class SegmentedRendererContractTests: XCTestCase {
         XCTAssertNotNil(renderer.body)
     }
 
-    func testBridgePublishesUnchangedTreeAndReconcilesWithoutEcho() {
+    func testUnchangedBridgePublicationPreservesServerAuthoritativeSelection() {
         let serverNode = makeNode(
             selectedValue: "mine",
             valueType: "string",
@@ -146,7 +149,7 @@ final class SegmentedRendererContractTests: XCTestCase {
             .sink { tree in state.serverPublished(tree) }
 
         if let event = state.userSelected(1) { emitted.append(event) }
-        XCTAssertEqual(state.selectionState.selectedIndex, 1)
+        XCTAssertEqual(state.selectionState.selectedIndex, 0)
         XCTAssertEqual(emitted, [
             .selectChange(callbackId: 41, nodeId: 7, value: "all"),
         ])
@@ -158,6 +161,29 @@ final class SegmentedRendererContractTests: XCTestCase {
         XCTAssertEqual(state.selectionState.selectedIndex, 0)
         XCTAssertEqual(emitted.count, 1)
         withExtendedLifetime(publication) {}
+    }
+
+    func testUIKitControlRestoresAuthoritativeSelectionBeforeSending() {
+        var emitted: [Int] = []
+        let controlView = FirstlightSegmentedControl(
+            labels: ["Mine", "All"],
+            optionEnabled: [true, true],
+            selectedIndex: 0,
+            disabled: false,
+            tintColor: .systemBlue,
+            required: false,
+            accessibilityLabel: "Queue",
+            accessibilityHint: "",
+            onSelection: { emitted.append($0) }
+        )
+        let coordinator = controlView.makeCoordinator()
+        let control = controlView.makeControl(coordinator: coordinator)
+        control.selectedSegmentIndex = 1
+
+        coordinator.changed(control)
+
+        XCTAssertEqual(control.selectedSegmentIndex, 0)
+        XCTAssertEqual(emitted, [1])
     }
 
     private func makeNode(

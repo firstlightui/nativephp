@@ -33,23 +33,15 @@ class SegmentedSelectionState(
     var selectedWireValue: String? by mutableStateOf(selectedWireValue)
         private set
 
-    private var lastPublicationId: Long? = null
-
     fun select(candidateWireValue: String, enabled: Boolean): Boolean {
         if (!enabled || candidateWireValue == selectedWireValue) {
             return false
         }
 
-        selectedWireValue = candidateWireValue
         return true
     }
 
-    fun reconcile(publicationId: Long, serverSelectedWireValue: String?) {
-        if (publicationId == lastPublicationId) {
-            return
-        }
-
-        lastPublicationId = publicationId
+    fun reconcile(serverSelectedWireValue: String?) {
         selectedWireValue = serverSelectedWireValue
     }
 }

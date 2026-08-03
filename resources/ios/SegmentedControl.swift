@@ -22,7 +22,6 @@ struct SegmentedSelectionState: Equatable {
             return false
         }
 
-        selectedIndex = index
         return true
     }
 
@@ -421,7 +420,8 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
                 return
             }
 
-            parent.selectedIndex = index
+            sender.selectedSegmentIndex = parent.selectedIndex
+                ?? UISegmentedControl.noSegment
             parent.onSelection(index)
         }
     }

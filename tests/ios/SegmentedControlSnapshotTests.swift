@@ -7,7 +7,7 @@ import XCTest
 
 @MainActor
 final class SegmentedControlSnapshotTests: XCTestCase {
-    func testNewSelectionUpdatesLocallyBeforeEmittingExactlyOnce() {
+    func testNewSelectionWaitsForServerAndAllowsRepeatedAttempts() {
         var state = SegmentedSelectionState(selectedIndex: 0)
         var stateObservedAtEmission: [Int?] = []
 
@@ -20,8 +20,8 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         select(1)
         select(1)
 
-        XCTAssertEqual(state.selectedIndex, 1)
-        XCTAssertEqual(stateObservedAtEmission, [1])
+        XCTAssertEqual(state.selectedIndex, 0)
+        XCTAssertEqual(stateObservedAtEmission, [0, 0])
     }
 
     func testDisabledSelectionsDoNotEmit() {
@@ -280,7 +280,7 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         coordinator.changed(control)
 
         XCTAssertEqual(changes, [1])
-        XCTAssertEqual(control.selectedSegmentIndex, 1)
+        XCTAssertEqual(control.selectedSegmentIndex, 0)
     }
 
     func testCompactSystemTitlesGrowWithDynamicTypeAndFitAtStandardSize() {

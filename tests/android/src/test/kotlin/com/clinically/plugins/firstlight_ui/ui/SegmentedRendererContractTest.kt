@@ -22,15 +22,16 @@ class SegmentedRendererContractTest {
     }
 
     @Test
-    fun `string tap updates optimistically and emits one SELECT_CHANGE`() {
+    fun `string tap waits for the server and emits every rejected attempt`() {
         val state = SegmentedRendererState(node(valueType = "string", selectedValue = "mine"))
 
-        val event = state.userSelected(1)
+        val first = state.userSelected(1)
+        val repeated = state.userSelected(1)
 
-        assertEquals(1, state.selectedIndex)
-        assertEquals(SegmentedRendererEvent.SelectChange(41, 7, "all"), event)
-        assertEquals("SELECT_CHANGE", event?.wireName)
-        assertNull(state.userSelected(1))
+        assertEquals(0, state.selectedIndex)
+        assertEquals(SegmentedRendererEvent.SelectChange(41, 7, "all"), first)
+        assertEquals(SegmentedRendererEvent.SelectChange(41, 7, "all"), repeated)
+        assertEquals("SELECT_CHANGE", first?.wireName)
     }
 
     @Test
@@ -59,35 +60,21 @@ class SegmentedRendererContractTest {
     }
 
     @Test
-    fun `new nested publication corrects unchanged-value rejection`() {
+    fun `unchanged-value rejection needs no corrective publication`() {
         val state = SegmentedRendererState(node(valueType = "string", selectedValue = "mine"))
-        state.serverPublished(1, tree(node(valueType = "string", selectedValue = "mine")))
         state.userSelected(1)
 
-        assertTrue(state.serverPublished(2, tree(node(valueType = "string", selectedValue = "mine"))))
+        assertFalse(state.serverPublished(tree(node(valueType = "string", selectedValue = "mine"))))
         assertEquals(0, state.selectedIndex)
     }
 
     @Test
-    fun `same publication never rewinds optimistic selection`() {
-        val state = SegmentedRendererState(node(valueType = "string", selectedValue = "mine"))
-        val serverTree = tree(node(valueType = "string", selectedValue = "mine"))
-        state.serverPublished(1, serverTree)
-        state.userSelected(1)
-
-        assertFalse(state.serverPublished(1, serverTree))
-        assertEquals(1, state.selectedIndex)
-    }
-
-    @Test
-    fun `matching echo and differing correction reconcile without events`() {
+    fun `changed server publication advances the visible selection`() {
         val state = SegmentedRendererState(node(valueType = "string", selectedValue = "mine"))
         state.userSelected(1)
 
-        assertFalse(state.serverPublished(2, tree(node(valueType = "string", selectedValue = "all"))))
+        assertTrue(state.serverPublished(tree(node(valueType = "string", selectedValue = "all"))))
         assertEquals(1, state.selectedIndex)
-        assertTrue(state.serverPublished(3, tree(node(valueType = "string", selectedValue = "mine"))))
-        assertEquals(0, state.selectedIndex)
     }
 
     @Test

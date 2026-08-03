@@ -2,6 +2,8 @@
 
 Ratified: 2026-08-03
 
+Last amended: 2026-08-04 (Article III.3)
+
 Status: approved founding constitution
 
 ## Preamble
@@ -32,7 +34,7 @@ Firstlight values clear APIs, native interaction, equal platform quality, access
 
 1. Selection controls bind stable public values, never display labels or renderer indexes.
 2. `null` represents no selection.
-3. User interaction updates native state immediately, then synchronizes with PHP.
+3. User interaction emits immediately; visible control state remains server-authoritative until PHP publishes the accepted value.
 4. Server reconciliation must not echo events, replay animations, or produce feedback loops.
 5. Programmatic state changes do not masquerade as user changes.
 6. Disabled choices cannot emit changes.

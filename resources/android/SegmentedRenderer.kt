@@ -141,22 +141,17 @@ class SegmentedRendererState(node: NativeUINode) {
         }
     }
 
-    fun serverPublished(publicationId: Long, tree: NativeUITree): Boolean {
+    fun serverPublished(tree: NativeUITree): Boolean {
         val node = tree.root.findNode(configuration.nodeId) ?: return false
         val previousSelection = selectionState.selectedWireValue
         val published = SegmentedRendererConfiguration(node)
         configuration = published
-        selectionState.reconcile(publicationId, published.serverSelectedWireValue)
+        selectionState.reconcile(published.serverSelectedWireValue)
         return previousSelection != selectionState.selectedWireValue
     }
 }
 
 object SegmentedRenderer {
-    /**
-     * Development dependency: NativePHP local fork commit ca1bf3e exposes
-     * NativeUIBridge.treePublicationId. This package remains blocked from public release
-     * until an official NativePHP version ships the equivalent publication-revision API.
-     */
     @Composable
     fun Render(
         node: NativeUINode,
@@ -165,13 +160,9 @@ object SegmentedRenderer {
     ) {
         val rendererState = remember(node.id) { SegmentedRendererState(node) }
 
-        // Reading longValue subscribes this renderer to every mounted tree publication,
-        // including an equal tree whose node reference was reused by NativePHP diffing.
-        val publicationId = NativeUIBridge.treePublicationId.longValue
-        LaunchedEffect(publicationId) {
-            NativeUIBridge.currentTree.value?.let { tree ->
-                rendererState.serverPublished(publicationId, tree)
-            }
+        val publishedTree = NativeUIBridge.currentTree.value
+        LaunchedEffect(publishedTree) {
+            publishedTree?.let(rendererState::serverPublished)
         }
 
         val tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
