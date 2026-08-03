@@ -130,6 +130,120 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         XCTAssertNotNil(control.titleTextAttributes(for: .selected)?[.font])
     }
 
+    func testSemanticTitleColorsApplyToNormalSelectedAndDisabledStates() {
+        let representable = makeRepresentable(onSelection: { _ in })
+        let control = representable.makeControl()
+
+        XCTAssertEqual(titleColor(named: "unselectedTextColor", in: representable), .label)
+        XCTAssertEqual(titleColor(named: "selectedTextColor", in: representable), .white)
+        XCTAssertEqual(titleColor(named: "disabledTextColor", in: representable), .secondaryLabel)
+        XCTAssertEqual(control.titleTextAttributes(for: .normal)?[.foregroundColor] as? UIColor, .label)
+        XCTAssertEqual(control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor, .white)
+        XCTAssertEqual(control.titleTextAttributes(for: .disabled)?[.foregroundColor] as? UIColor, .secondaryLabel)
+    }
+
+    func testSelectedSemanticTitleColorIsPreservedOnIOS26() {
+        guard #available(iOS 26.0, *) else {
+            return XCTFail("This contrast regression test requires iOS 26")
+        }
+
+        let control = makeRepresentable(onSelection: { _ in }).makeControl()
+
+        XCTAssertEqual(control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor, .white)
+    }
+
+    func testDefaultThemeSelectedForegroundsMeetNormalTextContrast() {
+        let lightPrimary = UIColor(red: 15 / 255, green: 118 / 255, blue: 110 / 255, alpha: 1)
+        let darkPrimary = UIColor(red: 20 / 255, green: 184 / 255, blue: 166 / 255, alpha: 1)
+
+        let lightForeground = FirstlightSegmentedTokens.contrastSafeSelectedTextColor(
+            primary: lightPrimary,
+            preferred: .white
+        )
+        let darkForeground = FirstlightSegmentedTokens.contrastSafeSelectedTextColor(
+            primary: darkPrimary,
+            preferred: .white
+        )
+
+        XCTAssertEqual(lightForeground, .white)
+        XCTAssertEqual(darkForeground, .black)
+        XCTAssertGreaterThanOrEqual(contrastRatio(lightForeground, lightPrimary), 4.5)
+        XCTAssertGreaterThanOrEqual(contrastRatio(darkForeground, darkPrimary), 4.5)
+    }
+
+    func testSelectedTokenRetainsThemeOnPrimaryWhenItIsContrastSafe() {
+        let preferredOnPrimary = UIColor(red: 1, green: 0.8, blue: 0, alpha: 1)
+        let theme = NativeUITokens(
+            primary: Color(uiColor: .black),
+            onPrimary: Color(uiColor: preferredOnPrimary),
+            surface: Color(uiColor: .white),
+            onSurface: Color(uiColor: .label),
+            onSurfaceVariant: Color(uiColor: .secondaryLabel),
+            destructive: Color(uiColor: .systemRed)
+        )
+
+        let tokens = FirstlightSegmentedTokens.from(theme: theme, traits: lightTraits)
+
+        XCTAssertEqual(tokens.selectedTextColor, preferredOnPrimary)
+        XCTAssertEqual(tokens.unselectedTextColor, .label)
+        XCTAssertEqual(tokens.disabledTextColor, .secondaryLabel)
+    }
+
+    func testTranslucentThemeTokensBecomeOpaqueControlColorsWithSafeContrast() {
+        let theme = NativeUITokens(
+            primary: Color(uiColor: UIColor(red: 1, green: 1, blue: 1, alpha: 0.5)),
+            onPrimary: Color(uiColor: UIColor(white: 0, alpha: 0.5)),
+            surface: Color(uiColor: UIColor(red: 0, green: 0, blue: 1, alpha: 0.2)),
+            onSurface: Color(uiColor: .label),
+            onSurfaceVariant: Color(uiColor: .secondaryLabel),
+            destructive: Color(uiColor: .systemRed)
+        )
+
+        let tokens = FirstlightSegmentedTokens.from(theme: theme, traits: lightTraits)
+        let control = FirstlightSegmentedControl(
+            labels: ["Mine", "All"],
+            optionEnabled: [true, true],
+            selectedIndex: 0,
+            disabled: false,
+            tintColor: tokens.tintColor,
+            unselectedTextColor: tokens.unselectedTextColor,
+            selectedTextColor: tokens.selectedTextColor,
+            disabledTextColor: tokens.disabledTextColor,
+            required: false,
+            accessibilityLabel: "Document queue",
+            accessibilityHint: "Changes the active queue",
+            onSelection: { _ in }
+        ).makeControl()
+
+        XCTAssertEqual(alpha(of: tokens.tintColor), 1)
+        XCTAssertEqual(alpha(of: tokens.selectedTextColor), 1)
+        XCTAssertEqual(alpha(of: control.selectedSegmentTintColor!), 1)
+        XCTAssertEqual(
+            control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor,
+            tokens.selectedTextColor
+        )
+        XCTAssertGreaterThanOrEqual(contrastRatio(tokens.selectedTextColor, tokens.tintColor), 4.5)
+    }
+
+    func testTranslucentOnPrimaryIsRetainedAfterCompositingWhenItIsContrastSafe() {
+        let preferredOnPrimary = UIColor(white: 1, alpha: 0.5)
+        let theme = NativeUITokens(
+            primary: Color(uiColor: UIColor(white: 0, alpha: 0.9)),
+            onPrimary: Color(uiColor: preferredOnPrimary),
+            surface: Color(uiColor: UIColor(white: 1, alpha: 0.5)),
+            onSurface: Color(uiColor: .label),
+            onSurfaceVariant: Color(uiColor: .secondaryLabel),
+            destructive: Color(uiColor: .systemRed)
+        )
+
+        let tokens = FirstlightSegmentedTokens.from(theme: theme, traits: lightTraits)
+
+        XCTAssertEqual(alpha(of: tokens.tintColor), 1)
+        XCTAssertEqual(alpha(of: tokens.selectedTextColor), 1)
+        XCTAssertNotEqual(tokens.selectedTextColor, .white)
+        XCTAssertGreaterThanOrEqual(contrastRatio(tokens.selectedTextColor, tokens.tintColor), 4.5)
+    }
+
     func testAccessibilityExposesEveryFullTitleAndState() {
         let representable = FirstlightSegmentedControl(
             labels: ["Mine", "All referrals", "Unassigned"],
@@ -264,7 +378,7 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         style: UIUserInterfaceStyle,
         contentSize: UIContentSizeCategory
     ) -> UIViewController {
-        let state = Binding.constant(SegmentedSelectionState(selectedIndex: 0))
+        let state = Binding.constant(SegmentedSelectionState(selectedIndex: nil))
         let view = FirstlightSegmentedField(
             label: "Queue",
             helper: "Choose the referrals shown in this list.",
@@ -289,11 +403,55 @@ final class SegmentedControlSnapshotTests: XCTestCase {
             contentSize: contentSize
         )
     }
+
+    private func titleColor(
+        named name: String,
+        in representable: FirstlightSegmentedControl
+    ) -> UIColor? {
+        Mirror(reflecting: representable).children.first { $0.label == name }?.value as? UIColor
+    }
+
+    private func contrastRatio(_ foreground: UIColor, _ background: UIColor) -> CGFloat {
+        let foregroundLuminance = relativeLuminance(foreground)
+        let backgroundLuminance = relativeLuminance(background)
+
+        return (max(foregroundLuminance, backgroundLuminance) + 0.05)
+            / (min(foregroundLuminance, backgroundLuminance) + 0.05)
+    }
+
+    private var lightTraits: UITraitCollection {
+        UITraitCollection(userInterfaceStyle: .light)
+    }
+
+    private func alpha(of color: UIColor) -> CGFloat {
+        color.resolvedColor(with: lightTraits).cgColor.alpha
+    }
+
+    private func relativeLuminance(_ color: UIColor) -> CGFloat {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        XCTAssertTrue(color.getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+
+        func linearized(_ channel: CGFloat) -> CGFloat {
+            channel <= 0.04045
+                ? channel / 12.92
+                : pow((channel + 0.055) / 1.055, 2.4)
+        }
+
+        return 0.2126 * linearized(red)
+            + 0.7152 * linearized(green)
+            + 0.0722 * linearized(blue)
+    }
 }
 
 private extension FirstlightSegmentedTokens {
     static let snapshot = FirstlightSegmentedTokens(
         tintColor: .firstlightSemantic(light: 0x0F766E, dark: 0x14B8A6),
+        unselectedTextColor: .firstlightSemantic(light: 0x0F172A, dark: 0xF8FAFC),
+        selectedTextColor: .firstlightSemantic(light: 0xFFFFFF, dark: 0x000000),
+        disabledTextColor: .firstlightSemantic(light: 0x475569, dark: 0x94A3B8),
         labelColor: Color(uiColor: .firstlightSemantic(light: 0x0F172A, dark: 0xF8FAFC)),
         helperColor: Color(uiColor: .firstlightSemantic(light: 0x475569, dark: 0x94A3B8)),
         errorColor: Color(uiColor: .firstlightSemantic(light: 0xB91C1C, dark: 0xF87171))

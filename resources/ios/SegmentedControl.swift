@@ -51,9 +51,131 @@ struct SegmentedSelectionState: Equatable {
 
 struct FirstlightSegmentedTokens {
     let tintColor: UIColor
+    let unselectedTextColor: UIColor
+    let selectedTextColor: UIColor
+    let disabledTextColor: UIColor
     let labelColor: Color
     let helperColor: Color
     let errorColor: Color
+
+    static func from(theme: NativeUITokens, traits: UITraitCollection) -> Self {
+        let surface = opaqueComposite(
+            foreground: UIColor(theme.surface),
+            over: .systemBackground,
+            traits: traits
+        )
+        let selectedFill = opaqueComposite(
+            foreground: UIColor(theme.primary),
+            over: surface,
+            traits: traits
+        )
+        let selectedText = opaqueComposite(
+            foreground: UIColor(theme.onPrimary),
+            over: selectedFill,
+            traits: traits
+        )
+
+        return Self(
+            tintColor: selectedFill,
+            unselectedTextColor: UIColor(theme.onSurface),
+            selectedTextColor: contrastSafeSelectedTextColor(
+                primary: selectedFill,
+                preferred: selectedText
+            ),
+            disabledTextColor: UIColor(theme.onSurfaceVariant),
+            labelColor: theme.onSurface,
+            helperColor: theme.onSurfaceVariant,
+            errorColor: theme.destructive
+        )
+    }
+
+    static func contrastSafeSelectedTextColor(
+        primary: UIColor,
+        preferred: UIColor
+    ) -> UIColor {
+        guard contrastRatio(foreground: preferred, background: primary) < 4.5 else {
+            return preferred
+        }
+
+        let black = UIColor.black
+        let white = UIColor.white
+
+        return contrastRatio(foreground: black, background: primary)
+            >= contrastRatio(foreground: white, background: primary)
+            ? black
+            : white
+    }
+
+    private static func contrastRatio(foreground: UIColor, background: UIColor) -> CGFloat {
+        let foregroundLuminance = relativeLuminance(foreground)
+        let backgroundLuminance = relativeLuminance(background)
+
+        return (max(foregroundLuminance, backgroundLuminance) + 0.05)
+            / (min(foregroundLuminance, backgroundLuminance) + 0.05)
+    }
+
+    private static func opaqueComposite(
+        foreground: UIColor,
+        over background: UIColor,
+        traits: UITraitCollection
+    ) -> UIColor {
+        let foreground = rgba(foreground, traits: traits)
+        let background = rgba(background, traits: traits)
+        let alpha = foreground.alpha + background.alpha * (1 - foreground.alpha)
+
+        guard alpha > 0 else {
+            return .black
+        }
+
+        return UIColor(
+            red: (foreground.red * foreground.alpha
+                + background.red * background.alpha * (1 - foreground.alpha)) / alpha,
+            green: (foreground.green * foreground.alpha
+                + background.green * background.alpha * (1 - foreground.alpha)) / alpha,
+            blue: (foreground.blue * foreground.alpha
+                + background.blue * background.alpha * (1 - foreground.alpha)) / alpha,
+            alpha: alpha
+        )
+    }
+
+    private static func rgba(
+        _ color: UIColor,
+        traits: UITraitCollection
+    ) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
+        let resolved = color.resolvedColor(with: traits)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        guard resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return (0, 0, 0, 1)
+        }
+
+        return (red, green, blue, alpha)
+    }
+
+    private static func relativeLuminance(_ color: UIColor) -> CGFloat {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        let resolved = color.resolvedColor(with: .current)
+
+        guard resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return 0
+        }
+
+        func linearized(_ channel: CGFloat) -> CGFloat {
+            channel <= 0.04045
+                ? channel / 12.92
+                : pow((channel + 0.055) / 1.055, 2.4)
+        }
+
+        return 0.2126 * linearized(red)
+            + 0.7152 * linearized(green)
+            + 0.0722 * linearized(blue)
+    }
 }
 
 struct FirstlightSegmentedField: View {
@@ -90,6 +212,9 @@ struct FirstlightSegmentedField: View {
                 selectedIndex: selectionState.selectedIndex,
                 disabled: disabled,
                 tintColor: tokens.tintColor,
+                unselectedTextColor: tokens.unselectedTextColor,
+                selectedTextColor: tokens.selectedTextColor,
+                disabledTextColor: tokens.disabledTextColor,
                 required: required,
                 accessibilityLabel: accessibilityLabel,
                 accessibilityHint: accessibilityHint,
@@ -120,10 +245,41 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
     var selectedIndex: Int?
     let disabled: Bool
     let tintColor: UIColor
+    let unselectedTextColor: UIColor
+    let selectedTextColor: UIColor
+    let disabledTextColor: UIColor
     let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
     let onSelection: (Int) -> Void
+
+    init(
+        labels: [String],
+        optionEnabled: [Bool],
+        selectedIndex: Int?,
+        disabled: Bool,
+        tintColor: UIColor,
+        unselectedTextColor: UIColor = .label,
+        selectedTextColor: UIColor = .white,
+        disabledTextColor: UIColor = .secondaryLabel,
+        required: Bool,
+        accessibilityLabel: String,
+        accessibilityHint: String,
+        onSelection: @escaping (Int) -> Void
+    ) {
+        self.labels = labels
+        self.optionEnabled = optionEnabled
+        self.selectedIndex = selectedIndex
+        self.disabled = disabled
+        self.tintColor = tintColor
+        self.unselectedTextColor = unselectedTextColor
+        self.selectedTextColor = selectedTextColor
+        self.disabledTextColor = disabledTextColor
+        self.required = required
+        self.accessibilityLabel = accessibilityLabel
+        self.accessibilityHint = accessibilityHint
+        self.onSelection = onSelection
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -202,8 +358,18 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
         // categories from drawing outside this fixed-height native control;
         // VoiceOver still exposes every full title and state.
         let titleFont = Self.titleFont(compatibleWith: control.traitCollection)
-        control.setTitleTextAttributes([.font: titleFont], for: .normal)
-        control.setTitleTextAttributes([.font: titleFont], for: .selected)
+        control.setTitleTextAttributes(
+            [.font: titleFont, .foregroundColor: unselectedTextColor],
+            for: .normal
+        )
+        control.setTitleTextAttributes(
+            [.font: titleFont, .foregroundColor: selectedTextColor],
+            for: .selected
+        )
+        control.setTitleTextAttributes(
+            [.font: titleFont, .foregroundColor: disabledTextColor],
+            for: .disabled
+        )
     }
 
     static func titleFont(compatibleWith traits: UITraitCollection) -> UIFont {

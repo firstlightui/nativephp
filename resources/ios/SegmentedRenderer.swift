@@ -177,11 +177,11 @@ struct SegmentedRenderer: View {
             optionEnabled: configuration.optionEnabled,
             disabled: configuration.disabled,
             selectionState: $rendererState.selectionState,
-            tokens: FirstlightSegmentedTokens(
-                tintColor: UIColor(theme.primary),
-                labelColor: theme.onSurface,
-                helperColor: theme.onSurfaceVariant,
-                errorColor: theme.destructive
+            tokens: FirstlightSegmentedTokens.from(
+                theme: theme,
+                traits: UITraitCollection(
+                    userInterfaceStyle: colorScheme == .dark ? .dark : .light
+                )
             ),
             accessibilityLabel: configuration.accessibilityLabel,
             accessibilityHint: configuration.accessibilityHint,

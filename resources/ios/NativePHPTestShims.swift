@@ -93,12 +93,16 @@ final class NativeUIBridge: ObservableObject {
 
 struct NativeUITokens: Equatable {
     let primary: Color
+    let onPrimary: Color
+    let surface: Color
     let onSurface: Color
     let onSurfaceVariant: Color
     let destructive: Color
 
     static let fallback = NativeUITokens(
         primary: Color(uiColor: .systemTeal),
+        onPrimary: Color(uiColor: .white),
+        surface: Color(uiColor: .systemBackground),
         onSurface: Color(uiColor: .label),
         onSurfaceVariant: Color(uiColor: .secondaryLabel),
         destructive: Color(uiColor: .systemRed)
