@@ -57,3 +57,11 @@ This is traceable development evidence, not a clean release capture.
   loading state, and differentiated light/dark appearances.
 
 Do not describe Text Field as release-ready until both blocked rows are closed.
+
+## Development screenshot evidence update — 2026-08-05
+
+Text Field's current four-image development matrix is present and visually
+approved in the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This supersedes only earlier pending or absent screenshot statements. Clean
+release capture, physical-device, assistive-technology, and component-specific
+blocked rows remain unchanged.

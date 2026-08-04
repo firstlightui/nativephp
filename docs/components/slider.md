@@ -105,3 +105,10 @@ grid and send the standard Float slider event.
 Slider deliberately has no range mode, vertical orientation, marks, ticks,
 visible value label, formatter, min/max captions, required metadata, size,
 variant, or colour/style escape props.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Slider on iOS in light mode](../screenshots/slider/ios-light.png) | ![Slider on iOS in dark mode](../screenshots/slider/ios-dark.png) |
+| Android | ![Slider on Android in light mode](../screenshots/slider/android-light.png) | ![Slider on Android in dark mode](../screenshots/slider/android-dark.png) |

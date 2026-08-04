@@ -59,3 +59,10 @@ Firstlight does not trim or coerce time values. For example, `09:05` is valid;
 Always provide either a visible `label` or `a11y-label`. Errors replace helper
 text visually and are announced by platform semantics. The native presentation
 retains standard VoiceOver or TalkBack traversal and Cancel/Confirm actions.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Time Picker on iOS in light mode](../screenshots/time-picker/ios-light.png) | ![Time Picker on iOS in dark mode](../screenshots/time-picker/ios-dark.png) |
+| Android | ![Time Picker on Android in light mode](../screenshots/time-picker/android-light.png) | ![Time Picker on Android in dark mode](../screenshots/time-picker/android-dark.png) |

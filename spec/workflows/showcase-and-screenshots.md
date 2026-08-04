@@ -8,6 +8,7 @@ sources:
   - spec/documentation-constitution.md
   - spec/screenshots.json
   - bin/capture-doc-screenshots
+  - bin/capture-doc-screenshot-batch
   - bin/support/DocumentationScreenshotCapture.php
   - tests/Feature/DocumentationScreenshotCaptureTest.php
   - .agents/skills/firstlight-docs-screenshots/SKILL.md
@@ -58,7 +59,29 @@ bin/capture-doc-screenshots Component \
 
 Add `--release` only for release evidence. Add `--keep-failed` only while diagnosing a failed temporary matrix.
 
-The orchestrator verifies the package revision installed by Composer, both explicit targets, emulator status, generated hosts, and the focused showcase test. It launches the exact route, confirms the configured Android application is installed and foregrounded, waits for stable frames, captures both appearances, restores original appearance settings, rejects byte-identical theme pairs, and publishes only a complete matrix.
+For two or more components, use the guarded batch entrypoint:
+
+```bash
+bin/capture-doc-screenshot-batch Component ComponentTwo \
+  --showcase=../firstlight-showcase \
+  --ios=<simulator-udid> \
+  --android=<emulator-serial>
+```
+
+The batch guard builds and launches each native host once, then changes only the
+installed showcase runtime's start URL and cold-launches the same app for each
+exact stable route. It does not invoke custom URL schemes, rebuild between
+components, or modify generated host source.
+It captures all iOS light routes, iOS dark routes, Android light routes, and
+Android dark routes in that order. The showcase environment and both original
+appearances are restored even when capture fails. The Android animator-duration
+scale is temporarily set to zero so documented indeterminate states can produce
+stable evidence, and iOS Reduced Motion is enabled before launch for the same
+reason. Both settings are restored to their exact prior values. Route switching is
+capture orchestration only; the public showcase menu continues to open its
+interactive component pages.
+
+The orchestrators verify the package revision installed by Composer, both explicit targets, emulator status, generated hosts, and every focused showcase test. They launch exact routes, confirm the configured Android application is installed and foregrounded, wait for stable frames, capture both appearances, restore original appearance settings, reject byte-identical theme pairs, and publish only complete matrices. Consecutive frames must be byte-identical or differ across no more than `0.01%` of pixels, which admits a small intentional native progress animation without admitting a transition or unstable page.
 
 NativePHP process exit alone is not capture success. Installation, foreground state, stable frames, four distinct outputs, and appearance restoration must all pass.
 

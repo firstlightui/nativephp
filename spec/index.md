@@ -28,4 +28,5 @@ sources:
 - [Adding components](workflows/adding-components.md) — Defines the evidence-based workflow for delivering a paired Firstlight component.
 - [Testing](workflows/testing.md) — Defines useful contract, platform, showcase, and tooling verification.
 - [Showcase and screenshots](workflows/showcase-and-screenshots.md) — Defines stable showcase fixtures and the four-image documentation capture workflow.
+- [Alpha catalogue development screenshot evidence](reviews/2026-08-05-alpha-screenshot-evidence.md) — Records the approved four-image development matrix for every alpha component and the remaining release gates.
 - [Repository layout](reference/repository-layout.md) — Maps package, documentation, tooling, skill, and showcase paths to their responsibilities.

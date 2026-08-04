@@ -131,3 +131,11 @@ amendment.
   physical-device and accessibility evidence are missing.
 - **Catalogue readiness: BLOCKED.** The complete alpha catalogue and every
   component's release evidence are incomplete.
+
+## Development screenshot evidence update — 2026-08-05
+
+Progress's current four-image development matrix is present and visually
+approved in the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This supersedes only earlier pending or absent screenshot statements. Clean
+release capture, physical-device, assistive-technology, and component-specific
+blocked rows remain unchanged.

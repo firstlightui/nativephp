@@ -221,3 +221,11 @@ controller-gated skips; showcase 93 tests/1,467 assertions; both strict
 Composer validations; docs build/check; all ten development component checks;
 plugin validation with the expected UI-only no-bridge-functions warning; and
 both repository diff checks.
+
+## Development screenshot evidence update — 2026-08-05
+
+Icon Button's current four-image development matrix is present and visually
+approved in the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This supersedes only earlier pending or absent screenshot statements. Clean
+release capture, physical-device, assistive-technology, and component-specific
+blocked rows remain unchanged.

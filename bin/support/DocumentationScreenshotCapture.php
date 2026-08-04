@@ -55,7 +55,9 @@ final class DocumentationScreenshotCapture
         }
 
         $originalIosAppearance = null;
+        $originalIosReduceMotion = null;
         $originalAndroidAppearance = null;
+        $originalAndroidAnimatorScale = false;
         $environmentPath = $showcaseRoot.'/.env';
         $originalEnvironment = is_file($environmentPath) ? file_get_contents($environmentPath) : false;
         $failure = null;
@@ -66,7 +68,10 @@ final class DocumentationScreenshotCapture
             if (! is_string($originalEnvironment)) {
                 throw new RuntimeException('Showcase .env is required for native screenshot capture.');
             }
-            $this->primeStartUrl($environmentPath, $originalEnvironment, $manifest['route']);
+            $this->primeCaptureEnvironment($environmentPath, $originalEnvironment, $manifest['route']);
+
+            $originalIosReduceMotion = $this->iosReduceMotion($request->iosUdid);
+            $this->setIosReduceMotion($request->iosUdid, true, 'enable-ios-reduce-motion');
 
             $this->terminateIosApplication($request->iosUdid, $androidAppId);
             $this->execute(
@@ -84,9 +89,12 @@ final class DocumentationScreenshotCapture
                 $showcaseRoot,
             );
             $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, 'after launch');
+            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $request->component);
 
             $originalIosAppearance = $this->iosAppearance($request->iosUdid);
             $originalAndroidAppearance = $this->androidAppearance($request->androidSerial);
+            $originalAndroidAnimatorScale = $this->androidAnimatorScale($request->androidSerial);
+            $this->setAndroidAnimatorScale($request->androidSerial, '0', 'freeze-android-animator-scale');
 
             foreach (['light', 'dark'] as $appearance) {
                 $this->execute(
@@ -131,10 +139,24 @@ final class DocumentationScreenshotCapture
                         ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $originalIosAppearance],
                     );
                 }
+                if ($originalIosReduceMotion !== null) {
+                    $this->setIosReduceMotion(
+                        $request->iosUdid,
+                        $originalIosReduceMotion,
+                        'restore-ios-reduce-motion',
+                    );
+                }
                 if ($originalAndroidAppearance !== null) {
                     $this->execute(
                         'restore-android-appearance',
                         ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $originalAndroidAppearance],
+                    );
+                }
+                if ($originalAndroidAnimatorScale !== false) {
+                    $this->setAndroidAnimatorScale(
+                        $request->androidSerial,
+                        $originalAndroidAnimatorScale,
+                        'restore-android-animator-scale',
                     );
                 }
                 if (is_string($originalEnvironment) && file_put_contents($environmentPath, $originalEnvironment) === false) {
@@ -168,6 +190,268 @@ final class DocumentationScreenshotCapture
         );
     }
 
+    public function captureBatch(BatchCaptureRequest $request): BatchCaptureReport
+    {
+        $this->commands = [];
+        $this->validateBatchRequest($request);
+
+        $packageRoot = $this->existingDirectory($request->packageRoot, 'package');
+        $showcaseRoot = $this->existingDirectory($request->showcaseRoot, 'showcase');
+        if ($packageRoot !== $this->existingDirectory($this->packageRoot, 'configured package')) {
+            throw new InvalidArgumentException('Capture request package root does not match the configured package root.');
+        }
+
+        $components = [];
+        foreach ($request->components as $component) {
+            [$slug, $manifest] = $this->componentManifest($component, $packageRoot);
+            $components[$slug] = [
+                'name' => $component,
+                'manifest' => $manifest,
+                'outputs' => $this->outputPaths($manifest, $packageRoot),
+            ];
+        }
+
+        $packageRevision = trim($this->execute('package-revision', ['git', 'rev-parse', 'HEAD'], $packageRoot)['stdout']);
+        $showcaseRevision = trim($this->execute('showcase-revision', ['git', 'rev-parse', 'HEAD'], $showcaseRoot)['stdout']);
+        $packageDirty = trim($this->execute('package-status', ['git', 'status', '--porcelain'], $packageRoot)['stdout']) !== '';
+        $showcaseDirty = trim($this->execute('showcase-status', ['git', 'status', '--porcelain'], $showcaseRoot)['stdout']) !== '';
+
+        if ($request->release && ($packageDirty || $showcaseDirty)) {
+            throw new RuntimeException('Release capture requires clean package and showcase repositories.');
+        }
+
+        $this->assertInstalledPackageRevision($showcaseRoot, $packageRevision);
+        $this->assertIosSimulator($request->iosUdid);
+        $this->assertAndroidEmulator($request->androidSerial);
+        $this->assertNativeHostProjects($showcaseRoot);
+        $androidAppId = $this->nativeAppId($showcaseRoot);
+
+        foreach ($components as $component) {
+            $this->runFocusedShowcaseTest($component['manifest'], $showcaseRoot);
+        }
+
+        $temporaryRoot = sys_get_temp_dir().'/firstlight-docs-batch-'.bin2hex(random_bytes(8));
+        if (! mkdir($temporaryRoot, 0700, true)) {
+            throw new RuntimeException('Unable to create a temporary screenshot directory.');
+        }
+
+        foreach (array_keys($components) as $slug) {
+            if (! mkdir($temporaryRoot.'/'.$slug, 0700, true)) {
+                throw new RuntimeException("Unable to create a temporary screenshot directory for {$slug}.");
+            }
+        }
+
+        $first = reset($components);
+        $firstRoute = $first['manifest']['route'];
+        $captureVersion = '0.1.'.(time() % 100000000);
+        $environmentPath = $showcaseRoot.'/.env';
+        $originalEnvironment = is_file($environmentPath) ? file_get_contents($environmentPath) : false;
+        $originalIosAppearance = null;
+        $originalIosReduceMotion = null;
+        $originalAndroidAppearance = null;
+        $originalAndroidAnimatorScale = false;
+        $failure = null;
+        $restorationFailure = null;
+        $published = [];
+        $iosRuntimeEnvironmentPath = null;
+        $iosRuntimeEnvironment = null;
+        $androidRuntimeEnvironmentPath = "/data/data/{$androidAppId}/app_storage/laravel/.env";
+        $androidRuntimeEnvironment = null;
+
+        try {
+            if (! is_string($originalEnvironment)) {
+                throw new RuntimeException('Showcase .env is required for native screenshot capture.');
+            }
+
+            $this->primeCaptureEnvironment($environmentPath, $originalEnvironment, $firstRoute, appVersion: $captureVersion);
+
+            $originalIosReduceMotion = $this->iosReduceMotion($request->iosUdid);
+            $this->setIosReduceMotion($request->iosUdid, true, 'enable-ios-reduce-motion');
+
+            $this->terminateIosApplication($request->iosUdid, $androidAppId);
+            $this->execute(
+                'launch-ios',
+                ['php', 'artisan', 'native:run', 'ios', $request->iosUdid, '--start-url='.$firstRoute, '--no-tty'],
+                $showcaseRoot,
+            );
+            $iosAppContainer = trim($this->execute(
+                'ios-app-container',
+                ['xcrun', 'simctl', 'get_app_container', $request->iosUdid, $androidAppId, 'data'],
+            )['stdout']);
+            if ($iosAppContainer === '' || ! is_dir($iosAppContainer.'/Documents/app')) {
+                throw new RuntimeException('Unable to locate the installed iOS showcase application container.');
+            }
+            $iosRuntimeEnvironmentPath = $iosAppContainer.'/Documents/app/.env';
+            $iosRuntimeEnvironment = is_file($iosRuntimeEnvironmentPath)
+                ? file_get_contents($iosRuntimeEnvironmentPath)
+                : false;
+            if (! is_string($iosRuntimeEnvironment)) {
+                throw new RuntimeException('Unable to read the installed iOS showcase environment.');
+            }
+            $this->execute(
+                'terminate-android-before-launch',
+                ['adb', '-s', $request->androidSerial, 'shell', 'am', 'force-stop', $androidAppId],
+            );
+            $this->execute(
+                'launch-android',
+                ['php', 'artisan', 'native:run', 'android', $request->androidSerial, '--start-url='.$firstRoute, '--no-tty'],
+                $showcaseRoot,
+            );
+            $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, 'after launch');
+            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $first['name']);
+            $androidRuntimeEnvironment = $this->execute(
+                'android-runtime-environment',
+                ['adb', '-s', $request->androidSerial, 'exec-out', 'run-as', $androidAppId, 'cat', $androidRuntimeEnvironmentPath],
+            )['stdout'];
+
+            $originalIosAppearance = $this->iosAppearance($request->iosUdid);
+            $originalAndroidAppearance = $this->androidAppearance($request->androidSerial);
+            $originalAndroidAnimatorScale = $this->androidAnimatorScale($request->androidSerial);
+            $this->setAndroidAnimatorScale($request->androidSerial, '0', 'freeze-android-animator-scale');
+
+            foreach (['light', 'dark'] as $appearance) {
+                $this->execute(
+                    "ios-{$appearance}-appearance",
+                    ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $appearance],
+                );
+
+                foreach ($components as $slug => $component) {
+                    $this->writeIosRuntimeEnvironment(
+                        $iosRuntimeEnvironmentPath,
+                        $iosRuntimeEnvironment,
+                        $component['manifest']['route'],
+                    );
+                    $this->terminateIosApplication($request->iosUdid, $androidAppId);
+                    $this->execute(
+                        "ios-{$appearance}-{$slug}-launch",
+                        ['xcrun', 'simctl', 'launch', $request->iosUdid, $androidAppId],
+                    );
+                    $this->execute("ios-{$appearance}-{$slug}-route-wait", ['sleep', '3']);
+                    $this->captureStable(
+                        "ios-{$appearance}-{$slug}",
+                        ['xcrun', 'simctl', 'io', $request->iosUdid, 'screenshot'],
+                        $temporaryRoot."/{$slug}/ios-{$appearance}.png",
+                        commandWritesFile: true,
+                    );
+                }
+            }
+
+            foreach (['light' => 'no', 'dark' => 'yes'] as $appearance => $mode) {
+                $this->execute(
+                    "android-{$appearance}-appearance",
+                    ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $mode],
+                );
+
+                foreach ($components as $slug => $component) {
+                    $this->writeAndroidRuntimeEnvironment(
+                        $request->androidSerial,
+                        $androidAppId,
+                        $androidRuntimeEnvironmentPath,
+                        $androidRuntimeEnvironment,
+                        $component['manifest']['route'],
+                        $temporaryRoot,
+                    );
+                    $this->execute(
+                        "android-{$appearance}-{$slug}-stop",
+                        ['adb', '-s', $request->androidSerial, 'shell', 'am', 'force-stop', $androidAppId],
+                    );
+                    $this->execute(
+                        "android-{$appearance}-{$slug}-launch",
+                        ['adb', '-s', $request->androidSerial, 'shell', 'monkey', '-p', $androidAppId, '-c', 'android.intent.category.LAUNCHER', '1'],
+                    );
+                    $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} {$slug} capture");
+                    $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $component['name']);
+                    $this->captureStable(
+                        "android-{$appearance}-{$slug}",
+                        ['adb', '-s', $request->androidSerial, 'exec-out', 'screencap', '-p'],
+                        $temporaryRoot."/{$slug}/android-{$appearance}.png",
+                    );
+                }
+            }
+
+            foreach ($components as $slug => $component) {
+                foreach (['ios', 'android'] as $platform) {
+                    if (hash_file('sha256', $temporaryRoot."/{$slug}/{$platform}-light.png") === hash_file('sha256', $temporaryRoot."/{$slug}/{$platform}-dark.png")) {
+                        throw new RuntimeException(ucfirst($platform)." light and dark captures are byte-identical for {$component['name']}.");
+                    }
+                }
+
+                $published[$slug] = $this->publishAtomically($component['outputs'], $temporaryRoot.'/'.$slug);
+            }
+        } catch (Throwable $exception) {
+            $failure = $exception;
+        } finally {
+            try {
+                if (is_string($iosRuntimeEnvironmentPath) && is_string($iosRuntimeEnvironment)) {
+                    $this->writeIosRuntimeEnvironment($iosRuntimeEnvironmentPath, $iosRuntimeEnvironment, '/');
+                }
+                if (is_string($androidRuntimeEnvironment)) {
+                    $this->writeAndroidRuntimeEnvironment(
+                        $request->androidSerial,
+                        $androidAppId,
+                        $androidRuntimeEnvironmentPath,
+                        $androidRuntimeEnvironment,
+                        '/',
+                        $temporaryRoot,
+                    );
+                }
+                if ($originalIosAppearance !== null) {
+                    $this->execute(
+                        'restore-ios-appearance',
+                        ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $originalIosAppearance],
+                    );
+                }
+                if ($originalIosReduceMotion !== null) {
+                    $this->setIosReduceMotion(
+                        $request->iosUdid,
+                        $originalIosReduceMotion,
+                        'restore-ios-reduce-motion',
+                    );
+                }
+                if ($originalAndroidAppearance !== null) {
+                    $this->execute(
+                        'restore-android-appearance',
+                        ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $originalAndroidAppearance],
+                    );
+                }
+                if ($originalAndroidAnimatorScale !== false) {
+                    $this->setAndroidAnimatorScale(
+                        $request->androidSerial,
+                        $originalAndroidAnimatorScale,
+                        'restore-android-animator-scale',
+                    );
+                }
+                if (is_string($originalEnvironment) && file_put_contents($environmentPath, $originalEnvironment) === false) {
+                    throw new RuntimeException('Unable to restore showcase .env after screenshot capture.');
+                }
+            } catch (Throwable $exception) {
+                $restorationFailure = $exception;
+            }
+
+            if (! $request->keepFailed || $failure === null) {
+                $this->removeDirectory($temporaryRoot);
+            }
+        }
+
+        if ($failure !== null) {
+            throw $failure;
+        }
+        if ($restorationFailure !== null) {
+            throw $restorationFailure;
+        }
+
+        return new BatchCaptureReport(
+            packageRevision: $packageRevision,
+            showcaseRevision: $showcaseRevision,
+            packageDirty: $packageDirty,
+            showcaseDirty: $showcaseDirty,
+            iosUdid: $request->iosUdid,
+            androidSerial: $request->androidSerial,
+            commands: $this->commands,
+            outputs: $published,
+        );
+    }
+
     private function validateRequest(CaptureRequest $request): void
     {
         if (trim($request->iosUdid) === '' || trim($request->androidSerial) === '') {
@@ -175,6 +459,24 @@ final class DocumentationScreenshotCapture
         }
         if (preg_match('/^[A-Z][A-Za-z0-9]*$/', $request->component) !== 1) {
             throw new InvalidArgumentException('Component must be a StudlyCase name.');
+        }
+    }
+
+    private function validateBatchRequest(BatchCaptureRequest $request): void
+    {
+        if (trim($request->iosUdid) === '' || trim($request->androidSerial) === '') {
+            throw new InvalidArgumentException('Explicit iOS Simulator and Android emulator identifiers are required.');
+        }
+        if ($request->components === []) {
+            throw new InvalidArgumentException('At least one component is required for batch capture.');
+        }
+        if (count(array_unique($request->components)) !== count($request->components)) {
+            throw new InvalidArgumentException('Batch capture components must be unique.');
+        }
+        foreach ($request->components as $component) {
+            if (preg_match('/^[A-Z][A-Za-z0-9]*$/', $component) !== 1) {
+                throw new InvalidArgumentException('Every component must be a StudlyCase name.');
+            }
         }
     }
 
@@ -297,10 +599,36 @@ final class DocumentationScreenshotCapture
         return $appId;
     }
 
-    private function primeStartUrl(string $environmentPath, string $environment, string $route): void
+    private function primeCaptureEnvironment(
+        string $environmentPath,
+        string $environment,
+        string $route,
+        ?string $appVersion = null,
+    ): void
     {
         if (preg_match('#^/[A-Za-z0-9/_-]+$#', $route) !== 1) {
             throw new RuntimeException("Invalid screenshot route: {$route}");
+        }
+
+        $updated = $environment;
+        $values = ['NATIVEPHP_START_URL' => $route, 'NATIVEPHP_APP_VERSION' => $appVersion ?? 'DEBUG'];
+
+        foreach ($values as $key => $value) {
+            $line = $key.'='.$value;
+            $updated = preg_match('/^'.preg_quote($key, '/').'=.*$/m', $updated) === 1
+                ? preg_replace('/^'.preg_quote($key, '/').'=.*$/m', $line, $updated)
+                : rtrim($updated).PHP_EOL.$line.PHP_EOL;
+        }
+
+        if (! is_string($updated) || file_put_contents($environmentPath, $updated) === false) {
+            throw new RuntimeException('Unable to prime showcase environment for screenshot capture.');
+        }
+    }
+
+    private function environmentForRoute(string $environment, string $route): string
+    {
+        if (preg_match('#^/[A-Za-z0-9/_-]*$#', $route) !== 1) {
+            throw new RuntimeException("Invalid installed screenshot route: {$route}");
         }
 
         $line = 'NATIVEPHP_START_URL='.$route;
@@ -308,10 +636,39 @@ final class DocumentationScreenshotCapture
             ? preg_replace('/^NATIVEPHP_START_URL=.*$/m', $line, $environment)
             : rtrim($environment).PHP_EOL.$line.PHP_EOL;
 
-        if (! is_string($updated) || file_put_contents($environmentPath, $updated) === false) {
-            throw new RuntimeException('Unable to prime showcase start URL for screenshot capture.');
+        if (! is_string($updated)) {
+            throw new RuntimeException("Unable to prepare installed screenshot route: {$route}");
+        }
+
+        return $updated;
+    }
+
+    private function writeIosRuntimeEnvironment(string $path, string $environment, string $route): void
+    {
+        if (file_put_contents($path, $this->environmentForRoute($environment, $route)) === false) {
+            throw new RuntimeException("Unable to update installed iOS screenshot route: {$route}");
         }
     }
+
+    private function writeAndroidRuntimeEnvironment(
+        string $serial,
+        string $appId,
+        string $devicePath,
+        string $environment,
+        string $route,
+        string $temporaryRoot,
+    ): void {
+        $localPath = $temporaryRoot.'/android-runtime.env';
+        if (file_put_contents($localPath, $this->environmentForRoute($environment, $route)) === false) {
+            throw new RuntimeException("Unable to prepare installed Android screenshot route: {$route}");
+        }
+
+        $temporaryPath = '/data/local/tmp/firstlight_capture_runtime.env';
+        $this->execute('android-runtime-environment-push', ['adb', '-s', $serial, 'push', $localPath, $temporaryPath]);
+        $this->execute('android-runtime-environment-copy', ['adb', '-s', $serial, 'shell', 'run-as', $appId, 'cp', $temporaryPath, $devicePath]);
+        $this->execute('android-runtime-environment-cleanup', ['adb', '-s', $serial, 'shell', 'rm', $temporaryPath]);
+    }
+
 
     private function terminateIosApplication(string $udid, string $appId): void
     {
@@ -364,6 +721,31 @@ final class DocumentationScreenshotCapture
         throw new RuntimeException("Android showcase is not foregrounded at {$stage}: {$appId}");
     }
 
+    private function assertAndroidCaptureReady(string $serial, string $appId, string $component): void
+    {
+        $title = 'Firstlight '.trim((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $component));
+
+        for ($attempt = 1; $attempt <= 30; $attempt++) {
+            $hierarchy = $this->execute(
+                "android-capture-ready-{$attempt}",
+                ['adb', '-s', $serial, 'exec-out', 'uiautomator', 'dump', '/dev/tty'],
+            )['stdout'];
+
+            if (str_contains($hierarchy, 'package="'.$appId.'"') && str_contains($hierarchy, 'text="'.$title.'"')) {
+                return;
+            }
+
+            if ($attempt < 30) {
+                $this->execute(
+                    "android-capture-ready-wait-{$attempt}",
+                    ['adb', '-s', $serial, 'shell', 'sleep', '1'],
+                );
+            }
+        }
+
+        throw new RuntimeException("Android capture route did not render: {$title}");
+    }
+
     /** @param array<string, mixed> $manifest */
     private function runFocusedShowcaseTest(array $manifest, string $showcaseRoot): void
     {
@@ -401,6 +783,58 @@ final class DocumentationScreenshotCapture
         return $matches[1];
     }
 
+    private function iosReduceMotion(string $udid): bool
+    {
+        $output = strtolower(trim($this->execute(
+            'ios-original-reduce-motion',
+            ['xcrun', 'simctl', 'spawn', $udid, 'defaults', 'read', 'com.apple.Accessibility', 'ReduceMotionEnabled'],
+        )['stdout']));
+
+        return match ($output) {
+            '1', 'true', 'yes' => true,
+            '0', 'false', 'no' => false,
+            default => throw new RuntimeException("Unsupported iOS Simulator Reduce Motion value: {$output}"),
+        };
+    }
+
+    private function setIosReduceMotion(string $udid, bool $enabled, string $label): void
+    {
+        $this->execute(
+            $label,
+            [
+                'xcrun', 'simctl', 'spawn', $udid,
+                'defaults', 'write', 'com.apple.Accessibility', 'ReduceMotionEnabled',
+                '-bool', $enabled ? 'true' : 'false',
+            ],
+        );
+    }
+
+    private function androidAnimatorScale(string $serial): ?string
+    {
+        $output = strtolower(trim($this->execute(
+            'android-original-animator-scale',
+            ['adb', '-s', $serial, 'shell', 'settings', 'get', 'global', 'animator_duration_scale'],
+        )['stdout']));
+
+        if ($output === '' || $output === 'null') {
+            return null;
+        }
+        if (preg_match('/^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/', $output) !== 1) {
+            throw new RuntimeException("Unsupported Android emulator animator duration scale: {$output}");
+        }
+
+        return $output;
+    }
+
+    private function setAndroidAnimatorScale(string $serial, ?string $scale, string $label): void
+    {
+        $command = $scale === null
+            ? ['adb', '-s', $serial, 'shell', 'settings', 'delete', 'global', 'animator_duration_scale']
+            : ['adb', '-s', $serial, 'shell', 'settings', 'put', 'global', 'animator_duration_scale', $scale];
+
+        $this->execute($label, $command);
+    }
+
     /** @param list<string> $command */
     private function captureStable(
         string $label,
@@ -411,6 +845,7 @@ final class DocumentationScreenshotCapture
     {
         $deadline = microtime(true) + 15;
         $previousHash = null;
+        $previousPath = null;
         $attempt = 0;
 
         do {
@@ -424,17 +859,44 @@ final class DocumentationScreenshotCapture
             $this->assertPng($attemptPath);
             $hash = hash_file('sha256', $attemptPath);
 
-            if ($previousHash !== null && $hash === $previousHash) {
+            if ($previousHash !== null && (
+                $hash === $previousHash
+                || ($previousPath !== null && $this->screenshotsAreVisuallyStable($previousPath, $attemptPath, $label, $attempt))
+            )) {
                 rename($attemptPath, $finalTemporaryPath);
 
                 return;
             }
 
             $previousHash = $hash;
+            $previousPath = $attemptPath;
             usleep(100000);
         } while (microtime(true) < $deadline);
 
         throw new RuntimeException("Screenshot did not stabilise within 15 seconds: {$label}");
+    }
+
+    private function screenshotsAreVisuallyStable(
+        string $previousPath,
+        string $currentPath,
+        string $label,
+        int $attempt,
+    ): bool {
+        $command = ['magick', 'compare', '-metric', 'AE', $previousPath, $currentPath, 'null:'];
+        $this->commands["{$label}-visual-difference-{$attempt}"] = implode(' ', array_map($this->quoteArgument(...), $command));
+        $result = $this->runner->run($command);
+
+        if (! in_array($result['exitCode'], [0, 1], true)) {
+            $detail = trim($result['stderr']) ?: trim($result['stdout']);
+            throw new RuntimeException($detail !== '' ? $detail : 'Unable to compare consecutive screenshot frames.');
+        }
+
+        $metric = trim($result['stderr']) ?: trim($result['stdout']);
+        if (preg_match('/\(([0-9.eE+-]+)\)\s*$/', $metric, $matches) !== 1) {
+            throw new RuntimeException("Unable to parse screenshot visual difference: {$metric}");
+        }
+
+        return (float) $matches[1] <= 0.0001;
     }
 
     private function assertPng(string $path): void

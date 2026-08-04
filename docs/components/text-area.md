@@ -95,11 +95,7 @@ line bounds, supporting and error slots, and Compose selection and composition.
 
 ## Screenshots
 
-The deterministic `/captures/text-area` fixture owns the expected iOS and
-Android light/dark image paths. Runtime capture is controller-authorized and
-may be deferred when the shared simulator or emulator lane is unavailable.
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/text-area/ios-light.png` | `docs/screenshots/text-area/ios-dark.png` |
-| Android | `docs/screenshots/text-area/android-light.png` | `docs/screenshots/text-area/android-dark.png` |
+| iOS | ![Text Area on iOS in light mode](../screenshots/text-area/ios-light.png) | ![Text Area on iOS in dark mode](../screenshots/text-area/ios-dark.png) |
+| Android | ![Text Area on Android in light mode](../screenshots/text-area/android-light.png) | ![Text Area on Android in dark mode](../screenshots/text-area/android-dark.png) |

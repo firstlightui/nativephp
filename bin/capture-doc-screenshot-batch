@@ -1,0 +1,78 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FirstlightUI\Documentation\BatchCaptureRequest;
+use FirstlightUI\Documentation\CaptureCommandRunner;
+use FirstlightUI\Documentation\DocumentationScreenshotCapture;
+
+require_once dirname(__DIR__).'/vendor/autoload.php';
+require_once __DIR__.'/support/BatchCaptureRequest.php';
+require_once __DIR__.'/support/BatchCaptureReport.php';
+require_once __DIR__.'/support/CaptureCommandRunner.php';
+require_once __DIR__.'/support/DocumentationScreenshotCapture.php';
+
+$components = [];
+$options = [];
+$invalid = false;
+
+foreach (array_slice($argv, 1) as $argument) {
+    if (str_starts_with($argument, '--')) {
+        if (in_array($argument, ['--release', '--keep-failed'], true)) {
+            $key = substr($argument, 2);
+            if (isset($options[$key])) {
+                $invalid = true;
+                break;
+            }
+            $options[$key] = true;
+        } elseif (preg_match('/^--(showcase|ios|android)=(.+)$/', $argument, $matches) === 1) {
+            if (isset($options[$matches[1]])) {
+                $invalid = true;
+                break;
+            }
+            $options[$matches[1]] = $matches[2];
+        } else {
+            $invalid = true;
+            break;
+        }
+    } else {
+        $components[] = $argument;
+    }
+}
+
+if ($invalid || $components === [] || ! isset($options['showcase'], $options['ios'], $options['android'])) {
+    fwrite(STDERR, "Usage: bin/capture-doc-screenshot-batch Component [Component ...] --showcase=PATH --ios=UDID --android=SERIAL [--release] [--keep-failed]\n");
+    exit(2);
+}
+
+$packageRoot = dirname(__DIR__);
+
+try {
+    $report = (new DocumentationScreenshotCapture(new CaptureCommandRunner, $packageRoot))->captureBatch(
+        new BatchCaptureRequest(
+            components: $components,
+            packageRoot: $packageRoot,
+            showcaseRoot: (string) $options['showcase'],
+            iosUdid: (string) $options['ios'],
+            androidSerial: (string) $options['android'],
+            release: (bool) ($options['release'] ?? false),
+            keepFailed: (bool) ($options['keep-failed'] ?? false),
+        ),
+    );
+
+    fwrite(STDOUT, "Package: {$report->packageRevision}".($report->packageDirty ? ' (dirty)' : '')."\n");
+    fwrite(STDOUT, "Showcase: {$report->showcaseRevision}".($report->showcaseDirty ? ' (dirty)' : '')."\n");
+    fwrite(STDOUT, "iOS Simulator: {$report->iosUdid}\nAndroid emulator: {$report->androidSerial}\n");
+    foreach ($report->commands as $label => $command) {
+        fwrite(STDOUT, "Command [{$label}]: {$command}\n");
+    }
+    foreach ($report->outputs as $slug => $outputs) {
+        foreach ($outputs as $variant => $path) {
+            fwrite(STDOUT, "Output [{$slug}:{$variant}]: {$path}\n");
+        }
+    }
+} catch (Throwable $exception) {
+    fwrite(STDERR, $exception->getMessage()."\n");
+    exit(1);
+}

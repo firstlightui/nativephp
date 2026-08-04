@@ -137,9 +137,7 @@ Choice Group supports the versions listed in the current [compatibility referenc
 
 ## Screenshots
 
-Runtime screenshot evidence is controller-owned. If capture is available, the stable paths are:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/choice-group/ios-light.png` | `docs/screenshots/choice-group/ios-dark.png` |
-| Android | `docs/screenshots/choice-group/android-light.png` | `docs/screenshots/choice-group/android-dark.png` |
+| iOS | ![Choice Group on iOS in light mode](../screenshots/choice-group/ios-light.png) | ![Choice Group on iOS in dark mode](../screenshots/choice-group/ios-dark.png) |
+| Android | ![Choice Group on Android in light mode](../screenshots/choice-group/android-light.png) | ![Choice Group on Android in dark mode](../screenshots/choice-group/android-dark.png) |

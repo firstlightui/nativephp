@@ -100,3 +100,10 @@ iOS uses the genuine SwiftUI Stepper. Android uses Material 3 icon buttons in
 the idiomatic minus/value/plus arrangement. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press
 acceleration, required state, size, variant, colour, or style escape props.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Stepper on iOS in light mode](../screenshots/stepper/ios-light.png) | ![Stepper on iOS in dark mode](../screenshots/stepper/ios-dark.png) |
+| Android | ![Stepper on Android in light mode](../screenshots/stepper/android-light.png) | ![Stepper on Android in dark mode](../screenshots/stepper/android-dark.png) |

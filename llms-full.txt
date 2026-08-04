@@ -506,12 +506,10 @@ Choice Group supports the versions listed in the current [compatibility referenc
 
 ## Screenshots
 
-Runtime screenshot evidence is controller-owned. If capture is available, the stable paths are:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/choice-group/ios-light.png` | `docs/screenshots/choice-group/ios-dark.png` |
-| Android | `docs/screenshots/choice-group/android-light.png` | `docs/screenshots/choice-group/android-dark.png` |
+| iOS | ![Choice Group on iOS in light mode](../screenshots/choice-group/ios-light.png) | ![Choice Group on iOS in dark mode](../screenshots/choice-group/ios-dark.png) |
+| Android | ![Choice Group on Android in light mode](../screenshots/choice-group/android-light.png) | ![Choice Group on Android in dark mode](../screenshots/choice-group/android-dark.png) |
 
 --- Source: docs/components/date-picker.md ---
 
@@ -617,6 +615,13 @@ Date Picker deliberately has no time or datetime mode, picker-style override,
 hour format, clear action, custom presentation labels or icons, range mode, or
 visual variant props.
 
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Date Picker on iOS in light mode](../screenshots/date-picker/ios-light.png) | ![Date Picker on iOS in dark mode](../screenshots/date-picker/ios-dark.png) |
+| Android | ![Date Picker on Android in light mode](../screenshots/date-picker/android-light.png) | ![Date Picker on Android in dark mode](../screenshots/date-picker/android-dark.png) |
+
 --- Source: docs/components/time-picker.md ---
 
 # Time Picker
@@ -664,6 +669,13 @@ Firstlight does not trim or coerce time values. For example, `09:05` is valid;
 Always provide either a visible `label` or `a11y-label`. Errors replace helper
 text visually and are announced by platform semantics. The native presentation
 retains standard VoiceOver or TalkBack traversal and Cancel/Confirm actions.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Time Picker on iOS in light mode](../screenshots/time-picker/ios-light.png) | ![Time Picker on iOS in dark mode](../screenshots/time-picker/ios-dark.png) |
+| Android | ![Time Picker on Android in light mode](../screenshots/time-picker/android-light.png) | ![Time Picker on Android in dark mode](../screenshots/time-picker/android-dark.png) |
 
 --- Source: docs/components/icon-button.md ---
 
@@ -889,12 +901,10 @@ Pill Group supports the versions listed in the current [compatibility reference]
 
 ## Screenshots
 
-Runtime screenshot evidence is deferred for this development build. The capture manifest reserves these output paths for the later visual review:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/pill-group/ios-light.png` | `docs/screenshots/pill-group/ios-dark.png` |
-| Android | `docs/screenshots/pill-group/android-light.png` | `docs/screenshots/pill-group/android-dark.png` |
+| iOS | ![Pill Group on iOS in light mode](../screenshots/pill-group/ios-light.png) | ![Pill Group on iOS in dark mode](../screenshots/pill-group/ios-dark.png) |
+| Android | ![Pill Group on Android in light mode](../screenshots/pill-group/android-light.png) | ![Pill Group on Android in dark mode](../screenshots/pill-group/android-dark.png) |
 
 --- Source: docs/components/progress.md ---
 
@@ -1016,12 +1026,10 @@ by the Firstlight adapter.
 
 ## Screenshots
 
-The development screenshot matrix is pending explicit capture approval.
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/progress/ios-light.png` pending | `docs/screenshots/progress/ios-dark.png` pending |
-| Android | `docs/screenshots/progress/android-light.png` pending | `docs/screenshots/progress/android-dark.png` pending |
+| iOS | ![Progress on iOS in light mode](../screenshots/progress/ios-light.png) | ![Progress on iOS in dark mode](../screenshots/progress/ios-dark.png) |
+| Android | ![Progress on Android in light mode](../screenshots/progress/android-light.png) | ![Progress on Android in dark mode](../screenshots/progress/android-dark.png) |
 
 --- Source: docs/components/segmented.md ---
 
@@ -1201,8 +1209,10 @@ action, Material search/clear affordances, Compose semantics, and font scaling.
 
 ## Screenshots
 
-Search Field simulator and emulator screenshots are intentionally pending the
-controller-owned evidence pass. Their stable route is `/captures/search-field`.
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Search Field on iOS in light mode](../screenshots/search-field/ios-light.png) | ![Search Field on iOS in dark mode](../screenshots/search-field/ios-dark.png) |
+| Android | ![Search Field on Android in light mode](../screenshots/search-field/android-light.png) | ![Search Field on Android in dark mode](../screenshots/search-field/android-dark.png) |
 
 --- Source: docs/components/select.md ---
 
@@ -1312,12 +1322,10 @@ Select supports the versions listed in the current [compatibility reference](../
 
 ## Screenshots
 
-Runtime screenshot evidence is controller-owned. If capture is available, the stable paths are:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/select/ios-light.png` | `docs/screenshots/select/ios-dark.png` |
-| Android | `docs/screenshots/select/android-light.png` | `docs/screenshots/select/android-dark.png` |
+| iOS | ![Select on iOS in light mode](../screenshots/select/ios-light.png) | ![Select on iOS in dark mode](../screenshots/select/ios-dark.png) |
+| Android | ![Select on Android in light mode](../screenshots/select/android-light.png) | ![Select on Android in dark mode](../screenshots/select/android-dark.png) |
 
 --- Source: docs/components/slider.md ---
 
@@ -1413,6 +1421,13 @@ Slider deliberately has no range mode, vertical orientation, marks, ticks,
 visible value label, formatter, min/max captions, required metadata, size,
 variant, or colour/style escape props.
 
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Slider on iOS in light mode](../screenshots/slider/ios-light.png) | ![Slider on iOS in dark mode](../screenshots/slider/ios-dark.png) |
+| Android | ![Slider on Android in light mode](../screenshots/slider/android-light.png) | ![Slider on Android in dark mode](../screenshots/slider/android-dark.png) |
+
 --- Source: docs/components/stepper.md ---
 
 # Stepper
@@ -1500,6 +1515,13 @@ iOS uses the genuine SwiftUI Stepper. Android uses Material 3 icon buttons in
 the idiomatic minus/value/plus arrangement. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press
 acceleration, required state, size, variant, colour, or style escape props.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Stepper on iOS in light mode](../screenshots/stepper/ios-light.png) | ![Stepper on iOS in dark mode](../screenshots/stepper/ios-dark.png) |
+| Android | ![Stepper on Android in light mode](../screenshots/stepper/android-light.png) | ![Stepper on Android in dark mode](../screenshots/stepper/android-dark.png) |
 
 --- Source: docs/components/status-label.md ---
 
@@ -1762,14 +1784,10 @@ line bounds, supporting and error slots, and Compose selection and composition.
 
 ## Screenshots
 
-The deterministic `/captures/text-area` fixture owns the expected iOS and
-Android light/dark image paths. Runtime capture is controller-authorized and
-may be deferred when the shared simulator or emulator lane is unavailable.
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/text-area/ios-light.png` | `docs/screenshots/text-area/ios-dark.png` |
-| Android | `docs/screenshots/text-area/android-light.png` | `docs/screenshots/text-area/android-dark.png` |
+| iOS | ![Text Area on iOS in light mode](../screenshots/text-area/ios-light.png) | ![Text Area on iOS in dark mode](../screenshots/text-area/ios-dark.png) |
+| Android | ![Text Area on Android in light mode](../screenshots/text-area/android-light.png) | ![Text Area on Android in dark mode](../screenshots/text-area/android-dark.png) |
 
 --- Source: docs/components/switch.md ---
 

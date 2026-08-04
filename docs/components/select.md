@@ -121,9 +121,7 @@ Select supports the versions listed in the current [compatibility reference](../
 
 ## Screenshots
 
-Runtime screenshot evidence is controller-owned. If capture is available, the stable paths are:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/select/ios-light.png` | `docs/screenshots/select/ios-dark.png` |
-| Android | `docs/screenshots/select/android-light.png` | `docs/screenshots/select/android-dark.png` |
+| iOS | ![Select on iOS in light mode](../screenshots/select/ios-light.png) | ![Select on iOS in dark mode](../screenshots/select/ios-dark.png) |
+| Android | ![Select on Android in light mode](../screenshots/select/android-light.png) | ![Select on Android in dark mode](../screenshots/select/android-dark.png) |

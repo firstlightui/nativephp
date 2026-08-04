@@ -44,6 +44,7 @@ sources:
 | `bin/build-docs-artifacts` | Atomic generator for root LLM artefacts | Authored executable tooling |
 | `bin/check-docs` | Documentation, source, link, manifest, screenshot, skill, and generated-output validator | Authored executable tooling |
 | `bin/capture-doc-screenshots` | Guarded iOS/Android light/dark capture entrypoint | Authored executable tooling |
+| `bin/capture-doc-screenshot-batch` | Guarded appearance-batched capture for multiple component matrices with one build per platform | Authored executable tooling |
 | `bin/support/` | PHP implementations shared by documentation commands | Authored executable support code |
 | `docs/` | Published, current-only developer documentation and approved screenshot files | Authored Markdown and reviewed capture output |
 | `docs/index.md` | Public navigation and the only page order used to generate LLM artefacts | Authored index |

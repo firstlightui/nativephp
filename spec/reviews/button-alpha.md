@@ -88,3 +88,11 @@ Article XII is not applicable because this adapter introduces no constitutional 
 ## Warning
 
 The screenshot commands exited successfully and produced differentiated files, but process success is not visual correctness. Every image showed a page titled `Firstlight Text Field`; none showed the Button fixture. The four files were deleted and must not be cited as Button evidence.
+
+## Development screenshot evidence update — 2026-08-05
+
+Button's current four-image development matrix is present and visually approved
+in the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This supersedes the earlier rejected Text Field captures and only the review's
+pending or absent screenshot statements. Clean release capture, physical-device,
+assistive-technology, and component-specific blocked rows remain unchanged.

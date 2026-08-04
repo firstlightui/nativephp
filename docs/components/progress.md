@@ -132,9 +132,7 @@ by the Firstlight adapter.
 
 ## Screenshots
 
-The development screenshot matrix is pending explicit capture approval.
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/progress/ios-light.png` pending | `docs/screenshots/progress/ios-dark.png` pending |
-| Android | `docs/screenshots/progress/android-light.png` pending | `docs/screenshots/progress/android-dark.png` pending |
+| iOS | ![Progress on iOS in light mode](../screenshots/progress/ios-light.png) | ![Progress on iOS in dark mode](../screenshots/progress/ios-dark.png) |
+| Android | ![Progress on Android in light mode](../screenshots/progress/android-light.png) | ![Progress on Android in dark mode](../screenshots/progress/android-dark.png) |

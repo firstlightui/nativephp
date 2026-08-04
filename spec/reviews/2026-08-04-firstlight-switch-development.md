@@ -162,3 +162,11 @@ resolve the development-only sibling path after bundling.
 Switch is implementation-complete, consumer-tested, and host-build-proven on
 both platforms. It is not development-proven, component-release-ready, or
 alpha-ready until the deferred evidence and upstream dependency are closed.
+
+## Development screenshot evidence update — 2026-08-05
+
+Switch's current four-image development matrix is present and visually
+approved in the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This supersedes only earlier pending or absent screenshot statements. Clean
+release capture, physical-device, assistive-technology, and component-specific
+blocked rows remain unchanged.

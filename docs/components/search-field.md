@@ -87,5 +87,7 @@ action, Material search/clear affordances, Compose semantics, and font scaling.
 
 ## Screenshots
 
-Search Field simulator and emulator screenshots are intentionally pending the
-controller-owned evidence pass. Their stable route is `/captures/search-field`.
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Search Field on iOS in light mode](../screenshots/search-field/ios-light.png) | ![Search Field on iOS in dark mode](../screenshots/search-field/ios-dark.png) |
+| Android | ![Search Field on Android in light mode](../screenshots/search-field/android-light.png) | ![Search Field on Android in dark mode](../screenshots/search-field/android-dark.png) |

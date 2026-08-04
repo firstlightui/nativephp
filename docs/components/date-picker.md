@@ -114,3 +114,10 @@ back to the same canonical date rather than treating it as a local instant.
 Date Picker deliberately has no time or datetime mode, picker-style override,
 hour format, clear action, custom presentation labels or icons, range mode, or
 visual variant props.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Date Picker on iOS in light mode](../screenshots/date-picker/ios-light.png) | ![Date Picker on iOS in dark mode](../screenshots/date-picker/ios-dark.png) |
+| Android | ![Date Picker on Android in light mode](../screenshots/date-picker/android-light.png) | ![Date Picker on Android in dark mode](../screenshots/date-picker/android-dark.png) |

@@ -116,3 +116,11 @@ Article XII is not applicable; Pill Group requires no constitutional amendment.
 
 Do not describe Pill Group as development-complete or release-ready until the
 blocked rows are closed.
+
+## Development screenshot evidence update — 2026-08-05
+
+Pill Group's current four-image development matrix is present and visually
+approved in the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This supersedes only earlier pending or absent screenshot statements. Clean
+release capture, physical-device, assistive-technology, and component-specific
+blocked rows remain unchanged.

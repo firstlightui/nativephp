@@ -100,3 +100,11 @@ The matrix was captured from `/captures/status-label` with the explicit simulato
 - Android reported an empty `sdk.dir` warning while resolving the SDK from the environment; the release host still assembled successfully.
 - Xcode emitted existing environment/state warnings from Segmented contract construction and an AppIntents metadata notice; Status Label tests and the generated host build passed.
 - Composer advisory refresh was unavailable in the restricted environment during the preceding path-package update; this review does not claim a current dependency security audit.
+
+## Catalogue screenshot evidence update — 2026-08-05
+
+The remaining alpha component matrices are now present and visually approved in
+the [alpha catalogue screenshot evidence](2026-08-05-alpha-screenshot-evidence.md).
+This closes the screenshot-only catalogue gap recorded above. Clean release
+capture, physical-device, assistive-technology, and component-specific blocked
+rows remain unchanged.

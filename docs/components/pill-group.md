@@ -131,9 +131,7 @@ Pill Group supports the versions listed in the current [compatibility reference]
 
 ## Screenshots
 
-Runtime screenshot evidence is deferred for this development build. The capture manifest reserves these output paths for the later visual review:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/pill-group/ios-light.png` | `docs/screenshots/pill-group/ios-dark.png` |
-| Android | `docs/screenshots/pill-group/android-light.png` | `docs/screenshots/pill-group/android-dark.png` |
+| iOS | ![Pill Group on iOS in light mode](../screenshots/pill-group/ios-light.png) | ![Pill Group on iOS in dark mode](../screenshots/pill-group/ios-dark.png) |
+| Android | ![Pill Group on Android in light mode](../screenshots/pill-group/android-light.png) | ![Pill Group on Android in dark mode](../screenshots/pill-group/android-dark.png) |
