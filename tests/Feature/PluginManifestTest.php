@@ -104,6 +104,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.text-area',
+            'element' => 'FirstlightUI\\Elements\\TextArea',
+            'blade' => 'FirstlightUI\\Components\\TextArea',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.TextAreaRenderer',
+            'ios_renderer' => 'TextAreaRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.switch',
             'element' => 'FirstlightUI\\Elements\\SwitchControl',
             'blade' => 'FirstlightUI\\Components\\SwitchControl',

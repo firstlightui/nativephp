@@ -24,5 +24,6 @@ sources:
 - [Search Field](components/search-field.md) — Configure native query entry, clear, submission, and synchronisation behaviour.
 - [Status Label](components/status-label.md) — Look up display-only status text, semantic tones, accessibility, and platform evidence.
 - [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
+- [Text Area](components/text-area.md) — Configure native multiline editing, line bounds, validation, accessibility, and synchronisation.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.
 - [Compatibility](reference/compatibility.md) — Check the currently supported PHP, NativePHP, iOS, Android, and Swift versions.

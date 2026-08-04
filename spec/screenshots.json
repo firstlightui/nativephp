@@ -90,6 +90,16 @@
                 "android-dark": "docs/screenshots/text-field/android-dark.png"
             }
         },
+        "text-area": {
+            "route": "/captures/text-area",
+            "test": "php artisan test tests/Feature/TextAreaCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/text-area/ios-light.png",
+                "ios-dark": "docs/screenshots/text-area/ios-dark.png",
+                "android-light": "docs/screenshots/text-area/android-light.png",
+                "android-dark": "docs/screenshots/text-area/android-dark.png"
+            }
+        },
         "switch": {
             "route": "/captures/switch",
             "test": "php artisan test tests/Feature/SwitchCaptureTest.php",
