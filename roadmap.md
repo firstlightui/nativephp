@@ -39,26 +39,6 @@ details behind the same coherent Firstlight API.
 - Slider
 - Stepper
 
-### In flight
-
-- None
-
-## Build order
-
-All alpha catalogue components are implemented. Remaining work belongs to the
-shared alpha release gate below rather than another component build.
-
-## Dependency spine
-
-- Text Field -> Search Field -> Select
-- Text Field -> Text Area
-- Pill Group -> Choice Group -> Select
-- Button -> Progress
-- Status Label -> Badge
-- Icon Button -> Search Field and Stepper
-- Slider -> Stepper
-- Date Picker -> Time Picker
-
 ## Completion boundary
 
 A component is complete only when its semantic contract, PHP and EDGE API,
@@ -85,13 +65,13 @@ The catalogue implementation and current automated/host gates are complete:
 - iPhone 17 Pro debug reports `BUILD SUCCEEDED`, clean-installs, and launches
   the complete catalogue.
 
-Screenshot capture is explicitly waived under the roadmap controller's task
-instruction. Transient emulator images are supporting runtime evidence, not
-committed canonical documentation screenshots.
-
 The public-alpha release gate remains blocked by work outside another component
-build: NativePHP must ship an observable identical-publication epoch for Choice
-Group, Select, Slider, and Stepper; exact iOS component XCTest/direct-runtime
-rows and dated physical-device VoiceOver/TalkBack, scaling, contrast, RTL,
-motion, offline, and reconciliation evidence remain open. The catalogue must
-not be described as public-alpha ready until those rows close.
+build:
+
+- NativePHP must ship an observable identical-publication epoch for Choice
+  Group, Select, Slider, and Stepper;
+- exact iOS component XCTest/direct-runtime rows and dated physical-device
+  VoiceOver/TalkBack, scaling, contrast, RTL, motion, offline, and
+  reconciliation evidence remain open;
+- the catalogue must not be described as public-alpha ready until those rows
+  close.
