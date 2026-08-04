@@ -19,7 +19,7 @@ it('declares the Firstlight package identity', function () {
         ->and($manifest['ios']['min_version'])->toBe('18.0');
 });
 
-it('contains only the production Segmented component', function () {
+it('contains the production Segmented and Switch components', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest['components'])->toBe([
@@ -29,6 +29,14 @@ it('contains only the production Segmented component', function () {
             'blade' => 'FirstlightUI\\Components\\Segmented',
             'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.SegmentedRenderer',
             'ios_renderer' => 'SegmentedRenderer',
+            'self_closing' => true,
+        ],
+        [
+            'type' => 'firstlight.switch',
+            'element' => 'FirstlightUI\\Elements\\SwitchControl',
+            'blade' => 'FirstlightUI\\Components\\SwitchControl',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.SwitchRenderer',
+            'ios_renderer' => 'SwitchRenderer',
             'self_closing' => true,
         ],
     ]);
