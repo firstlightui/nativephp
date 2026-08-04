@@ -110,6 +110,16 @@
                 "android-dark": "docs/screenshots/select/android-dark.png"
             }
         },
+        "slider": {
+            "route": "/captures/slider",
+            "test": "php artisan test tests/Feature/SliderCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/slider/ios-light.png",
+                "ios-dark": "docs/screenshots/slider/ios-dark.png",
+                "android-light": "docs/screenshots/slider/android-light.png",
+                "android-dark": "docs/screenshots/slider/android-dark.png"
+            }
+        },
         "status-label": {
             "route": "/captures/status-label",
             "test": "php artisan test tests/Feature/StatusLabelCaptureTest.php",

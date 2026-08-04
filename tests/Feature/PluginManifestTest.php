@@ -144,6 +144,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.slider',
+            'element' => 'FirstlightUI\\Elements\\Slider',
+            'blade' => 'FirstlightUI\\Components\\Slider',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightSliderRenderer',
+            'ios_renderer' => 'SliderRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.switch',
             'element' => 'FirstlightUI\\Elements\\SwitchControl',
             'blade' => 'FirstlightUI\\Components\\SwitchControl',
