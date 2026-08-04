@@ -17,7 +17,7 @@ final class DocumentationValidator
     ) {}
 
     /** @return list<string> */
-    public function errors(bool $development): array
+    public function errors(bool $development, ?string $componentName = null): array
     {
         $errors = [];
         $pages = [];
@@ -50,7 +50,7 @@ final class DocumentationValidator
         }
         $this->validateStandaloneLinks('README.md', $development, $errors);
 
-        $componentSlugs = $this->validateManifestComponents($errors);
+        $componentSlugs = $this->validateManifestComponents($errors, $componentName);
         $this->validateScreenshotManifest($componentSlugs, $development, $errors);
         $this->validateSkills($errors);
         $this->validateGeneratedOutputs($errors);
@@ -128,7 +128,7 @@ final class DocumentationValidator
     /** @param list<string> $errors
      *  @return list<string>
      */
-    private function validateManifestComponents(array &$errors): array
+    private function validateManifestComponents(array &$errors, ?string $componentName = null): array
     {
         try {
             $manifest = $this->json('nativephp.json');
@@ -155,7 +155,14 @@ final class DocumentationValidator
 
             $name = substr($element, (int) strrpos('\\'.$element, '\\'));
             $name = ltrim($name, '\\');
-            $slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $name));
+            if ($componentName !== null && $name !== $componentName) {
+                continue;
+            }
+
+            $type = $component['type'] ?? null;
+            $slug = is_string($type) && preg_match('/^firstlight\.([a-z0-9-]+)$/', $type, $matches) === 1
+                ? $matches[1]
+                : strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $name));
             $path = "docs/components/{$slug}.md";
             $slugs[] = $slug;
 

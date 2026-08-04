@@ -257,3 +257,36 @@ it('defers absent screenshot and review evidence only in development mode', func
         removeDocumentationFixture($root);
     }
 });
+
+it('scopes a component gate to its manifest entry and public type slug', function () {
+    $root = documentationFixture();
+
+    try {
+        $repository = new DocumentationRepository($root);
+        $builder = new DocumentationArtifactBuilder($repository);
+        foreach ($builder->outputs() as $path => $contents) {
+            file_put_contents($root.'/'.$path, $contents);
+        }
+
+        file_put_contents($root.'/nativephp.json', json_encode([
+            'components' => [
+                [
+                    'type' => 'firstlight.segmented',
+                    'element' => 'FirstlightUI\\Elements\\Segmented',
+                ],
+                [
+                    'type' => 'firstlight.switch',
+                    'element' => 'FirstlightUI\\Elements\\SwitchControl',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT)."\n");
+
+        $validator = new DocumentationValidator($root, $repository, $builder);
+
+        expect($validator->errors(true, 'Segmented'))->toBe([])
+            ->and(implode("\n", $validator->errors(true)))
+            ->toContain('docs/components/switch.md');
+    } finally {
+        removeDocumentationFixture($root);
+    }
+});

@@ -7,7 +7,7 @@ description: Use when adding or changing a public cross-platform control in the 
 
 ## Overview
 
-Define one semantic public contract, then satisfy it through official SuperNative seams. A Firstlight component may adapt an adequate `nativephp/mobile-ui` primitive or add paired renderers; either path still exposes a documented `<firstlight:...>` API.
+Define one public contract through official SuperNative seams. Adapt an adequate `nativephp/mobile-ui` primitive or add paired renderers; both expose `<firstlight:...>`.
 
 ## Canonical Identity
 
@@ -17,11 +17,9 @@ Define one semantic public contract, then satisfy it through official SuperNativ
 - Blade prefix: `firstlight`
 - Plugin namespace: `Firstlight`
 
-Read renderer class/package identifiers from `nativephp.json` and `Package.swift`; do not derive them from Composer names or copy transitional identifiers.
-
 ## Required Authorities
 
-Read `Constitution.md`, `spec/designs/2026-08-04-firstlight-alpha-component-system-design.md`, the closest implemented contract, and current official NativePHP plus platform documentation. Resolve public API ambiguity before scaffolding.
+Read `Constitution.md`, `spec/designs/2026-08-04-firstlight-alpha-component-system-design.md`, the closest implemented contract, and current official NativePHP plus platform documentation. When icons apply, also read `spec/reference/icons.md`. Resolve public API ambiguity before scaffolding.
 
 ## State Classification
 
@@ -32,15 +30,19 @@ Read `Constitution.md`, `spec/designs/2026-08-04-firstlight-alpha-component-syst
 | Continuous value | Native UI-thread gesture; standard binding modifiers control `@change` frequency. |
 | Action or display | No invented model or change event. |
 
-Use standard `@change`, `@submit`, and `@press` events. Do not invent a parallel bridge or binding vocabulary.
+Use standard `@change`, `@submit`, and `@press`; do not invent bridge vocabulary.
+
+## Icon Contract
+
+Retain each base icon prop with `-ios` and `-android` overrides. Document kebab-case Blade names, accept camelCase aliases, and resolve `(name, IosSymbol|string|null, AndroidSymbol|string|null)` through `IconResolver`. Preserve Android variants and shared fallback. Decorative icons are silent; icon-only actions require the established label prop, such as `trailing-a11y-label`. Semantic affordances own their icons.
 
 ## Workflow
 
-1. Write the semantic contract: purpose, values, null/empty behaviour, events, disabled/loading/error behaviour, field metadata, accessibility, and platform expression.
+1. Specify purpose, values, empty behaviour, events, states, metadata, accessibility, and platform expression.
 2. Audit the corresponding `nativephp/mobile-ui` primitive. Choose:
    - **Adapter:** retain the public Firstlight tag while reusing or thinly adapting an adequate official primitive.
    - **Renderer:** add a Firstlight EDGE element and paired native renderers only when the official primitive cannot meet the contract.
-3. Write failing Pest 5 contract examples. For a renderer path, run `bin/scaffold-component Name`; stop rather than overwrite existing files. For an adapter path, add only the minimum tag/element adaptation the failing contract requires.
+3. Write failing Pest 5 contracts. For a renderer, run `bin/scaffold-component Name`; never overwrite. For an adapter, add only what the failing contract requires.
 4. **REQUIRED SUB-SKILL:** Use `firstlight-ios-component` for Apple implementation or adapter evidence.
 5. **REQUIRED SUB-SKILL:** Use `firstlight-android-component` for Material implementation or adapter evidence.
 6. Add `docs/components/<slug>.md`, complete `firstlightui/showcase` fixtures, paired screenshots, and documented states.
@@ -48,15 +50,15 @@ Use standard `@change`, `@submit`, and `@press` events. Do not invent a parallel
 
 ## Evidence
 
-Record the exact `firstlightui/nativephp` commit, adapter/renderer decision, focused and full tests, both consumer builds, screenshots, accessibility checks, device results, and unresolved upstream prerequisites.
+Record the commit, path decision, tests, consumer builds, screenshots, accessibility, devices, and upstream prerequisites.
 
 ## Common Mistakes
 
-- Replacing an alpha-catalogue component with a `<native:...>` recipe instead of retaining its Firstlight API.
-- Copying Segmented's state machine into text, continuous, action, or display controls.
-- Scaffolding paired renderers before auditing the official primitive.
-- Treating a custom shape as native when an idiomatic platform composition is required.
+- Replacing a Firstlight API with a `<native:...>` recipe.
+- Copying Segmented state into unrelated controls.
+- Scaffolding before auditing the official primitive.
+- Inventing `ios-icon`, `android-icon`, or another icon vocabulary instead of applying `spec/reference/icons.md`.
 
 ## Stop Conditions
 
-Stop when the semantic contract is unresolved, an official seam cannot express it, platform capability or quality is unequal, tests or consumer builds fail, accessibility evidence is incomplete, an upstream prerequisite is unreleased, or constitutional review fails. Do not publish, tag, edit generated native trees, or weaken the release gate.
+Stop for unresolved contracts, inadequate official seams, unequal platforms, failed tests/builds, missing accessibility, unreleased prerequisites, or failed review. Never publish, tag, edit generated trees, or weaken gates.

@@ -88,6 +88,22 @@ function makeSegmentedValidationCopy(): string
     return $root;
 }
 
+function installDocumentationGateProbe(string $root): string
+{
+    $log = $root.'/documentation-gate-arguments';
+    $probe = <<<'PHP'
+#!/usr/bin/env php
+<?php
+
+file_put_contents(dirname(__DIR__).'/documentation-gate-arguments', implode(' ', array_slice($argv, 1)));
+PHP;
+
+    file_put_contents($root.'/bin/check-docs', $probe);
+    chmod($root.'/bin/check-docs', 0755);
+
+    return $log;
+}
+
 afterEach(function () use (&$componentToolingTemporaryRoots): void {
     foreach ($componentToolingTemporaryRoots as $root) {
         removeComponentToolingPath($root);
@@ -180,14 +196,31 @@ it('keeps the release gate closed until all documentation evidence exists', func
         ->toContain('docs/components/segmented.md')
         ->toContain('docs/screenshots/segmented/android-light.png')
         ->toContain('docs/screenshots/segmented/android-dark.png')
-        ->toContain('docs/review/segmented-alpha.md');
+        ->toContain('spec/reviews/segmented-alpha.md');
 });
+
+it('runs the documentation gate in the matching review mode', function (array $arguments, string $expected) {
+    $root = makeSegmentedValidationCopy();
+    $log = installDocumentationGateProbe($root);
+
+    $process = new Process(array_merge([$root.'/bin/check-component'], $arguments));
+    $process->run();
+
+    expect($log)->toBeFile()
+        ->and(file_get_contents($log))->toBe($expected);
+})->with([
+    'development' => [['Segmented', '--development'], '--component=Segmented --development'],
+    'release' => [['Segmented'], '--component=Segmented'],
+]);
 
 it('ships four concise skills with the required workflow entrypoints', function () {
     $root = dirname(__DIR__, 2);
     $contracts = [
         'firstlight-create-component' => [
             'Constitution.md',
+            'spec/reference/icons.md',
+            '-ios',
+            '-android',
             'bin/scaffold-component',
             'firstlight-ios-component',
             'firstlight-android-component',
@@ -197,28 +230,36 @@ it('ships four concise skills with the required workflow entrypoints', function 
         ],
         'firstlight-ios-component' => [
             'genuine Apple',
+            'spec/reference/icons.md',
+            'IosSymbol',
             'SuperNative',
             'server-authoritative',
             'XCTest',
             'VoiceOver',
             'Dynamic Type',
             'Reduced Motion',
-            'physical-device',
+            'physical device',
             'Stop',
         ],
         'firstlight-android-component' => [
             'Material 3',
+            'spec/reference/icons.md',
+            'AndroidSymbol',
+            'filled',
+            'outlined',
             'SuperNative',
             'server-authoritative',
             'Paparazzi',
             'TalkBack',
             'font scaling',
-            'physical-device',
-            'publication lookup',
+            'physical device',
+            'real publication lookup',
             'Stop',
         ],
         'firstlight-review-component' => [
             'Constitution.md',
+            'spec/reference/icons.md',
+            'trailing-a11y-label',
             'bin/check-component',
             'composer test',
             'xcodebuild',
@@ -240,7 +281,24 @@ it('ships four concise skills with the required workflow entrypoints', function 
             ->and(str_word_count(strip_tags($contents)))->toBeLessThan(500);
 
         foreach ($needles as $needle) {
-            expect($contents)->toContain($needle);
+            $searchableContents = $needle === 'physical device'
+                ? str_replace('physical-device', 'physical device', $contents)
+                : $contents;
+
+            expect($searchableContents)->toContain($needle);
         }
+    }
+});
+
+it('routes icon documentation through the maintained contract', function () {
+    $root = dirname(__DIR__, 2);
+
+    foreach ([
+        '.agents/skills/firstlight-docs-write/SKILL.md',
+        '.agents/skills/firstlight-docs-update/SKILL.md',
+    ] as $path) {
+        expect(file_get_contents($root.'/'.$path))
+            ->toContain('spec/reference/icons.md')
+            ->toContain('platform override');
     }
 });

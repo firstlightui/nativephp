@@ -23,6 +23,10 @@ final class GenericProps: Equatable {
         (map[key] as? Bool) ?? defaultValue
     }
 
+    func getInt(_ key: String, default defaultValue: Int = 0) -> Int {
+        (map[key] as? Int) ?? defaultValue
+    }
+
     func getCallbackId(_ key: String) -> Int {
         if let value = map[key] as? Int { return value }
         if let value = map[key] as? NSNumber { return value.intValue }
@@ -89,6 +93,8 @@ final class NativeUIBridge: ObservableObject {
 
     static func sendSelectChangeEvent(_ callbackId: Int, nodeId: Int, value: String) {}
     static func sendPressEvent(_ callbackId: Int, nodeId: Int) {}
+    static func sendTextChangeEvent(_ callbackId: Int, nodeId: Int, text: String) {}
+    static func sendSubmitEvent(_ callbackId: Int, nodeId: Int, text: String) {}
 }
 
 final class NativeElementBridge {
@@ -100,8 +106,48 @@ struct NativeUITokens: Equatable {
     let onPrimary: Color
     let surface: Color
     let onSurface: Color
+    let background: Color
+    let onBackground: Color
+    let surfaceVariant: Color
     let onSurfaceVariant: Color
     let destructive: Color
+    let onDestructive: Color
+    let success: Color
+    let onSuccess: Color
+    let accent: Color
+    let onAccent: Color
+
+    init(
+        primary: Color,
+        onPrimary: Color,
+        surface: Color,
+        onSurface: Color,
+        background: Color = .clear,
+        onBackground: Color = .clear,
+        surfaceVariant: Color = .clear,
+        onSurfaceVariant: Color,
+        destructive: Color,
+        onDestructive: Color = .clear,
+        success: Color = .clear,
+        onSuccess: Color = .clear,
+        accent: Color = .clear,
+        onAccent: Color = .clear
+    ) {
+        self.primary = primary
+        self.onPrimary = onPrimary
+        self.surface = surface
+        self.onSurface = onSurface
+        self.background = background
+        self.onBackground = onBackground
+        self.surfaceVariant = surfaceVariant
+        self.onSurfaceVariant = onSurfaceVariant
+        self.destructive = destructive
+        self.onDestructive = onDestructive
+        self.success = success
+        self.onSuccess = onSuccess
+        self.accent = accent
+        self.onAccent = onAccent
+    }
 
     static let fallback = NativeUITokens(
         primary: Color(uiColor: .systemTeal),

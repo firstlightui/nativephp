@@ -109,7 +109,7 @@ if (! $development) {
         "docs/screenshots/{$slug}/ios-dark.png",
         "docs/screenshots/{$slug}/android-light.png",
         "docs/screenshots/{$slug}/android-dark.png",
-        "docs/review/{$slug}-alpha.md",
+        "spec/reviews/{$slug}-alpha.md",
     ];
 
     foreach ($releasePaths as $path) {
@@ -118,9 +118,48 @@ if (! $development) {
         }
     }
 
-    $reviewPath = $root."/docs/review/{$slug}-alpha.md";
+    $reviewPath = $root."/spec/reviews/{$slug}-alpha.md";
     if (is_file($reviewPath) && str_contains((string) file_get_contents($reviewPath), '- [ ]')) {
-        $errors[] = "Release checklist is incomplete: docs/review/{$slug}-alpha.md";
+        $errors[] = "Release checklist is incomplete: spec/reviews/{$slug}-alpha.md";
+    }
+}
+
+$documentationCommand = [$root.'/bin/check-docs', '--component='.$name];
+if ($development) {
+    $documentationCommand[] = '--development';
+}
+
+$documentationProcess = proc_open(
+    $documentationCommand,
+    [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ],
+    $documentationPipes,
+    $root,
+);
+
+if (! is_resource($documentationProcess)) {
+    $errors[] = 'Unable to run documentation gate: bin/check-docs';
+} else {
+    fclose($documentationPipes[0]);
+    $documentationOutput = stream_get_contents($documentationPipes[1]);
+    $documentationError = stream_get_contents($documentationPipes[2]);
+    fclose($documentationPipes[1]);
+    fclose($documentationPipes[2]);
+
+    if (proc_close($documentationProcess) !== 0) {
+        $errors[] = 'Documentation gate failed: bin/check-docs --component='.$name.($development ? ' --development' : '');
+
+        foreach (preg_split('/\R/', trim($documentationOutput."\n".$documentationError)) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '' || $line === 'Documentation checks failed:') {
+                continue;
+            }
+
+            $errors[] = 'Documentation: '.preg_replace('/^-\s*/', '', $line);
+        }
     }
 }
 

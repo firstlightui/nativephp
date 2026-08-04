@@ -62,7 +62,7 @@ bin/check-docs --development
 
 Omit `--development` from `bin/check-component` only for component-release review. The release mode requires evidence that development mode deliberately defers. Do not make a failing release gate pass by deleting a required row or substituting simulator evidence for a physical device.
 
-Before relying on the current component-release command, resolve its review-path mismatch with the documentation gate: `bin/check-component` checks `docs/review/`, while `bin/check-docs` checks the maintained `spec/reviews/` boundary. A duplicated review file is not a fix.
+`bin/check-component` and `bin/check-docs` use the same review mode and the maintained `spec/reviews/<slug>-alpha.md` evidence boundary. The component checker reports its structural findings and propagates documentation failures without requiring a duplicate public review file.
 
 Pest evals under `tests/Evals/` launch an isolated Codex process and are evidence for skill decisions. Keep them focused on consequential choices; do not use them as a substitute for deterministic structural tests.
 

@@ -15,4 +15,6 @@ sources:
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.
 - [Segmented](components/segmented.md) — Look up the Segmented control's complete public contract and platform evidence.
+- [Status Label](components/status-label.md) — Look up display-only status text, semantic tones, accessibility, and platform evidence.
+- [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
 - [Compatibility](reference/compatibility.md) — Check the currently supported PHP, NativePHP, iOS, Android, and Swift versions.

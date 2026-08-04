@@ -13,8 +13,26 @@ require_once __DIR__.'/support/DocumentationArtifactBuilder.php';
 require_once __DIR__.'/support/DocumentationValidator.php';
 
 $arguments = array_slice($argv, 1);
-if ($arguments !== [] && $arguments !== ['--development']) {
-    fwrite(STDERR, "Usage: bin/check-docs [--development]\n");
+$development = false;
+$component = null;
+
+foreach ($arguments as $argument) {
+    if ($argument === '--development' && ! $development) {
+        $development = true;
+
+        continue;
+    }
+
+    if (str_starts_with($argument, '--component=') && $component === null) {
+        $candidate = substr($argument, strlen('--component='));
+        if (preg_match('/^[A-Z][A-Za-z0-9]*$/', $candidate) === 1) {
+            $component = $candidate;
+
+            continue;
+        }
+    }
+
+    fwrite(STDERR, "Usage: bin/check-docs [--development] [--component=StudlyCaseName]\n");
     exit(2);
 }
 
@@ -22,7 +40,7 @@ $root = dirname(__DIR__);
 $repository = new DocumentationRepository($root);
 $builder = new DocumentationArtifactBuilder($repository);
 $validator = new DocumentationValidator($root, $repository, $builder);
-$errors = $validator->errors($arguments === ['--development']);
+$errors = $validator->errors($development, $component);
 
 if ($errors !== []) {
     fwrite(STDERR, "Documentation checks failed:\n");
