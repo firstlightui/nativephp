@@ -111,13 +111,13 @@ it('scaffolds every component layer without overwriting authored work', function
         'src/Components/ExampleControl.php',
         'src/Elements/ExampleControl.php',
         'resources/ios/ExampleControl.swift',
-        'resources/ios/ExampleControlRenderer.swift',
+        'resources/ios/ExampleRenderer.swift',
         'resources/android/ExampleControl.kt',
-        'resources/android/ExampleControlRenderer.kt',
+        'resources/android/ExampleRenderer.kt',
         'tests/Feature/ExampleControlElementTest.php',
         'tests/ios/ExampleControlSnapshotTests.swift',
         'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/ExampleControlTest.kt',
-        'docs/components/example-control.md',
+        'docs/components/example.md',
     ];
 
     foreach ($paths as $path) {
@@ -130,6 +130,24 @@ it('scaffolds every component layer without overwriting authored work', function
 
     expect($again->getExitCode())->toBe(1)
         ->and($again->getErrorOutput())->toContain('Refusing to overwrite');
+});
+
+it('strips an internal Control suffix from public component artifacts', function () {
+    $sourceRoot = dirname(__DIR__, 2);
+    $root = componentToolingRoot();
+    copyComponentToolingPath($sourceRoot.'/bin/scaffold-component', $root.'/bin/scaffold-component');
+
+    $process = new Process([$root.'/bin/scaffold-component', 'SwitchControl']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(0)
+        ->and($root.'/resources/ios/SwitchControl.swift')->toBeFile()
+        ->and($root.'/resources/ios/SwitchRenderer.swift')->toBeFile()
+        ->and($root.'/resources/android/SwitchControl.kt')->toBeFile()
+        ->and($root.'/resources/android/SwitchRenderer.kt')->toBeFile()
+        ->and($root.'/docs/components/switch.md')->toBeFile()
+        ->and($root.'/resources/ios/SwitchControlRenderer.swift')->not->toBeFile()
+        ->and($root.'/docs/components/switch-control.md')->not->toBeFile();
 });
 
 it('accepts the implemented Segmented structure in development mode', function () {

@@ -14,9 +14,12 @@ if (count($names) !== 1 || preg_match('/^[A-Z][A-Za-z0-9]*$/', $names[0]) !== 1)
 
 $name = $names[0];
 $root = dirname(__DIR__);
-$slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $name));
+$publicName = str_ends_with($name, 'Control')
+    ? substr($name, 0, -strlen('Control'))
+    : $name;
+$slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $publicName));
 $controlName = str_ends_with($name, 'Control') ? $name : $name.'Control';
-$rendererName = $name.'Renderer';
+$rendererName = $publicName.'Renderer';
 $errors = [];
 
 $required = [
@@ -130,4 +133,3 @@ if ($errors !== []) {
 }
 
 fwrite(STDOUT, "Constitution checks passed for {$name}.\n");
-

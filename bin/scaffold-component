@@ -12,9 +12,12 @@ if (count($arguments) !== 1 || preg_match('/^[A-Z][A-Za-z0-9]*$/', $arguments[0]
 
 $name = $arguments[0];
 $root = dirname(__DIR__);
-$slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $name));
+$publicName = str_ends_with($name, 'Control')
+    ? substr($name, 0, -strlen('Control'))
+    : $name;
+$slug = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '-$0', $publicName));
 $controlName = str_ends_with($name, 'Control') ? $name : $name.'Control';
-$rendererName = $name.'Renderer';
+$rendererName = $publicName.'Renderer';
 $marker = 'FIRSTLIGHT_NOT_IMPLEMENTED';
 
 $files = [
@@ -123,4 +126,3 @@ foreach ($files as $path => $contents) {
 }
 
 fwrite(STDOUT, "Scaffolded {$name}. Define its contract before registering it.\n");
-
