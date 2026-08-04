@@ -16,7 +16,7 @@ sources:
 
 `<firstlight:status-label>` presents short display-only metadata or status text in a native capsule. It is an action/display component: it has no model, mutable state, event, selection, disabled state, loading state, or validation state.
 
-An interactive capsule belongs to `pill-group`. A compact count or overlay marker belongs to `badge`.
+Interactive capsules are outside this component's contract and require an appropriate interactive control. A compact count or overlay marker belongs to `badge`.
 
 ## Public API
 

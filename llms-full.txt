@@ -243,7 +243,7 @@ Segmented supports the versions listed in the current [compatibility reference](
 
 # Status Label
 
-Status Label presents short display-only metadata or status text as a native capsule. Use an interactive choice component such as Pill Group when the capsule must respond to a press.
+Status Label presents short display-only metadata or status text as a native capsule. Use an appropriate interactive control when the interface must respond to a press.
 
 ## Complete example
 
