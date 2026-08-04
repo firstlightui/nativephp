@@ -1,5 +1,5 @@
 {
-    "name": "firstlightui/firstlight-ui",
+    "name": "firstlightui/nativephp",
     "description": "Native controls for NativePHP, shaped for each platform.",
     "type": "nativephp-ui-plugin",
     "license": "MIT",
@@ -18,8 +18,8 @@
     ],
     "support": {
         "email": "team@firstlightui.dev",
-        "issues": "https://github.com/firstlightui/firstlight-ui/issues",
-        "source": "https://github.com/firstlightui/firstlight-ui"
+        "issues": "https://github.com/firstlightui/nativephp/issues",
+        "source": "https://github.com/firstlightui/nativephp"
     },
     "require": {
         "php": "^8.4",

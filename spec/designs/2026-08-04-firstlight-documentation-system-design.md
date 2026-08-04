@@ -48,7 +48,7 @@ Stream's documentation skills provide a useful lifecycle split, but their assump
 
 ## Public identity
 
-The canonical documentation URL is `https://firstlightui.dev`. `https://firstlightui.com` redirects to the canonical `.dev` host. The public repository is `https://github.com/firstlightui/firstlight-ui`, the Composer package is `firstlightui/firstlight-ui`, the PHP namespace is `FirstlightUI`, and native identifiers use the `dev.firstlightui` namespace.
+The canonical documentation URL is `https://firstlightui.dev`. `https://firstlightui.com` redirects to the canonical `.dev` host. The public repository is `https://github.com/firstlightui/nativephp`, the Composer package is `firstlightui/nativephp`, the PHP namespace is `FirstlightUI`, and native identifiers use the `dev.firstlightui` namespace.
 
 Firstlight documentation and generated artefacts contain no legacy organisation, package, namespace, email, or repository identity. Documentation implementation verifies that the identity migration is complete before publishing generated links or installation commands.
 

@@ -9,7 +9,7 @@ Firstlight provides genuine platform controls behind a shared EDGE API. iOS uses
 ## Installation
 
 ```bash
-composer require firstlightui/firstlight-ui
+composer require firstlightui/nativephp
 ```
 
 Rebuild the native application after installing or updating Firstlight so its platform renderers are compiled into the host app.

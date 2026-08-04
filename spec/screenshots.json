@@ -1,0 +1,14 @@
+{
+    "components": {
+        "segmented": {
+            "route": "/captures/segmented",
+            "test": "php artisan test tests/Feature/SegmentedCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/segmented/ios-light.png",
+                "ios-dark": "docs/screenshots/segmented/ios-dark.png",
+                "android-light": "docs/screenshots/segmented/android-light.png",
+                "android-dark": "docs/screenshots/segmented/android-dark.png"
+            }
+        }
+    }
+}

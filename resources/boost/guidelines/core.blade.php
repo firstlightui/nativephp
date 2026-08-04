@@ -1,4 +1,4 @@
-## firstlightui/firstlight-ui
+## firstlightui/nativephp
 
 Native controls for NativePHP, shaped for each platform.
 

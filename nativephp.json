@@ -1,5 +1,5 @@
 {
-    "name": "firstlightui/firstlight-ui",
+    "name": "firstlightui/nativephp",
     "version": "0.1.0-alpha.1",
     "description": "Native controls for NativePHP, shaped for each platform.",
     "namespace": "Firstlight",

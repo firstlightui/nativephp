@@ -1,0 +1,7 @@
+{
+    "name": "Firstlight UI",
+    "site_url": "https://firstlightui.dev",
+    "repository_url": "https://github.com/firstlightui/nativephp",
+    "package": "firstlightui/nativephp",
+    "versioning": "current"
+}

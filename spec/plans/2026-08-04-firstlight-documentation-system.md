@@ -20,7 +20,7 @@ sources:
 
 - Preserve the active package-identity migration and every unrelated user change; stage only files named by the current task.
 - If the identity migration is still uncommitted when execution starts, finish or isolate it before documentation work so commits do not mix concerns.
-- Public identity is `firstlightui/firstlight-ui`, `FirstlightUI`, `dev.firstlightui`, `github.com/firstlightui/firstlight-ui`, and `firstlightui.dev`; do not introduce a legacy organisation identity.
+- Public identity is `firstlightui/nativephp`, `FirstlightUI`, `dev.firstlightui`, `github.com/firstlightui/nativephp`, and `firstlightui.dev`; do not introduce a legacy organisation identity.
 - Root `Constitution.md` outranks `spec/documentation-constitution.md`; current code, tests, `composer.json`, and `nativephp.json` remain factual evidence.
 - `docs/` is public and current-only. `spec/` contains maintained contributor/agent contracts plus explicitly historical dated designs and plans.
 - `llms.txt` and `llms-full.txt` consume only pages indexed by `docs/index.md`.
@@ -82,8 +82,8 @@ Create `spec/documentation.json` with this shape and current values:
 {
     "name": "Firstlight UI",
     "site_url": "https://firstlightui.dev",
-    "repository_url": "https://github.com/firstlightui/firstlight-ui",
-    "package": "firstlightui/firstlight-ui",
+    "repository_url": "https://github.com/firstlightui/nativephp",
+    "package": "firstlightui/nativephp",
     "versioning": "current"
 }
 ```
@@ -155,7 +155,7 @@ git commit -m "docs: establish documentation governance"
 Use `type: how-to` for installation and `type: tutorial` for the first component. Both use `audience: consumer` and source `composer.json`, `nativephp.json`, and the relevant provider/component files. Installation must use:
 
 ```bash
-composer require firstlightui/firstlight-ui
+composer require firstlightui/nativephp
 ```
 
 It must explain plugin registration and the required native rebuild without promising unsupported automatic registration. The tutorial must show one complete property/options definition and one `<firstlight:segmented>` example.
@@ -590,7 +590,7 @@ git commit -m "feat: integrate documentation into component workflows"
 
 **Interfaces:**
 
-- Consumes: installed `firstlightui/firstlight-ui` package and the route/test declared by `spec/screenshots.json`.
+- Consumes: installed `firstlightui/nativephp` package and the route/test declared by `spec/screenshots.json`.
 - Produces: stable `/captures/segmented` native screen with representative selected, disabled-choice, helper, and error states; a focused wire-tree contract test.
 
 - [ ] **Step 1: Resolve the showcase's existing dirty migration first**
