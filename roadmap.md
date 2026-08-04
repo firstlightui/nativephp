@@ -34,10 +34,12 @@ details behind the same coherent Firstlight API.
 - Text Area
 - Date Picker
 - Choice Group
+- Time Picker
 
 ### In flight
 
-- Time Picker
+- Select
+- Slider
 
 ## Build order
 
@@ -49,8 +51,6 @@ details behind the same coherent Firstlight API.
    slider primitive first.
 8. **Stepper** — reuses Slider's numeric range contract and Icon Button's
    accessible increment and decrement actions.
-9. **Time Picker** — reuses Date Picker's presentation, internationalisation,
-    reconciliation, and evidence patterns with a time-specific public value.
 
 ## Dependency spine
 
