@@ -43,16 +43,14 @@ Stream's documentation skills provide a useful lifecycle split, but their assump
 - Versioned documentation is deferred until the public API needs to be locked across releases.
 - Building or hosting the documentation website is not part of this work.
 - Purchasing or configuring domains is not part of this work.
-- Renaming or transferring the GitHub repository is not part of this work.
-- Renaming the Composer package is not part of this work.
 - Documentation generation will not replace prose authoring with a YAML or JSON component schema.
 - Screenshot tests do not replace runtime documentation screenshots from the showcase.
 
 ## Public identity
 
-The intended canonical documentation URL is `https://firstlightui.dev`. `https://firstlightui.com` will redirect to the canonical `.dev` host. The intended GitHub organisation is `firstlightui`, but repository migration is a separate future change.
+The canonical documentation URL is `https://firstlightui.dev`. `https://firstlightui.com` redirects to the canonical `.dev` host. The public repository is `https://github.com/firstlightui/firstlight-ui`, the Composer package is `firstlightui/firstlight-ui`, the PHP namespace is `FirstlightUI`, and native identifiers use the `dev.firstlightui` namespace.
 
-Until that migration occurs, generated configuration must describe the repository's actual current URL. It must not publish a future repository URL as if it already exists.
+Firstlight documentation and generated artefacts contain no legacy organisation, package, namespace, email, or repository identity. Documentation implementation verifies that the identity migration is complete before publishing generated links or installation commands.
 
 ## Authority and precedence
 
@@ -264,6 +262,7 @@ The audit is read-only by default. It reports:
 - iOS or Android claims without paired evidence;
 - malformed metadata, missing sources, broken links, orphan public pages, and unindexed current specifications;
 - README or LLM artefact drift;
+- legacy organisation identity in public documentation, maintained specifications, generated artefacts, or repository skills;
 - incomplete or stale screenshot matrices and missing showcase fixtures;
 - documentation-constitution violations;
 - stale instructions in `firstlight-development` or existing component skills.
@@ -329,6 +328,7 @@ The checker validates:
 - required component-reference sections;
 - the four-image screenshot matrix and manifest entry;
 - README package identity and canonical links;
+- absence of legacy organisation identity from documentation, specifications, generated artefacts, and repository skills;
 - generated artefact freshness;
 - repository skill presence and required integration markers.
 
@@ -433,4 +433,4 @@ The first implementation includes:
 9. integration updates to the existing component skills;
 10. the complete Segmented showcase screenshot matrix, subject to available fixed simulator and emulator targets and visual approval.
 
-Website hosting, DNS, redirects, repository transfer, Composer package renaming, and versioned documentation remain follow-up work.
+Website hosting, DNS, redirects, and versioned documentation remain follow-up work.
