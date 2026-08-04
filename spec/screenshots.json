@@ -9,6 +9,16 @@
                 "android-light": "docs/screenshots/segmented/android-light.png",
                 "android-dark": "docs/screenshots/segmented/android-dark.png"
             }
+        },
+        "status-label": {
+            "route": "/captures/status-label",
+            "test": "php artisan test tests/Feature/StatusLabelCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/status-label/ios-light.png",
+                "ios-dark": "docs/screenshots/status-label/ios-dark.png",
+                "android-light": "docs/screenshots/status-label/android-light.png",
+                "android-dark": "docs/screenshots/status-label/android-dark.png"
+            }
         }
     }
 }

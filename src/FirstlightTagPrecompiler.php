@@ -6,7 +6,7 @@ use Native\Mobile\Edge\NativeTagPrecompiler;
 
 final class FirstlightTagPrecompiler
 {
-    private const SEGMENTED_TAG = '~<\s*firstlight\s*:\s*segmented\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
+    private const FIRSTLIGHT_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label)\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
     private const COMPILED_MARKER = '<?php '.NativeTagPrecompiler::COMPILED_MARKER.' ?>';
 
@@ -17,7 +17,7 @@ final class FirstlightTagPrecompiler
         }
 
         return preg_replace_callback(
-            self::SEGMENTED_TAG,
+            self::FIRSTLIGHT_TAG,
             function (array $match): string {
                 $expanded = (new NativeTagPrecompiler)($match[0]);
 
@@ -26,8 +26,8 @@ final class FirstlightTagPrecompiler
                 }
 
                 return preg_replace(
-                    '~^<\s*firstlight\s*:\s*segmented\b~',
-                    '<x-native-firstlight-segmented',
+                    '~^<\s*firstlight\s*:\s*'.preg_quote($match[1], '~').'\b~',
+                    '<x-native-firstlight-'.$match[1],
                     $expanded,
                     limit: 1,
                 ) ?? $expanded;

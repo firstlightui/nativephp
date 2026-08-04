@@ -96,8 +96,48 @@ struct NativeUITokens: Equatable {
     let onPrimary: Color
     let surface: Color
     let onSurface: Color
+    let background: Color
+    let onBackground: Color
+    let surfaceVariant: Color
     let onSurfaceVariant: Color
     let destructive: Color
+    let onDestructive: Color
+    let success: Color
+    let onSuccess: Color
+    let accent: Color
+    let onAccent: Color
+
+    init(
+        primary: Color,
+        onPrimary: Color,
+        surface: Color,
+        onSurface: Color,
+        background: Color = .clear,
+        onBackground: Color = .clear,
+        surfaceVariant: Color = .clear,
+        onSurfaceVariant: Color,
+        destructive: Color,
+        onDestructive: Color = .clear,
+        success: Color = .clear,
+        onSuccess: Color = .clear,
+        accent: Color = .clear,
+        onAccent: Color = .clear
+    ) {
+        self.primary = primary
+        self.onPrimary = onPrimary
+        self.surface = surface
+        self.onSurface = onSurface
+        self.background = background
+        self.onBackground = onBackground
+        self.surfaceVariant = surfaceVariant
+        self.onSurfaceVariant = onSurfaceVariant
+        self.destructive = destructive
+        self.onDestructive = onDestructive
+        self.success = success
+        self.onSuccess = onSuccess
+        self.accent = accent
+        self.onAccent = onAccent
+    }
 
     static let fallback = NativeUITokens(
         primary: Color(uiColor: .systemTeal),
