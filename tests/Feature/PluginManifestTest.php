@@ -96,6 +96,14 @@ it('registers the production component catalogue with canonical renderers', func
             ],
         ],
         [
+            'type' => 'firstlight.activity-indicator',
+            'element' => 'FirstlightUI\\Elements\\ActivityIndicator',
+            'blade' => 'FirstlightUI\\Components\\ActivityIndicator',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightActivityIndicatorRenderer',
+            'ios_renderer' => 'ActivityIndicatorRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.text-field',
             'element' => 'FirstlightUI\\Elements\\TextField',
             'blade' => 'FirstlightUI\\Components\\TextField',
@@ -168,4 +176,12 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
     ]);
+});
+
+it('registers Activity Indicator as paired Firstlight renderers rather than an adapter', function () {
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    $component = collect($manifest['components'])->firstWhere('type', 'firstlight.activity-indicator');
+
+    expect($component)->not->toBeNull()
+        ->and($component)->not->toHaveKey('adapter');
 });
