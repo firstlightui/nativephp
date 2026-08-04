@@ -149,7 +149,7 @@ final class IconButtonSnapshotTests: XCTestCase {
                 HStack(spacing: 12) {
                     ForEach(FirstlightIconButtonSize.allCases, id: \.self) { size in
                         FirstlightIconButtonControl(
-                            configuration: IconButtonRendererConfiguration(node: makeNode(
+                            configuration: IconButtonRendererConfiguration(node: self.makeNode(
                                 variant: variant.rawValue,
                                 size: size.rawValue
                             )),
