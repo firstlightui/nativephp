@@ -120,6 +120,16 @@
                 "android-dark": "docs/screenshots/slider/android-dark.png"
             }
         },
+        "stepper": {
+            "route": "/captures/stepper",
+            "test": "php artisan test tests/Feature/StepperCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/stepper/ios-light.png",
+                "ios-dark": "docs/screenshots/stepper/ios-dark.png",
+                "android-light": "docs/screenshots/stepper/android-light.png",
+                "android-dark": "docs/screenshots/stepper/android-dark.png"
+            }
+        },
         "status-label": {
             "route": "/captures/status-label",
             "test": "php artisan test tests/Feature/StatusLabelCaptureTest.php",

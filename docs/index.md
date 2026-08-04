@@ -27,6 +27,7 @@ sources:
 - [Search Field](components/search-field.md) — Configure native query entry, clear, submission, and synchronisation behaviour.
 - [Select](components/select.md) — Choose one stable string or integer value with automatic searchable presentation for larger option sets.
 - [Slider](components/slider.md) — Choose one strictly validated numeric value from an evenly spaced native range.
+- [Stepper](components/stepper.md) — Increment or decrement an exact bounded number while PHP remains authoritative.
 - [Status Label](components/status-label.md) — Look up display-only status text, semantic tones, accessibility, and platform evidence.
 - [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
 - [Text Area](components/text-area.md) — Configure native multiline editing, line bounds, validation, accessibility, and synchronisation.

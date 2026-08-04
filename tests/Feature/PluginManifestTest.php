@@ -152,6 +152,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.stepper',
+            'element' => 'FirstlightUI\\Elements\\Stepper',
+            'blade' => 'FirstlightUI\\Components\\Stepper',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.StepperRenderer',
+            'ios_renderer' => 'StepperRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.switch',
             'element' => 'FirstlightUI\\Elements\\SwitchControl',
             'blade' => 'FirstlightUI\\Components\\SwitchControl',
