@@ -15,6 +15,7 @@ sources:
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.
+- [Firstlight and NativePHP Mobile UI](concepts/firstlight-and-mobile-ui.md) — Understand how Firstlight complements Mobile UI with a focused form and control layer.
 - [Button](components/button.md) — Look up labelled actions, semantic variants, loading and disabled states, accessibility, and adapter behaviour.
 - [Badge](components/badge.md) — Present compact display-only counts or short markers with semantic tones and contextual accessibility.
 - [Choice Group](components/choice-group.md) — Configure visible single-radio or multiple-checkbox choice rows with stable values.
