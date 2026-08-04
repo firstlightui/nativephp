@@ -15,4 +15,5 @@
 - [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
 - [Status Label](https://firstlightui.dev/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
+- [Switch](https://firstlightui.dev/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
 - [Compatibility](https://firstlightui.dev/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.

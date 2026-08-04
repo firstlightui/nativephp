@@ -29,6 +29,16 @@
                 "android-light": "docs/screenshots/text-field/android-light.png",
                 "android-dark": "docs/screenshots/text-field/android-dark.png"
             }
+        },
+        "switch": {
+            "route": "/captures/switch",
+            "test": "php artisan test tests/Feature/SwitchCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/switch/ios-light.png",
+                "ios-dark": "docs/screenshots/switch/ios-dark.png",
+                "android-light": "docs/screenshots/switch/android-light.png",
+                "android-dark": "docs/screenshots/switch/android-dark.png"
+            }
         }
     }
 }
