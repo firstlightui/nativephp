@@ -1,5 +1,15 @@
 {
     "components": {
+        "activity-indicator": {
+            "route": "/captures/activity-indicator",
+            "test": "php artisan test tests/Feature/ActivityIndicatorCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/activity-indicator/ios-light.png",
+                "ios-dark": "docs/screenshots/activity-indicator/ios-dark.png",
+                "android-light": "docs/screenshots/activity-indicator/android-light.png",
+                "android-dark": "docs/screenshots/activity-indicator/android-dark.png"
+            }
+        },
         "badge": {
             "route": "/captures/badge",
             "test": "php artisan test tests/Feature/BadgeCaptureTest.php",

@@ -14,6 +14,7 @@
 - [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
 - [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
 - [How Firstlight complements NativePHP Mobile UI](https://firstlightui.dev/concepts/firstlight-and-mobile-ui): How Firstlight builds on NativePHP Mobile UI with a focused, opinionated form and control layer.
+- [Activity Indicator](https://firstlightui.dev/components/activity-indicator): Indeterminate native activity, semantic sizes, conditional presence, accessibility announcements, validation, and platform behaviour.
 - [Button](https://firstlightui.dev/components/button): Public API, variants, states, accessibility, adapter behaviour, compatibility, and visual evidence for Firstlight Button.
 - [Badge](https://firstlightui.dev/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
 - [Choice Group](https://firstlightui.dev/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
