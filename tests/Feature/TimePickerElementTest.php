@@ -230,3 +230,13 @@ it('declares exact paired renderer manifest identifiers', function () {
         'self_closing' => true,
     ]);
 });
+
+it('keeps the Android text field inert behind an explicit full size button overlay', function () {
+    $source = file_get_contents(dirname(__DIR__, 2).'/resources/android/TimePickerControl.kt');
+
+    expect($source)
+        ->toContain('Box(modifier = modifier.fillMaxWidth())')
+        ->toContain('.clearAndSetSemantics {}')
+        ->toContain('.matchParentSize()')
+        ->toContain('.clickable(enabled = enabled, role = Role.Button) { onOpen() }');
+});

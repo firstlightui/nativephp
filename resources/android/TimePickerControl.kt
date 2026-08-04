@@ -3,6 +3,7 @@ package dev.firstlightui.plugins.firstlight_ui.ui
 import android.content.res.Configuration
 import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,9 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
@@ -45,37 +50,53 @@ internal fun FirstlightTimePickerControl(
 ) {
     val configuration = state.configuration
     val supporting = configuration.error.ifEmpty { configuration.helper }
-    val description = listOf(configuration.accessibilityLabel, configuration.accessibilityHint)
+    val description = listOf(
+        configuration.accessibilityLabel,
+        "Required".takeIf { configuration.required }.orEmpty(),
+        configuration.accessibilityHint,
+        supporting,
+    )
         .filter(String::isNotEmpty)
         .joinToString(". ")
     val enabled = !configuration.disabled && configuration.onChangeCallback != 0
+    val shown = configuration.acceptedValue?.let { formatTimeForDisplay(it, configuration.locale) }.orEmpty()
 
-    OutlinedTextField(
-        value = configuration.acceptedValue?.let { formatTimeForDisplay(it, configuration.locale) }.orEmpty(),
-        onValueChange = {},
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
-            .clickable(enabled = enabled) { onOpen() }
-            .semantics {
-                if (description.isNotEmpty()) contentDescription = description
-                if (configuration.error.isNotEmpty()) error(configuration.error)
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = shown,
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 48.dp)
+                .clearAndSetSemantics {},
+            enabled = enabled,
+            readOnly = true,
+            singleLine = true,
+            isError = configuration.error.isNotEmpty(),
+            label = configuration.label.takeIf(String::isNotEmpty)?.let { label ->
+                { Text(if (configuration.required) "$label *" else label) }
             },
-        enabled = !configuration.disabled,
-        readOnly = true,
-        singleLine = true,
-        isError = configuration.error.isNotEmpty(),
-        label = configuration.label.takeIf(String::isNotEmpty)?.let { label ->
-            { Text(if (configuration.required) "$label *" else label) }
-        },
-        placeholder = configuration.placeholder.takeIf(String::isNotEmpty)?.let { text ->
-            { Text(text) }
-        },
-        supportingText = supporting.takeIf(String::isNotEmpty)?.let { text ->
-            { Text(text, color = if (configuration.error.isEmpty()) tokens.onSurfaceVariant else tokens.destructive) }
-        },
-        trailingIcon = { MaterialIcon("schedule", null) },
-    )
+            placeholder = configuration.placeholder.takeIf(String::isNotEmpty)?.let { text ->
+                { Text(text) }
+            },
+            supportingText = supporting.takeIf(String::isNotEmpty)?.let { text ->
+                { Text(text, color = if (configuration.error.isEmpty()) tokens.onSurfaceVariant else tokens.destructive) }
+            },
+            trailingIcon = { MaterialIcon("schedule", null) },
+        )
+
+        Box(
+            Modifier
+                .matchParentSize()
+                .clickable(enabled = enabled, role = Role.Button) { onOpen() }
+                .semantics {
+                    if (description.isNotEmpty()) contentDescription = description
+                    stateDescription = shown.ifEmpty { configuration.placeholder }
+                    if (!enabled) disabled()
+                    if (configuration.error.isNotEmpty()) error(configuration.error)
+                },
+        )
+    }
 
     if (state.isPresented) {
         key(state.presentationVersion) {
