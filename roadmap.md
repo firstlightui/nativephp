@@ -32,11 +32,11 @@ details behind the same coherent Firstlight API.
 - Badge
 - Search Field
 - Text Area
+- Date Picker
 
 ### In flight
 
 - Choice Group
-- Date Picker
 - Time Picker
 
 ## Build order
@@ -52,10 +52,7 @@ details behind the same coherent Firstlight API.
    slider primitive first.
 9. **Stepper** — reuses Slider's numeric range contract and Icon Button's
    accessible increment and decrement actions.
-10. **Date Picker** — establishes native picker presentation, bounds, locale,
-   timezone, and wall-clock ISO date values. Audit Mobile UI's date-picker
-   primitive first.
-11. **Time Picker** — reuses Date Picker's presentation, internationalisation,
+10. **Time Picker** — reuses Date Picker's presentation, internationalisation,
     reconciliation, and evidence patterns with a time-specific public value.
 
 ## Dependency spine
