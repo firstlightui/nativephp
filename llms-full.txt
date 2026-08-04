@@ -335,12 +335,10 @@ Pill Group supports the versions listed in the current [compatibility reference]
 
 ## Screenshots
 
-The four-image visual matrix is intentionally deferred while shared simulators are occupied. The reserved evidence paths are:
-
 | Platform | Light | Dark |
 | --- | --- | --- |
-| iOS | `docs/screenshots/pill-group/ios-light.png` | `docs/screenshots/pill-group/ios-dark.png` |
-| Android | `docs/screenshots/pill-group/android-light.png` | `docs/screenshots/pill-group/android-dark.png` |
+| iOS | ![Pill Group on iOS in light mode](../screenshots/pill-group/ios-light.png) | ![Pill Group on iOS in dark mode](../screenshots/pill-group/ios-dark.png) |
+| Android | ![Pill Group on Android in light mode](../screenshots/pill-group/android-light.png) | ![Pill Group on Android in dark mode](../screenshots/pill-group/android-dark.png) |
 
 --- Source: docs/components/segmented.md ---
 

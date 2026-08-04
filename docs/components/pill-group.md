@@ -131,7 +131,7 @@ Pill Group supports the versions listed in the current [compatibility reference]
 
 ## Screenshots
 
-The four-image visual matrix is intentionally deferred while shared simulators are occupied. The reserved evidence paths are:
+Runtime screenshot evidence is deferred for this development build. The capture manifest reserves these output paths for the later visual review:
 
 | Platform | Light | Dark |
 | --- | --- | --- |

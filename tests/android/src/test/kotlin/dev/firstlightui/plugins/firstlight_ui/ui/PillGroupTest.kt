@@ -117,6 +117,7 @@ class PillGroupRendererContractTest {
         assertEquals(1f, resolved.selectedContent.alpha)
         assertTrue(resolved.selectedContent != resolved.selectedContainer)
         assertTrue(contrastRatio(resolved.selectedContent, resolved.selectedContainer) >= 4.5f)
+        assertEquals(resolved.selectedContent, resolved.selectedLeadingIcon)
     }
 
     @Test

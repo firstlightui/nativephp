@@ -166,6 +166,7 @@ private fun NativeUINode.findPillGroupNode(id: Int): NativeUINode? {
 internal data class PillGroupTokenColors(
     val selectedContainer: Color,
     val selectedContent: Color,
+    val selectedLeadingIcon: Color,
     val unselectedContainer: Color,
     val unselectedContent: Color,
     val outline: Color,
@@ -182,6 +183,7 @@ internal fun resolvePillGroupTokenColors(tokens: NativeUITokens): PillGroupToken
     return PillGroupTokenColors(
         selectedContainer = selectedContainer,
         selectedContent = selectedContent,
+        selectedLeadingIcon = selectedContent,
         unselectedContainer = tokens.surfaceVariant.compositeOver(surface).copy(alpha = 1f),
         unselectedContent = tokens.onSurface,
         outline = tokens.outline,
@@ -197,7 +199,9 @@ internal fun pillGroupColors(tokens: NativeUITokens): SelectableChipColors {
         labelColor = resolved.unselectedContent,
         selectedContainerColor = resolved.selectedContainer,
         selectedLabelColor = resolved.selectedContent,
+        selectedLeadingIconColor = resolved.selectedLeadingIcon,
         disabledContainerColor = resolved.unselectedContainer.copy(alpha = 0.38f),
         disabledLabelColor = tokens.onSurfaceVariant.copy(alpha = 0.38f),
+        disabledLeadingIconColor = tokens.onSurfaceVariant.copy(alpha = 0.38f),
     )
 }
