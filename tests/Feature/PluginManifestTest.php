@@ -24,6 +24,14 @@ it('registers the production component catalogue with canonical renderers', func
 
     expect($manifest['components'])->toBe([
         [
+            'type' => 'firstlight.pill-group',
+            'element' => 'FirstlightUI\\Elements\\PillGroup',
+            'blade' => 'FirstlightUI\\Components\\PillGroup',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.PillGroupRenderer',
+            'ios_renderer' => 'PillGroupRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.segmented',
             'element' => 'FirstlightUI\\Elements\\Segmented',
             'blade' => 'FirstlightUI\\Components\\Segmented',
