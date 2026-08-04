@@ -28,7 +28,7 @@ final class SelectRendererContractTests: XCTestCase {
         XCTAssertEqual(configuration.optionValues, ["routine", "urgent", "critical"])
         XCTAssertEqual(configuration.optionLabels, ["Routine", "Urgent", "Critical"])
         XCTAssertEqual(configuration.optionEnabled, [true, true, false])
-        XCTAssertEqual(configuration.optionCallbacks, [51, 0, 0])
+        XCTAssertEqual(configuration.optionCallbacks, [51, 52, 0])
         XCTAssertEqual(configuration.selectedValues, ["urgent"])
         XCTAssertEqual(configuration.valueType, "string")
         XCTAssertTrue(configuration.searchEnabled)

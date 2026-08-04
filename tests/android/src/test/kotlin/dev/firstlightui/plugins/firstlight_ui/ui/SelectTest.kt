@@ -39,7 +39,7 @@ class SelectRendererContractTest {
         assertEquals(listOf("routine", "urgent", "critical"), configuration.optionValues)
         assertEquals(listOf("Routine", "Urgent", "Critical"), configuration.optionLabels)
         assertEquals(listOf(true, true, false), configuration.optionEnabled)
-        assertEquals(listOf(51, 0, 0), configuration.optionCallbacks)
+        assertEquals(listOf(51, 52, 0), configuration.optionCallbacks)
         assertEquals(listOf("urgent"), configuration.selectedValues)
         assertEquals("string", configuration.valueType)
         assertTrue(configuration.searchEnabled)
