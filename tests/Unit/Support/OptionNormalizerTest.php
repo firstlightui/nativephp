@@ -51,4 +51,7 @@ it('rejects mixed values, duplicate values, unknown fields, and non-string label
     'duplicates' => [[['value' => 'same', 'label' => 'One'], ['value' => 'same', 'label' => 'Two']], 'duplicate value'],
     'unknown field' => [[['value' => 'one', 'label' => 'One', 'icon' => 'star']], 'unknown field'],
     'invalid label' => [[['value' => 'one', 'label' => 1]], 'label must be a string'],
+    'blank simple label' => [['  '], 'label must not be blank'],
+    'blank mapped label' => [['one' => "\t"], 'label must not be blank'],
+    'blank rich label' => [[['value' => 'one', 'label' => "\n"]], 'label must not be blank'],
 ]);

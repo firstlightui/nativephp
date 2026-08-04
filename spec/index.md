@@ -12,6 +12,7 @@ sources:
 
 - [Button component contract](components/button.md) — Defines the labelled action API, adapter boundary, state, diagnostics, accessibility, and renderer exit criteria.
 - [Badge component contract](components/badge.md) — Defines compact count and marker semantics, strict display sources, tones, accessibility, and the paired-renderer decision.
+- [Choice Group component contract](components/choice-group.md) — Defines visible radio or checkbox choice rows, stable values, state timing, accessibility, and native expression.
 - [Date Picker component contract](components/date-picker.md) — Defines canonical nullable dates, inclusive bounds, native draft confirmation, internationalisation, accessibility, and the paired-renderer boundary.
 - [Icon Button component contract](components/icon-button.md) — Defines compact action semantics, platform icon resolution, strict accessibility, state, and the paired-renderer decision.
 - [Progress component contract](components/progress.md) — Defines determinate and indeterminate display semantics, strict values, accessibility, and the Mobile UI adapter boundary.

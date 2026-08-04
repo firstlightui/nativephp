@@ -34,6 +34,7 @@ final class OptionNormalizer
                     throw InvalidOption::at($index, 'list options must be strings');
                 }
 
+                self::assertLabel($option, $index);
                 self::assertUnique($option, $seen, $index);
 
                 $items[] = new NormalizedOption($option, $option, false);
@@ -61,6 +62,7 @@ final class OptionNormalizer
                 throw InvalidOption::at(count($items), 'label must be a string');
             }
 
+            self::assertLabel($label, count($items));
             self::assertValueType($value, $valueType, count($items));
             self::assertUnique($value, $seen, count($items));
 
@@ -104,6 +106,8 @@ final class OptionNormalizer
                 throw InvalidOption::at($index, 'label must be a string');
             }
 
+            self::assertLabel($label, $index);
+
             if (! is_bool($disabled)) {
                 throw InvalidOption::at($index, 'disabled must be a boolean');
             }
@@ -131,6 +135,13 @@ final class OptionNormalizer
         }
 
         $valueType = $type;
+    }
+
+    private static function assertLabel(string $label, int $index): void
+    {
+        if (trim($label) === '') {
+            throw InvalidOption::at($index, 'label must not be blank');
+        }
     }
 
     /** @param array<string, true> $seen */

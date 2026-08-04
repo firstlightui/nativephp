@@ -24,6 +24,14 @@ it('registers the production component catalogue with canonical renderers', func
 
     expect($manifest['components'])->toBe([
         [
+            'type' => 'firstlight.choice-group',
+            'element' => 'FirstlightUI\\Elements\\ChoiceGroup',
+            'blade' => 'FirstlightUI\\Components\\ChoiceGroup',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.ChoiceGroupRenderer',
+            'ios_renderer' => 'ChoiceGroupRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.pill-group',
             'element' => 'FirstlightUI\\Elements\\PillGroup',
             'blade' => 'FirstlightUI\\Components\\PillGroup',

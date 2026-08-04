@@ -20,6 +20,16 @@
                 "android-dark": "docs/screenshots/button/android-dark.png"
             }
         },
+        "choice-group": {
+            "route": "/captures/choice-group",
+            "test": "php artisan test tests/Feature/ChoiceGroupCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/choice-group/ios-light.png",
+                "ios-dark": "docs/screenshots/choice-group/ios-dark.png",
+                "android-light": "docs/screenshots/choice-group/android-light.png",
+                "android-dark": "docs/screenshots/choice-group/android-dark.png"
+            }
+        },
         "date-picker": {
             "route": "/captures/date-picker",
             "test": "php artisan test tests/Feature/DatePickerCaptureTest.php",
