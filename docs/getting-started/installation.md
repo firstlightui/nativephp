@@ -7,6 +7,7 @@ sources:
   - composer.json
   - nativephp.json
   - src/FirstlightServiceProvider.php
+  - docs/reference/compatibility.md
 ---
 
 # Install Firstlight UI
@@ -14,6 +15,12 @@ sources:
 ## Requirements
 
 Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
+
+Firstlight is still pre-alpha: no released NativePHP runtime currently passes
+its state-reconciliation release gate. Review the documented
+[runtime limitation](../reference/compatibility.md#pre-alpha-runtime-limitation)
+before installing. The development fork and patched Android binary are not
+supported production dependencies.
 
 ## Install and register the plugin
 
