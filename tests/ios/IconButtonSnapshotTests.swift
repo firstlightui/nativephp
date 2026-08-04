@@ -7,6 +7,12 @@ import XCTest
 
 @MainActor
 final class IconButtonSnapshotTests: XCTestCase {
+    #if SWIFT_PACKAGE
+    func testPackageShimPreservesResolvedIOSSymbolNames() {
+        XCTAssertEqual(getIconForName("plus.circle"), "plus.circle")
+    }
+    #endif
+
     func testConfigurationDecodesTheCompleteActionContract() {
         let configuration = IconButtonRendererConfiguration(node: makeNode())
 

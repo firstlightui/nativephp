@@ -169,4 +169,11 @@ final class NativeUITheme: ObservableObject {
         .fallback
     }
 }
+
+// SwiftPM does not compile NativePHP's host-owned IconHelper.swift. Package
+// tests use canonical SF Symbol names, so preserve them here; consumer builds
+// omit this branch and continue through NativePHP's real icon resolver.
+func getIconForName(_ iconName: String) -> String {
+    iconName
+}
 #endif
