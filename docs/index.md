@@ -17,6 +17,7 @@ sources:
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.
 - [Button](components/button.md) — Look up labelled actions, semantic variants, loading and disabled states, accessibility, and adapter behaviour.
 - [Badge](components/badge.md) — Present compact display-only counts or short markers with semantic tones and contextual accessibility.
+- [Date Picker](components/date-picker.md) — Choose strict nullable calendar dates with inclusive bounds and native confirmation.
 - [Icon Button](components/icon-button.md) — Configure compact icon-only actions, platform icon overrides, semantic variants, states, and accessibility.
 - [Pill Group](components/pill-group.md) — Configure compact single- or multiple-selection native options.
 - [Progress](components/progress.md) — Communicate determinate or indeterminate work with strict values and native accessibility.

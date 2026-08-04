@@ -112,6 +112,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.date-picker',
+            'element' => 'FirstlightUI\\Elements\\DatePicker',
+            'blade' => 'FirstlightUI\\Components\\DatePicker',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightDatePickerRenderer',
+            'ios_renderer' => 'DatePickerRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.switch',
             'element' => 'FirstlightUI\\Elements\\SwitchControl',
             'blade' => 'FirstlightUI\\Components\\SwitchControl',
