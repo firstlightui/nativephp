@@ -1,41 +1,60 @@
 ---
 name: firstlight-ios-component
-description: Use when implementing or reviewing the iOS half of a Firstlight native control.
+description: Use when implementing or reviewing the iOS expression of a public Firstlight control.
 ---
 
 # Build a Firstlight iOS Component
 
 ## Overview
 
-Wrap the genuine Apple control and keep the renderer a thin SuperNative adapter. PHP remains server-authoritative for visible state.
+Express the shared contract with genuine Apple controls or an idiomatic composition of native primitives. Reuse an adequate official NativePHP control before adding a custom renderer.
 
-## Inputs and Files
+## Canonical Identity and Authorities
 
-- Read `Constitution.md`, `nativephp.json`, and the component's PHP contract.
-- Implement `resources/ios/<Name>Control.swift` and `resources/ios/<Name>Renderer.swift`.
-- Add behavior and snapshot coverage under `tests/ios/`.
+- Package: `firstlightui/nativephp`
+- Showcase: `firstlightui/showcase`
+- Swift scheme: `FirstlightIOSControls`
+
+Read `Constitution.md`, `spec/designs/2026-08-04-firstlight-alpha-component-system-design.md`, the component contract, `nativephp.json`, `Package.swift`, current NativePHP source/docs, and current Apple documentation. Manifest and Swift package files—not Composer-name inference—own renderer identifiers.
+
+## Implementation Decision
+
+| Path | Requirement |
+| --- | --- |
+| Adapter | Keep the public Firstlight tag while reusing or thinly adapting an adequate official primitive. Do not create Swift files merely to satisfy a template. |
+| Renderer | Add `resources/ios/<Name>Control.swift` and `<Name>Renderer.swift` only when core cannot meet the contract. Compile the production renderer against current official APIs. |
+
+Use a genuine UIKit/SwiftUI control when available. When Apple has no named stock control, compose the intent from native SwiftUI/UIKit primitives; do not imitate Android or draw platform-neutral chrome.
+
+## State Rules
+
+- **Discrete:** emit once per user action; keep accepted visible state server-authoritative; reconcile every publication without echo or replay.
+- **Focused text:** preserve the native editing buffer, focus, cursor, selection, and marked-text composition. Standard `live`, `blur`, and `debounce` modes control `@change`; server reconciliation must not cause keyboard or cursor jumps.
+- **Continuous:** update the gesture on the UI thread; standard modifiers control change frequency and release behaviour.
+- **Action/display:** use only the contract's standard `@press` or no event.
 
 ## Workflow
 
-1. Write failing XCTest contract and snapshot cases before implementation. Cover null, selected, disabled, error, light, dark, and accessibility states.
-2. Use the genuine Apple UIKit or SwiftUI control. Do not recreate an iPhone-looking control from generic shapes.
-3. Decode only primitive Element Tree props in the SuperNative renderer. Route semantic events through the official bridge.
-4. On touch, emit once but keep visible selection server-authoritative. Reconcile accepted PHP publications without replaying events. A rejected value must never remain displayed; repeated rejected attempts must remain possible.
-5. Use semantic NativePHP theme tokens. Verify contrast and at least 44-point targets.
-6. Run:
+1. Write failing XCTest behaviour, accessibility, and snapshot cases appropriate to the state class before implementation.
+2. Prove an adapter maps every Firstlight prop/event/state. If it cannot, implement the minimum renderer, decode primitive Element Tree props, and use only the official SuperNative event seam.
+3. Use NativePHP semantic theme tokens, Apple-native typography and motion, and targets of at least 44 points.
+4. Run:
 
 ```bash
 xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=<fixed-id>' test
 bin/check-component <Name> --development
 ```
 
-7. Verify VoiceOver labels, values, traits, and order; Dynamic Type at a large accessibility size; Increased Contrast; Reduced Motion; light and dark modes; and rapid taps.
-8. Capture deterministic simulator snapshots. Record a separate physical device pass with model, iOS version, package commit, tester, and date.
+5. Verify VoiceOver names, values, roles, states, order, Dynamic Type at accessibility sizes, Increased Contrast, Reduced Motion, light/dark modes, rapid input, and the state-class-specific reconciliation cases.
+6. Prove `firstlightui/showcase` builds against the exact package commit and capture deterministic simulator evidence. Record a separate dated physical-device pass for release.
 
-## Evidence
+## Common Mistakes
 
-Report exact test counts, snapshot paths, the consumer build result, accessibility findings, and unresolved warnings. Simulator evidence does not replace the physical device row.
+- Copying Segmented's selection state machine into text or continuous controls.
+- Creating wrapper files without proving an official primitive needs adaptation.
+- Treating snapshots as evidence for focus, animation, VoiceOver, or touch behaviour.
+- Testing a shim while excluding the production renderer from compilation.
 
 ## Stop Conditions
 
-Stop when no genuine Apple control fits, the official SuperNative seam cannot express the contract, Swift warnings remain, accessibility truncates meaning, the consumer host does not compile, or physical-device evidence is absent for release. Do not add web-rendered or ad hoc bridge substitutes.
+Stop when neither a genuine control nor idiomatic native composition fits, the official seam cannot express the contract, warnings remain, state reconciliation harms native interaction, accessibility truncates meaning, the showcase host fails, or required evidence is absent. Missing physical-device evidence blocks release, not development. Do not add WebViews, ad hoc bridges, generated-tree edits, or platform escape props.
