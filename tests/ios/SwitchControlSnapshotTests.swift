@@ -1,6 +1,7 @@
 import SnapshotTesting
 import SwiftUI
 import UIKit
+import Vision
 import XCTest
 
 @testable import FirstlightIOSControls
@@ -25,6 +26,21 @@ final class SwitchControlSnapshotTests: XCTestCase {
         )
     }
 
+    func testErrorStateVisiblyRetainsTitle() throws {
+        let image = renderLayer(of: makeViewController(error: "Notifications are required for this account."))
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+
+        let handler = VNImageRequestHandler(cgImage: try XCTUnwrap(image.cgImage))
+        try handler.perform([request])
+
+        let recognizedLines = try XCTUnwrap(request.results).compactMap { $0.topCandidates(1).first?.string }
+        XCTAssertTrue(
+            recognizedLines.contains("Notifications"),
+            "Expected a distinct visible Notifications title, recognized: \(recognizedLines)"
+        )
+    }
+
     func testAcceptedValueBindingProposesWithoutMutatingVisibleState() {
         var proposalCount = 0
         let control = FirstlightSwitchControl(
@@ -45,22 +61,26 @@ final class SwitchControlSnapshotTests: XCTestCase {
         XCTAssertFalse(control.acceptedValueBinding.wrappedValue)
     }
 
-    func testErrorAccessibilityValuePreservesAcceptedStateAndValidationMessage() {
-        XCTAssertNil(SwitchAccessibility.errorValue(value: false, error: ""))
-        XCTAssertEqual(
-            SwitchAccessibility.errorValue(
-                value: false,
-                error: "Notifications are required for this account."
-            ),
-            "Off. Error: Notifications are required for this account."
-        )
-        XCTAssertEqual(
-            SwitchAccessibility.errorValue(
-                value: true,
-                error: "Notifications are required for this account."
-            ),
-            "On. Error: Notifications are required for this account."
-        )
+    func testRenderedToggleExposesOneAccessibleControlWithExplicitSemantics() throws {
+        let error = "Notifications are required for this account."
+        let controller = makeViewController(error: error)
+        let elements = accessibilityElements(in: controller)
+        let labeled = elements.filter { $0.accessibilityLabel?.isEmpty == false }
+        let toggle = try XCTUnwrap(labeled.single)
+
+        XCTAssertEqual(toggle.accessibilityLabel, "Receive notifications")
+        XCTAssertEqual(toggle.accessibilityHint, "Controls notification delivery")
+        XCTAssertEqual(toggle.accessibilityValue, "Off. Error: \(error)")
+        XCTAssertFalse(toggle.accessibilityTraits.contains(.notEnabled))
+        XCTAssertTrue(toggle.accessibilityTraits.contains(.button))
+        XCTAssertTrue(toggle.accessibilityActivate())
+        XCTAssertFalse(labeled.contains { $0 !== toggle && $0.accessibilityLabel == "Notifications" })
+        XCTAssertFalse(labeled.contains { $0 !== toggle && $0.accessibilityLabel?.contains(error) == true })
+
+        let disabledElements = accessibilityElements(in: makeViewController(value: true, disabled: true))
+        let disabledToggle = try XCTUnwrap(disabledElements.filter { $0.accessibilityLabel == "Receive notifications" }.single)
+        XCTAssertEqual(disabledToggle.accessibilityValue, "On")
+        XCTAssertTrue(disabledToggle.accessibilityTraits.contains(.notEnabled))
     }
 
     private func makeViewController(
@@ -77,7 +97,7 @@ final class SwitchControlSnapshotTests: XCTestCase {
             supportingText: error.isEmpty ? "Receive updates about new activity." : error,
             error: error,
             disabled: disabled,
-            accessibilityLabel: "",
+            accessibilityLabel: "Receive notifications",
             accessibilityHint: "Controls notification delivery",
             tokens: .fallback,
             onProposal: {}
@@ -87,6 +107,84 @@ final class SwitchControlSnapshotTests: XCTestCase {
         .background(Color(uiColor: .systemBackground))
 
         return SwitchTraitHostingController(rootView: view, style: style, contentSize: contentSize)
+    }
+
+    private func renderLayer(of controller: UIViewController) -> UIImage {
+        withPreparedWindow(for: controller) { window in
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 2
+            return UIGraphicsImageRenderer(bounds: window.bounds, format: format).image { context in
+                window.layer.render(in: context.cgContext)
+            }
+        }
+    }
+
+    private func accessibilityElements(in controller: UIViewController) -> [NSObject] {
+        withPreparedWindow(for: controller) { window in
+            return collectAccessibilityElements(from: window)
+        }
+    }
+
+    private func withPreparedWindow<Result>(
+        for controller: UIViewController,
+        perform: (UIWindow) -> Result
+    ) -> Result {
+        let frame = CGRect(x: 0, y: 0, width: 320, height: 568)
+        let window: UIWindow
+        if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
+            window = UIWindow(windowScene: scene)
+            window.frame = frame
+        } else {
+            window = UIWindow(frame: frame)
+        }
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        controller.beginAppearanceTransition(true, animated: false)
+        controller.endAppearanceTransition()
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        let result = perform(window)
+        controller.beginAppearanceTransition(false, animated: false)
+        controller.endAppearanceTransition()
+        window.isHidden = true
+        window.rootViewController = nil
+        return result
+    }
+
+    private func collectAccessibilityElements(from object: NSObject) -> [NSObject] {
+        if object.isAccessibilityElement {
+            return [object]
+        }
+
+        if let explicitElements = object.accessibilityElements, !explicitElements.isEmpty {
+            return explicitElements.flatMap { element in
+                guard let child = element as? NSObject else { return [NSObject]() }
+                return collectAccessibilityElements(from: child)
+            }
+        }
+
+        let count = object.accessibilityElementCount()
+        if count != NSNotFound, count > 0 {
+            return (0..<count).flatMap { index in
+                guard let child = object.accessibilityElement(at: index) as? NSObject else {
+                    return [NSObject]()
+                }
+                return collectAccessibilityElements(from: child)
+            }
+        }
+
+        if let view = object as? UIView {
+            return view.subviews.flatMap(collectAccessibilityElements)
+        }
+
+        return []
+    }
+}
+
+private extension Array {
+    var single: Element? {
+        count == 1 ? first : nil
     }
 }
 

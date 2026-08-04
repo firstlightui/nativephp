@@ -24,15 +24,19 @@ struct FirstlightSwitchControl: View {
                 if !label.isEmpty {
                     Text(label)
                         .font(.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .layoutPriority(1)
                 }
                 if !supportingText.isEmpty {
                     Text(supportingText)
                         .font(.footnote)
                         .foregroundStyle(error.isEmpty ? tokens.onSurfaceVariant : tokens.destructive)
+                        .fixedSize(horizontal: false, vertical: true)
                         .accessibilityLabel(error.isEmpty ? supportingText : "Error: \(error)")
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
         }
         .toggleStyle(.switch)
         .tint(tokens.primary)
@@ -45,10 +49,11 @@ struct FirstlightSwitchControl: View {
 }
 
 enum SwitchAccessibility {
-    static func errorValue(value: Bool, error: String) -> String? {
-        guard !error.isEmpty else { return nil }
+    static func value(value: Bool, error: String) -> String {
+        let acceptedState = value ? "On" : "Off"
+        guard !error.isEmpty else { return acceptedState }
 
-        return "\(value ? "On" : "Off"). Error: \(error)"
+        return "\(acceptedState). Error: \(error)"
     }
 }
 
@@ -81,10 +86,6 @@ private struct SwitchAccessibilityErrorModifier: ViewModifier {
     let error: String
 
     func body(content: Content) -> some View {
-        if let errorValue = SwitchAccessibility.errorValue(value: value, error: error) {
-            content.accessibilityValue(errorValue)
-        } else {
-            content
-        }
+        content.accessibilityValue(SwitchAccessibility.value(value: value, error: error))
     }
 }
