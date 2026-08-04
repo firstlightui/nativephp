@@ -69,6 +69,36 @@ it('keeps an adapted search field inside the Firstlight public API', function ()
         ->toMatch('/"reads_alpha_design"\s*:\s*true/');
 });
 
+it('retains the shared icon contract for icon-bearing controls', function (): void {
+    expect(firstlightSkillTask('.agents/skills/firstlight-create-component/SKILL.md'))
+        ->prompt(<<<'PROMPT'
+        Define an icon-bearing Firstlight text control that needs shared,
+        iOS-specific, and Android-specific leading and trailing icons plus an
+        accessible trailing icon action. Return JSON with arrays blade_props
+        and fluent_types; string key trailing_action_label; booleans
+        uses_nativephp_resolver, preserves_android_variant,
+        rejects_invented_platform_names, and reads_icon_contract. Use the exact
+        repository conventions required by the skill.
+        PROMPT)
+        ->repeat(5)
+        ->toBeJson()
+        ->toContain(
+            'leading-icon',
+            'leading-icon-ios',
+            'leading-icon-android',
+            'trailing-icon',
+            'trailing-icon-ios',
+            'trailing-icon-android',
+            'IosSymbol',
+            'AndroidSymbol',
+            'trailing-a11y-label',
+        )
+        ->toMatch('/"uses_nativephp_resolver"\s*:\s*true/')
+        ->toMatch('/"preserves_android_variant"\s*:\s*true/')
+        ->toMatch('/"rejects_invented_platform_names"\s*:\s*true/')
+        ->toMatch('/"reads_icon_contract"\s*:\s*true/');
+});
+
 it('preserves native focused editing in the iOS skill', function (): void {
     expect(firstlightSkillTask('.agents/skills/firstlight-ios-component/SKILL.md'))
         ->prompt(<<<'PROMPT'

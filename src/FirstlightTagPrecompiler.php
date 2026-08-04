@@ -6,7 +6,7 @@ use Native\Mobile\Edge\NativeTagPrecompiler;
 
 final class FirstlightTagPrecompiler
 {
-    private const FIRSTLIGHT_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label)\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
+    private const FIRSTLIGHT_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|text-field)\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
     private const COMPILED_MARKER = '<?php '.NativeTagPrecompiler::COMPILED_MARKER.' ?>';
 

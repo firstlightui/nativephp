@@ -16,6 +16,7 @@ Authority is: root constitution; documentation constitution; current code, tests
 ## Workflow
 
 1. Inventory the exact public API, behaviour, compatibility, examples, and evidence from current source. Mark uncertainty; never convert it into a claim.
+   For icon-bearing APIs, read `spec/reference/icons.md` and document every applicable shared fallback, `-ios` / `-android` platform override, accessible action label, and conflict rule exactly as implemented.
 2. Choose the destination:
    - `docs/` for published consumer material.
    - `spec/` for current maintainer/agent contracts that are repository-only but not confidential.

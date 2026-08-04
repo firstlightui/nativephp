@@ -19,6 +19,16 @@
                 "android-light": "docs/screenshots/status-label/android-light.png",
                 "android-dark": "docs/screenshots/status-label/android-dark.png"
             }
+        },
+        "text-field": {
+            "route": "/captures/text-field",
+            "test": "php artisan test tests/Feature/TextFieldCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/text-field/ios-light.png",
+                "ios-dark": "docs/screenshots/text-field/ios-dark.png",
+                "android-light": "docs/screenshots/text-field/android-light.png",
+                "android-dark": "docs/screenshots/text-field/android-dark.png"
+            }
         }
     }
 }

@@ -23,6 +23,10 @@ final class GenericProps: Equatable {
         (map[key] as? Bool) ?? defaultValue
     }
 
+    func getInt(_ key: String, default defaultValue: Int = 0) -> Int {
+        (map[key] as? Int) ?? defaultValue
+    }
+
     func getCallbackId(_ key: String) -> Int {
         if let value = map[key] as? Int { return value }
         if let value = map[key] as? NSNumber { return value.intValue }
@@ -89,6 +93,8 @@ final class NativeUIBridge: ObservableObject {
 
     static func sendSelectChangeEvent(_ callbackId: Int, nodeId: Int, value: String) {}
     static func sendPressEvent(_ callbackId: Int, nodeId: Int) {}
+    static func sendTextChangeEvent(_ callbackId: Int, nodeId: Int, text: String) {}
+    static func sendSubmitEvent(_ callbackId: Int, nodeId: Int, text: String) {}
 }
 
 struct NativeUITokens: Equatable {

@@ -39,5 +39,13 @@ it('registers the production component catalogue with canonical renderers', func
             'ios_renderer' => 'StatusLabelRenderer',
             'self_closing' => true,
         ],
+        [
+            'type' => 'firstlight.text-field',
+            'element' => 'FirstlightUI\\Elements\\TextField',
+            'blade' => 'FirstlightUI\\Components\\TextField',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.TextFieldRenderer',
+            'ios_renderer' => 'TextFieldRenderer',
+            'self_closing' => true,
+        ],
     ]);
 });

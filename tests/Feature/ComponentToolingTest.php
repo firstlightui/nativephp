@@ -200,6 +200,9 @@ it('ships four concise skills with the required workflow entrypoints', function 
     $contracts = [
         'firstlight-create-component' => [
             'Constitution.md',
+            'spec/reference/icons.md',
+            '-ios',
+            '-android',
             'bin/scaffold-component',
             'firstlight-ios-component',
             'firstlight-android-component',
@@ -209,6 +212,8 @@ it('ships four concise skills with the required workflow entrypoints', function 
         ],
         'firstlight-ios-component' => [
             'genuine Apple',
+            'spec/reference/icons.md',
+            'IosSymbol',
             'SuperNative',
             'server-authoritative',
             'XCTest',
@@ -220,6 +225,10 @@ it('ships four concise skills with the required workflow entrypoints', function 
         ],
         'firstlight-android-component' => [
             'Material 3',
+            'spec/reference/icons.md',
+            'AndroidSymbol',
+            'filled',
+            'outlined',
             'SuperNative',
             'server-authoritative',
             'Paparazzi',
@@ -231,6 +240,8 @@ it('ships four concise skills with the required workflow entrypoints', function 
         ],
         'firstlight-review-component' => [
             'Constitution.md',
+            'spec/reference/icons.md',
+            'trailing-a11y-label',
             'bin/check-component',
             'composer test',
             'xcodebuild',
@@ -258,5 +269,18 @@ it('ships four concise skills with the required workflow entrypoints', function 
 
             expect($searchableContents)->toContain($needle);
         }
+    }
+});
+
+it('routes icon documentation through the maintained contract', function () {
+    $root = dirname(__DIR__, 2);
+
+    foreach ([
+        '.agents/skills/firstlight-docs-write/SKILL.md',
+        '.agents/skills/firstlight-docs-update/SKILL.md',
+    ] as $path) {
+        expect(file_get_contents($root.'/'.$path))
+            ->toContain('spec/reference/icons.md')
+            ->toContain('platform override');
     }
 });
