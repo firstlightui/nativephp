@@ -48,7 +48,7 @@ Use `firstlight-create-component` as the coordinating skill. It delegates platfo
 
 When an adapter is the approved implementation and the checker demands renderer-only files, stop and update the checker to understand adapters. Do not create unused renderers, weaken the public contract, or misclassify the component merely to make the gate green.
 
-The current release checkers also disagree on review location: `bin/check-component` looks under `docs/review/<slug>-alpha.md`, while the documentation constitution, screenshot skill, and `bin/check-docs` use `spec/reviews/<slug>-alpha.md`. `spec/reviews/` is the maintained-evidence boundary. Align the component checker before component release; do not copy one review into both paths to conceal the conflict.
+The component and documentation release checkers share `spec/reviews/<slug>-alpha.md` as the maintained-evidence boundary. `bin/check-component` forwards the matching development or release mode to `bin/check-docs`; do not copy review evidence into public documentation paths.
 
 ## Evidence ownership
 
