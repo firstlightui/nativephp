@@ -15,6 +15,7 @@ sources:
 - [Choice Group component contract](components/choice-group.md) — Defines visible radio or checkbox choice rows, stable values, state timing, accessibility, and native expression.
 - [Date Picker component contract](components/date-picker.md) — Defines canonical nullable dates, inclusive bounds, native draft confirmation, internationalisation, accessibility, and the paired-renderer boundary.
 - [Time Picker component contract](components/time-picker.md) — Defines canonical nullable wall-clock times, native draft confirmation, internationalisation, accessibility, and the paired-renderer boundary.
+- [Select component contract](components/select.md) — Defines stable single-selection values, automatic searchable presentation, state timing, accessibility, and the paired-renderer boundary.
 - [Icon Button component contract](components/icon-button.md) — Defines compact action semantics, platform icon resolution, strict accessibility, state, and the paired-renderer decision.
 - [Progress component contract](components/progress.md) — Defines determinate and indeterminate display semantics, strict values, accessibility, and the Mobile UI adapter boundary.
 - [Shared icon contract](reference/icons.md) — Defines cross-control icon names, platform overrides, resolution, accessibility, and validation.

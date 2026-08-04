@@ -23,6 +23,7 @@
 - [Progress](https://firstlightui.dev/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
 - [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
 - [Search Field](https://firstlightui.dev/components/search-field): Public API, focused query synchronisation, native clear and submit behaviour, accessibility, and platform expression for Firstlight Search Field.
+- [Select](https://firstlightui.dev/components/select): Public API, stable values, searchable presentation, state timing, accessibility, and platform behaviour for Firstlight Select.
 - [Status Label](https://firstlightui.dev/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
 - [Text Area](https://firstlightui.dev/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.

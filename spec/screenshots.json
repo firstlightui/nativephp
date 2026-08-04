@@ -100,6 +100,16 @@
                 "android-dark": "docs/screenshots/search-field/android-dark.png"
             }
         },
+        "select": {
+            "route": "/captures/select",
+            "test": "php artisan test tests/Feature/SelectCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/select/ios-light.png",
+                "ios-dark": "docs/screenshots/select/ios-dark.png",
+                "android-light": "docs/screenshots/select/android-light.png",
+                "android-dark": "docs/screenshots/select/android-dark.png"
+            }
+        },
         "status-label": {
             "route": "/captures/status-label",
             "test": "php artisan test tests/Feature/StatusLabelCaptureTest.php",
