@@ -2,6 +2,7 @@
 
 use FirstlightUI\Elements\SwitchControl;
 use FirstlightUI\FirstlightServiceProvider;
+use FirstlightUI\FirstlightTagPrecompiler;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use Illuminate\Events\Dispatcher;
@@ -155,9 +156,11 @@ it('publishes the accepted boolean through the public Switch tag', function () {
 });
 
 it('defaults an omitted value to off', function () {
-    $tree = collectFirstlightSwitch(['label' => 'Notifications']);
+    $result = compileFirstlightSwitchView('<firstlight:switch label="Notifications" />', []);
 
-    expect($tree['props'])->toMatchArray([
+    expect($result['tree'])->not->toBeNull()
+        ->and($result['tree']['type'])->toBe('firstlight.switch')
+        ->and($result['tree']['props'])->toMatchArray([
         'value' => false,
         'label' => 'Notifications',
         'helper' => '',
@@ -214,15 +217,35 @@ it('publishes helper error disabled and accessibility metadata', function () {
 });
 
 it('accepts live sync mode without renderer timing props', function () {
-    $tree = collectFirstlightSwitch([
+    $result = compileFirstlightSwitchView(
+        '<firstlight:switch native:model.live="notifications" label="Notifications" />',
+        ['notifications' => true],
+    );
+
+    expect($result['tree']['props'])->toMatchArray([
         'value' => true,
         'label' => 'Notifications',
-        'sync-mode' => 'live',
-    ]);
-
-    expect($tree['props'])->not->toHaveKey('sync_mode')
-        ->and($tree['props'])->not->toHaveKey('debounce_ms');
+    ])->not->toHaveKey('sync_mode')
+        ->and($result['tree']['props'])->not->toHaveKey('debounce_ms')
+        ->and($result['registry']->resolve($result['tree']['props']['on_change']))->toBe([
+            'method' => '__syncProperty',
+            'args' => ['notifications'],
+        ]);
 });
+
+it('preserves unregistered Switch-like public tags', function (string $source) {
+    NativeTagPrecompiler::setActive(true);
+
+    try {
+        expect((new FirstlightTagPrecompiler)($source))->toBe($source);
+    } finally {
+        NativeTagPrecompiler::setActive(false);
+    }
+})->with([
+    '<firstlight:switch.foo />',
+    '<firstlight:switch-extra />',
+    '<firstlight:switch:other />',
+]);
 
 it('rejects deferred sync modes', function (string $attribute) {
     expect(fn () => compileFirstlightSwitchView(
