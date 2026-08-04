@@ -76,6 +76,7 @@ function compileFirstlightSegmentedView(string $source, array $data, bool $nativ
     );
     $factory->setContainer($container);
     $factory->addExtension('blade.php', 'blade');
+    $factory->addNamespace('__components', $compiledPath);
 
     $container->instance(ViewFactoryContract::class, $factory);
     $container->instance('view', $factory);

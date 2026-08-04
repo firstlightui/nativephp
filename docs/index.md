@@ -21,6 +21,7 @@ sources:
 - [Pill Group](components/pill-group.md) — Configure compact single- or multiple-selection native options.
 - [Progress](components/progress.md) — Communicate determinate or indeterminate work with strict values and native accessibility.
 - [Segmented](components/segmented.md) — Look up the Segmented control's complete public contract and platform evidence.
+- [Search Field](components/search-field.md) — Configure native query entry, clear, submission, and synchronisation behaviour.
 - [Status Label](components/status-label.md) — Look up display-only status text, semantic tones, accessibility, and platform evidence.
 - [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.

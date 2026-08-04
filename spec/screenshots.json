@@ -60,6 +60,16 @@
                 "android-dark": "docs/screenshots/segmented/android-dark.png"
             }
         },
+        "search-field": {
+            "route": "/captures/search-field",
+            "test": "php artisan test tests/Feature/SearchFieldCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/search-field/ios-light.png",
+                "ios-dark": "docs/screenshots/search-field/ios-dark.png",
+                "android-light": "docs/screenshots/search-field/android-light.png",
+                "android-dark": "docs/screenshots/search-field/android-dark.png"
+            }
+        },
         "status-label": {
             "route": "/captures/status-label",
             "test": "php artisan test tests/Feature/StatusLabelCaptureTest.php",

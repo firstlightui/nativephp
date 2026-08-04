@@ -19,6 +19,7 @@
 - [Pill Group](https://firstlightui.dev/components/pill-group): Public API, selection modes, state timing, accessibility, validation, and platform behaviour for Firstlight Pill Group.
 - [Progress](https://firstlightui.dev/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
 - [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
+- [Search Field](https://firstlightui.dev/components/search-field): Public API, focused query synchronisation, native clear and submit behaviour, accessibility, and platform expression for Firstlight Search Field.
 - [Status Label](https://firstlightui.dev/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
 - [Switch](https://firstlightui.dev/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.

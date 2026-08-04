@@ -96,6 +96,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.search-field',
+            'element' => 'FirstlightUI\\Elements\\SearchField',
+            'blade' => 'FirstlightUI\\Components\\SearchField',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.SearchFieldRenderer',
+            'ios_renderer' => 'SearchFieldRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.switch',
             'element' => 'FirstlightUI\\Elements\\SwitchControl',
             'blade' => 'FirstlightUI\\Components\\SwitchControl',
