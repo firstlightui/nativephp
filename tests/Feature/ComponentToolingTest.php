@@ -152,7 +152,9 @@ it('reports an exact missing renderer path', function () {
 });
 
 it('keeps the release gate closed until all documentation evidence exists', function () {
-    $process = new Process([dirname(__DIR__, 2).'/bin/check-component', 'Segmented']);
+    $root = makeSegmentedValidationCopy();
+
+    $process = new Process([$root.'/bin/check-component', 'Segmented']);
     $process->run();
 
     expect($process->getExitCode())->toBe(1)
