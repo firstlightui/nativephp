@@ -26,17 +26,17 @@ details behind the same coherent Firstlight API.
 - Text Field
 - Button
 - Icon Button
-
-### In flight
-
 - Pill Group
 - Progress
 - Switch
+- Badge
+
+### In flight
+
+- Search Field
 
 ## Build order
 
-3. **Badge** — follows Status Label and reuses its display-only semantic tones
-   and accessibility conventions. Audit Mobile UI's badge primitive first.
 4. **Search Field** — builds on Text Field's native editing buffer, sync modes,
    submission behaviour, and clear action, plus Icon Button's compact action
    semantics.
