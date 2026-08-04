@@ -2,7 +2,7 @@
 
 Ratified: 2026-08-03
 
-Last amended: 2026-08-04 (Articles III.3 and IX.6)
+Last amended: 2026-08-04 (Articles II.7, III.3, VI.7, and IX.6)
 
 Status: approved founding constitution
 
@@ -29,6 +29,7 @@ Firstlight values clear APIs, native interaction, equal platform quality, access
 4. Compatibility preserves the NativePHP mental model, not incidental limitations or ambiguous behaviour.
 5. Shared APIs never expose SwiftUI or Compose implementation terminology.
 6. New props must express durable user-facing semantics rather than one renderer's current implementation.
+7. Icon-bearing APIs follow NativePHP's shared fallback, paired `-ios` and `-android` override, and official icon-resolution conventions rather than inventing parallel names or platform handling.
 
 ## Article III: Stable values and predictable state
 
@@ -65,6 +66,7 @@ Firstlight values clear APIs, native interaction, equal platform quality, access
 4. Interaction targets meet the platform baseline: at least 44 points on iOS and 48 dp on Android.
 5. A control without a visible or explicit accessibility label must fail development review.
 6. Accessibility regressions block release.
+7. Decorative icons remain silent to assistive technology. Every icon-only action has an explicit accessible name and meets the platform interaction-target baseline.
 
 ## Article VII: System-first theming
 
@@ -115,3 +117,15 @@ Firstlight values clear APIs, native interaction, equal platform quality, access
 2. Amendments require a written rationale, affected principles, migration impact, and explicit maintainer approval.
 3. An amendment and the code that relies on it must not be hidden in the same unremarked change.
 4. Component documentation and implementation plans may evolve without constitutional amendment when they remain within these principles.
+
+## Amendment record: shared icon contract
+
+Date: 2026-08-04
+
+Rationale: NativePHP supplies one icon resolver with a shared fallback, typed iOS and Android overrides, and Android Material variants. Firstlight needs the same vocabulary across Text Field, Button, Icon Button, and later icon-bearing controls so equivalent migrations do not require relearning icon props and accessibility does not depend on each component author.
+
+Affected principles: Article II's familiar and coherent APIs and Article VI's accessibility correctness.
+
+Migration impact: none. No released Firstlight component currently exposes a public icon API.
+
+Approval: explicitly approved by the maintainer during the Text Field component build on 2026-08-04.
