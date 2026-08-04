@@ -13,6 +13,7 @@
 - [Theme Firstlight components](https://firstlightui.dev/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
 - [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
 - [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
+- [Button](https://firstlightui.dev/components/button): Public API, variants, states, accessibility, adapter behaviour, compatibility, and visual evidence for Firstlight Button.
 - [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
 - [Status Label](https://firstlightui.dev/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.

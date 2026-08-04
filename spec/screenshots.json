@@ -1,5 +1,15 @@
 {
     "components": {
+        "button": {
+            "route": "/captures/button",
+            "test": "php artisan test tests/Feature/ButtonCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/button/ios-light.png",
+                "ios-dark": "docs/screenshots/button/ios-dark.png",
+                "android-light": "docs/screenshots/button/android-light.png",
+                "android-dark": "docs/screenshots/button/android-dark.png"
+            }
+        },
         "segmented": {
             "route": "/captures/segmented",
             "test": "php artisan test tests/Feature/SegmentedCaptureTest.php",

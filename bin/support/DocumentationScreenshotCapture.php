@@ -56,15 +56,27 @@ final class DocumentationScreenshotCapture
 
         $originalIosAppearance = null;
         $originalAndroidAppearance = null;
+        $environmentPath = $showcaseRoot.'/.env';
+        $originalEnvironment = is_file($environmentPath) ? file_get_contents($environmentPath) : false;
         $failure = null;
         $restorationFailure = null;
         $published = [];
 
         try {
+            if (! is_string($originalEnvironment)) {
+                throw new RuntimeException('Showcase .env is required for native screenshot capture.');
+            }
+            $this->primeStartUrl($environmentPath, $originalEnvironment, $manifest['route']);
+
+            $this->terminateIosApplication($request->iosUdid, $androidAppId);
             $this->execute(
                 'launch-ios',
                 ['php', 'artisan', 'native:run', 'ios', $request->iosUdid, '--start-url='.$manifest['route'], '--no-tty'],
                 $showcaseRoot,
+            );
+            $this->execute(
+                'terminate-android-before-launch',
+                ['adb', '-s', $request->androidSerial, 'shell', 'am', 'force-stop', $androidAppId],
             );
             $this->execute(
                 'launch-android',
@@ -124,6 +136,9 @@ final class DocumentationScreenshotCapture
                         'restore-android-appearance',
                         ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $originalAndroidAppearance],
                     );
+                }
+                if (is_string($originalEnvironment) && file_put_contents($environmentPath, $originalEnvironment) === false) {
+                    throw new RuntimeException('Unable to restore showcase .env after screenshot capture.');
                 }
             } catch (Throwable $exception) {
                 $restorationFailure = $exception;
@@ -280,6 +295,42 @@ final class DocumentationScreenshotCapture
         }
 
         return $appId;
+    }
+
+    private function primeStartUrl(string $environmentPath, string $environment, string $route): void
+    {
+        if (preg_match('#^/[A-Za-z0-9/_-]+$#', $route) !== 1) {
+            throw new RuntimeException("Invalid screenshot route: {$route}");
+        }
+
+        $line = 'NATIVEPHP_START_URL='.$route;
+        $updated = preg_match('/^NATIVEPHP_START_URL=.*$/m', $environment) === 1
+            ? preg_replace('/^NATIVEPHP_START_URL=.*$/m', $line, $environment)
+            : rtrim($environment).PHP_EOL.$line.PHP_EOL;
+
+        if (! is_string($updated) || file_put_contents($environmentPath, $updated) === false) {
+            throw new RuntimeException('Unable to prime showcase start URL for screenshot capture.');
+        }
+    }
+
+    private function terminateIosApplication(string $udid, string $appId): void
+    {
+        $command = ['xcrun', 'simctl', 'terminate', $udid, $appId];
+        $this->commands['terminate-ios-before-launch'] = implode(' ', array_map($this->quoteArgument(...), $command));
+        $result = $this->runner->run($command);
+
+        if ($result['exitCode'] === 0) {
+            return;
+        }
+
+        $detail = trim($result['stderr']) ?: trim($result['stdout']);
+        foreach (['found nothing to terminate', 'did not find requested application', 'not running'] as $allowed) {
+            if (str_contains(strtolower($detail), $allowed)) {
+                return;
+            }
+        }
+
+        throw new RuntimeException($detail !== '' ? $detail : 'Unable to terminate iOS showcase before launch.');
     }
 
     private function assertAndroidApplicationForeground(string $serial, string $appId, string $stage): void

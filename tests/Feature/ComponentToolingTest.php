@@ -88,6 +88,51 @@ function makeSegmentedValidationCopy(): string
     return $root;
 }
 
+function makeButtonAdapterValidationCopy(): string
+{
+    $sourceRoot = dirname(__DIR__, 2);
+    $root = componentToolingRoot();
+
+    foreach ([
+        'Constitution.md',
+        'bin/check-component',
+        'vendor/nativephp/mobile-ui/nativephp.json',
+    ] as $path) {
+        copyComponentToolingPath($sourceRoot.'/'.$path, $root.'/'.$path);
+    }
+
+    foreach ([
+        'src/Components/Button.php',
+        'src/Elements/Button.php',
+        'tests/Feature/ButtonElementTest.php',
+    ] as $path) {
+        if (! is_dir(dirname($root.'/'.$path))) {
+            mkdir(dirname($root.'/'.$path), 0755, true);
+        }
+
+        file_put_contents($root.'/'.$path, "<?php\n");
+    }
+
+    file_put_contents($root.'/nativephp.json', json_encode([
+        'components' => [[
+            'type' => 'firstlight.button',
+            'element' => 'FirstlightUI\\Elements\\Button',
+            'blade' => 'FirstlightUI\\Components\\Button',
+            'android_renderer' => 'com.nativephp.plugins.native_ui.ui.ButtonRenderer',
+            'ios_renderer' => 'NativeUIButtonRenderer',
+            'self_closing' => true,
+            'adapter' => [
+                'package' => 'nativephp/mobile-ui',
+                'type' => 'button',
+            ],
+        ]],
+    ], JSON_THROW_ON_ERROR));
+
+    installDocumentationGateProbe($root);
+
+    return $root;
+}
+
 function installDocumentationGateProbe(string $root): string
 {
     $log = $root.'/documentation-gate-arguments';
@@ -165,6 +210,30 @@ it('reports an exact missing renderer path', function () {
 
     expect($process->getExitCode())->toBe(1)
         ->and($process->getErrorOutput())->toContain('resources/android/SegmentedRenderer.kt');
+});
+
+it('accepts an official adapter without placeholder native sources', function () {
+    $root = makeButtonAdapterValidationCopy();
+
+    $process = new Process([$root.'/bin/check-component', 'Button', '--development']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(0)
+        ->and($process->getOutput())->toContain('Constitution checks passed');
+});
+
+it('rejects adapter renderer mappings that drift from the official primitive', function () {
+    $root = makeButtonAdapterValidationCopy();
+    $manifest = json_decode(file_get_contents($root.'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    $manifest['components'][0]['ios_renderer'] = 'FirstlightButtonRenderer';
+    file_put_contents($root.'/nativephp.json', json_encode($manifest, JSON_THROW_ON_ERROR));
+
+    $process = new Process([$root.'/bin/check-component', 'Button', '--development']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1)
+        ->and($process->getErrorOutput())
+        ->toContain('Manifest ios_renderer must match nativephp/mobile-ui button: NativeUIButtonRenderer');
 });
 
 it('keeps the release gate closed until all documentation evidence exists', function () {
