@@ -37,15 +37,16 @@ details behind the same coherent Firstlight API.
 - Time Picker
 - Select
 - Slider
+- Stepper
 
 ### In flight
 
-- Stepper
+- None
 
 ## Build order
 
-6. **Stepper** — reuses Slider's numeric range contract and Icon Button's
-   accessible increment and decrement actions.
+All alpha catalogue components are implemented. Remaining work belongs to the
+shared alpha release gate below rather than another component build.
 
 ## Dependency spine
 
