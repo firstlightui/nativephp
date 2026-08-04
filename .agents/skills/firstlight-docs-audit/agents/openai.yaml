@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Docs Audit"
+  short_description: "Audit Firstlight documentation against source"
+  default_prompt: "Use $firstlight-docs-audit to audit Firstlight documentation for drift and gaps."

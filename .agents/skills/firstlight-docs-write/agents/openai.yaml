@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Docs Write"
+  short_description: "Write source-backed Firstlight documentation"
+  default_prompt: "Use $firstlight-docs-write to document a Firstlight package capability."

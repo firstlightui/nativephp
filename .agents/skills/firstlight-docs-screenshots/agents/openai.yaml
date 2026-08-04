@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Docs Screenshots"
+  short_description: "Capture paired native documentation images"
+  default_prompt: "Use $firstlight-docs-screenshots to capture Firstlight component documentation images."

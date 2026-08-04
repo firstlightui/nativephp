@@ -1,0 +1,48 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FirstlightUI\Documentation\DocumentationArtifactBuilder;
+use FirstlightUI\Documentation\DocumentationRepository;
+
+require_once __DIR__.'/support/DocumentationPage.php';
+require_once __DIR__.'/support/DocumentationRepository.php';
+require_once __DIR__.'/support/DocumentationArtifactBuilder.php';
+
+if ($argc !== 1) {
+    fwrite(STDERR, "Usage: bin/build-docs-artifacts\n");
+    exit(2);
+}
+
+$root = dirname(__DIR__);
+$temporary = [];
+
+try {
+    $outputs = (new DocumentationArtifactBuilder(new DocumentationRepository($root)))->outputs();
+
+    foreach ($outputs as $path => $contents) {
+        $temporary[$path] = tempnam($root, '.'.$path.'.tmp.');
+        if ($temporary[$path] === false || file_put_contents($temporary[$path], $contents) === false) {
+            throw new RuntimeException("Unable to write temporary documentation artefact: {$path}");
+        }
+    }
+
+    foreach ($temporary as $path => $temporaryPath) {
+        if (! rename($temporaryPath, $root.'/'.$path)) {
+            throw new RuntimeException("Unable to publish documentation artefact: {$path}");
+        }
+        unset($temporary[$path]);
+    }
+
+    fwrite(STDOUT, "Built llms.txt and llms-full.txt.\n");
+} catch (Throwable $exception) {
+    foreach ($temporary as $temporaryPath) {
+        if (is_string($temporaryPath) && is_file($temporaryPath)) {
+            unlink($temporaryPath);
+        }
+    }
+
+    fwrite(STDERR, $exception->getMessage()."\n");
+    exit(1);
+}

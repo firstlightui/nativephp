@@ -1,0 +1,16 @@
+# Firstlight UI
+
+> Current public documentation for firstlightui/nativephp.
+
+- Website: https://firstlightui.dev
+- Repository: https://github.com/firstlightui/nativephp
+- Package: firstlightui/nativephp
+
+## Documentation
+
+- [Install Firstlight UI](https://firstlightui.dev/getting-started/installation): Install Firstlight, register its NativePHP plugin, and rebuild the native projects.
+- [Build your first Firstlight component](https://firstlightui.dev/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
+- [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
+- [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
+- [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
+- [Compatibility](https://firstlightui.dev/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.

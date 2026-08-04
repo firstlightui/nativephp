@@ -1,0 +1,256 @@
+# Firstlight UI Documentation
+
+--- Source: docs/getting-started/installation.md ---
+
+# Install Firstlight UI
+
+## Requirements
+
+Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
+
+## Install and register the plugin
+
+Install Firstlight as a normal Composer dependency:
+
+```bash
+composer require firstlightui/nativephp
+```
+
+Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
+
+```bash
+php artisan native:plugin:register
+```
+
+The command discovers unregistered plugins. If your application disables Laravel package discovery, register `FirstlightUI\FirstlightServiceProvider` through the application's normal provider configuration as well.
+
+## Rebuild the native projects
+
+Native renderer source is compiled into the host application. Regenerate the native projects after installing or updating Firstlight:
+
+```bash
+php artisan native:install --force
+```
+
+Build and run the application through your normal NativePHP workflow. Firstlight's `<firstlight:...>` tags are collected as native elements only in a native render; an ordinary web render leaves them unchanged.
+
+## Next step
+
+Build [your first Firstlight component](first-component.md).
+
+--- Source: docs/getting-started/first-component.md ---
+
+# Build Your First Firstlight Component
+
+This tutorial adds a native Segmented control for choosing a queue. The same EDGE markup renders as a platform-appropriate control on iOS and Android.
+
+## Define the state
+
+Add the selected value and stable value-to-label options to your EDGE component:
+
+```php
+public string $queue = 'mine';
+
+public array $queueOptions = [
+    'mine' => 'Mine',
+    'all' => 'All',
+];
+```
+
+The array keys are the public values stored in `$queue`; the labels are display text.
+
+## Render the control
+
+Bind the property with `native:model`:
+
+```blade
+<firstlight:segmented
+    :options="$queueOptions"
+    native:model="queue"
+    label="Queue"
+    helper="Choose the active queue."
+/>
+```
+
+Run the application natively. A selection emits its stable value to PHP, and the published `$queue` value determines the visible selection.
+
+## Handle a selection explicitly
+
+Use `@change` when the selection should call a method instead of directly synchronising a property:
+
+```blade
+<firstlight:segmented
+    :options="$queueOptions"
+    :value="$queue"
+    @change="selectQueue"
+    label="Queue"
+/>
+```
+
+The method receives the selected string value. See the [Segmented reference](../components/segmented.md) for integer values, disabled choices, accessibility, and validation rules.
+
+--- Source: docs/concepts/supernative-components.md ---
+
+# SuperNative Components
+
+Firstlight is a NativePHP SuperNative UI plugin. It participates in the same EDGE, Element Tree, native renderer, and wire-event lifecycle as NativePHP's own native UI components.
+
+## From EDGE to an Element Tree
+
+The Firstlight precompiler maps an authored tag such as `<firstlight:segmented>` to its Blade component during a native render. The component declares the `firstlight.segmented` element type. Its PHP element validates authored input, normalises options, and publishes a primitive Element Tree payload.
+
+The payload carries stable values, labels, enabled state, field metadata, accessibility text, and callback identifiers. It does not carry SwiftUI or Compose objects and does not introduce a separate JSON bridge.
+
+## Genuine platform renderers
+
+The plugin manifest maps the same element type to `SegmentedRenderer` on iOS and `dev.firstlightui.plugins.firstlight_ui.ui.SegmentedRenderer` on Android. The iOS renderer creates a native SwiftUI/UIKit control. The Android renderer creates a Material 3 Jetpack Compose control.
+
+The shared API guarantees the component's meaning and behaviour. Each platform retains its own geometry, materials, typography, state layers, motion, and accessibility conventions.
+
+## Semantic events and reconciliation
+
+A native interaction sends a semantic change event with the stable public value, not a renderer index or display label. PHP processes that event and publishes the next Element Tree. The renderer reconciles its control from the newly published value.
+
+That lifecycle keeps application decisions in PHP while ordinary native interaction and presentation remain on the platform UI thread. Read [server-authoritative state](server-authoritative-state.md) for the selection timing contract.
+
+--- Source: docs/concepts/server-authoritative-state.md ---
+
+# Server-authoritative State
+
+Firstlight selection controls treat PHP's published value as authoritative. Native interaction is immediate, but it does not create an independent source of truth.
+
+## Interaction and acceptance
+
+When a person selects an enabled option, the native renderer immediately sends the option's stable value through the component callback. PHP may accept it by publishing that value, transform it according to application rules, or reject it by retaining the existing value.
+
+The renderer reconciles from every resulting Element Tree publication. An accepted value becomes selected. A rejected value returns to, or remains at, the last published selection. Reconciliation itself never emits another change event.
+
+## Repeated attempts and programmatic changes
+
+Each user attempt is semantic. If PHP rejects a choice, selecting that choice again sends another event rather than being suppressed as a duplicate of the rejected attempt.
+
+A programmatic PHP update changes the published selection without masquerading as a user interaction. It therefore updates the native control without firing `@change` back to PHP.
+
+## No selection
+
+`null` means no selection. It is distinct from an authored empty-string value. A same-typed value that is not present in the current options also renders with no selected segment; Firstlight never silently selects the first option.
+
+This timing is why Segmented accepts plain `native:model` and `native:model.live`, but rejects deferred `blur` and `debounce` sync modes.
+
+--- Source: docs/components/segmented.md ---
+
+# Segmented
+
+Segmented presents a small set of mutually exclusive choices as a native segmented control.
+
+## Complete example
+
+```php
+public int $priority = 10;
+
+public array $priorityOptions = [
+    ['value' => 10, 'label' => 'Routine'],
+    ['value' => 20, 'label' => 'Urgent', 'disabled' => true],
+];
+```
+
+```blade
+<firstlight:segmented
+    :options="$priorityOptions"
+    native:model="priority"
+    label="Priority"
+    helper="Choose a response priority."
+    a11y-hint="Urgent may be unavailable."
+/>
+```
+
+## Props
+
+| API | Accepted type | Purpose |
+| --- | --- | --- |
+| `options` | `array` | Simple strings, a value-to-label map, or rich option arrays. |
+| `value` / `native:model` | `string`, `int`, or `null` | Stable selected value. Its type must match the option values. |
+| `label` | `string` | Visible field label. |
+| `helper` | `string` | Supporting text below the control. |
+| `error` | `string` | Error text and error semantics. |
+| `required` | `bool` | Marks the field as required. |
+| `disabled` | `bool` | Disables the complete control. |
+| `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
+| `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `class` | `string` | External EDGE layout utilities. |
+
+## Events
+
+`@change` receives the selected stable value. `native:model` normally generates this callback for property synchronisation. A user selection emits immediately; server reconciliation and programmatic updates do not emit.
+
+## Options and accepted values
+
+Simple string options use the same value and label:
+
+```php
+['Mine', 'All']
+```
+
+A map separates stable values from labels and may use all-string or all-integer keys:
+
+```php
+['mine' => 'Mine', 'all' => 'All']
+```
+
+Rich options accept only `value`, `label`, and optional `disabled` fields:
+
+```php
+[
+    ['value' => 'mine', 'label' => 'Mine'],
+    ['value' => 'all', 'label' => 'All', 'disabled' => true],
+]
+```
+
+All values in one control must be uniquely typed strings or uniquely typed integers. `null` represents no selection; an empty string remains a distinct string value.
+
+## State timing
+
+Segmented is [server-authoritative](../concepts/server-authoritative-state.md). A tap emits immediately, while PHP's next published value determines the visible selection. Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` modes are rejected.
+
+## Disabled behaviour
+
+`disabled` prevents every choice from emitting. A rich option's `disabled: true` prevents only that option from emitting. An empty option set becomes an inert disabled control. A disabled or already-selected choice does not emit a new change.
+
+## Accessibility
+
+Provide either a visible `label` or an explicit `a11y-label`. Firstlight warns during development when both are blank. The renderers expose the label or explicit accessibility label, optional hint, selected state, disabled state, required indication, helper text, and error text through native platform semantics.
+
+## Validation and failure behaviour
+
+Firstlight throws an actionable exception for mixed string and integer values, duplicate values, missing rich-option fields, unknown rich-option fields, non-string labels, non-boolean disabled flags, unsupported value types, or a selected value whose type differs from the options. A same-typed value absent from `options` remains visibly unselected rather than selecting the first option.
+
+## Platform behaviour
+
+iOS uses a native SwiftUI field backed by `UISegmentedControl`. Android uses Material 3 `SingleChoiceSegmentedButtonRow` and `SegmentedButton`. The controls share behaviour and authored API while retaining platform-native styling, layout, and interaction.
+
+## Compatibility
+
+Segmented supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers to be compiled into the host application.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Segmented on iOS in light mode](../screenshots/segmented/ios-light.png) | ![Segmented on iOS in dark mode](../screenshots/segmented/ios-dark.png) |
+| Android | ![Segmented on Android in light mode](../screenshots/segmented/android-light.png) | ![Segmented on Android in dark mode](../screenshots/segmented/android-dark.png) |
+
+--- Source: docs/reference/compatibility.md ---
+
+# Compatibility
+
+| Dependency or platform | Current requirement |
+| --- | --- |
+| PHP | `^8.4` |
+| NativePHP Mobile | `^4.0` |
+| NativePHP Mobile UI | `^0.3` |
+| iOS application target | iOS 18.0 or later |
+| Android application target | API 29 or later |
+| Firstlight Swift package | iOS 18 or later |
+| Swift tools | Swift 6.2 |
+
+These are the package's current declared floors. Firstlight does not promise support for earlier versions. Both the iOS and Android renderers are required for a public component; the same documented EDGE example works on both platforms.

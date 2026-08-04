@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FirstlightUI\Documentation\CaptureCommandRunner;
+use FirstlightUI\Documentation\CaptureRequest;
+use FirstlightUI\Documentation\DocumentationScreenshotCapture;
+
+require_once dirname(__DIR__).'/vendor/autoload.php';
+require_once __DIR__.'/support/CaptureRequest.php';
+require_once __DIR__.'/support/CaptureReport.php';
+require_once __DIR__.'/support/CaptureCommandRunner.php';
+require_once __DIR__.'/support/DocumentationScreenshotCapture.php';
+
+$component = null;
+$options = [];
+foreach (array_slice($argv, 1) as $argument) {
+    if (str_starts_with($argument, '--')) {
+        if (in_array($argument, ['--release', '--keep-failed'], true)) {
+            $options[substr($argument, 2)] = true;
+        } elseif (preg_match('/^--(showcase|ios|android)=(.+)$/', $argument, $matches) === 1) {
+            if (isset($options[$matches[1]])) {
+                $component = null;
+                break;
+            }
+            $options[$matches[1]] = $matches[2];
+        } else {
+            $component = null;
+            break;
+        }
+    } elseif ($component === null) {
+        $component = $argument;
+    } else {
+        $component = null;
+        break;
+    }
+}
+
+if (! is_string($component) || ! isset($options['showcase'], $options['ios'], $options['android'])) {
+    fwrite(STDERR, "Usage: bin/capture-doc-screenshots Component --showcase=PATH --ios=UDID --android=SERIAL [--release] [--keep-failed]\n");
+    exit(2);
+}
+
+$packageRoot = dirname(__DIR__);
+
+try {
+    $report = (new DocumentationScreenshotCapture(new CaptureCommandRunner, $packageRoot))->capture(
+        new CaptureRequest(
+            component: $component,
+            packageRoot: $packageRoot,
+            showcaseRoot: (string) $options['showcase'],
+            iosUdid: (string) $options['ios'],
+            androidSerial: (string) $options['android'],
+            release: (bool) ($options['release'] ?? false),
+            keepFailed: (bool) ($options['keep-failed'] ?? false),
+        ),
+    );
+
+    fwrite(STDOUT, "Package: {$report->packageRevision}".($report->packageDirty ? ' (dirty)' : '')."\n");
+    fwrite(STDOUT, "Showcase: {$report->showcaseRevision}".($report->showcaseDirty ? ' (dirty)' : '')."\n");
+    fwrite(STDOUT, "iOS Simulator: {$report->iosUdid}\nAndroid emulator: {$report->androidSerial}\n");
+    foreach ($report->commands as $label => $command) {
+        fwrite(STDOUT, "Command [{$label}]: {$command}\n");
+    }
+    foreach ($report->outputs as $variant => $path) {
+        fwrite(STDOUT, "Output [{$variant}]: {$path}\n");
+    }
+} catch (Throwable $exception) {
+    fwrite(STDERR, $exception->getMessage()."\n");
+    exit(1);
+}

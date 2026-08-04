@@ -1,0 +1,4 @@
+interface:
+  display_name: "Firstlight Docs Update"
+  short_description: "Update Firstlight docs after code changes"
+  default_prompt: "Use $firstlight-docs-update to update Firstlight documentation for this change."

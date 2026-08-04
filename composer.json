@@ -47,7 +47,9 @@
         "pestphp/pest-plugin-evals": "^5.0"
     },
     "scripts": {
-        "test": "pest"
+        "test": "pest",
+        "docs:build": "bin/build-docs-artifacts",
+        "docs:check": "bin/check-docs --development"
     },
     "config": {
         "allow-plugins": {
