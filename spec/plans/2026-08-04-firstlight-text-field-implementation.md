@@ -1,7 +1,7 @@
 ---
 title: Firstlight Text Field implementation plan
 description: Build and verify the approved cross-platform Text Field contract.
-status: active
+status: complete
 sources:
   - spec/designs/2026-08-04-firstlight-text-field-design.md
   - spec/reference/icons.md
@@ -41,12 +41,12 @@ sources:
 
 ## Task 5: Documentation, showcase, and evidence
 
-- [ ] Write `docs/components/text-field.md`, index it, and add complete showcase fixtures without editing generated native trees.
-- [ ] Add representative iOS/Android snapshots and accessibility states when deterministic hosts are available.
-- [ ] Record development review evidence and any physical-device release blockers.
+- [x] Write `docs/components/text-field.md`, index it, and add complete showcase fixtures without editing generated native trees.
+- [x] Add representative iOS/Android snapshots and accessibility states on deterministic hosts.
+- [x] Record development review evidence and the remaining physical-device and clean-release-capture blockers.
 
 ## Task 6: Complete verification
 
-- [ ] Run focused and full Pest, Swift, and Android suites.
-- [ ] Run `bin/check-component TextField --development`, docs build/check, plugin manifest validation where available, and both consumer builds.
-- [ ] Review the diff requirement-by-requirement against the Constitution and approved design; commit the completed build.
+- [x] Run focused and full Pest, Swift, and Android suites.
+- [x] Run `bin/check-component TextField --development`, docs build/check, plugin manifest validation, and both consumer builds.
+- [x] Review the diff requirement-by-requirement against the Constitution and approved design; commit the completed development build.
