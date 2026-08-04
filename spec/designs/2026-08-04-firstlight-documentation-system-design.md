@@ -378,28 +378,17 @@ constitutions + code + tests + manifest + showcase + docs + generated outputs
 
 ## Testing strategy
 
-Deterministic tooling is developed test-first with Pest. Tests use temporary fixture repositories and fake platform adapters. Coverage includes:
+Documentation does not receive tests merely to increase coverage. Prose, static Markdown structure, generated examples already proven by package or showcase tests, and declarative skill text remain untested unless a concrete regression has occurred or a realistic control demonstrates a meaningful failure.
 
-- stable index ordering and byte-identical generation;
-- malformed or missing frontmatter;
-- missing or irrelevant source paths;
-- duplicate, unindexed, and orphan pages;
-- broken internal links and media references;
-- stale `llms.txt` and `llms-full.txt`;
-- undocumented manifest components;
-- incomplete screenshot matrices;
-- target validation and physical-device rejection;
-- partial capture cleanup and appearance restoration;
-- installed-package mismatch and dirty release rejection.
+Add focused Pest coverage only for reusable executable behaviour where tests provide concrete protection. The initial useful cases are:
 
-Each skill is developed independently using the skill-writing RED-GREEN-REFACTOR workflow:
+- deterministic index ordering and byte-identical LLM generation;
+- parsing and validation failures that would otherwise publish broken metadata, links, sources, component coverage, or screenshot matrices;
+- screenshot-orchestrator safety, including explicit target validation, physical-device rejection, appearance restoration, partial-output cleanup, installed-package mismatch, and dirty release rejection.
 
-1. run realistic baseline scenarios without the skill;
-2. record concrete omissions, wrong output shapes, and rationalisations;
-3. write the smallest skill that corrects those failures;
-4. forward-test the same scenarios with the skill;
-5. close discovered gaps before creating the next skill;
-6. validate every skill folder and its `agents/openai.yaml` metadata.
+Use temporary fixture repositories and fake platform adapters for those executable tests. Do not add one test per rule when a table-driven case or an end-to-end fixture proves the same behaviour.
+
+Validate every skill folder and its `agents/openai.yaml` metadata. Use focused agent scenarios only for behaviour with a demonstrated material risk, such as an audit mutating files, an update rewriting unaffected pages, or screenshot capture proceeding with weak evidence. If the no-skill control already behaves correctly, do not create an artificial skill test.
 
 ## Failure handling
 
