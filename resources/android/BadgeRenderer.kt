@@ -40,7 +40,7 @@ class BadgeRendererState(node: NativeUINode) {
     }
 }
 
-object BadgeRenderer {
+object FirstlightBadgeRenderer {
     @Composable fun Render(node: NativeUINode, modifier: Modifier) {
         val state = remember(node.id) { BadgeRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value

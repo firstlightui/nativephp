@@ -88,8 +88,25 @@ if (is_array($component)) {
     ];
 
     if ($adapter === null) {
+        $androidRendererName = $rendererName;
+        foreach (glob($root.'/vendor/*/*/nativephp.json') ?: [] as $dependencyManifestPath) {
+            $dependencyManifest = json_decode((string) file_get_contents($dependencyManifestPath), true);
+            foreach (is_array($dependencyManifest) ? ($dependencyManifest['components'] ?? []) : [] as $dependencyComponent) {
+                $dependencyRenderer = $dependencyComponent['android_renderer'] ?? null;
+                if (! is_string($dependencyRenderer)) {
+                    continue;
+                }
+
+                $segments = explode('.', $dependencyRenderer);
+                if (end($segments) === $rendererName) {
+                    $androidRendererName = 'Firstlight'.$rendererName;
+                    break 2;
+                }
+            }
+        }
+
         $expected['ios_renderer'] = $rendererName;
-        $expected['android_renderer'] = "dev.firstlightui.plugins.firstlight_ui.ui.{$rendererName}";
+        $expected['android_renderer'] = "dev.firstlightui.plugins.firstlight_ui.ui.{$androidRendererName}";
     } else {
         $package = $adapter['package'] ?? null;
         $type = $adapter['type'] ?? null;

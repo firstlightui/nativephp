@@ -96,7 +96,7 @@ it('declares paired package renderer identifiers', function () {
         'type' => 'firstlight.badge',
         'element' => 'FirstlightUI\\Elements\\Badge',
         'blade' => 'FirstlightUI\\Components\\Badge',
-        'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.BadgeRenderer',
+        'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightBadgeRenderer',
         'ios_renderer' => 'BadgeRenderer',
         'self_closing' => true,
     ]);
