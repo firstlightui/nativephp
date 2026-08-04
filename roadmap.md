@@ -28,37 +28,35 @@ details behind the same coherent Firstlight API.
 
 ### In flight
 
-- Icon Button
 - Pill Group
+- Progress
 - Switch
 
 ## Build order
 
-1. **Progress** — follows Button so it can reuse the established loading,
-   busy-state, tone, and accessibility semantics. Audit Mobile UI's progress
-   primitive for a thin-wrapper implementation first.
-2. **Badge** — follows Status Label and reuses its display-only semantic tones
+1. **Icon Button** - may not be built yet, was meant to be part of the button work.
+3. **Badge** — follows Status Label and reuses its display-only semantic tones
    and accessibility conventions. Audit Mobile UI's badge primitive first.
-3. **Search Field** — builds on Text Field's native editing buffer, sync modes,
+4. **Search Field** — builds on Text Field's native editing buffer, sync modes,
    submission behaviour, and clear action, plus Icon Button's compact action
    semantics.
-4. **Text Area** — extends the proven Text Field editing model to multiline
+5. **Text Area** — extends the proven Text Field editing model to multiline
    input, selection, composition, scrolling, and multiline accessibility.
-5. **Choice Group** — builds on Pill Group's stable option normalisation and
+6. **Choice Group** — builds on Pill Group's stable option normalisation and
    establishes the shared single- and multiple-selection contract for visible
    choices. Audit Mobile UI's radio and checkbox primitives first.
-6. **Select** — follows Choice Group for stable option values and Search Field
+7. **Select** — follows Choice Group for stable option values and Search Field
    for searchable large-collection presentation. Audit Mobile UI's select
    primitive first.
-7. **Slider** — establishes continuous numeric values, range and step
+8. **Slider** — establishes continuous numeric values, range and step
    validation, and live, blur, and debounce event frequency. Audit Mobile UI's
    slider primitive first.
-8. **Stepper** — reuses Slider's numeric range contract and Icon Button's
+9. **Stepper** — reuses Slider's numeric range contract and Icon Button's
    accessible increment and decrement actions.
-9. **Date Picker** — establishes native picker presentation, bounds, locale,
+10. **Date Picker** — establishes native picker presentation, bounds, locale,
    timezone, and wall-clock ISO date values. Audit Mobile UI's date-picker
    primitive first.
-10. **Time Picker** — reuses Date Picker's presentation, internationalisation,
+11. **Time Picker** — reuses Date Picker's presentation, internationalisation,
     reconciliation, and evidence patterns with a time-specific public value.
 
 ## Dependency spine

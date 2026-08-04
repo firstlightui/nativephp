@@ -12,6 +12,8 @@ sources:
   - src/FirstlightTagPrecompiler.php
   - src/Components/Button.php
   - src/Elements/Button.php
+  - src/Components/Progress.php
+  - src/Elements/Progress.php
   - src/Components/Segmented.php
   - src/Elements/Segmented.php
   - resources/ios/SegmentedRenderer.swift
@@ -47,9 +49,9 @@ The current renderer-backed path is:
 7. User interaction travels through the official NativePHP event seam. PHP accepts or rejects the proposed change and publishes the next tree.
 8. The native renderer finds its node in that publication and reconciles visible state without emitting another user event.
 
-An adapter-backed component keeps the same public Firstlight tag and `firstlight.<slug>` Element Tree type but delegates to an adequate official primitive. Its manifest entry identifies the official package and type, while its renderer identifiers match that dependency's manifest. This gives consumers a coherent Firstlight catalogue without duplicating mature native code or leaking a second public API. Button is the first adapter-backed example.
+An adapter-backed component keeps the same public Firstlight tag and `firstlight.<slug>` Element Tree type but delegates to an adequate official primitive. Its manifest entry identifies the official package and type, while its renderer identifiers match that dependency's manifest. This gives consumers a coherent Firstlight catalogue without duplicating mature native code or leaking a second public API. Button and Progress are current adapter-backed examples.
 
-If a later durable, cross-platform Button requirement cannot be expressed by the official primitive, Firstlight can replace the delegated renderer identifiers with package-owned renderers without changing consumer markup. Platform-only novelty or visual preference does not justify that migration.
+If a later durable, cross-platform adapter requirement cannot be expressed by the official primitive, Firstlight can replace the delegated renderer identifiers with package-owned renderers without changing consumer markup. Platform-only novelty or visual preference does not justify that migration.
 
 ## Element contract
 
