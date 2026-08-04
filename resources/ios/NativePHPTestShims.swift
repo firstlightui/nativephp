@@ -2,7 +2,7 @@
 import SwiftUI
 
 // These shims mirror only the NativePHP 4.0.1 and Mobile UI 0.3.0 APIs used by
-// SegmentedRenderer. NativePHP copies plugin sources into its Xcode target,
+// the package renderers. NativePHP copies plugin sources into its Xcode target,
 // where SWIFT_PACKAGE is not defined and the real framework APIs are used.
 
 struct NodeLayout: Equatable {}
@@ -89,6 +89,10 @@ final class NativeUIBridge: ObservableObject {
 
     static func sendSelectChangeEvent(_ callbackId: Int, nodeId: Int, value: String) {}
     static func sendPressEvent(_ callbackId: Int, nodeId: Int) {}
+}
+
+final class NativeElementBridge {
+    static func sendToggleChangeEvent(_ callbackId: Int, nodeId: Int, value: Bool) {}
 }
 
 struct NativeUITokens: Equatable {
