@@ -48,6 +48,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.badge',
+            'element' => 'FirstlightUI\\Elements\\Badge',
+            'blade' => 'FirstlightUI\\Components\\Badge',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.BadgeRenderer',
+            'ios_renderer' => 'BadgeRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.button',
             'element' => 'FirstlightUI\\Elements\\Button',
             'blade' => 'FirstlightUI\\Components\\Button',

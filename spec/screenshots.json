@@ -1,5 +1,15 @@
 {
     "components": {
+        "badge": {
+            "route": "/captures/badge",
+            "test": "php artisan test tests/Feature/BadgeCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/badge/ios-light.png",
+                "ios-dark": "docs/screenshots/badge/ios-dark.png",
+                "android-light": "docs/screenshots/badge/android-light.png",
+                "android-dark": "docs/screenshots/badge/android-dark.png"
+            }
+        },
         "button": {
             "route": "/captures/button",
             "test": "php artisan test tests/Feature/ButtonCaptureTest.php",
