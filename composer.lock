@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c14ba81c895b54829214b64c602b6363",
+    "content-hash": "4ffb75e3027e6ed87bb9b5675d545363",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4795,6 +4795,97 @@
                 {
                     "url": "https://github.com/nunomaduro",
                     "type": "github"
+                }
+            ],
+            "time": "2026-07-21T07:48:55+00:00"
+        },
+        {
+            "name": "pestphp/pest-plugin-evals",
+            "version": "v5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pestphp/pest-plugin-evals.git",
+                "reference": "53562da1c912aa04007d5c02a42529e401fc3271"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pestphp/pest-plugin-evals/zipball/53562da1c912aa04007d5c02a42529e401fc3271",
+                "reference": "53562da1c912aa04007d5c02a42529e401fc3271",
+                "shasum": ""
+            },
+            "require": {
+                "pestphp/pest": "^5.0.0",
+                "pestphp/pest-plugin": "^5.0.0",
+                "php": "^8.4"
+            },
+            "conflict": {
+                "laravel/ai": "<0.9.1 || >=0.10.0",
+                "pestphp/pest": "<5.0.0"
+            },
+            "require-dev": {
+                "laravel/ai": "^0.9.1",
+                "laravel/framework": "^13.20.0",
+                "orchestra/testbench": "^11.1.0",
+                "pestphp/pest-dev-tools": "^5.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "pest": {
+                    "plugins": [
+                        "Pest\\Evals\\Plugin"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Autoload.php"
+                ],
+                "psr-4": {
+                    "Pest\\Evals\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Pushpak Chhajed",
+                    "email": "pushpak1300@gmail.com"
+                },
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "A PestPHP plugin for evaluating LLM agents with LLM-as-judge, semantic similarity, and deterministic scorers",
+            "keywords": [
+                "ai",
+                "eval",
+                "framework",
+                "llm",
+                "pest",
+                "php",
+                "plugin",
+                "test",
+                "testing",
+                "unit"
+            ],
+            "support": {
+                "source": "https://github.com/pestphp/pest-plugin-evals/tree/v5.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=66BYDWAT92N6L",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/nunomaduro",
+                    "type": "patreon"
                 }
             ],
             "time": "2026-07-21T07:48:55+00:00"
