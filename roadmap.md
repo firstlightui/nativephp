@@ -33,26 +33,23 @@ details behind the same coherent Firstlight API.
 - Search Field
 - Text Area
 - Date Picker
+- Choice Group
 
 ### In flight
 
-- Choice Group
 - Time Picker
 
 ## Build order
 
-6. **Choice Group** — builds on Pill Group's stable option normalisation and
-   establishes the shared single- and multiple-selection contract for visible
-   choices. Audit Mobile UI's radio and checkbox primitives first.
-7. **Select** — follows Choice Group for stable option values and Search Field
+6. **Select** — follows Choice Group for stable option values and Search Field
    for searchable large-collection presentation. Audit Mobile UI's select
    primitive first.
-8. **Slider** — establishes continuous numeric values, range and step
+7. **Slider** — establishes continuous numeric values, range and step
    validation, and live, blur, and debounce event frequency. Audit Mobile UI's
    slider primitive first.
-9. **Stepper** — reuses Slider's numeric range contract and Icon Button's
+8. **Stepper** — reuses Slider's numeric range contract and Icon Button's
    accessible increment and decrement actions.
-10. **Time Picker** — reuses Date Picker's presentation, internationalisation,
+9. **Time Picker** — reuses Date Picker's presentation, internationalisation,
     reconciliation, and evidence patterns with a time-specific public value.
 
 ## Dependency spine
