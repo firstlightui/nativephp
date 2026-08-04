@@ -2,7 +2,7 @@
 
 Ratified: 2026-08-03
 
-Last amended: 2026-08-04 (Article III.3)
+Last amended: 2026-08-04 (Articles III.3 and IX.6)
 
 Status: approved founding constitution
 
@@ -90,7 +90,7 @@ Firstlight values clear APIs, native interaction, equal platform quality, access
 3. Accessibility semantics and representative screenshots are tested.
 4. Physical-device release checks cover interaction, motion, presentation, accessibility, offline behaviour, reconciliation, and rapid input.
 5. The separate Firstlight showcase proves real Composer installation and plugin registration.
-6. Clinically Mobile dogfoods every public component in a production workflow before its first release.
+6. The separate Firstlight showcase dogfoods every public component and documented state before release.
 7. Native feel requires structured human or agent review and cannot be inferred solely from file existence or screenshots.
 
 ## Article X: Public alpha stewardship
