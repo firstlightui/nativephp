@@ -35,9 +35,9 @@ sources:
 
 ## Task 4: Implement the Material 3 renderer
 
-- [ ] Add failing Kotlin tests for configuration, focused draft reconciliation, dispatch policy, clear/reveal semantics, icon variants, accessibility, and font scaling.
-- [ ] Implement Material 3 `OutlinedTextField` with native keyboard/IME/content hints, semantic icons, 48-dp actions, and official bridge events.
-- [ ] Run `testDebugUnitTest` and commit.
+- [x] Add failing Kotlin tests for configuration, focused draft reconciliation, dispatch policy, clear/reveal semantics, icon variants, accessibility, and font scaling.
+- [x] Implement Material 3 `OutlinedTextField` with native keyboard/IME/content hints, autofill semantics, semantic icons, 48-dp actions, and official bridge events.
+- [x] Run `testDebugUnitTest` and record representative Paparazzi baselines.
 
 ## Task 5: Documentation, showcase, and evidence
 

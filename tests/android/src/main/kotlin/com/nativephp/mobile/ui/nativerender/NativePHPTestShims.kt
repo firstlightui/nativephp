@@ -3,6 +3,7 @@ package com.nativephp.mobile.ui.nativerender
 class GenericProps(private val values: Map<String, Any> = emptyMap()) {
     fun getString(key: String, default: String = ""): String = values[key] as? String ?: default
     fun getBool(key: String, default: Boolean = false): Boolean = values[key] as? Boolean ?: default
+    fun getInt(key: String, default: Int = 0): Int = (values[key] as? Number)?.toInt() ?: default
     fun getCallbackId(key: String): Int = (values[key] as? Number)?.toInt() ?: 0
 
     @Suppress("UNCHECKED_CAST")
@@ -14,6 +15,7 @@ data class NativeUITree(val root: NativeUINode)
 data class NativeUINode(
     val id: Int,
     val props: GenericProps,
+    val onPress: Int = 0,
     val children: List<NativeUINode> = emptyList(),
 )
 
