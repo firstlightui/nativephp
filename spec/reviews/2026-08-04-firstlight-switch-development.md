@@ -19,9 +19,9 @@ Date: 2026-08-04
 
 Mode: development
 
-Package revision reviewed: `30ed163`
+Package revision reviewed: `cadcfab`
 
-Showcase revision reviewed: `e7a9bd2`
+Showcase revision reviewed: `66985e0`
 
 Overall development verdict: **BLOCKED**. Implementation, package gates,
 consumer tests, and both showcase host builds pass. The maintainer deferred the
@@ -105,7 +105,7 @@ into a pass.
 
 ```text
 composer test
-PASS — 218 tests, 710 assertions; 5 model-backed evals skipped by design
+PASS — 245 tests, 788 assertions; 5 model-backed evals skipped by design
 
 composer validate --strict
 PASS
@@ -127,7 +127,7 @@ php artisan test tests/Feature/SwitchShowcaseTest.php tests/Feature/SwitchCaptur
 PASS — 3 tests, 66 assertions
 
 php artisan test
-PASS — 40 tests, 569 assertions
+PASS — 44 tests, 610 assertions
 
 php artisan native:plugin:validate /private/tmp/clinically-au/firstlight-ui
 PASS with expected warning — no custom bridge_functions; Switch uses the
