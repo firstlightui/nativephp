@@ -187,7 +187,8 @@ internal fun textFieldKeyboardOptions(configuration: TextFieldRendererConfigurat
         "number" -> KeyboardType.Number; "decimal" -> KeyboardType.Decimal; else -> KeyboardType.Text
     },
     imeAction = when (configuration.submitLabel) {
-        "go" -> ImeAction.Go; "next" -> ImeAction.Next; "search" -> ImeAction.Search; "send" -> ImeAction.Send; else -> ImeAction.Done
+        "done" -> ImeAction.Done; "go" -> ImeAction.Go; "next" -> ImeAction.Next
+        "search" -> ImeAction.Search; "send" -> ImeAction.Send; else -> ImeAction.Default
     },
 )
 

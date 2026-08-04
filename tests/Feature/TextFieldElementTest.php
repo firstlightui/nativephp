@@ -1,9 +1,21 @@
 <?php
 
 use FirstlightUI\Elements\TextField;
+use FirstlightUI\FirstlightServiceProvider;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use Illuminate\Events\Dispatcher;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\View\Compilers\BladeCompiler;
+use Illuminate\View\Component;
+use Illuminate\View\Engines\CompilerEngine;
+use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\Factory;
+use Illuminate\View\FileViewFinder;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
+use Native\Mobile\Edge\NativeTagPrecompiler;
 use Native\Mobile\Icon\AndroidSymbol;
 use Native\Mobile\Icon\IosSymbol;
 use Native\Mobile\Platform;
@@ -31,10 +43,97 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    NativeTagPrecompiler::setActive(false);
     NativeElementCollector::reset();
     ElementRegistry::reset();
     Platform::set(null);
 });
+
+/** @return array{compiled: string, output: string, tree: ?array, registry: CallbackRegistry} */
+function compileFirstlightTextFieldView(string $source, array $data, bool $native = true): array
+{
+    $filesystem = new Filesystem;
+    $temporaryPath = sys_get_temp_dir().'/firstlight-text-field-blade-'.bin2hex(random_bytes(8));
+    $compiledPath = $temporaryPath.'/compiled';
+    $viewsPath = $temporaryPath.'/views';
+    $filesystem->makeDirectory($compiledPath, 0755, true);
+    $filesystem->makeDirectory($viewsPath, 0755, true);
+
+    $previousContainer = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+
+    $container->instance('config', new class($compiledPath)
+    {
+        public function __construct(private string $compiledPath) {}
+
+        public function get(string $key, mixed $default = null): mixed
+        {
+            return $key === 'view.compiled' ? $this->compiledPath : $default;
+        }
+    });
+
+    $compiler = new BladeCompiler($filesystem, $compiledPath);
+    $resolver = new EngineResolver;
+    $resolver->register('blade', fn () => new CompilerEngine($compiler, $filesystem));
+
+    $factory = new Factory(
+        $resolver,
+        new FileViewFinder($filesystem, [$viewsPath]),
+        new Dispatcher($container),
+    );
+    $factory->setContainer($container);
+    $factory->addExtension('blade.php', 'blade');
+    $factory->addNamespace('__components', $compiledPath);
+
+    $container->instance(ViewFactoryContract::class, $factory);
+    $container->instance('view', $factory);
+    $container->instance('blade.compiler', $compiler);
+
+    Component::flushCache();
+    $compiler->component('native-firstlight-text-field', \FirstlightUI\Components\TextField::class);
+    $compiler->precompiler(new NativeTagPrecompiler);
+    (new FirstlightServiceProvider($container))->boot();
+
+    NativeElementCollector::reset();
+    NativeTagPrecompiler::setActive($native);
+
+    try {
+        $compiled = $compiler->compileString($source);
+        extract($data, EXTR_SKIP);
+        $__env = $factory;
+
+        ob_start();
+        try {
+            Component::flushCache();
+            eval('?>'.$compiled);
+            $output = ob_get_clean();
+        } catch (Throwable $exception) {
+            ob_end_clean();
+            throw $exception;
+        }
+
+        $registry = new CallbackRegistry;
+
+        try {
+            $tree = NativeElementCollector::collect()->toArray($registry);
+        } catch (RuntimeException $exception) {
+            if ($exception->getMessage() !== 'No root element was built by the Blade template.') {
+                throw $exception;
+            }
+
+            $tree = null;
+        }
+
+        return compact('compiled', 'output', 'tree', 'registry');
+    } finally {
+        NativeTagPrecompiler::setActive(false);
+        NativeElementCollector::reset();
+        Component::flushCache();
+        Container::setInstance($previousContainer);
+        $filesystem->deleteDirectory($temporaryPath);
+    }
+}
 
 function collectTextField(array $attributes, ?CallbackRegistry $registry = null): array
 {
@@ -195,4 +294,35 @@ it('publishes semantic clear and reveal flags without consumer icon names', func
         ->and($reveal['props']['revealable'])->toBeTrue()
         ->and($clear['props'])->not->toHaveKey('trailing_icon')
         ->and($reveal['props'])->not->toHaveKey('trailing_icon');
+});
+
+it('compiles the public native:model debounce tag through the real Blade pipeline', function () {
+    $result = compileFirstlightTextFieldView(
+        '<firstlight:text-field native:model.debounce.500ms="email" label="Email" keyboard="email" clearable />',
+        ['email' => 'clinician@example.com'],
+    );
+
+    expect($result['tree'])->not->toBeNull()
+        ->and($result['tree']['type'])->toBe('firstlight.text-field')
+        ->and($result['tree']['props'])->toMatchArray([
+            'value' => 'clinician@example.com',
+            'keyboard' => 'email',
+            'sync_mode' => 'debounce',
+            'debounce_ms' => 500,
+            'clearable' => true,
+        ])
+        ->and($result['registry']->resolve($result['tree']['props']['on_change']))->toBe([
+            'method' => '__syncProperty',
+            'args' => ['email'],
+        ])
+        ->and($result['output'])->toBe('');
+});
+
+it('leaves the authored Text Field tag untouched through real web compilation', function () {
+    $source = '<firstlight:text-field label="Email" />';
+    $result = compileFirstlightTextFieldView($source, [], native: false);
+
+    expect($result['compiled'])->toContain($source)
+        ->and($result['output'])->toBe($source)
+        ->and($result['tree'])->toBeNull();
 });

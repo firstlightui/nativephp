@@ -14,10 +14,7 @@ struct FirstlightTextFieldControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if !configuration.label.isEmpty {
-                HStack(spacing: 2) {
-                    Text(configuration.label)
-                    if configuration.required { Text("*").accessibilityHidden(true) }
-                }
+                Text(configuration.required ? "\(configuration.label) *" : configuration.label)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(tokens.onSurface)
             }
@@ -31,7 +28,7 @@ struct FirstlightTextFieldControl: View {
 
                 input
                     .focused(isFocused)
-                    .disabled(configuration.disabled || configuration.readOnly)
+                    .disabled(configuration.disabled)
 
                 trailing
             }
@@ -57,7 +54,10 @@ struct FirstlightTextFieldControl: View {
 
     @ViewBuilder private var input: some View {
         if configuration.secure && !revealed {
-            SecureField(configuration.placeholder, text: $text)
+            SecureField(
+                configuration.placeholder,
+                text: configuration.readOnly ? .constant(text) : $text
+            )
                 .textContentType(resolveContentType(configuration.contentType))
                 .keyboardType(resolveKeyboard(configuration.keyboard))
                 .textInputAutocapitalization(resolveCapitalization(configuration.autocapitalize))
@@ -65,7 +65,10 @@ struct FirstlightTextFieldControl: View {
                 .submitLabel(resolveSubmitLabel(configuration.submitLabel))
                 .onSubmit(onSubmit)
         } else {
-            TextField(configuration.placeholder, text: $text)
+            TextField(
+                configuration.placeholder,
+                text: configuration.readOnly ? .constant(text) : $text
+            )
                 .textContentType(resolveContentType(configuration.contentType))
                 .keyboardType(resolveKeyboard(configuration.keyboard))
                 .textInputAutocapitalization(resolveCapitalization(configuration.autocapitalize))
@@ -148,6 +151,6 @@ private func resolveSubmitLabel(_ value: String) -> SubmitLabel {
     case "next": .next
     case "search": .search
     case "send": .send
-    default: .done
+    default: .return
     }
 }
