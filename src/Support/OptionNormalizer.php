@@ -1,8 +1,8 @@
 <?php
 
-namespace Clinically\Firstlight\Support;
+namespace FirstlightUI\Support;
 
-use Clinically\Firstlight\Exceptions\InvalidOption;
+use FirstlightUI\Exceptions\InvalidOption;
 
 final class OptionNormalizer
 {

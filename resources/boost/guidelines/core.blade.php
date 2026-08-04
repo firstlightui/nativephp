@@ -1,4 +1,4 @@
-## clinically/firstlight-ui
+## firstlightui/firstlight-ui
 
 Native controls for NativePHP, shaped for each platform.
 

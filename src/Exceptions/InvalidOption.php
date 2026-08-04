@@ -1,6 +1,6 @@
 <?php
 
-namespace Clinically\Firstlight\Exceptions;
+namespace FirstlightUI\Exceptions;
 
 use InvalidArgumentException;
 

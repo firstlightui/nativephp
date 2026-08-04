@@ -1,6 +1,6 @@
 <?php
 
-namespace Clinically\Firstlight\Support;
+namespace FirstlightUI\Support;
 
 final readonly class NormalizedOption
 {

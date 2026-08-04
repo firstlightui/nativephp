@@ -4,10 +4,12 @@ Native controls for NativePHP, shaped for each platform.
 
 Firstlight provides genuine platform controls behind a shared EDGE API. iOS uses UIKit and SwiftUI integration; Android uses Jetpack Compose and Material 3.
 
+[firstlightui.dev](https://firstlightui.dev) · [team@firstlightui.dev](mailto:team@firstlightui.dev)
+
 ## Installation
 
 ```bash
-composer require clinically/firstlight-ui
+composer require firstlightui/firstlight-ui
 ```
 
 Rebuild the native application after installing or updating Firstlight so its platform renderers are compiled into the host app.

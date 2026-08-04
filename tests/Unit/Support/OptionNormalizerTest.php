@@ -1,7 +1,7 @@
 <?php
 
-use Clinically\Firstlight\Exceptions\InvalidOption;
-use Clinically\Firstlight\Support\OptionNormalizer;
+use FirstlightUI\Exceptions\InvalidOption;
+use FirstlightUI\Support\OptionNormalizer;
 
 it('normalizes simple string options', function () {
     $options = OptionNormalizer::normalize(['Mine', 'All']);

@@ -1,7 +1,7 @@
 <?php
 
-use Clinically\Firstlight\Elements\Segmented;
-use Clinically\Firstlight\FirstlightServiceProvider;
+use FirstlightUI\Elements\Segmented;
+use FirstlightUI\FirstlightServiceProvider;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use Illuminate\Events\Dispatcher;
@@ -81,7 +81,7 @@ function compileFirstlightSegmentedView(string $source, array $data, bool $nativ
     $container->instance('view', $factory);
     $container->instance('blade.compiler', $compiler);
 
-    $compiler->component('native-firstlight-segmented', \Clinically\Firstlight\Components\Segmented::class);
+    $compiler->component('native-firstlight-segmented', \FirstlightUI\Components\Segmented::class);
     $compiler->precompiler(new NativeTagPrecompiler);
     (new FirstlightServiceProvider($container))->boot();
 
@@ -385,9 +385,9 @@ it('declares the official Segmented renderer and Blade mappings', function () {
 
     expect($manifest['components'])->toContain([
         'type' => 'firstlight.segmented',
-        'element' => 'Clinically\\Firstlight\\Elements\\Segmented',
-        'blade' => 'Clinically\\Firstlight\\Components\\Segmented',
-        'android_renderer' => 'com.clinically.plugins.firstlight_ui.ui.SegmentedRenderer',
+        'element' => 'FirstlightUI\\Elements\\Segmented',
+        'blade' => 'FirstlightUI\\Components\\Segmented',
+        'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.SegmentedRenderer',
         'ios_renderer' => 'SegmentedRenderer',
         'self_closing' => true,
     ]);

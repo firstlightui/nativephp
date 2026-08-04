@@ -1,6 +1,6 @@
 <?php
 
-namespace Clinically\Firstlight\Components;
+namespace FirstlightUI\Components;
 
 use Native\Mobile\Edge\Components\Native\NativeBladeComponent;
 

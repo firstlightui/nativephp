@@ -1,5 +1,5 @@
 {
-    "name": "clinically/firstlight-ui",
+    "name": "firstlightui/firstlight-ui",
     "version": "0.1.0-alpha.1",
     "description": "Native controls for NativePHP, shaped for each platform.",
     "namespace": "Firstlight",
@@ -10,9 +10,9 @@
     "components": [
         {
             "type": "firstlight.segmented",
-            "element": "Clinically\\Firstlight\\Elements\\Segmented",
-            "blade": "Clinically\\Firstlight\\Components\\Segmented",
-            "android_renderer": "com.clinically.plugins.firstlight_ui.ui.SegmentedRenderer",
+            "element": "FirstlightUI\\Elements\\Segmented",
+            "blade": "FirstlightUI\\Components\\Segmented",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.SegmentedRenderer",
             "ios_renderer": "SegmentedRenderer",
             "self_closing": true
         }

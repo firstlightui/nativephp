@@ -1,4 +1,4 @@
-package com.clinically.plugins.firstlight_ui.ui
+package dev.firstlightui.plugins.firstlight_ui.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.SegmentedButtonDefaults

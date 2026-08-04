@@ -21,7 +21,7 @@ $files = [
     "src/Components/{$name}.php" => <<<PHP
         <?php
 
-        namespace Clinically\Firstlight\Components;
+        namespace FirstlightUI\Components;
 
         // {$marker}: define the public Blade adapter contract first.
         final class {$name}
@@ -31,7 +31,7 @@ $files = [
     "src/Elements/{$name}.php" => <<<PHP
         <?php
 
-        namespace Clinically\Firstlight\Elements;
+        namespace FirstlightUI\Elements;
 
         // {$marker}: publish primitive props through the official Element Tree.
         final class {$name}
@@ -55,13 +55,13 @@ $files = [
         }
         SWIFT,
     "resources/android/{$controlName}.kt" => <<<KOTLIN
-        package com.clinically.plugins.firstlight_ui.ui
+        package dev.firstlightui.plugins.firstlight_ui.ui
 
         // {$marker}: render the Material 3 control.
         internal object {$controlName}
         KOTLIN,
     "resources/android/{$rendererName}.kt" => <<<KOTLIN
-        package com.clinically.plugins.firstlight_ui.ui
+        package dev.firstlightui.plugins.firstlight_ui.ui
 
         // {$marker}: adapt the SuperNative node without a web bridge.
         internal object {$rendererName}
@@ -82,8 +82,8 @@ $files = [
             func testNotImplemented() { XCTFail("{$marker}") }
         }
         SWIFT,
-    "tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/{$name}Test.kt" => <<<KOTLIN
-        package com.clinically.plugins.firstlight_ui.ui
+    "tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/{$name}Test.kt" => <<<KOTLIN
+        package dev.firstlightui.plugins.firstlight_ui.ui
 
         import kotlin.test.Test
         import kotlin.test.fail

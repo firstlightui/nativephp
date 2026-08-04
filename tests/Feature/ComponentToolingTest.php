@@ -79,8 +79,8 @@ function makeSegmentedValidationCopy(): string
         'tests/Feature/SegmentedElementTest.php',
         'tests/ios/SegmentedControlSnapshotTests.swift',
         'tests/ios/SegmentedRendererContractTests.swift',
-        'tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/SegmentedControlScreenshotTest.kt',
-        'tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/SegmentedRendererContractTest.kt',
+        'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/SegmentedControlScreenshotTest.kt',
+        'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/SegmentedRendererContractTest.kt',
     ] as $path) {
         copyComponentToolingPath($sourceRoot.'/'.$path, $root.'/'.$path);
     }
@@ -116,7 +116,7 @@ it('scaffolds every component layer without overwriting authored work', function
         'resources/android/ExampleControlRenderer.kt',
         'tests/Feature/ExampleControlElementTest.php',
         'tests/ios/ExampleControlSnapshotTests.swift',
-        'tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/ExampleControlTest.kt',
+        'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/ExampleControlTest.kt',
         'docs/components/example-control.md',
     ];
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Clinically\Firstlight;
+namespace FirstlightUI;
 
 use Illuminate\Support\ServiceProvider;
 

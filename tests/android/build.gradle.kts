@@ -48,7 +48,7 @@ tasks.register("verifyFirstlightAndroidSourceLayout") {
 }
 
 android {
-    namespace = "com.clinically.plugins.firstlight_ui.tests"
+    namespace = "dev.firstlightui.plugins.firstlight_ui.tests"
     compileSdk = 36
 
     defaultConfig {

@@ -41,7 +41,7 @@ if ($iosTests === []) {
     $errors[] = "Missing iOS tests matching: tests/ios/{$name}*Test*.swift";
 }
 
-$androidTestPattern = "tests/android/src/test/kotlin/com/clinically/plugins/firstlight_ui/ui/{$name}*Test*.kt";
+$androidTestPattern = "tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/{$name}*Test*.kt";
 $androidTests = glob($root.'/'.$androidTestPattern) ?: [];
 if ($androidTests === []) {
     $errors[] = "Missing Android tests matching: {$androidTestPattern}";
@@ -54,19 +54,19 @@ if (! is_array($manifest)) {
 } else {
     $component = null;
     foreach ($manifest['components'] ?? [] as $candidate) {
-        if (($candidate['element'] ?? null) === "Clinically\\Firstlight\\Elements\\{$name}") {
+        if (($candidate['element'] ?? null) === "FirstlightUI\\Elements\\{$name}") {
             $component = $candidate;
             break;
         }
     }
 
     if (! is_array($component)) {
-        $errors[] = "Manifest does not register Clinically\\Firstlight\\Elements\\{$name}";
+        $errors[] = "Manifest does not register FirstlightUI\\Elements\\{$name}";
     } else {
         $expected = [
-            'blade' => "Clinically\\Firstlight\\Components\\{$name}",
+            'blade' => "FirstlightUI\\Components\\{$name}",
             'ios_renderer' => $rendererName,
-            'android_renderer' => "com.clinically.plugins.firstlight_ui.ui.{$rendererName}",
+            'android_renderer' => "dev.firstlightui.plugins.firstlight_ui.ui.{$rendererName}",
         ];
 
         foreach ($expected as $key => $value) {

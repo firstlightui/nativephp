@@ -1,10 +1,10 @@
 <?php
 
-namespace Clinically\Firstlight\Elements;
+namespace FirstlightUI\Elements;
 
-use Clinically\Firstlight\Support\CallbackExpression;
-use Clinically\Firstlight\Support\NormalizedOption;
-use Clinically\Firstlight\Support\OptionNormalizer;
+use FirstlightUI\Support\CallbackExpression;
+use FirstlightUI\Support\NormalizedOption;
+use FirstlightUI\Support\OptionNormalizer;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;

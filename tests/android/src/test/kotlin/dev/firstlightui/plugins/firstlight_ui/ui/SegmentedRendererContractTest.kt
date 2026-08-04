@@ -1,4 +1,4 @@
-package com.clinically.plugins.firstlight_ui.ui
+package dev.firstlightui.plugins.firstlight_ui.ui
 
 import com.nativephp.mobile.ui.nativerender.GenericProps
 import com.nativephp.mobile.ui.nativerender.NativeUINode

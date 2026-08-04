@@ -1,6 +1,6 @@
 <?php
 
-use Clinically\Firstlight\Support\CallbackExpression;
+use FirstlightUI\Support\CallbackExpression;
 use Native\Mobile\Edge\CallbackRegistry;
 
 it('appends an integer without changing existing callback arguments', function () {

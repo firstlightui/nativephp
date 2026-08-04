@@ -1,4 +1,4 @@
-package com.clinically.plugins.firstlight_ui.ui
+package dev.firstlightui.plugins.firstlight_ui.ui
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
