@@ -48,7 +48,7 @@ bin/check-component <Name> --development
 ```
 
 5. Verify TalkBack, Compose semantics, font scaling at `2.0`, contrast, themes, rapid input, and reconciliation.
-6. Build `firstlightui/showcase` at the exact commit; capture emulator evidence and a dated physical device pass for release.
+6. Build `firstlightui/showcase` at the exact commit. With explicit permission for the exact target, capture emulator evidence and a dated physical-device pass for release. Never list, start, switch, reset, or stop shared targets implicitly.
 
 ## Common Mistakes
 

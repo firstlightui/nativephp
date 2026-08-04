@@ -341,6 +341,40 @@ it('ships four concise skills with the required workflow entrypoints', function 
     }
 });
 
+it('keeps component skills safe for the shared showcase and device targets', function () {
+    $root = dirname(__DIR__, 2);
+
+    $contracts = [
+        'firstlight-create-component' => [
+            'ShowcaseScreen',
+            'ShowcaseHome',
+            '/captures/<slug>',
+            'NATIVEPHP_START_URL=/',
+            'adjacent work',
+            'explicit permission',
+        ],
+        'firstlight-ios-component' => ['explicit permission'],
+        'firstlight-android-component' => ['explicit permission'],
+        'firstlight-review-component' => [
+            'ShowcaseScreen',
+            'ShowcaseHome',
+            'explicit permission',
+        ],
+    ];
+
+    foreach ($contracts as $name => $needles) {
+        $contents = file_get_contents($root."/.agents/skills/{$name}/SKILL.md");
+
+        foreach ($needles as $needle) {
+            expect($contents)->toContain($needle);
+        }
+    }
+
+    expect(file_get_contents($root.'/.agents/skills/firstlight-docs-screenshots/SKILL.md'))
+        ->toContain('explicit permission')
+        ->toContain('Target IDs are not permission');
+});
+
 it('routes icon documentation through the maintained contract', function () {
     $root = dirname(__DIR__, 2);
 
