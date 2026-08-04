@@ -14,6 +14,7 @@
 - [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
 - [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
 - [Button](https://firstlightui.dev/components/button): Public API, variants, states, accessibility, adapter behaviour, compatibility, and visual evidence for Firstlight Button.
+- [Icon Button](https://firstlightui.dev/components/icon-button): Public API, variants, sizes, loading and disabled states, accessibility, and native platform behaviour for Firstlight Icon Button.
 - [Pill Group](https://firstlightui.dev/components/pill-group): Public API, selection modes, state timing, accessibility, validation, and platform behaviour for Firstlight Pill Group.
 - [Progress](https://firstlightui.dev/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
 - [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.

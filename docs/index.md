@@ -16,6 +16,7 @@ sources:
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.
 - [Button](components/button.md) — Look up labelled actions, semantic variants, loading and disabled states, accessibility, and adapter behaviour.
+- [Icon Button](components/icon-button.md) — Configure compact icon-only actions, platform icon overrides, semantic variants, states, and accessibility.
 - [Pill Group](components/pill-group.md) — Configure compact single- or multiple-selection native options.
 - [Progress](components/progress.md) — Communicate determinate or indeterminate work with strict values and native accessibility.
 - [Segmented](components/segmented.md) — Look up the Segmented control's complete public contract and platform evidence.

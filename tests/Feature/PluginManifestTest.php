@@ -60,6 +60,14 @@ it('registers the production component catalogue with canonical renderers', func
             ],
         ],
         [
+            'type' => 'firstlight.icon-button',
+            'element' => 'FirstlightUI\\Elements\\IconButton',
+            'blade' => 'FirstlightUI\\Components\\IconButton',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.IconButtonRenderer',
+            'ios_renderer' => 'IconButtonRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.progress',
             'element' => 'FirstlightUI\\Elements\\Progress',
             'blade' => 'FirstlightUI\\Components\\Progress',
