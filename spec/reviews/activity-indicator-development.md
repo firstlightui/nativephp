@@ -141,3 +141,36 @@ showcase at the exact package revision, and proven by broad off-device coverage.
 It is not development-complete, component-release-ready, or public-alpha-ready
 until the applicable runtime evidence is completed. The roadmap hit-list item
 must remain open.
+
+## Approved iOS simulator evidence — 2026-08-05
+
+The maintainer explicitly approved the running iPhone 17 Pro simulator at iOS
+26.5 (`EB44C64E-1579-4C13-A1F9-C44FBD496763`) and Android emulator
+`emulator-5554` for development host, runtime, accessibility, and screenshot
+checks, without booting, switching, resetting, or stopping either target.
+
+The guarded documentation capture stopped before capture because the Android
+serial was not available. An exact-serial `adb get-state` probe confirmed the
+same absence; no replacement emulator was selected or started. The approved
+iOS simulator was already running and retained its lifecycle state.
+
+The exact-destination iOS package gate first exposed a Swift 6 explicit-capture
+compile error in the existing Icon Button snapshot fixture. Adding `self.` to
+that helper call allowed the complete iOS test target to compile and execute.
+The full suite ran 146 tests with five controller-gated skips; remaining suite
+failures were pre-existing Badge, Icon Button, Pill Group, Search Field, and
+Text Area evidence failures rather than Activity Indicator behaviour.
+
+Activity Indicator's two missing iOS reference images were then recorded from
+the approved simulator, visually inspected, and re-run in verification mode.
+The focused suite passed all eight tests with zero failures, proving semantic
+size decoding, non-interactive accessibility metadata, one announcement per
+mount, reconciliation without repeat announcement, stable nested publication,
+production renderer construction, and light/dark native snapshots at all three
+sizes.
+
+This closes Activity Indicator's exact iOS XCTest and unit-snapshot row. It does
+not close generated showcase host runtime, documentation screenshots, manual
+VoiceOver/TalkBack, or physical-device evidence. Development and release
+verdicts therefore remain **BLOCKED** until the approved Android emulator is
+available and the guarded paired workflow can complete.
