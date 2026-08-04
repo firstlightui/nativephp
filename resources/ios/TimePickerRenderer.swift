@@ -1,0 +1,193 @@
+import SwiftUI
+
+enum TimePickerRendererEvent: Equatable {
+    case change(callbackId: Int, nodeId: Int, value: String)
+
+    var wireName: String { "SELECT_CHANGE" }
+}
+
+struct TimePickerRendererEvents {
+    let send: @MainActor (TimePickerRendererEvent) -> Void
+
+    static let native = TimePickerRendererEvents { event in
+        switch event {
+        case let .change(callbackId, nodeId, value):
+            NativeUIBridge.sendSelectChangeEvent(callbackId, nodeId: nodeId, value: value)
+        }
+    }
+}
+
+struct TimePickerRendererConfiguration: Equatable {
+    let nodeID: Int
+    let hasValue: Bool
+    let value: String
+    let label: String
+    let placeholder: String
+    let helper: String
+    let error: String
+    let required: Bool
+    let disabled: Bool
+    let locale: String
+    let timezone: String
+    let accessibilityLabel: String
+    let accessibilityHint: String
+    let onChangeCallback: Int
+
+    init(node: NativeUINode) {
+        let props = node.props
+        nodeID = node.id
+        hasValue = props.getBool("has_value")
+        value = props.getString("value")
+        label = props.getString("label")
+        placeholder = props.getString("placeholder")
+        helper = props.getString("helper")
+        error = props.getString("error")
+        required = props.getBool("required")
+        disabled = props.getBool("disabled")
+        locale = props.getString("locale")
+        timezone = props.getString("timezone")
+        let explicitLabel = props.getString("a11y_label")
+        accessibilityLabel = explicitLabel.isEmpty ? label : explicitLabel
+        accessibilityHint = props.getString("a11y_hint")
+        onChangeCallback = props.getCallbackId("on_change")
+    }
+
+    var acceptedValue: String? { hasValue ? value : nil }
+    var isInteractive: Bool { !disabled && onChangeCallback != 0 }
+
+    fileprivate var presentationFingerprint: String {
+        [hasValue ? "1" : "0", value, locale, timezone, disabled ? "1" : "0"]
+            .joined(separator: "\u{1F}")
+    }
+}
+
+struct TimePickerRendererState {
+    var configuration: TimePickerRendererConfiguration
+    var draft: String?
+    var isPresented = false
+    var presentationVersion = 0
+
+    init(node: NativeUINode) {
+        configuration = TimePickerRendererConfiguration(node: node)
+        draft = nil
+    }
+
+    @discardableResult
+    mutating func open(currentTime: String? = nil) -> Bool {
+        guard configuration.isInteractive else { return false }
+        draft = configuration.acceptedValue
+            ?? currentTime
+            ?? TimePickerClock.current(timezone: configuration.timezone)
+        presentationVersion += 1
+        isPresented = true
+        return true
+    }
+
+    mutating func userSelected(_ value: String) {
+        guard isPresented else { return }
+        draft = value
+    }
+
+    mutating func cancel() {
+        draft = nil
+        isPresented = false
+    }
+
+    mutating func confirm() -> TimePickerRendererEvent? {
+        let selected = draft
+        let published = configuration
+        cancel()
+
+        guard let selected, published.isInteractive, selected != published.acceptedValue else {
+            return nil
+        }
+
+        return .change(
+            callbackId: published.onChangeCallback,
+            nodeId: published.nodeID,
+            value: selected
+        )
+    }
+
+    mutating func serverPublished(_ tree: NativeUITree) {
+        guard let node = Self.findNode(id: configuration.nodeID, in: tree.root) else { return }
+        publish(TimePickerRendererConfiguration(node: node))
+    }
+
+    private mutating func publish(_ published: TimePickerRendererConfiguration) {
+        let presentationChanged = published.presentationFingerprint != configuration.presentationFingerprint
+        configuration = published
+        if isPresented && presentationChanged { cancel() }
+    }
+
+    private static func findNode(id: Int, in node: NativeUINode) -> NativeUINode? {
+        if node.id == id { return node }
+        for child in node.children {
+            if let found = findNode(id: id, in: child) { return found }
+        }
+        return nil
+    }
+}
+
+enum TimePickerClock {
+    static func calendar(timezone: String) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US_POSIX")
+        calendar.timeZone = TimeZone(identifier: timezone) ?? .current
+        return calendar
+    }
+
+    static func date(from canonical: String, timezone: String) -> Date {
+        let parts = canonical.split(separator: ":").compactMap { Int($0) }
+        precondition(parts.count == 2, "Time Picker received a noncanonical time")
+        let value = calendar(timezone: timezone).date(
+            from: DateComponents(year: 2001, month: 1, day: 1, hour: parts[0], minute: parts[1])
+        )
+        return value ?? Date(timeIntervalSince1970: 0)
+    }
+
+    static func canonical(from date: Date, timezone: String) -> String {
+        let components = calendar(timezone: timezone).dateComponents([.hour, .minute], from: date)
+        return String(format: "%02d:%02d", components.hour!, components.minute!)
+    }
+
+    static func current(timezone: String, now: Date = Date()) -> String {
+        canonical(from: now, timezone: timezone)
+    }
+
+    static func display(_ canonical: String, locale: String, timezone: String) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar(timezone: timezone)
+        formatter.timeZone = formatter.calendar.timeZone
+        formatter.locale = locale.isEmpty ? .current : Locale(identifier: locale)
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter.string(from: date(from: canonical, timezone: timezone))
+    }
+}
+
+struct TimePickerRenderer: View {
+    @ObservedObject private var themeStore = NativeUITheme.shared
+    @ObservedObject private var bridge = NativeUIBridge.shared
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var state: TimePickerRendererState
+    private let events: TimePickerRendererEvents
+
+    init(node: NativeUINode, events: TimePickerRendererEvents = .native) {
+        _state = State(initialValue: TimePickerRendererState(node: node))
+        self.events = events
+    }
+
+    var body: some View {
+        FirstlightTimePickerControl(
+            state: $state,
+            tokens: themeStore.resolve(for: colorScheme),
+            onConfirm: {
+                if let event = state.confirm() { events.send(event) }
+            }
+        )
+        .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
+            state.serverPublished(tree)
+        }
+    }
+}

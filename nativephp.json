@@ -113,6 +113,14 @@
             "self_closing": true
         },
         {
+            "type": "firstlight.time-picker",
+            "element": "FirstlightUI\\Elements\\TimePicker",
+            "blade": "FirstlightUI\\Components\\TimePicker",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.TimePickerRenderer",
+            "ios_renderer": "TimePickerRenderer",
+            "self_closing": true
+        },
+        {
             "type": "firstlight.switch",
             "element": "FirstlightUI\\Elements\\SwitchControl",
             "blade": "FirstlightUI\\Components\\SwitchControl",

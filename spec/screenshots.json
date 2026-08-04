@@ -40,6 +40,16 @@
                 "android-dark": "docs/screenshots/date-picker/android-dark.png"
             }
         },
+        "time-picker": {
+            "route": "/captures/time-picker",
+            "test": "php artisan test tests/Feature/TimePickerCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/time-picker/ios-light.png",
+                "ios-dark": "docs/screenshots/time-picker/ios-dark.png",
+                "android-light": "docs/screenshots/time-picker/android-light.png",
+                "android-dark": "docs/screenshots/time-picker/android-dark.png"
+            }
+        },
         "icon-button": {
             "route": "/captures/icon-button",
             "test": "php artisan test tests/Feature/IconButtonCaptureTest.php",

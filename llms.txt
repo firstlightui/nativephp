@@ -17,6 +17,7 @@
 - [Badge](https://firstlightui.dev/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
 - [Choice Group](https://firstlightui.dev/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
 - [Date Picker](https://firstlightui.dev/components/date-picker): Canonical nullable dates, inclusive bounds, native confirmation, localisation, and accessibility for Firstlight Date Picker.
+- [Time Picker](https://firstlightui.dev/components/time-picker): Choose a wall-clock time with a native, server-authoritative picker.
 - [Icon Button](https://firstlightui.dev/components/icon-button): Public API, variants, sizes, loading and disabled states, accessibility, and native platform behaviour for Firstlight Icon Button.
 - [Pill Group](https://firstlightui.dev/components/pill-group): Public API, selection modes, state timing, accessibility, validation, and platform behaviour for Firstlight Pill Group.
 - [Progress](https://firstlightui.dev/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
