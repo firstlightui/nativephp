@@ -6,7 +6,7 @@ use Native\Mobile\Edge\NativeTagPrecompiler;
 
 final class FirstlightTagPrecompiler
 {
-    private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|button|text-field|switch)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
+    private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|button|progress|text-field|switch)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
     private const FIRSTLIGHT_PAIRED_BUTTON_TAG = '~<\s*firstlight\s*:\s*(button)(?=\s|>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</\s*firstlight\s*:\s*\1\s*>~s';
 
