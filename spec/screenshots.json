@@ -30,6 +30,16 @@
                 "android-dark": "docs/screenshots/button/android-dark.png"
             }
         },
+        "checkbox": {
+            "route": "/captures/checkbox",
+            "test": "php artisan test tests/Feature/CheckboxCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/checkbox/ios-light.png",
+                "ios-dark": "docs/screenshots/checkbox/ios-dark.png",
+                "android-light": "docs/screenshots/checkbox/android-light.png",
+                "android-dark": "docs/screenshots/checkbox/android-dark.png"
+            }
+        },
         "choice-group": {
             "route": "/captures/choice-group",
             "test": "php artisan test tests/Feature/ChoiceGroupCaptureTest.php",

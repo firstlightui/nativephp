@@ -159,6 +159,14 @@
             "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.SwitchRenderer",
             "ios_renderer": "SwitchRenderer",
             "self_closing": true
+        },
+        {
+            "type": "firstlight.checkbox",
+            "element": "FirstlightUI\\Elements\\Checkbox",
+            "blade": "FirstlightUI\\Components\\Checkbox",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.FirstlightCheckboxRenderer",
+            "ios_renderer": "CheckboxRenderer",
+            "self_closing": true
         }
     ],
     "android": {

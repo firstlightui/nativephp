@@ -99,6 +99,7 @@ final class NativeUIBridge: ObservableObject {
 
 final class NativeElementBridge {
     static func sendToggleChangeEvent(_ callbackId: Int, nodeId: Int, value: Bool) {}
+    static func sendCheckboxChangeEvent(_ callbackId: Int, nodeId: Int, value: Bool) {}
 }
 
 struct NativeUITokens: Equatable {

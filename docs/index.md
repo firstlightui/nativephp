@@ -19,6 +19,7 @@ sources:
 - [Activity Indicator](components/activity-indicator.md) — Communicate indeterminate native activity with semantic sizes and one polite appearance announcement.
 - [Button](components/button.md) — Look up labelled actions, semantic variants, loading and disabled states, accessibility, and adapter behaviour.
 - [Badge](components/badge.md) — Present compact display-only counts or short markers with semantic tones and contextual accessibility.
+- [Checkbox](components/checkbox.md) — Configure strict Boolean form and checklist state with server-authoritative proposals.
 - [Choice Group](components/choice-group.md) — Configure visible single-radio or multiple-checkbox choice rows with stable values.
 - [Date Picker](components/date-picker.md) — Choose strict nullable calendar dates with inclusive bounds and native confirmation.
 - [Time Picker](components/time-picker.md) — Choose strict nullable wall-clock times with localized native confirmation.
