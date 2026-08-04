@@ -45,7 +45,7 @@ Retain each base icon prop with `-ios` and `-android` overrides. Document kebab-
 3. Write failing Pest 5 contracts. For a renderer, run `bin/scaffold-component Name`; never overwrite. For an adapter, add only what the failing contract requires.
 4. **REQUIRED SUB-SKILL:** Use `firstlight-ios-component` for Apple implementation or adapter evidence.
 5. **REQUIRED SUB-SKILL:** Use `firstlight-android-component` for Material implementation or adapter evidence.
-6. Add `docs/components/<slug>.md`, complete `firstlightui/showcase` fixtures, paired screenshots, and documented states.
+6. Add `docs/components/<slug>.md`. In the sibling showcase, inspect status and preserve adjacent work. Extend `ShowcaseScreen`, register the exact tag and summary in `ShowcaseHome`, and add `/captures/<slug>` separately. Keep `NATIVEPHP_START_URL=/`; navigation and appearance belong to `ShowcaseLayout`. Run focused and full consumer tests without devices. Any simulator or emulator action requires explicit permission for the exact target.
 7. **REQUIRED SUB-SKILL:** Use `firstlight-review-component` before calling the component complete.
 
 ## Evidence
@@ -58,6 +58,7 @@ Record the commit, path decision, tests, consumer builds, screenshots, accessibi
 - Copying Segmented state into unrelated controls.
 - Scaffolding before auditing the official primitive.
 - Inventing `ios-icon`, `android-icon`, or another icon vocabulary instead of applying `spec/reference/icons.md`.
+- Replacing shared showcase chrome, changing its start route, or overwriting concurrent fixtures.
 
 ## Stop Conditions
 

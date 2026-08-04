@@ -40,7 +40,7 @@ PHP resolves icon overrides through `IosSymbol`. Swift consumes resolved props, 
 1. Write failing XCTest behaviour, accessibility, and snapshot cases appropriate to the state class before implementation.
 2. Prove adapter mapping; otherwise implement the minimum renderer through the official SuperNative seam.
 3. Use NativePHP semantic theme tokens, Apple-native typography and motion, and targets of at least 44 points.
-4. Run:
+4. Run the package gate. Run the Simulator command only after explicit permission for the exact target; a supplied ID is not permission.
 
 ```bash
 xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=<fixed-id>' test
@@ -48,7 +48,7 @@ bin/check-component <Name> --development
 ```
 
 5. Verify VoiceOver, Dynamic Type, Increased Contrast, Reduced Motion, themes, rapid input, and reconciliation.
-6. Build `firstlightui/showcase` at the exact commit; capture simulator evidence and a dated physical device pass for release.
+6. Build `firstlightui/showcase` at the exact commit. With explicit permission, capture Simulator evidence and a dated physical-device pass for release. Never boot, switch, reset, or stop a shared target implicitly.
 
 ## Common Mistakes
 

@@ -19,40 +19,13 @@ $controlName = str_ends_with($name, 'Control') ? $name : $name.'Control';
 $rendererName = $name.'Renderer';
 $errors = [];
 
-$required = [
-    'Constitution.md',
-    "src/Components/{$name}.php",
-    "src/Elements/{$name}.php",
-    "resources/ios/{$controlName}.swift",
-    "resources/ios/{$rendererName}.swift",
-    "resources/android/{$controlName}.kt",
-    "resources/android/{$rendererName}.kt",
-    "tests/Feature/{$name}ElementTest.php",
-];
-
-foreach ($required as $path) {
-    if (! is_file($root.'/'.$path)) {
-        $errors[] = "Missing required path: {$path}";
-    }
-}
-
-$iosTests = glob($root."/tests/ios/{$name}*Test*.swift") ?: [];
-if ($iosTests === []) {
-    $errors[] = "Missing iOS tests matching: tests/ios/{$name}*Test*.swift";
-}
-
-$androidTestPattern = "tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/{$name}*Test*.kt";
-$androidTests = glob($root.'/'.$androidTestPattern) ?: [];
-if ($androidTests === []) {
-    $errors[] = "Missing Android tests matching: {$androidTestPattern}";
-}
-
 $manifestPath = $root.'/nativephp.json';
 $manifest = is_file($manifestPath) ? json_decode((string) file_get_contents($manifestPath), true) : null;
+$component = null;
+
 if (! is_array($manifest)) {
     $errors[] = 'Missing or invalid manifest: nativephp.json';
 } else {
-    $component = null;
     foreach ($manifest['components'] ?? [] as $candidate) {
         if (($candidate['element'] ?? null) === "FirstlightUI\\Elements\\{$name}") {
             $component = $candidate;
@@ -62,17 +35,102 @@ if (! is_array($manifest)) {
 
     if (! is_array($component)) {
         $errors[] = "Manifest does not register FirstlightUI\\Elements\\{$name}";
-    } else {
-        $expected = [
-            'blade' => "FirstlightUI\\Components\\{$name}",
-            'ios_renderer' => $rendererName,
-            'android_renderer' => "dev.firstlightui.plugins.firstlight_ui.ui.{$rendererName}",
-        ];
+    }
+}
 
-        foreach ($expected as $key => $value) {
-            if (($component[$key] ?? null) !== $value) {
-                $errors[] = "Manifest {$key} must be {$value}";
+$adapter = is_array($component['adapter'] ?? null) ? $component['adapter'] : null;
+
+$required = [
+    'Constitution.md',
+    "src/Components/{$name}.php",
+    "src/Elements/{$name}.php",
+    "tests/Feature/{$name}ElementTest.php",
+];
+
+if ($adapter === null) {
+    array_push(
+        $required,
+        "resources/ios/{$controlName}.swift",
+        "resources/ios/{$rendererName}.swift",
+        "resources/android/{$controlName}.kt",
+        "resources/android/{$rendererName}.kt",
+    );
+}
+
+foreach ($required as $path) {
+    if (! is_file($root.'/'.$path)) {
+        $errors[] = "Missing required path: {$path}";
+    }
+}
+
+$iosTests = [];
+$androidTests = [];
+
+if ($adapter === null) {
+    $iosTests = glob($root."/tests/ios/{$name}*Test*.swift") ?: [];
+    if ($iosTests === []) {
+        $errors[] = "Missing iOS tests matching: tests/ios/{$name}*Test*.swift";
+    }
+
+    $androidTestPattern = "tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/{$name}*Test*.kt";
+    $androidTests = glob($root.'/'.$androidTestPattern) ?: [];
+    if ($androidTests === []) {
+        $errors[] = "Missing Android tests matching: {$androidTestPattern}";
+    }
+}
+
+if (is_array($component)) {
+    $expected = [
+        'blade' => "FirstlightUI\\Components\\{$name}",
+    ];
+
+    if ($adapter === null) {
+        $expected['ios_renderer'] = $rendererName;
+        $expected['android_renderer'] = "dev.firstlightui.plugins.firstlight_ui.ui.{$rendererName}";
+    } else {
+        $package = $adapter['package'] ?? null;
+        $type = $adapter['type'] ?? null;
+
+        if (! is_string($package) || preg_match('~^[a-z0-9_.-]+/[a-z0-9_.-]+$~', $package) !== 1) {
+            $errors[] = 'Manifest adapter package must be a Composer package name';
+        } elseif (! is_string($type) || trim($type) === '') {
+            $errors[] = 'Manifest adapter type must be a non-empty string';
+        } else {
+            $officialManifestPath = $root.'/vendor/'.$package.'/nativephp.json';
+            $officialManifest = is_file($officialManifestPath)
+                ? json_decode((string) file_get_contents($officialManifestPath), true)
+                : null;
+            $officialComponent = null;
+
+            if (! is_array($officialManifest)) {
+                $errors[] = "Missing or invalid adapter manifest: vendor/{$package}/nativephp.json";
+            } else {
+                foreach ($officialManifest['components'] ?? [] as $candidate) {
+                    if (($candidate['type'] ?? null) === $type) {
+                        $officialComponent = $candidate;
+                        break;
+                    }
+                }
             }
+
+            if (is_array($officialManifest) && ! is_array($officialComponent)) {
+                $errors[] = "Adapter package {$package} does not register component type {$type}";
+            } elseif (is_array($officialComponent)) {
+                foreach (['ios_renderer', 'android_renderer'] as $key) {
+                    $value = $officialComponent[$key] ?? null;
+                    if (! is_string($value) || $value === '') {
+                        $errors[] = "Adapter package {$package} component {$type} has no {$key}";
+                    } elseif (($component[$key] ?? null) !== $value) {
+                        $errors[] = "Manifest {$key} must match {$package} {$type}: {$value}";
+                    }
+                }
+            }
+        }
+    }
+
+    foreach ($expected as $key => $value) {
+        if (($component[$key] ?? null) !== $value) {
+            $errors[] = "Manifest {$key} must be {$value}";
         }
     }
 }

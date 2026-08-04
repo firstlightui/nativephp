@@ -13,7 +13,7 @@ Return an evidence-backed, requirement-by-requirement verdict. `Constitution.md`
 
 - Public component name and tag
 - Review mode: development or component-release
-- Package root, showcase root, fixed simulator/emulator targets, and package commit
+- Package root, showcase root, package commit, and permitted device targets
 
 ## Workflow
 
@@ -32,7 +32,7 @@ bin/check-component <Name> --development
 # Omit --development for component-release review.
 ```
 
-6. Run package gates from a clean diff:
+6. Run package gates from a clean diff. Device-targeting commands require explicit permission for each exact simulator or emulator; target IDs alone are not permission.
 
 ```bash
 composer test
@@ -40,9 +40,9 @@ xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id
 JAVA_HOME=<jdk-21> tests/android/gradlew -p tests/android testDebugUnitTest
 ```
 
-7. In `firstlightui/showcase`, install the exact package commit, run focused and full consumer tests, then run `php artisan native:plugin:validate <package-root>`. Build both hosts without editing generated trees.
-8. Verify the showcase covers every applicable documented state: default, selected, empty, disabled, loading, error, light/dark, increased contrast, text scaling, screen-reader semantics, Reduced Motion, RTL, long or large data, rapid interaction, rejection, and programmatic changes.
-9. For component-release mode, verify representative simulator evidence and completed physical-device rows for both platforms, including motion, focus, keyboard, accessibility, offline behaviour, reconciliation, and rapid input.
+7. In `firstlightui/showcase`, preserve adjacent work. Interactive pages extend `ShowcaseScreen` and appear in `ShowcaseHome`; capture routes remain isolated from shared chrome. Install the exact package, run focused and full consumer tests, then `php artisan native:plugin:validate <package-root>`. Never edit generated trees.
+8. Verify every applicable documented state, accessibility mode, edge case, rapid interaction, rejection, and programmatic change.
+9. For component-release mode, verify permitted Simulator/emulator evidence and completed physical-device rows for both platforms.
 
 ## Report Shape
 
