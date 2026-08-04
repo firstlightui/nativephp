@@ -35,21 +35,16 @@ details behind the same coherent Firstlight API.
 - Date Picker
 - Choice Group
 - Time Picker
-
-### In flight
-
 - Select
 - Slider
 
+### In flight
+
+- Stepper
+
 ## Build order
 
-6. **Select** — follows Choice Group for stable option values and Search Field
-   for searchable large-collection presentation. Audit Mobile UI's select
-   primitive first.
-7. **Slider** — establishes continuous numeric values, range and step
-   validation, and live, blur, and debounce event frequency. Audit Mobile UI's
-   slider primitive first.
-8. **Stepper** — reuses Slider's numeric range contract and Icon Button's
+6. **Stepper** — reuses Slider's numeric range contract and Icon Button's
    accessible increment and decrement actions.
 
 ## Dependency spine
