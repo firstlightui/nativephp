@@ -174,3 +174,12 @@ not close generated showcase host runtime, documentation screenshots, manual
 VoiceOver/TalkBack, or physical-device evidence. Development and release
 verdicts therefore remain **BLOCKED** until the approved Android emulator is
 available and the guarded paired workflow can complete.
+
+The showcase at revision `d280c9a` remained locked to package revision
+`57d0ea2`, which contains the complete production implementation and review.
+Running `php artisan native:run ios` with the approved UDID and stable
+`/captures/activity-indicator` start route produced `BUILD SUCCEEDED`, installed
+the generated host, and launched it successfully. This closes the iOS generated
+showcase host build/install/launch row. It is not presented as a canonical
+documentation screenshot or manual VoiceOver review; the paired capture guard
+could not proceed while `emulator-5554` was unavailable.
