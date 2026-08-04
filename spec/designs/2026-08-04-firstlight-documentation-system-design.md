@@ -89,6 +89,7 @@ spec/
   architecture/
   workflows/
   reference/
+  reviews/
   designs/
   plans/
 ```
@@ -114,6 +115,7 @@ spec/workflows/adding-components.md
 spec/workflows/testing.md
 spec/workflows/showcase-and-screenshots.md
 spec/reference/repository-layout.md
+spec/reviews/segmented-alpha.md
 ```
 
 `spec/documentation.json` contains output configuration, not package contracts. Its initial fields cover the site name, canonical documentation URL, actual repository URL, and current-only versioning mode.
@@ -333,6 +335,8 @@ The checker validates:
 - repository skill presence and required integration markers.
 
 Judgment-heavy factual accuracy remains the audit skill's responsibility.
+
+`bin/check-docs --development` permits missing runtime screenshot files and release-review evidence while still requiring their manifest and index contracts. The default release mode requires the complete screenshot matrix and current review evidence. Development mode must report every deferred release item; it must not silently treat the package as release-ready.
 
 ### `bin/capture-doc-screenshots`
 
