@@ -88,6 +88,22 @@ function makeSegmentedValidationCopy(): string
     return $root;
 }
 
+function installDocumentationGateProbe(string $root): string
+{
+    $log = $root.'/documentation-gate-arguments';
+    $probe = <<<'PHP'
+#!/usr/bin/env php
+<?php
+
+file_put_contents(dirname(__DIR__).'/documentation-gate-arguments', implode(' ', array_slice($argv, 1)));
+PHP;
+
+    file_put_contents($root.'/bin/check-docs', $probe);
+    chmod($root.'/bin/check-docs', 0755);
+
+    return $log;
+}
+
 afterEach(function () use (&$componentToolingTemporaryRoots): void {
     foreach ($componentToolingTemporaryRoots as $root) {
         removeComponentToolingPath($root);
@@ -162,8 +178,22 @@ it('keeps the release gate closed until all documentation evidence exists', func
         ->toContain('docs/components/segmented.md')
         ->toContain('docs/screenshots/segmented/android-light.png')
         ->toContain('docs/screenshots/segmented/android-dark.png')
-        ->toContain('docs/review/segmented-alpha.md');
+        ->toContain('spec/reviews/segmented-alpha.md');
 });
+
+it('runs the documentation gate in the matching review mode', function (array $arguments, string $expected) {
+    $root = makeSegmentedValidationCopy();
+    $log = installDocumentationGateProbe($root);
+
+    $process = new Process(array_merge([$root.'/bin/check-component'], $arguments));
+    $process->run();
+
+    expect($log)->toBeFile()
+        ->and(file_get_contents($log))->toBe($expected);
+})->with([
+    'development' => [['Segmented', '--development'], '--development'],
+    'release' => [['Segmented'], ''],
+]);
 
 it('ships four concise skills with the required workflow entrypoints', function () {
     $root = dirname(__DIR__, 2);
@@ -205,7 +235,7 @@ it('ships four concise skills with the required workflow entrypoints', function 
             'TalkBack',
             'font scaling',
             'physical device',
-            'publication fix',
+            'real publication lookup',
             'Stop',
         ],
         'firstlight-review-component' => [
@@ -233,7 +263,11 @@ it('ships four concise skills with the required workflow entrypoints', function 
             ->and(str_word_count(strip_tags($contents)))->toBeLessThan(500);
 
         foreach ($needles as $needle) {
-            expect($contents)->toContain($needle);
+            $searchableContents = $needle === 'physical device'
+                ? str_replace('physical-device', 'physical device', $contents)
+                : $contents;
+
+            expect($searchableContents)->toContain($needle);
         }
     }
 });

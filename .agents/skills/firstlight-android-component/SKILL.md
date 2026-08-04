@@ -55,7 +55,7 @@ bin/check-component <Name> --development
 - Treating composition as failure.
 - Copying Segmented state into unrelated controls.
 - Creating wrappers without proving adaptation is needed.
-- Excluding production renderers or publication lookup from tests.
+- Excluding production renderers or real publication lookup from tests.
 
 ## Stop Conditions
 

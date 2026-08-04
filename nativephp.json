@@ -17,6 +17,14 @@
             "self_closing": true
         },
         {
+            "type": "firstlight.status-label",
+            "element": "FirstlightUI\\Elements\\StatusLabel",
+            "blade": "FirstlightUI\\Components\\StatusLabel",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.StatusLabelRenderer",
+            "ios_renderer": "StatusLabelRenderer",
+            "self_closing": true
+        },
+        {
             "type": "firstlight.text-field",
             "element": "FirstlightUI\\Elements\\TextField",
             "blade": "FirstlightUI\\Components\\TextField",
