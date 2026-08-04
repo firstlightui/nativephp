@@ -27,8 +27,8 @@ sources:
 | Component | `Button` / `<firstlight:button>` |
 | State class | Action/display; PHP owns outcomes and native code owns transient press feedback |
 | Implementation | Firstlight API adapter over the official `nativephp/mobile-ui` Button renderers |
-| Package revision reviewed | `868c8eedec33875560ff1984214c9feab7ff5db3` |
-| Showcase revision reviewed | `4b8bd1379a5e0c50dca4dbbc61ae31b31192cfff` |
+| Package revision reviewed | `5ee6817f51c8a8477c93228dd5316c27359c6e2c` |
+| Showcase revision reviewed | `8f5ab2edbd1db3d43544d8db405cc570e2457a38` |
 | iOS simulator | iPhone 17 Pro, iOS 26.5, `EB44C64E-1579-4C13-A1F9-C44FBD496763` |
 | Android emulator | Pixel 9 Pro AVD, `emulator-5554` |
 | Visual reviewer | Not approved; attempted captures opened the unrelated Text Field screen and were deleted |
@@ -41,11 +41,11 @@ This evidence update follows the reviewed package runtime commit. It changes doc
 
 | Result | Command and evidence |
 | --- | --- |
-| PASS | Package `composer test` — 121 passed, 403 assertions; four model evals intentionally skipped. |
+| PASS | Package `composer test` — 144 passed, 519 assertions; five model evals intentionally skipped. |
 | PASS | `bin/check-component Button --development` — adapter structure and exact dependency renderer mappings passed. |
 | PASS | `bin/check-docs --development` — development documentation checks passed. |
 | PASS | `bin/build-docs-artifacts` — generated documentation artefacts rebuilt successfully. |
-| PASS | Showcase `composer test` — 18 passed, 187 assertions, including the Button gallery, capture fixture, and press round-trip. |
+| PASS | Showcase `composer test` — 23 passed, 282 assertions, including the Button gallery, capture fixture, and press round-trip. |
 | PASS | `php artisan native:plugin:validate <package-root>` — manifest valid; expected UI-only warning that no bridge functions are declared. |
 | PASS | `xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=EB44C64E-1579-4C13-A1F9-C44FBD496763' test` — 35 existing package-native tests passed. Button delegates the installed Mobile UI renderer and therefore adds no duplicate Firstlight Swift test target. |
 | PASS | Android `testDebugUnitTest` with JDK 21 — build successful. Button delegates the installed Mobile UI renderer and therefore adds no duplicate Firstlight Kotlin test target. |
