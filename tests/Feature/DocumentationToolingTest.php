@@ -290,3 +290,22 @@ it('scopes a component gate to its manifest entry and public type slug', functio
         removeDocumentationFixture($root);
     }
 });
+
+it('rejects a scoped component gate without a matching manifest element', function (string $component) {
+    $root = documentationFixture();
+
+    try {
+        $repository = new DocumentationRepository($root);
+        $builder = new DocumentationArtifactBuilder($repository);
+        foreach ($builder->outputs() as $path => $contents) {
+            file_put_contents($root.'/'.$path, $contents);
+        }
+
+        $validator = new DocumentationValidator($root, $repository, $builder);
+
+        expect($validator->errors(true, $component))
+            ->toContain("Requested documentation component [{$component}] is not registered in nativephp.json; use its manifest element name.");
+    } finally {
+        removeDocumentationFixture($root);
+    }
+})->with(['unknown component' => 'NotAComponent', 'public name instead of element name' => 'Switch']);

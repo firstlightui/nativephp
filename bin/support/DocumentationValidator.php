@@ -145,6 +145,7 @@ final class DocumentationValidator
         }
 
         $slugs = [];
+        $matchedRequestedComponent = $componentName === null;
         foreach ($manifest['components'] ?? [] as $component) {
             $element = is_array($component) ? ($component['element'] ?? null) : null;
             if (! is_string($element) || $element === '') {
@@ -159,6 +160,7 @@ final class DocumentationValidator
                 continue;
             }
 
+            $matchedRequestedComponent = true;
             $type = $component['type'] ?? null;
             $slug = is_string($type) && preg_match('/^firstlight\.([a-z0-9-]+)$/', $type, $matches) === 1
                 ? $matches[1]
@@ -169,6 +171,10 @@ final class DocumentationValidator
             if (! is_file($this->root().'/'.$path) || ! in_array($path, $indexed, true)) {
                 $errors[] = "Undocumented nativephp.json component {$name}: {$path}";
             }
+        }
+
+        if (! $matchedRequestedComponent) {
+            $errors[] = "Requested documentation component [{$componentName}] is not registered in nativephp.json; use its manifest element name.";
         }
 
         return array_values(array_unique($slugs));
