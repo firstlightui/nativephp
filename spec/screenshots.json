@@ -10,6 +10,16 @@
                 "android-dark": "docs/screenshots/button/android-dark.png"
             }
         },
+        "progress": {
+            "route": "/captures/progress",
+            "test": "php artisan test tests/Feature/ProgressCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/progress/ios-light.png",
+                "ios-dark": "docs/screenshots/progress/ios-dark.png",
+                "android-light": "docs/screenshots/progress/android-light.png",
+                "android-dark": "docs/screenshots/progress/android-dark.png"
+            }
+        },
         "segmented": {
             "route": "/captures/segmented",
             "test": "php artisan test tests/Feature/SegmentedCaptureTest.php",

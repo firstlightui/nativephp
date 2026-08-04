@@ -37,6 +37,18 @@
             }
         },
         {
+            "type": "firstlight.progress",
+            "element": "FirstlightUI\\Elements\\Progress",
+            "blade": "FirstlightUI\\Components\\Progress",
+            "android_renderer": "com.nativephp.plugins.native_ui.ui.ProgressBarRenderer",
+            "ios_renderer": "NativeUIProgressBarRenderer",
+            "self_closing": true,
+            "adapter": {
+                "package": "nativephp/mobile-ui",
+                "type": "progress_bar"
+            }
+        },
+        {
             "type": "firstlight.text-field",
             "element": "FirstlightUI\\Elements\\TextField",
             "blade": "FirstlightUI\\Components\\TextField",
