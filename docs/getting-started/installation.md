@@ -43,4 +43,4 @@ Build and run the application through your normal NativePHP workflow. Firstlight
 
 ## Next step
 
-Build [your first Firstlight component](first-component.md).
+Add [your first Firstlight component](first-component.md) to your application.

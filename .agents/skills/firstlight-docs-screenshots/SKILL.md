@@ -11,7 +11,7 @@ Capture paired native evidence from a stable consumer fixture. Never substitute 
 
 Require a StudlyCase component name, `../firstlight-showcase`, one explicit iOS Simulator UDID, one explicit Android emulator serial, and development or release mode. Read `Constitution.md`, `spec/documentation-constitution.md`, and the component entry in `spec/screenshots.json`.
 
-If target IDs were not supplied, list available simulators/emulators read-only and ask the user to choose. Do not select or switch targets implicitly.
+Target IDs are not permission. Obtain explicit permission before listing, booting, launching, capturing, changing appearance, or stopping a simulator or emulator. If IDs are absent and listing is permitted, list read-only and ask the user to choose. Treat targets as shared resources; never select, switch, reset, or stop them implicitly.
 
 ## Workflow
 

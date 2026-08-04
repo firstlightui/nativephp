@@ -1,0 +1,83 @@
+# Firstlight UI Roadmap
+
+Firstlight's first public alpha delivers the complete component catalogue in
+the order below. Components are finished one semantic contract at a time and
+remain subject to the shared alpha release gate.
+
+## Component policy
+
+Every catalogue component is exposed through a public `<firstlight:...>` API.
+When `nativephp/mobile-ui` already handles the intent well, Firstlight provides
+a thin, documented wrapper over the official primitive, as Button does. When
+the primitive cannot satisfy Firstlight's semantic contract, stable-value
+model, accessibility requirements, or equal native quality, Firstlight adds
+paired iOS and Android renderers through the official SuperNative seams.
+
+Consumers should not need to switch to a `<native:...>` tag for a component in
+the Firstlight catalogue. Adapter and renderer decisions are implementation
+details behind the same coherent Firstlight API.
+
+## Current state
+
+### On main
+
+- Segmented
+- Status Label
+- Text Field
+- Button
+
+### In flight
+
+- Icon Button
+- Pill Group
+- Switch
+
+## Build order
+
+1. **Progress** — follows Button so it can reuse the established loading,
+   busy-state, tone, and accessibility semantics. Audit Mobile UI's progress
+   primitive for a thin-wrapper implementation first.
+2. **Badge** — follows Status Label and reuses its display-only semantic tones
+   and accessibility conventions. Audit Mobile UI's badge primitive first.
+3. **Search Field** — builds on Text Field's native editing buffer, sync modes,
+   submission behaviour, and clear action, plus Icon Button's compact action
+   semantics.
+4. **Text Area** — extends the proven Text Field editing model to multiline
+   input, selection, composition, scrolling, and multiline accessibility.
+5. **Choice Group** — builds on Pill Group's stable option normalisation and
+   establishes the shared single- and multiple-selection contract for visible
+   choices. Audit Mobile UI's radio and checkbox primitives first.
+6. **Select** — follows Choice Group for stable option values and Search Field
+   for searchable large-collection presentation. Audit Mobile UI's select
+   primitive first.
+7. **Slider** — establishes continuous numeric values, range and step
+   validation, and live, blur, and debounce event frequency. Audit Mobile UI's
+   slider primitive first.
+8. **Stepper** — reuses Slider's numeric range contract and Icon Button's
+   accessible increment and decrement actions.
+9. **Date Picker** — establishes native picker presentation, bounds, locale,
+   timezone, and wall-clock ISO date values. Audit Mobile UI's date-picker
+   primitive first.
+10. **Time Picker** — reuses Date Picker's presentation, internationalisation,
+    reconciliation, and evidence patterns with a time-specific public value.
+
+## Dependency spine
+
+- Text Field -> Search Field -> Select
+- Text Field -> Text Area
+- Pill Group -> Choice Group -> Select
+- Button -> Progress
+- Status Label -> Badge
+- Icon Button -> Search Field and Stepper
+- Slider -> Stepper
+- Date Picker -> Time Picker
+
+## Completion boundary
+
+A component is complete only when its semantic contract, PHP and EDGE API,
+equal-quality iOS and Android implementation or adapter evidence, focused and
+full tests, showcase fixtures, documentation, screenshots, accessibility
+checks, consumer builds, device evidence, and constitutional review all pass.
+
+No individual component changes the public-alpha status. The alpha remains
+unreleased until the complete catalogue passes the shared release gate.

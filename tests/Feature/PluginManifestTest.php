@@ -40,6 +40,18 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.button',
+            'element' => 'FirstlightUI\\Elements\\Button',
+            'blade' => 'FirstlightUI\\Components\\Button',
+            'android_renderer' => 'com.nativephp.plugins.native_ui.ui.ButtonRenderer',
+            'ios_renderer' => 'NativeUIButtonRenderer',
+            'self_closing' => true,
+            'adapter' => [
+                'package' => 'nativephp/mobile-ui',
+                'type' => 'button',
+            ],
+        ],
+        [
             'type' => 'firstlight.text-field',
             'element' => 'FirstlightUI\\Elements\\TextField',
             'blade' => 'FirstlightUI\\Components\\TextField',

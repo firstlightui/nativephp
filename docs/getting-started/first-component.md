@@ -1,5 +1,5 @@
 ---
-title: Build your first Firstlight component
+title: Add your first Firstlight component
 description: Add a Segmented control whose selected value is managed by PHP.
 type: tutorial
 audience: consumer
@@ -9,7 +9,7 @@ sources:
   - tests/Feature/SegmentedElementTest.php
 ---
 
-# Build Your First Firstlight Component
+# Add Your First Firstlight Component
 
 This tutorial adds a native Segmented control for choosing a queue. The same EDGE markup renders as a platform-appropriate control on iOS and Android.
 

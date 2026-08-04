@@ -46,9 +46,7 @@ Use `firstlight-create-component` as the coordinating skill. It delegates platfo
 
 ## Structural checker limitation
 
-`bin/check-component` currently models the renderer path: it requires PHP component and element classes, paired Swift and Kotlin control/renderer files, platform tests, and a manifest entry. The component skills also permit a proven adapter path without placeholder native files.
-
-When an adapter is the approved implementation and the checker demands renderer-only files, stop and update the checker to understand adapters. Do not create unused renderers, weaken the public contract, or misclassify the component merely to make the gate green.
+`bin/check-component` validates both implementation paths. A renderer-backed manifest entry requires PHP component and element classes, paired Swift and Kotlin control/renderer files, platform tests, and canonical Firstlight renderer identifiers. An adapter-backed entry declares its official package and component type under `adapter`; the checker requires the PHP contract files and proves that both renderer identifiers exactly match the installed official manifest. It does not require placeholder native files or package-local platform tests for delegated renderer code.
 
 The component and documentation release checkers share `spec/reviews/<slug>-alpha.md` as the maintained-evidence boundary. `bin/check-component` forwards the matching development or release mode to `bin/check-docs`; do not copy review evidence into public documentation paths.
 

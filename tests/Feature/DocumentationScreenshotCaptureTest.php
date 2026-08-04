@@ -125,6 +125,12 @@ function successfulCaptureRunner(array $fixture, bool $identicalAppearances = fa
         if ($command === ['adb', '-s', 'emulator-5554', 'shell', 'pm', 'path', 'dev.firstlightui.showcase']) {
             return $ok("package:/data/app/dev.firstlightui.showcase/base.apk\n");
         }
+        if ($command === ['xcrun', 'simctl', 'terminate', 'IOS-1', 'dev.firstlightui.showcase']) {
+            return $ok();
+        }
+        if ($command === ['adb', '-s', 'emulator-5554', 'shell', 'am', 'force-stop', 'dev.firstlightui.showcase']) {
+            return $ok();
+        }
         if ($command === ['adb', '-s', 'emulator-5554', 'shell', 'dumpsys', 'window']) {
             return $ok("mCurrentFocus=Window{1 u0 dev.firstlightui.showcase/com.nativephp.mobile.ui.MainActivity}\n");
         }
@@ -253,6 +259,54 @@ it('publishes the complete differentiated matrix atomically', function () {
             ->and(hash_file('sha256', $report->outputs['ios-light']))->not->toBe(hash_file('sha256', $report->outputs['ios-dark']))
             ->and(hash_file('sha256', $report->outputs['android-light']))->not->toBe(hash_file('sha256', $report->outputs['android-dark']))
             ->and($appearances())->toBe(['ios' => 'light', 'android' => 'no']);
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+    }
+});
+
+it('primes the requested start URL before launch and restores the showcase environment', function () {
+    $fixture = screenshotCaptureFixture();
+    $originalEnvironment = file_get_contents($fixture['showcase'].'/.env');
+    [$normalRunner] = successfulCaptureRunner($fixture);
+    $launchEnvironments = [];
+    $runner = new FakeCaptureCommandRunner(function (array $command, ?string $cwd) use (
+        $fixture,
+        $normalRunner,
+        &$launchEnvironments,
+    ): array {
+        if (array_slice($command, 0, 3) === ['php', 'artisan', 'native:run']) {
+            $launchEnvironments[] = file_get_contents($fixture['showcase'].'/.env');
+        }
+
+        return $normalRunner->run($command, $cwd);
+    });
+
+    try {
+        (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(captureRequest($fixture));
+
+        expect($launchEnvironments)->toHaveCount(2)
+            ->each->toContain("NATIVEPHP_START_URL=/captures/segmented\n")
+            ->and(file_get_contents($fixture['showcase'].'/.env'))->toBe($originalEnvironment);
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+    }
+});
+
+it('terminates each installed app before launching the requested capture route', function () {
+    $fixture = screenshotCaptureFixture();
+    [$runner] = successfulCaptureRunner($fixture);
+
+    try {
+        (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(captureRequest($fixture));
+
+        $commands = array_column($runner->calls, 'command');
+        $iosStop = array_search(['xcrun', 'simctl', 'terminate', 'IOS-1', 'dev.firstlightui.showcase'], $commands, true);
+        $iosLaunch = array_search(['php', 'artisan', 'native:run', 'ios', 'IOS-1', '--start-url=/captures/segmented', '--no-tty'], $commands, true);
+        $androidStop = array_search(['adb', '-s', 'emulator-5554', 'shell', 'am', 'force-stop', 'dev.firstlightui.showcase'], $commands, true);
+        $androidLaunch = array_search(['php', 'artisan', 'native:run', 'android', 'emulator-5554', '--start-url=/captures/segmented', '--no-tty'], $commands, true);
+
+        expect($iosStop)->toBeInt()->toBeLessThan($iosLaunch)
+            ->and($androidStop)->toBeInt()->toBeLessThan($androidLaunch);
     } finally {
         removeScreenshotCaptureFixture($fixture);
     }
