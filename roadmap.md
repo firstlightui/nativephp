@@ -30,18 +30,17 @@ details behind the same coherent Firstlight API.
 - Progress
 - Switch
 - Badge
+- Search Field
+- Text Area
 
 ### In flight
 
-- Search Field
+- Choice Group
+- Date Picker
+- Time Picker
 
 ## Build order
 
-4. **Search Field** — builds on Text Field's native editing buffer, sync modes,
-   submission behaviour, and clear action, plus Icon Button's compact action
-   semantics.
-5. **Text Area** — extends the proven Text Field editing model to multiline
-   input, selection, composition, scrolling, and multiline accessibility.
 6. **Choice Group** — builds on Pill Group's stable option normalisation and
    establishes the shared single- and multiple-selection contract for visible
    choices. Audit Mobile UI's radio and checkbox primitives first.
