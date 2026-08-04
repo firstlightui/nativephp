@@ -175,3 +175,29 @@ consumer-proven off-device at exact package and showcase revisions. It is not
 development-complete, component-release-ready, or alpha-ready until the
 blocked concurrent full-suite, iOS, runtime, host, screenshot-or-waiver, and
 device rows close.
+
+## Controller runtime evidence — 2026-08-04
+
+The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock passed `assembleRelease`. iOS debug reported `BUILD SUCCEEDED`,
+clean-installed, and launched the catalogue on iPhone 17 Pro. The final clean
+full-suite results recorded below supersede the earlier concurrent Slider
+failures, and these host runs close the generated-host rows.
+
+The first Android runtime pass exposed a real trigger defect: the text field
+consumed taps before the dialog action. A red regression now requires the
+full-size semantic button overlay used by Date Picker, and the corrected host
+opened the genuine Material time dialog with Cancel and Confirm actions. Direct
+iOS component routing and canonical capture were waived; this is not iOS
+component-runtime or screenshot evidence. Exact iOS XCTest, VoiceOver, full
+TalkBack, locale/hour-cycle, timezone, cancel/confirm, RTL,
+appearance/scaling, offline, and physical-device evidence remain release
+requirements.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.

@@ -76,3 +76,27 @@ Choice Group deliberately keeps the server authoritative and suppresses addition
 - Complete VoiceOver, TalkBack, large text, contrast, RTL, reduced motion, offline, rejection, rapid-tap, and physical-device checks.
 
 Do not describe Choice Group as development-complete or release-ready until the blocked rows are closed and the upstream publication dependency is released.
+
+## Controller runtime evidence — 2026-08-04
+
+The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock passed `assembleRelease`. iOS debug reported `BUILD SUCCEEDED`,
+clean-installed, and launched the catalogue on iPhone 17 Pro. These host runs
+close the earlier generated-host rows.
+
+On Android, the single-radio and multiple-checkbox fixtures rendered with
+their selected, disabled, helper, error, and required semantics. Selecting
+Urgent changed its radio accessibility state to checked. Direct iOS component
+routing and canonical capture were waived; this is not iOS component-runtime
+or screenshot evidence. Exact iOS XCTest, VoiceOver, full TalkBack, RTL,
+appearance/scaling, rejection/rapid-tap, offline, and physical-device evidence
+remain required. Release also remains blocked until NativePHP exposes the
+identical-publication epoch in a supported release.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.

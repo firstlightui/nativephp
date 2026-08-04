@@ -82,3 +82,28 @@ order-independent; that focused test-harness repair belongs to this component.
 Search Field must not be described as development-complete or release-ready
 until the applicable blocked rows are closed or the controller records the
 explicit screenshot waiver.
+
+## Controller runtime evidence — 2026-08-04
+
+The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock passed `assembleRelease`. iOS debug reported `BUILD SUCCEEDED`,
+clean-installed, and launched the catalogue on iPhone 17 Pro. These results
+close the earlier generated-host rows.
+
+On Android, the live, debounce, blur, clear, and disabled Search Field fixtures
+rendered with their expected semantics. Focusing the debounced field opened
+the native handwriting IME and retained focus; automated text injection was
+not claimed because that IME did not accept `adb input text`. Direct iOS
+component routing and canonical capture were waived under the task instruction,
+so the clean catalogue launch is not represented as iOS component-runtime or
+screenshot evidence. Exact iOS XCTest, VoiceOver, full TalkBack, composition,
+clear-focus, RTL, appearance/scaling, offline, and physical-device evidence
+remain release requirements.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.

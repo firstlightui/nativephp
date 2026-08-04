@@ -196,3 +196,28 @@ passes in both focused and full runs.
 Icon Button is on main with a consumer fixture and broad off-device automated
 coverage. It is not implementation-complete, development-proven,
 component-release-ready, or alpha-ready until the blocked rows above close.
+
+## Controller runtime evidence — 2026-08-04
+
+This section supersedes the earlier generated-host and Android-runtime pending
+rows. The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock then passed `assembleRelease`. iOS debug reported `BUILD
+SUCCEEDED`, clean-installed, and launched the catalogue on iPhone 17 Pro.
+
+On Android, Icon Button rendered its primary, secondary, destructive,
+selected, overflow, disabled, loading, and press-recording cases. The
+accessibility tree exposed the authored action names, and tapping Record press
+changed the PHP-backed count from 0 to 1. The iOS host compiled the complete
+renderer set, but direct component routing and canonical capture were waived
+under the task instruction; this is not represented as iOS component-runtime
+or screenshot evidence. Exact iOS XCTest, VoiceOver, full TalkBack, RTL,
+appearance/scaling matrices, and physical-device evidence remain release
+requirements.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.

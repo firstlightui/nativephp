@@ -169,3 +169,28 @@ showcase revisions. It is not development-complete, component-release-ready, or
 alpha-ready until the blocked iOS, host, shared-suite, and controller-owned
 runtime rows close. Screenshot failure alone may be bypassed under the user's
 instruction; the other evidence remains required.
+
+## Controller runtime evidence — 2026-08-04
+
+The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock passed `assembleRelease`. iOS debug reported `BUILD SUCCEEDED`,
+clean-installed, and launched the catalogue on iPhone 17 Pro. The final clean
+full-suite results recorded below supersede the earlier concurrent shared-suite
+failure, and these host runs close the generated-host rows.
+
+On Android, live, blur, debounce, required/helper, error, disabled, and
+read-only multiline fixtures rendered with native edit semantics. Focusing the
+live editor produced the native cursor/selection handle and handwriting IME.
+Direct iOS component routing and canonical capture were waived; this is not
+iOS component-runtime or screenshot evidence. Exact iOS XCTest, VoiceOver,
+full TalkBack, marked-text/composition, cursor/selection, scrolling, RTL,
+appearance/scaling, offline, and physical-device evidence remain release
+requirements.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.

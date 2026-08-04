@@ -185,3 +185,27 @@ Badge is on main with exact consumer integration and broad off-device automated
 coverage. It is not development-proven, component-release-ready, or alpha-ready
 until the blocked rows above close or, for screenshot capture only, are
 explicitly waived under the user's instruction.
+
+## Controller runtime evidence — 2026-08-04
+
+This section supersedes the earlier generated-host and Android-runtime pending
+rows. The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock then passed `assembleRelease`. iOS debug reported `BUILD
+SUCCEEDED`, clean-installed, and launched the catalogue on iPhone 17 Pro.
+
+On Android, Badge rendered the zero/single/double/maximum/overflow counts,
+semantic tones, and accessible-label override. The accessibility tree exposed
+`1 unread message`, `9 unread messages`, `99 pending items`, and `100 pending
+items` without making the display-only markers actionable. The iOS host
+compiled the complete renderer set, but direct component routing and canonical
+capture were waived; this is not iOS component-runtime or screenshot evidence.
+Exact iOS XCTest, VoiceOver, full TalkBack, RTL, appearance/scaling matrices,
+and physical-device evidence remain release requirements.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.

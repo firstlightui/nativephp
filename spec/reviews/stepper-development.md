@@ -156,3 +156,28 @@ and component-specific off-device ready at the reviewed revisions. It is not
 development-complete, component-release-ready, or alpha-ready until the
 pending iOS, runtime, accessibility, host, visual or bypass, physical-device,
 and identical-publication rows close.
+
+## Controller runtime evidence — 2026-08-04
+
+The final showcase lock at `a07da05` resolved the complete package at
+`b7cb3f9`. Android debug built, installed, and clean-launched on Pixel 9 Pro;
+the same lock passed `assembleRelease`. iOS debug reported `BUILD SUCCEEDED`,
+clean-installed, and launched the catalogue on iPhone 17 Pro. These host runs
+close the generated-host rows.
+
+On Android, integer and fractional models, lower/upper bounds, error, disabled,
+and server-authoritative fixtures rendered with named decrement/increment
+actions. Tapping Increase Quantity changed the PHP-backed accepted value from
+5 to 6. Direct iOS component routing and canonical capture were waived; this
+is not iOS component-runtime or screenshot evidence. Exact iOS XCTest,
+VoiceOver, full TalkBack, RTL, appearance/scaling, rejection/rapid taps,
+offline, and physical-device evidence remain required. Release also remains
+blocked until NativePHP exposes the identical-publication epoch in a supported
+release.
+
+Final shared gates passed: package 748 tests/2,160 assertions with five model
+evaluations skipped; Android 131 tests with zero failures/errors and seven
+controller-gated skips; showcase 93 tests/1,467 assertions; both strict
+Composer validations; docs build/check; all ten development component checks;
+plugin validation with the expected UI-only no-bridge-functions warning; and
+both repository diff checks.
