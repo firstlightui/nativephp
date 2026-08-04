@@ -10,6 +10,16 @@
                 "android-dark": "docs/screenshots/button/android-dark.png"
             }
         },
+        "pill-group": {
+            "route": "/captures/pill-group",
+            "test": "php artisan test tests/Feature/PillGroupCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/pill-group/ios-light.png",
+                "ios-dark": "docs/screenshots/pill-group/ios-dark.png",
+                "android-light": "docs/screenshots/pill-group/android-light.png",
+                "android-dark": "docs/screenshots/pill-group/android-dark.png"
+            }
+        },
         "progress": {
             "route": "/captures/progress",
             "test": "php artisan test tests/Feature/ProgressCaptureTest.php",

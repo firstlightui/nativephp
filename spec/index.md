@@ -13,6 +13,7 @@ sources:
 - [Button component contract](components/button.md) — Defines the labelled action API, adapter boundary, state, diagnostics, accessibility, and renderer exit criteria.
 - [Progress component contract](components/progress.md) — Defines determinate and indeterminate display semantics, strict values, accessibility, and the Mobile UI adapter boundary.
 - [Shared icon contract](reference/icons.md) — Defines cross-control icon names, platform overrides, resolution, accessibility, and validation.
+- [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
 - [Package architecture](architecture/package.md) — Maps the public PHP API to the iOS and Android renderer lifecycle.
 - [Adding components](workflows/adding-components.md) — Defines the evidence-based workflow for delivering a paired Firstlight component.

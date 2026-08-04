@@ -22,3 +22,19 @@ it('appends an integer to a callback without existing arguments', function (stri
         'args' => [-10],
     ]);
 })->with(['selectPriority', 'selectPriority()']);
+
+it('appends null and list values as literal callback arguments', function (mixed $value) {
+    $parsed = CallbackRegistry::parse(
+        CallbackExpression::appendValue("selectQueues('documents')", $value)
+    );
+
+    expect($parsed)->toBe([
+        'method' => 'selectQueues',
+        'args' => ['documents', $value],
+    ]);
+})->with([
+    null,
+    ['mine', 'all'],
+    [10, 20],
+    ["O'Connor, 東京"],
+]);
