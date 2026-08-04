@@ -152,7 +152,9 @@ it('reports an exact missing renderer path', function () {
 });
 
 it('keeps the release gate closed until all documentation evidence exists', function () {
-    $process = new Process([dirname(__DIR__, 2).'/bin/check-component', 'Segmented']);
+    $root = makeSegmentedValidationCopy();
+
+    $process = new Process([$root.'/bin/check-component', 'Segmented']);
     $process->run();
 
     expect($process->getExitCode())->toBe(1)
@@ -183,7 +185,7 @@ it('ships four concise skills with the required workflow entrypoints', function 
             'VoiceOver',
             'Dynamic Type',
             'Reduced Motion',
-            'physical device',
+            'physical-device',
             'Stop',
         ],
         'firstlight-android-component' => [
@@ -193,8 +195,8 @@ it('ships four concise skills with the required workflow entrypoints', function 
             'Paparazzi',
             'TalkBack',
             'font scaling',
-            'physical device',
-            'publication fix',
+            'physical-device',
+            'publication lookup',
             'Stop',
         ],
         'firstlight-review-component' => [
