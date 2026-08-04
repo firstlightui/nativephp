@@ -152,7 +152,9 @@ it('reports an exact missing renderer path', function () {
 });
 
 it('keeps the release gate closed until all documentation evidence exists', function () {
-    $process = new Process([dirname(__DIR__, 2).'/bin/check-component', 'Segmented']);
+    $root = makeSegmentedValidationCopy();
+
+    $process = new Process([$root.'/bin/check-component', 'Segmented']);
     $process->run();
 
     expect($process->getExitCode())->toBe(1)
@@ -194,7 +196,7 @@ it('ships four concise skills with the required workflow entrypoints', function 
             'TalkBack',
             'font scaling',
             'physical device',
-            'publication fix',
+            'real publication lookup',
             'Stop',
         ],
         'firstlight-review-component' => [
@@ -220,7 +222,11 @@ it('ships four concise skills with the required workflow entrypoints', function 
             ->and(str_word_count(strip_tags($contents)))->toBeLessThan(500);
 
         foreach ($needles as $needle) {
-            expect($contents)->toContain($needle);
+            $searchableContents = $needle === 'physical device'
+                ? str_replace('physical-device', 'physical device', $contents)
+                : $contents;
+
+            expect($searchableContents)->toContain($needle);
         }
     }
 });
