@@ -1,0 +1,462 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FirstlightUI\Documentation\DocumentationArtifactBuilder;
+use FirstlightUI\Documentation\DocumentationRepository;
+use FirstlightUI\Elements\FeedbackCenter as FeedbackCenterElement;
+use FirstlightUI\Elements\FeedbackItem;
+use FirstlightUI\Events\FeedbackActionPressed;
+use FirstlightUI\Events\FeedbackDismissed;
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Feedback\FeedbackDismissReason;
+use FirstlightUI\Feedback\FeedbackManager;
+use FirstlightUI\Feedback\FeedbackRecord;
+use FirstlightUI\Feedback\FeedbackStore;
+use FirstlightUI\Feedback\FeedbackTone;
+use FirstlightUI\Feedback\PendingFeedback;
+use FirstlightUI\NativeComponents\FeedbackCenter as FeedbackCenterComponent;
+use Illuminate\Support\Facades\Facade;
+use Native\Mobile\Edge\CallbackRegistry;
+
+$arguments = array_slice($argv, 1);
+$development = false;
+
+foreach ($arguments as $argument) {
+    if ($argument === '--development' && ! $development) {
+        $development = true;
+
+        continue;
+    }
+
+    fwrite(STDERR, "Usage: bin/check-transient-feedback [--development]\n");
+    exit(2);
+}
+
+$root = dirname(__DIR__);
+$errors = [];
+$gaps = [];
+
+$required = [
+    'src/Facades/Feedback.php',
+    'src/Feedback/PendingFeedback.php',
+    'src/Feedback/FeedbackManager.php',
+    'src/Feedback/FeedbackStore.php',
+    'src/Feedback/FeedbackRecord.php',
+    'src/Feedback/FeedbackTone.php',
+    'src/Feedback/FeedbackDismissReason.php',
+    'src/Events/FeedbackActionPressed.php',
+    'src/Events/FeedbackDismissed.php',
+    'src/Elements/FeedbackCenter.php',
+    'src/Elements/FeedbackItem.php',
+    'src/NativeComponents/FeedbackCenter.php',
+    'src/FirstlightServiceProvider.php',
+    'resources/views/native/feedback-center.blade.php',
+    'resources/ios/FeedbackCenterState.swift',
+    'resources/ios/FeedbackCenterControl.swift',
+    'resources/ios/FeedbackCenterHost.swift',
+    'resources/ios/FirstlightUIInit.swift',
+    'resources/android/FeedbackCenterState.kt',
+    'resources/android/FeedbackCenterControl.kt',
+    'resources/android/FeedbackCenterHost.kt',
+    'resources/android/FirstlightUIInit.kt',
+    'tests/Feature/TransientFeedbackApiTest.php',
+    'tests/Feature/FeedbackCenterTest.php',
+    'tests/ios/FeedbackCenterTests.swift',
+    'tests/ios/FeedbackCenterSnapshotTests.swift',
+    'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/FeedbackCenterTest.kt',
+    'docs/components/transient-feedback.md',
+    'spec/components/transient-feedback.md',
+    'tests/Feature/TransientFeedbackDocumentationTest.php',
+];
+
+foreach ($required as $path) {
+    if (! is_file($root.'/'.$path)) {
+        $errors[] = "Missing required path: {$path}";
+    }
+}
+
+$read = static function (string $path) use ($root, &$errors): string {
+    if (! is_file($root.'/'.$path)) {
+        return '';
+    }
+
+    $contents = file_get_contents($root.'/'.$path);
+    if ($contents === false) {
+        $errors[] = "Unable to read required path: {$path}";
+
+        return '';
+    }
+
+    return $contents;
+};
+
+$requireMarkers = static function (string $path, array $markers) use ($read, &$errors): void {
+    $contents = $read($path);
+    foreach ($markers as $marker) {
+        if (! str_contains($contents, $marker)) {
+            $errors[] = "Missing contract marker in {$path}: {$marker}";
+        }
+    }
+};
+
+$json = static function (string $path) use ($root, &$errors): ?array {
+    if (! is_file($root.'/'.$path)) {
+        $errors[] = "Missing JSON contract: {$path}";
+
+        return null;
+    }
+
+    try {
+        $decoded = json_decode(
+            (string) file_get_contents($root.'/'.$path),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+    } catch (Throwable $exception) {
+        $errors[] = "Invalid JSON contract {$path}: {$exception->getMessage()}";
+
+        return null;
+    }
+
+    if (! is_array($decoded)) {
+        $errors[] = "JSON contract must be an object: {$path}";
+
+        return null;
+    }
+
+    return $decoded;
+};
+
+if (is_file($root.'/vendor/autoload.php')) {
+    require_once $root.'/vendor/autoload.php';
+} else {
+    $errors[] = 'Missing Composer autoloader: vendor/autoload.php';
+}
+
+$methodContract = static function (
+    string $class,
+    string $method,
+    array $parameterTypes,
+    string $returnType,
+) use (&$errors): void {
+    if (! class_exists($class) || ! method_exists($class, $method)) {
+        $errors[] = "Missing public method: {$class}::{$method}";
+
+        return;
+    }
+
+    $reflection = new ReflectionMethod($class, $method);
+    $actualParameters = array_map(
+        static fn (ReflectionParameter $parameter): string => (string) $parameter->getType(),
+        $reflection->getParameters(),
+    );
+
+    if (! $reflection->isPublic() || $actualParameters !== $parameterTypes || (string) $reflection->getReturnType() !== $returnType) {
+        $errors[] = "Unexpected method contract: {$class}::{$method}";
+    }
+};
+
+foreach ([
+    [FeedbackManager::class, 'message', ['string'], PendingFeedback::class],
+    [FeedbackManager::class, 'success', ['string'], PendingFeedback::class],
+    [FeedbackManager::class, 'warning', ['string'], PendingFeedback::class],
+    [FeedbackManager::class, 'danger', ['string'], PendingFeedback::class],
+    [FeedbackManager::class, 'dismiss', ['string'], 'bool'],
+    [PendingFeedback::class, 'id', ['string'], PendingFeedback::class],
+    [PendingFeedback::class, 'action', ['string', 'string'], PendingFeedback::class],
+    [PendingFeedback::class, 'hold', [], PendingFeedback::class],
+    [PendingFeedback::class, 'send', [], 'string'],
+    [FeedbackCenterComponent::class, 'action', ['string', 'string'], 'void'],
+    [FeedbackCenterComponent::class, 'dismiss', ['string', 'string'], 'void'],
+] as [$class, $method, $parameterTypes, $returnType]) {
+    $methodContract($class, $method, $parameterTypes, $returnType);
+}
+
+if (! is_subclass_of(Feedback::class, Facade::class)) {
+    $errors[] = 'FirstlightUI\\Facades\\Feedback must extend the Laravel Facade';
+} else {
+    try {
+        $reflection = new ReflectionClass(Feedback::class);
+        $accessor = $reflection->getMethod('getFacadeAccessor');
+        $instance = $reflection->newInstanceWithoutConstructor();
+        if ($accessor->invoke($instance) !== FeedbackManager::class) {
+            $errors[] = 'Feedback facade accessor must resolve FeedbackManager';
+        }
+    } catch (Throwable $exception) {
+        $errors[] = 'Unable to verify Feedback facade accessor: '.$exception->getMessage();
+    }
+}
+
+foreach ([
+    FeedbackActionPressed::class => ['id' => 'string', 'actionKey' => 'string'],
+    FeedbackDismissed::class => ['id' => 'string', 'reason' => FeedbackDismissReason::class],
+] as $eventClass => $properties) {
+    $event = new ReflectionClass($eventClass);
+    if (! $event->isFinal() || ! $event->isReadOnly()) {
+        $errors[] = "Application event must be final readonly: {$eventClass}";
+    }
+    foreach ($properties as $property => $type) {
+        if (! $event->hasProperty($property)) {
+            $errors[] = "Missing event payload: {$eventClass}::\${$property}";
+        } else {
+            $payload = $event->getProperty($property);
+            if (! $payload->isPublic() || (string) $payload->getType() !== $type) {
+                $errors[] = "Unexpected event payload contract: {$eventClass}::\${$property}";
+            }
+        }
+    }
+}
+
+if (array_map(static fn (FeedbackTone $tone): string => $tone->value, FeedbackTone::cases()) !== [
+    'default', 'success', 'warning', 'danger',
+]) {
+    $errors[] = 'FeedbackTone must contain exactly default, success, warning, and danger';
+}
+
+if (array_map(static fn (FeedbackDismissReason $reason): string => $reason->value, FeedbackDismissReason::cases()) !== [
+    'timeout', 'manual', 'action',
+]) {
+    $errors[] = 'FeedbackDismissReason must contain exactly timeout, manual, and action';
+}
+
+try {
+    $store = new FeedbackStore;
+    $manager = new FeedbackManager($store);
+    $manager->message('First')->id('first')->send();
+    $manager->message('Second')->id('second')->send();
+    $manager->warning('Updated')->id('first')->action('Retry', 'retry')->hold()->send();
+
+    if (array_map(static fn (FeedbackRecord $record): string => $record->id, $store->all()) !== ['first', 'second']) {
+        $errors[] = 'FeedbackStore must preserve FIFO position when updating a stable ID';
+    }
+    if ($store->all()[0]->tone !== FeedbackTone::Warning || ! $store->all()[0]->hold) {
+        $errors[] = 'PendingFeedback modifiers must publish the updated semantic record';
+    }
+
+    $callbacks = new CallbackRegistry;
+    $automatic = FeedbackItem::fromRecord(new FeedbackRecord(
+        'automatic', 'Saved', FeedbackTone::Success, false, 'Undo', 'undo',
+    ));
+    $held = FeedbackItem::fromRecord(new FeedbackRecord(
+        'held', 'Offline', FeedbackTone::Warning, true, null, null,
+    ));
+    $tree = FeedbackCenterElement::make($automatic, $held)->toArray($callbacks);
+    $automaticProps = $tree['children'][0]['props'] ?? [];
+    $heldProps = $tree['children'][1]['props'] ?? [];
+
+    if (($tree['type'] ?? null) !== 'firstlight.feedback-center'
+        || ($tree['children'][0]['type'] ?? null) !== 'firstlight.feedback-item'
+        || ($tree['children'][1]['type'] ?? null) !== 'firstlight.feedback-item') {
+        $errors[] = 'FeedbackCenter must publish nested center and item wire types';
+    }
+    foreach (['feedback_id', 'message', 'tone', 'hold', 'action_label', 'on_action', 'on_timeout', 'on_manual'] as $prop) {
+        if (! array_key_exists($prop, $automaticProps)) {
+            $errors[] = "Automatic feedback wire is missing: {$prop}";
+        }
+    }
+    if (! array_key_exists('on_manual', $heldProps) || array_key_exists('on_timeout', $heldProps)) {
+        $errors[] = 'Held feedback must publish manual but not timeout callback ownership';
+    }
+    if (array_intersect_key($tree, ['layout' => true, 'style' => true]) !== []
+        || array_intersect_key($tree['children'][0] ?? [], ['layout' => true, 'style' => true]) !== []) {
+        $errors[] = 'Feedback center and item wire nodes must not publish in-tree layout or style';
+    }
+} catch (Throwable $exception) {
+    $errors[] = 'Unable to execute the PHP feedback and wire contract: '.$exception->getMessage();
+}
+
+$requireMarkers('src/FirstlightServiceProvider.php', [
+    '$this->app->singleton(FeedbackStore::class)',
+    '$this->app->singleton(FeedbackManager::class)',
+    "ComponentRegistry::register('firstlight-feedback-center', FeedbackCenter::class)",
+    'ChromeContributorRegistry::register(',
+    "view('firstlight::native.feedback-center')",
+]);
+$requireMarkers('resources/views/native/feedback-center.blade.php', [
+    '<native:firstlight-feedback-center key="firstlight-feedback-center" />',
+]);
+
+foreach ([
+    'resources/ios/FeedbackCenterState.swift' => ['struct FeedbackCenterQueueState', 'private var tombstones: Set<String>'],
+    'resources/ios/FeedbackCenterControl.swift' => ['struct FirstlightFeedbackCenterControl', 'minimumActionTarget = CGSize(width: 44, height: 44)'],
+    'resources/ios/FeedbackCenterHost.swift' => ['struct FirstlightFeedbackCenterHost<Content: View>', '@Environment(\\.scenePhase)', '@Environment(\\.accessibilityReduceMotion)'],
+    'resources/ios/FirstlightUIInit.swift' => ['func registerFirstlightUI()', '"firstlight.feedback-center"', 'consumes: "firstlight_feedback_center"'],
+    'resources/android/FeedbackCenterState.kt' => ['class FeedbackCenterQueueState', 'private val tombstones = mutableSetOf<String>()'],
+    'resources/android/FeedbackCenterControl.kt' => ['fun FirstlightFeedbackCenterControl(', 'minWidth = 48.dp, minHeight = 48.dp'],
+    'resources/android/FeedbackCenterHost.kt' => ['fun FirstlightFeedbackCenterHost(', 'accessibilityManager::getRecommendedTimeoutMillis', 'Lifecycle.State.RESUMED'],
+    'resources/android/FirstlightUIInit.kt' => ['fun registerFirstlightUI(context: Context)', '"firstlight.feedback-center"', 'consumes = "firstlight_feedback_center"'],
+    'tests/ios/FeedbackCenterTests.swift' => ['final class FeedbackCenterTests: XCTestCase'],
+    'tests/ios/FeedbackCenterSnapshotTests.swift' => ['final class FeedbackCenterSnapshotTests: XCTestCase'],
+    'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/FeedbackCenterTest.kt' => [
+        'class FeedbackCenterQueueTest',
+        'class FeedbackCenterSemanticsTest',
+        'class FeedbackCenterInitContractTest',
+        'class FeedbackCenterAndroidApi29Test',
+    ],
+] as $path => $markers) {
+    $requireMarkers($path, $markers);
+}
+
+$manifest = $json('nativephp.json');
+if (is_array($manifest)) {
+    if (($manifest['ios']['init_function'] ?? null) !== 'registerFirstlightUI') {
+        $errors[] = 'nativephp.json iOS init_function must be registerFirstlightUI';
+    }
+    if (($manifest['android']['init_function'] ?? null) !== 'dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI') {
+        $errors[] = 'nativephp.json Android init_function must be dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI';
+    }
+    foreach (['ios', 'android'] as $platform) {
+        if (array_key_exists('bridge_functions', $manifest[$platform] ?? [])) {
+            $errors[] = "nativephp.json {$platform} must not declare bridge_functions";
+        }
+    }
+    foreach ($manifest['components'] ?? [] as $component) {
+        if (($component['type'] ?? null) === 'firstlight.feedback-center') {
+            $errors[] = 'Feedback Center is package chrome and must not be a consumer manifest component';
+        }
+    }
+}
+
+$featureSources = array_values(array_unique(array_merge(
+    glob($root.'/src/Feedback/*.php') ?: [],
+    glob($root.'/src/Events/Feedback*.php') ?: [],
+    [
+        $root.'/src/Facades/Feedback.php',
+        $root.'/src/Elements/FeedbackCenter.php',
+        $root.'/src/Elements/FeedbackItem.php',
+        $root.'/src/NativeComponents/FeedbackCenter.php',
+        $root.'/src/FirstlightServiceProvider.php',
+        $root.'/resources/ios/FeedbackCenterState.swift',
+        $root.'/resources/ios/FeedbackCenterControl.swift',
+        $root.'/resources/ios/FeedbackCenterHost.swift',
+        $root.'/resources/ios/FirstlightUIInit.swift',
+        $root.'/resources/android/FeedbackCenterState.kt',
+        $root.'/resources/android/FeedbackCenterControl.kt',
+        $root.'/resources/android/FeedbackCenterHost.kt',
+        $root.'/resources/android/FirstlightUIInit.kt',
+    ],
+)));
+
+foreach ($featureSources as $path) {
+    if (! is_file($path)) {
+        continue;
+    }
+    $contents = (string) file_get_contents($path);
+    $relative = substr($path, strlen($root) + 1);
+    if (preg_match('/Dialog\s*::\s*toast/i', $contents) === 1) {
+        $errors[] = "Prohibited Dialog::toast call in feature source: {$relative}";
+    }
+    if (preg_match('/nativephp_call/i', $contents) === 1) {
+        $errors[] = "Prohibited nativephp_call bridge in feature source: {$relative}";
+    }
+}
+
+$public = $read('docs/components/transient-feedback.md');
+$spec = $read('spec/components/transient-feedback.md');
+$docsIndex = $read('docs/index.md');
+$specIndex = $read('spec/index.md');
+
+foreach ([
+    'FirstlightUI\\Facades\\Feedback',
+    'FeedbackActionPressed',
+    'FeedbackDismissed',
+    'There is no Blade tag and no host installation step',
+] as $marker) {
+    if (! str_contains($public, $marker)) {
+        $errors[] = "Public guide is missing contract marker: {$marker}";
+    }
+}
+if (str_contains($public, '<firstlight:transient-feedback')) {
+    $errors[] = 'Public guide must not document a Transient Feedback Blade tag';
+}
+foreach (['firstlight.feedback-center', 'firstlight.feedback-item', '`on_action`', '`on_timeout`', '`on_manual`'] as $marker) {
+    if (! str_contains($spec, $marker)) {
+        $errors[] = "Maintained specification is missing wire marker: {$marker}";
+    }
+}
+if (! str_contains($docsIndex, '(components/transient-feedback.md)')) {
+    $errors[] = 'docs/index.md does not index Transient Feedback';
+}
+if (! str_contains($specIndex, '(components/transient-feedback.md)')) {
+    $errors[] = 'spec/index.md does not index Transient Feedback';
+}
+
+$screenshots = $json('spec/screenshots.json');
+$expectedScreenshotEntry = [
+    'route' => '/captures/transient-feedback',
+    'test' => 'php artisan test tests/Feature/TransientFeedbackCaptureTest.php',
+    'outputs' => [
+        'ios-light' => 'docs/screenshots/transient-feedback/ios-light.png',
+        'ios-dark' => 'docs/screenshots/transient-feedback/ios-dark.png',
+        'android-light' => 'docs/screenshots/transient-feedback/android-light.png',
+        'android-dark' => 'docs/screenshots/transient-feedback/android-dark.png',
+    ],
+];
+if (($screenshots['components']['transient-feedback'] ?? null) !== $expectedScreenshotEntry) {
+    $errors[] = 'spec/screenshots.json must contain the exact Transient Feedback capture contract';
+}
+
+try {
+    require_once $root.'/bin/support/DocumentationPage.php';
+    require_once $root.'/bin/support/DocumentationRepository.php';
+    require_once $root.'/bin/support/DocumentationArtifactBuilder.php';
+    $outputs = (new DocumentationArtifactBuilder(new DocumentationRepository($root)))->outputs();
+    foreach ($outputs as $path => $expected) {
+        if (! is_file($root.'/'.$path)) {
+            $errors[] = "Missing generated documentation artefact: {$path}";
+        } elseif ((string) file_get_contents($root.'/'.$path) !== $expected) {
+            $errors[] = "Generated documentation artefact is stale: {$path}";
+        }
+    }
+} catch (Throwable $exception) {
+    $errors[] = 'Unable to verify generated documentation artefacts: '.$exception->getMessage();
+}
+
+foreach ($expectedScreenshotEntry['outputs'] as $path) {
+    if (! is_file($root.'/'.$path)) {
+        $message = "Missing screenshot evidence: {$path}";
+        if ($development) {
+            $gaps[] = $message;
+        } else {
+            $errors[] = $message;
+        }
+    }
+}
+
+$reviewPath = 'spec/reviews/transient-feedback-alpha.md';
+if (! is_file($root.'/'.$reviewPath)) {
+    $message = "Missing release review: {$reviewPath}";
+    if ($development) {
+        $gaps[] = $message;
+    } else {
+        $errors[] = $message;
+    }
+} elseif (preg_match('/^\s*-\s*\[\s\]\s/m', (string) file_get_contents($root.'/'.$reviewPath)) === 1) {
+    $message = "Release review has open checklist rows: {$reviewPath}";
+    if ($development) {
+        $gaps[] = $message;
+    } else {
+        $errors[] = $message;
+    }
+}
+
+$errors = array_values(array_unique($errors));
+$gaps = array_values(array_unique($gaps));
+
+if ($errors !== []) {
+    fwrite(STDERR, "Transient Feedback checks failed:\n");
+    foreach ($errors as $error) {
+        fwrite(STDERR, "- {$error}\n");
+    }
+    exit(1);
+}
+
+fwrite(STDOUT, "Transient Feedback structural checks passed.\n");
+if ($gaps !== []) {
+    fwrite(STDOUT, "Development evidence gaps (allowed):\n");
+    foreach ($gaps as $gap) {
+        fwrite(STDOUT, "- {$gap}\n");
+    }
+}

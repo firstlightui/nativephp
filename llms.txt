@@ -17,6 +17,7 @@
 - [Activity Indicator](https://firstlightui.dev/components/activity-indicator): Indeterminate native activity, semantic sizes, conditional presence, accessibility announcements, validation, and platform behaviour.
 - [Button](https://firstlightui.dev/components/button): Public API, variants, states, accessibility, adapter behaviour, compatibility, and visual evidence for Firstlight Button.
 - [Callout](https://firstlightui.dev/components/callout): Persistent semantic messages, tones, optional actions, accessibility, validation, and native platform behaviour.
+- [Transient Feedback](https://firstlightui.dev/components/transient-feedback): Publish queued app-level outcomes with semantic tones, optional actions, automatic or held lifetime, and Laravel application events.
 - [Badge](https://firstlightui.dev/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
 - [Checkbox](https://firstlightui.dev/components/checkbox): Strict Boolean form and checklist state, field metadata, server-authoritative proposals, accessibility, and native platform behaviour.
 - [Choice Group](https://firstlightui.dev/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.

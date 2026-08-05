@@ -40,6 +40,16 @@
                 "android-dark": "docs/screenshots/callout/android-dark.png"
             }
         },
+        "transient-feedback": {
+            "route": "/captures/transient-feedback",
+            "test": "php artisan test tests/Feature/TransientFeedbackCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/transient-feedback/ios-light.png",
+                "ios-dark": "docs/screenshots/transient-feedback/ios-dark.png",
+                "android-light": "docs/screenshots/transient-feedback/android-light.png",
+                "android-dark": "docs/screenshots/transient-feedback/android-dark.png"
+            }
+        },
         "checkbox": {
             "route": "/captures/checkbox",
             "test": "php artisan test tests/Feature/CheckboxCaptureTest.php",
