@@ -548,16 +548,30 @@ class FeedbackCenterSemanticsTest {
         }
 
         onNodeWithContentDescription("Dismiss feedback").assertIsDisplayed()
+        runOnIdle {
+            center = centerNode(
+                feedbackNode(id = "automatic", nodeId = 13, timeout = 173, manual = 163),
+                feedbackNode(id = "actionable", nodeId = 14, action = 154, timeout = 174, manual = 164),
+                feedbackNode(id = "held", nodeId = 15, hold = true, timeout = 0, manual = 165),
+            )
+        }
+        waitForIdle()
+        runOnIdle {
+            assertEquals("held", runtime.visible?.feedbackId)
+            assertEquals(165, runtime.visible?.manualCallback)
+            assertEquals(15, runtime.visible?.nodeId)
+        }
         onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
         waitForIdle()
         onAllNodes(dismiss).assertCountEquals(0)
         onAllNodes(liveRegion).assertCountEquals(0)
         onNodeWithContentDescription("Dismiss feedback").assertDoesNotExist()
         runOnIdle {
-            assertEquals(listOf(163 to 13, 164 to 14, 65 to 5), events)
+            assertEquals(listOf(163 to 13, 164 to 14, 165 to 15), events)
+            assertFalse(events.contains(65 to 5))
             assertNull(runtime.visible)
             runtime.snackbarDismissed("held")
-            assertEquals(listOf(163 to 13, 164 to 14, 65 to 5), events)
+            assertEquals(listOf(163 to 13, 164 to 14, 165 to 15), events)
         }
     }
 
