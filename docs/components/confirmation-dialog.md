@@ -63,3 +63,10 @@ Their native controls own modal focus, action order, destructive expression,
 Dynamic Type or font scaling, dark appearance, contrast, reduced motion, and
 right-to-left behavior. Use specific action labels such as `Delete` rather
 than generic text when the consequence can be named.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Confirmation Dialog on iOS in light mode](../screenshots/confirmation-dialog/ios-light.png) | ![Confirmation Dialog on iOS in dark mode](../screenshots/confirmation-dialog/ios-dark.png) |
+| Android | ![Confirmation Dialog on Android in light mode](../screenshots/confirmation-dialog/android-light.png) | ![Confirmation Dialog on Android in dark mode](../screenshots/confirmation-dialog/android-dark.png) |

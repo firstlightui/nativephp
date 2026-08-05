@@ -46,6 +46,7 @@ function screenshotCaptureFixture(): array
     mkdir($package.'/spec', 0777, true);
     mkdir($package.'/docs/screenshots/segmented', 0777, true);
     mkdir($package.'/docs/screenshots/status-label', 0777, true);
+    mkdir($package.'/docs/screenshots/confirmation-dialog', 0777, true);
     mkdir($showcase.'/vendor/composer', 0777, true);
     mkdir($showcase.'/nativephp/android', 0777, true);
     mkdir($showcase.'/nativephp/ios', 0777, true);
@@ -70,6 +71,17 @@ function screenshotCaptureFixture(): array
                     'ios-dark' => 'docs/screenshots/status-label/ios-dark.png',
                     'android-light' => 'docs/screenshots/status-label/android-light.png',
                     'android-dark' => 'docs/screenshots/status-label/android-dark.png',
+                ],
+            ],
+            'confirmation-dialog' => [
+                'route' => '/captures/confirmation-dialog',
+                'test' => 'php artisan test tests/Feature/ConfirmationDialogCaptureTest.php',
+                'ready-text' => 'Delete appointment?',
+                'outputs' => [
+                    'ios-light' => 'docs/screenshots/confirmation-dialog/ios-light.png',
+                    'ios-dark' => 'docs/screenshots/confirmation-dialog/ios-dark.png',
+                    'android-light' => 'docs/screenshots/confirmation-dialog/android-light.png',
+                    'android-dark' => 'docs/screenshots/confirmation-dialog/android-dark.png',
                 ],
             ],
         ],
@@ -458,6 +470,44 @@ it('waits for the Android capture title before taking screenshots', function () 
         expect($readinessChecks)->toBeGreaterThan(1)
             ->and($lastReadinessCheck)->toBeInt()->toBeLessThan($firstScreenshot)
             ->and(array_map('is_file', $report->outputs))->each->toBeTrue();
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+    }
+});
+
+it('uses manifest readiness text when a modal hides the Android route title', function () {
+    $fixture = screenshotCaptureFixture();
+    [$normalRunner] = successfulCaptureRunner($fixture);
+    $runner = new FakeCaptureCommandRunner(function (array $command, ?string $cwd) use ($normalRunner): array {
+        if ($command === ['adb', '-s', 'emulator-5554', 'exec-out', 'uiautomator', 'dump', '/dev/tty']) {
+            return [
+                'exitCode' => 0,
+                'stdout' => '<hierarchy><node text="Delete appointment?" package="dev.firstlightui.showcase" /></hierarchy>',
+                'stderr' => '',
+            ];
+        }
+
+        if (str_contains(implode(' ', $command), 'ConfirmationDialogCaptureTest.php')) {
+            return ['exitCode' => 0, 'stdout' => '', 'stderr' => ''];
+        }
+
+        return $normalRunner->run($command, $cwd);
+    });
+
+    try {
+        $report = (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(
+            new CaptureRequest(
+                'ConfirmationDialog',
+                $fixture['package'],
+                $fixture['showcase'],
+                'IOS-1',
+                'emulator-5554',
+                false,
+                false,
+            ),
+        );
+
+        expect(array_map('is_file', $report->outputs))->each->toBeTrue();
     } finally {
         removeScreenshotCaptureFixture($fixture);
     }

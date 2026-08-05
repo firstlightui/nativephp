@@ -223,6 +223,7 @@
         "confirmation-dialog": {
             "route": "/captures/confirmation-dialog",
             "test": "php artisan test tests/Feature/ConfirmationDialogCaptureTest.php",
+            "ready-text": "Delete appointment?",
             "outputs": {
                 "ios-light": "docs/screenshots/confirmation-dialog/ios-light.png",
                 "ios-dark": "docs/screenshots/confirmation-dialog/ios-dark.png",

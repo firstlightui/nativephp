@@ -89,7 +89,7 @@ final class DocumentationScreenshotCapture
                 $showcaseRoot,
             );
             $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, 'after launch');
-            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $request->component);
+            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $request->component, $manifest);
 
             $originalIosAppearance = $this->iosAppearance($request->iosUdid);
             $originalAndroidAppearance = $this->androidAppearance($request->androidSerial);
@@ -298,7 +298,7 @@ final class DocumentationScreenshotCapture
                 $showcaseRoot,
             );
             $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, 'after launch');
-            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $first['name']);
+            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $first['name'], $first['manifest']);
             $androidRuntimeEnvironment = $this->execute(
                 'android-runtime-environment',
                 ['adb', '-s', $request->androidSerial, 'exec-out', 'run-as', $androidAppId, 'cat', $androidRuntimeEnvironmentPath],
@@ -360,7 +360,7 @@ final class DocumentationScreenshotCapture
                         ['adb', '-s', $request->androidSerial, 'shell', 'monkey', '-p', $androidAppId, '-c', 'android.intent.category.LAUNCHER', '1'],
                     );
                     $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} {$slug} capture");
-                    $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $component['name']);
+                    $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $component['name'], $component['manifest']);
                     $this->captureStable(
                         "android-{$appearance}-{$slug}",
                         ['adb', '-s', $request->androidSerial, 'exec-out', 'screencap', '-p'],
@@ -505,6 +505,9 @@ final class DocumentationScreenshotCapture
         $entry = $manifest['components'][$slug] ?? null;
         if (! is_array($entry) || ! is_string($entry['route'] ?? null) || ! is_string($entry['test'] ?? null) || ! is_array($entry['outputs'] ?? null)) {
             throw new RuntimeException("Incomplete screenshot manifest entry for {$slug}.");
+        }
+        if (array_key_exists('ready-text', $entry) && (! is_string($entry['ready-text']) || trim($entry['ready-text']) === '')) {
+            throw new RuntimeException("Invalid screenshot readiness text for {$slug}.");
         }
 
         return [$slug, $entry];
@@ -721,9 +724,10 @@ final class DocumentationScreenshotCapture
         throw new RuntimeException("Android showcase is not foregrounded at {$stage}: {$appId}");
     }
 
-    private function assertAndroidCaptureReady(string $serial, string $appId, string $component): void
+    /** @param array<string, mixed> $manifest */
+    private function assertAndroidCaptureReady(string $serial, string $appId, string $component, array $manifest): void
     {
-        $title = 'Firstlight '.trim((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $component));
+        $title = $manifest['ready-text'] ?? 'Firstlight '.trim((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $component));
 
         for ($attempt = 1; $attempt <= 30; $attempt++) {
             $hierarchy = $this->execute(
