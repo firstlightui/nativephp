@@ -139,13 +139,21 @@ class FeedbackCenterQueueTest {
         assertEquals("two", held.visible?.feedbackId)
 
         val automatic = FeedbackCenterQueueState(0)
-        automatic.reconcile(listOf(item("automatic", timeout = 72)), 0)
-        assertNull(automatic.manualDismiss("automatic", 0))
+        automatic.reconcile(listOf(item("automatic", timeout = 72, manual = 73), item("next")), 0)
+        assertEquals(
+            FeedbackCenterWireEvent.Press(73, 1),
+            automatic.manualDismiss("automatic", 0),
+        )
+        assertNull(automatic.manualDismiss("automatic", 1))
+        assertEquals("next", automatic.visible?.feedbackId)
+
+        val timed = FeedbackCenterQueueState(0)
+        timed.reconcile(listOf(item("automatic", timeout = 72, manual = 73)), 0)
         assertEquals(
             FeedbackCenterWireEvent.Press(72, 1),
-            automatic.advanceBy(automatic.remainingMillis, "automatic"),
+            timed.advanceBy(timed.remainingMillis, "automatic"),
         )
-        assertNull(automatic.timeout("automatic", 100_000))
+        assertNull(timed.timeout("automatic", 100_000))
     }
 
     @Test
@@ -192,7 +200,7 @@ class FeedbackCenterQueueTest {
         val state = FeedbackCenterQueueState(0)
         state.reconcile(
             listOf(
-                item("automatic", timeout = 0),
+                item("automatic", timeout = 12, manual = 0),
                 item("held", hold = true, timeout = 0, manual = 0),
             ),
             0,
@@ -206,8 +214,9 @@ class FeedbackCenterQueueTest {
         assertFalse(item("blank-message", message = " ").isEligible)
         assertFalse(item("bad-tone", tone = "critical").isEligible)
 
-        state.reconcile(listOf(item("duplicate"), item("duplicate")), 1_000)
-        assertNull(state.visible)
+        state.reconcile(listOf(item("duplicate"), item("duplicate"), item("valid")), 1_000)
+        assertEquals("valid", state.visible?.feedbackId)
+        assertEquals(emptyList<String>(), state.pendingIds)
     }
 
     @Test
@@ -398,22 +407,27 @@ class FeedbackCenterSemanticsTest {
             ),
         )
         onNodeWithText("Original message").assertIsDisplayed()
+        onNode(hasTestTag("firstlight-feedback-tone-success"), useUnmergedTree = true).assertIsDisplayed()
         onNodeWithText("Undo").assertIsDisplayed().assertHasClickAction().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
         onNodeWithContentDescription("Feedback tone").assertDoesNotExist()
 
         runOnIdle {
             center = centerNode(
-                feedbackNode(id = "one", nodeId = 11, message = "Updated visible copy", tone = "danger", action = 151),
+                feedbackNode(id = "one", nodeId = 11, message = "Updated visible copy", tone = "danger", action = 151, manual = 161),
                 feedbackNode(id = "two", nodeId = 2, message = "Second message", hold = true, timeout = 0, manual = 62),
             )
         }
         onAllNodes(liveRegion).assertCountEquals(1)
         onNodeWithText("Original message").assertIsDisplayed()
-        onNodeWithText("Updated visible copy").assertDoesNotExist()
+        onNodeWithText("Updated visible copy", useUnmergedTree = true).assertIsDisplayed()
+        onNode(hasTestTag("firstlight-feedback-tone-danger"), useUnmergedTree = true).assertIsDisplayed()
+        onNode(hasTestTag("firstlight-feedback-tone-success"), useUnmergedTree = true).assertDoesNotExist()
         runOnIdle {
             assertEquals("Updated visible copy", runtime.visible?.message)
             assertEquals(FeedbackCenterTone.Danger, runtime.visible?.tone)
+            assertEquals(FeedbackCenterToneColorRole.ErrorContainer, FeedbackCenterRenderingPolicy(runtime.visible!!.tone).colorRole)
             assertEquals(151, runtime.visible?.actionCallback)
+            assertEquals(161, runtime.visible?.manualCallback)
         }
 
         onNodeWithText("Undo").performClick()
@@ -468,7 +482,7 @@ class FeedbackCenterSemanticsTest {
     }
 
     @Test
-    fun `host semantics dismiss is inert for automatic feedback and re-presents the same id`() = runComposeUiTest {
+    fun `host dismiss semantics enumerate and route automatic actionable held and empty states`() = runComposeUiTest {
         val events = mutableListOf<Pair<Int, Int>>()
         val runtime = FeedbackCenterHostRuntime(
             initialNowMillis = 0,
@@ -476,32 +490,74 @@ class FeedbackCenterSemanticsTest {
             sendPress = { callback, node -> events += callback to node },
             nowMillis = { 0 },
         )
+        var center by mutableStateOf(centerNode(
+            feedbackNode(id = "automatic", nodeId = 3, timeout = 73, manual = 63),
+            feedbackNode(id = "actionable", nodeId = 4, action = 54, timeout = 74, manual = 64),
+            feedbackNode(id = "held", nodeId = 5, hold = true, timeout = 0, manual = 65),
+        ))
         setContent {
             MaterialTheme {
-                FirstlightFeedbackCenterHost(
-                    centerNode = centerNode(feedbackNode(id = "automatic", nodeId = 3, timeout = 73)),
-                    runtime = runtime,
-                ) { Text("Screen") }
+                FirstlightFeedbackCenterHost(centerNode = center, runtime = runtime) { Text("Screen") }
             }
         }
 
         val dismiss = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss)
         val liveRegion = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
+        onAllNodes(dismiss).assertCountEquals(1)
+        onAllNodes(liveRegion).assertCountEquals(1)
+        onNodeWithText("Undo").assertDoesNotExist()
+        onNodeWithContentDescription("Dismiss feedback").assertDoesNotExist()
+
+        runOnIdle {
+            center = centerNode(
+                feedbackNode(id = "automatic", nodeId = 13, timeout = 173, manual = 163),
+                feedbackNode(id = "actionable", nodeId = 4, action = 54, timeout = 74, manual = 64),
+                feedbackNode(id = "held", nodeId = 5, hold = true, timeout = 0, manual = 65),
+            )
+        }
         onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
         waitForIdle()
         onAllNodes(dismiss).assertCountEquals(1)
         onAllNodes(liveRegion).assertCountEquals(1)
         runOnIdle {
-            assertEquals("automatic", runtime.visible?.feedbackId)
-            assertEquals(emptyList<Pair<Int, Int>>(), events)
+            assertEquals(listOf(163 to 13), events)
+            assertEquals("actionable", runtime.visible?.feedbackId)
+            runtime.snackbarDismissed("automatic")
+            runtime.snackbarDismissed("automatic")
+            assertEquals(listOf(163 to 13), events)
         }
 
+        onNodeWithText("Undo").assertIsDisplayed()
+        onNodeWithContentDescription("Dismiss feedback").assertDoesNotExist()
+        runOnIdle {
+            center = centerNode(
+                feedbackNode(id = "automatic", nodeId = 13, timeout = 173, manual = 163),
+                feedbackNode(id = "actionable", nodeId = 14, action = 154, timeout = 174, manual = 164),
+                feedbackNode(id = "held", nodeId = 5, hold = true, timeout = 0, manual = 65),
+            )
+        }
         onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
         waitForIdle()
         onAllNodes(dismiss).assertCountEquals(1)
+        onAllNodes(liveRegion).assertCountEquals(1)
         runOnIdle {
-            assertEquals("automatic", runtime.visible?.feedbackId)
-            assertEquals(emptyList<Pair<Int, Int>>(), events)
+            assertEquals(listOf(163 to 13, 164 to 14), events)
+            assertEquals("held", runtime.visible?.feedbackId)
+            runtime.snackbarDismissed("actionable")
+            assertEquals(listOf(163 to 13, 164 to 14), events)
+        }
+
+        onNodeWithContentDescription("Dismiss feedback").assertIsDisplayed()
+        onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
+        waitForIdle()
+        onAllNodes(dismiss).assertCountEquals(0)
+        onAllNodes(liveRegion).assertCountEquals(0)
+        onNodeWithContentDescription("Dismiss feedback").assertDoesNotExist()
+        runOnIdle {
+            assertEquals(listOf(163 to 13, 164 to 14, 65 to 5), events)
+            assertNull(runtime.visible)
+            runtime.snackbarDismissed("held")
+            assertEquals(listOf(163 to 13, 164 to 14, 65 to 5), events)
         }
     }
 
@@ -676,6 +732,48 @@ class FeedbackCenterSemanticsTest {
             assertFalse(runtime.isPaused)
             assertEquals(100, runtime.elapsedMillis)
         }
+    }
+
+    @Test
+    fun `replacing lifecycle owner disposes old observer and follows only the new owner`() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        val runtime = FeedbackCenterHostRuntime(0, { _, _ -> 100_000 }, { _, _ -> }, { 0 })
+        val oldOwner = TestFeedbackLifecycleOwner(Lifecycle.State.RESUMED)
+        val newOwner = TestFeedbackLifecycleOwner(Lifecycle.State.RESUMED)
+        var owner by mutableStateOf<LifecycleOwner>(oldOwner)
+        setContent {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                MaterialTheme {
+                    FirstlightFeedbackCenterHost(
+                        centerNode(feedbackNode(id = "lifecycle", timeout = 73, manual = 63)),
+                        runtime,
+                    ) { Text("Screen") }
+                }
+            }
+        }
+
+        mainClock.advanceTimeByFrame()
+        runOnIdle {
+            assertFalse(runtime.isPaused)
+            owner = newOwner
+        }
+        mainClock.advanceTimeByFrame()
+
+        runOnIdle { oldOwner.moveTo(Lifecycle.State.CREATED) }
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertFalse(runtime.isPaused) }
+
+        runOnIdle { newOwner.moveTo(Lifecycle.State.CREATED) }
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertTrue(runtime.isPaused) }
+
+        runOnIdle { oldOwner.moveTo(Lifecycle.State.RESUMED) }
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertTrue(runtime.isPaused) }
+
+        runOnIdle { newOwner.moveTo(Lifecycle.State.RESUMED) }
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertFalse(runtime.isPaused) }
     }
 
     @Test

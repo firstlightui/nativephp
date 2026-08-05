@@ -61,12 +61,15 @@ final class FeedbackItem extends Element
             $props['on_action'] = $registry->register($action);
         }
 
-        $dismissReason = $this->hold
-            ? FeedbackDismissReason::Manual
-            : FeedbackDismissReason::Timeout;
-        $dismiss = CallbackExpression::appendValue('dismiss', $this->feedbackId);
-        $dismiss = CallbackExpression::appendValue($dismiss, $dismissReason->value);
-        $props[$this->hold ? 'on_manual' : 'on_timeout'] = $registry->register($dismiss);
+        if (! $this->hold) {
+            $timeout = CallbackExpression::appendValue('dismiss', $this->feedbackId);
+            $timeout = CallbackExpression::appendValue($timeout, FeedbackDismissReason::Timeout->value);
+            $props['on_timeout'] = $registry->register($timeout);
+        }
+
+        $manual = CallbackExpression::appendValue('dismiss', $this->feedbackId);
+        $manual = CallbackExpression::appendValue($manual, FeedbackDismissReason::Manual->value);
+        $props['on_manual'] = $registry->register($manual);
 
         return $props;
     }

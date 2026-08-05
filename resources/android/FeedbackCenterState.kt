@@ -64,7 +64,7 @@ data class FeedbackCenterItemConfiguration(
 
     val isEligible: Boolean
         get() = hasValidIdentity && hasValidMessage && hasValidTone &&
-            if (hold) manualCallback != null else timeoutCallback != null
+            manualCallback != null && (hold || timeoutCallback != null)
 
     companion object {
         private fun callback(value: Int): Int? = value.takeIf { it != 0 }
@@ -170,7 +170,7 @@ class FeedbackCenterQueueState(
     fun manualDismiss(feedbackId: String, nowMillis: Long): FeedbackCenterWireEvent? {
         if (visible?.feedbackId != feedbackId) return null
         synchronize(nowMillis)
-        val current = visible?.takeIf { it.hold } ?: return null
+        val current = visible ?: return null
         val callback = current.manualCallback ?: return null
         return complete(current.feedbackId, FeedbackCenterWireEvent.Press(callback, current.nodeId), nowMillis)
     }

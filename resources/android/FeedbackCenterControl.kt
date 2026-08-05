@@ -1,6 +1,7 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -72,6 +73,7 @@ data class FeedbackCenterRenderingPolicy(val tone: FeedbackCenterTone) {
         FeedbackCenterTone.Warning -> FeedbackCenterToneColorRole.SecondaryContainer
         FeedbackCenterTone.Danger -> FeedbackCenterToneColorRole.ErrorContainer
     }
+    val iconTestTag: String = "firstlight-feedback-tone-${tone.wireName}"
 
     companion object {
         const val ConstrainedWidthDp = 480
@@ -93,29 +95,29 @@ private data class FeedbackCenterColors(
 @Composable
 private fun feedbackCenterColors(tone: FeedbackCenterTone): FeedbackCenterColors {
     val scheme = MaterialTheme.colorScheme
-    return when (tone) {
-        FeedbackCenterTone.Default -> FeedbackCenterColors(
+    return when (FeedbackCenterRenderingPolicy(tone).colorRole) {
+        FeedbackCenterToneColorRole.InverseSurface -> FeedbackCenterColors(
             container = scheme.inverseSurface,
             content = scheme.inverseOnSurface,
             action = scheme.inversePrimary,
             dismiss = scheme.inverseOnSurface,
             accent = scheme.inversePrimary,
         )
-        FeedbackCenterTone.Success -> FeedbackCenterColors(
+        FeedbackCenterToneColorRole.TertiaryContainer -> FeedbackCenterColors(
             container = scheme.tertiaryContainer,
             content = scheme.onTertiaryContainer,
             action = scheme.tertiary,
             dismiss = scheme.onTertiaryContainer,
             accent = scheme.tertiary,
         )
-        FeedbackCenterTone.Warning -> FeedbackCenterColors(
+        FeedbackCenterToneColorRole.SecondaryContainer -> FeedbackCenterColors(
             container = scheme.secondaryContainer,
             content = scheme.onSecondaryContainer,
             action = scheme.secondary,
             dismiss = scheme.onSecondaryContainer,
             accent = scheme.secondary,
         )
-        FeedbackCenterTone.Danger -> FeedbackCenterColors(
+        FeedbackCenterToneColorRole.ErrorContainer -> FeedbackCenterColors(
             container = scheme.errorContainer,
             content = scheme.onErrorContainer,
             action = scheme.error,
@@ -183,22 +185,24 @@ fun FirstlightFeedbackCenterControl(
         Row(verticalAlignment = Alignment.CenterVertically) {
             ToneIcon(configuration.tone, colors.accent)
             Spacer(Modifier.width(12.dp))
-            Text(
-                configuration.message,
+            Box(
                 Modifier.clearAndSetSemantics {
                     text = AnnotatedString(announcementMessage)
                 },
-            )
+            ) {
+                Text(configuration.message)
+            }
         }
     }
 }
 
 @Composable
 private fun ToneIcon(tone: FeedbackCenterTone, color: Color) {
+    val renderingPolicy = FeedbackCenterRenderingPolicy(tone)
     Canvas(
         Modifier
             .size(20.dp)
-            .testTag("firstlight-feedback-tone-${tone.wireName}")
+            .testTag(renderingPolicy.iconTestTag)
             .clearAndSetSemantics {},
     ) {
         val stroke = Stroke(width = size.minDimension * 0.1f, cap = StrokeCap.Round)

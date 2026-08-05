@@ -175,7 +175,8 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
     $heldProps = $tree['children'][1]['props'];
     $actionCallback = $automaticProps['on_action'];
     $timeoutCallback = $automaticProps['on_timeout'];
-    $manualCallback = $heldProps['on_manual'];
+    $automaticManualCallback = $automaticProps['on_manual'];
+    $heldManualCallback = $heldProps['on_manual'];
 
     expect($tree['type'])->toBe('firstlight.feedback-center')
         ->and(array_column($tree['children'], 'type'))->toBe([
@@ -191,24 +192,27 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
             'action_label' => 'Undo',
             'on_action' => $actionCallback,
             'on_timeout' => $timeoutCallback,
+            'on_manual' => $automaticManualCallback,
         ])
         ->and($actionCallback)->toBeInt()->not->toBe(0)
         ->and($timeoutCallback)->toBeInt()->not->toBe(0)
+        ->and($automaticManualCallback)->toBeInt()->not->toBe(0)
         ->and($heldProps)->toBe([
             'feedback_id' => 'offline',
             'message' => 'Offline',
             'tone' => 'warning',
             'hold' => true,
-            'on_manual' => $manualCallback,
+            'on_manual' => $heldManualCallback,
         ])
-        ->and($manualCallback)->toBeInt()->not->toBe(0)
+        ->and($heldManualCallback)->toBeInt()->not->toBe(0)
         ->and($tree)->not->toHaveKeys(['layout', 'style'])
         ->and($tree['children'][0])->not->toHaveKeys(['layout', 'style']);
 
     foreach ([
         $actionCallback,
         $timeoutCallback,
-        $manualCallback,
+        $automaticManualCallback,
+        $heldManualCallback,
     ] as $callbackId) {
 
         expect($frame['consumer']->resolve($callbackId))->toBeNull()
@@ -321,6 +325,7 @@ it('dispatches only the supported user dismissal reason', function (
         ->and($store->all())->toBe([]);
 })->with([
     'automatic timeout' => [false, 'on_timeout', FeedbackDismissReason::Timeout],
+    'automatic platform dismissal' => [false, 'on_manual', FeedbackDismissReason::Manual],
     'held manual dismissal' => [true, 'on_manual', FeedbackDismissReason::Manual],
 ]);
 
@@ -363,6 +368,7 @@ it('refreshes callback ids across navigation without reordering updated semantic
     foreach ([
         [0, 'on_action'],
         [0, 'on_timeout'],
+        [0, 'on_manual'],
         [1, 'on_manual'],
     ] as [$itemIndex, $callbackProp]) {
         $priorCallback = $first['tree']['children'][$itemIndex]['props'][$callbackProp];
@@ -370,6 +376,7 @@ it('refreshes callback ids across navigation without reordering updated semantic
 
         expect($refreshedCallback)->toBeInt()->not->toBe(0)->not->toBe($priorCallback)
             ->and($second['consumer']->resolve($refreshedCallback))->toBeNull()
+            ->and($first['host']->feedbackCallbacks()->resolve($refreshedCallback))->toBeNull()
             ->and($second['host']->feedbackCallbacks()->resolve($refreshedCallback))->not->toBeNull();
     }
 });

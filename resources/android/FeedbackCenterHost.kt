@@ -107,7 +107,6 @@ internal fun FirstlightFeedbackCenterHost(
     val lifecycleOwner = LocalLifecycleOwner.current
     val snackbarHostState = remember { SnackbarHostState() }
     var revision by remember { mutableIntStateOf(0) }
-    var presentationEpoch by remember { mutableIntStateOf(0) }
     var lifecycleResumed by remember(lifecycleOwner) {
         mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
     }
@@ -150,7 +149,7 @@ internal fun FirstlightFeedbackCenterHost(
     val visible = runtime.visible
     val visibleId = visible?.feedbackId
 
-    LaunchedEffect(visibleId, presentationEpoch) {
+    LaunchedEffect(visibleId) {
         val initiatingId = visibleId ?: return@LaunchedEffect
         val result = try {
             snackbarHostState.showSnackbar(
@@ -162,11 +161,8 @@ internal fun FirstlightFeedbackCenterHost(
         }
 
         if (result == SnackbarResult.Dismissed) {
-            val completed = runtime.snackbarDismissed(initiatingId)
+            runtime.snackbarDismissed(initiatingId)
             revision += 1
-            if (!completed && runtime.visible?.feedbackId == initiatingId) {
-                presentationEpoch += 1
-            }
         }
     }
 
@@ -202,14 +198,14 @@ internal fun FirstlightFeedbackCenterHost(
                             announcementMessage = runtime.announcementMessage ?: current.message,
                             actionOnNewLine = actionOnNewLine,
                             onAction = {
-                                snackbarData.dismiss()
                                 controlFocused = false
                                 mutate { runtime.action(current.feedbackId) }
+                                snackbarData.dismiss()
                             },
                             onDismiss = {
-                                snackbarData.dismiss()
                                 controlFocused = false
                                 mutate { runtime.manualDismiss(current.feedbackId) }
+                                snackbarData.dismiss()
                             },
                             onFocusChanged = { focused ->
                                 if (runtime.visible?.feedbackId == current.feedbackId) {
