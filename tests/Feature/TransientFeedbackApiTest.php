@@ -4,8 +4,11 @@ use FirstlightUI\Events\FeedbackActionPressed;
 use FirstlightUI\Events\FeedbackDismissed;
 use FirstlightUI\Feedback\FeedbackDismissReason;
 use FirstlightUI\Feedback\FeedbackManager;
+use FirstlightUI\Feedback\FeedbackRecord;
 use FirstlightUI\Feedback\FeedbackStore;
 use FirstlightUI\Feedback\FeedbackTone;
+use Illuminate\Container\Container;
+use Illuminate\Events\Dispatcher;
 
 it('queues semantic feedback and returns a generated stable id', function () {
     $store = new FeedbackStore;
@@ -32,13 +35,78 @@ it('updates a pending id in place without moving it', function () {
 });
 
 it('removes programmatic feedback without an application event', function () {
+    $previousContainer = Container::getInstance();
+    $container = new Container;
+    $dispatcher = new Dispatcher($container);
+    $container->instance('events', $dispatcher);
+    Container::setInstance($container);
+
+    $observedEvents = [];
+    $dispatcher->listen(FeedbackActionPressed::class, function (FeedbackActionPressed $event) use (&$observedEvents): void {
+        $observedEvents[] = $event;
+    });
+    $dispatcher->listen(FeedbackDismissed::class, function (FeedbackDismissed $event) use (&$observedEvents): void {
+        $observedEvents[] = $event;
+    });
+    $dispatcher->dispatch(new FeedbackActionPressed('probe', 'probe'));
+
+    expect($observedEvents)->toHaveCount(1)
+        ->and($observedEvents[0])->toBeInstanceOf(FeedbackActionPressed::class);
+
+    $observedEvents = [];
+
     $store = new FeedbackStore;
     $feedback = new FeedbackManager($store);
     $feedback->danger('Connection failed')->id('failure')->send();
 
-    expect($feedback->dismiss('failure'))->toBeTrue()
-        ->and($feedback->dismiss('failure'))->toBeFalse()
-        ->and($store->all())->toBe([]);
+    try {
+        expect($feedback->dismiss('failure'))->toBeTrue()
+            ->and($feedback->dismiss('failure'))->toBeFalse()
+            ->and($store->all())->toBe([])
+            ->and($observedEvents)->toBe([]);
+    } finally {
+        Container::setInstance($previousContainer);
+    }
+});
+
+it('rejects invalid direct feedback records', function (
+    string $id,
+    string $message,
+    ?string $actionLabel,
+    ?string $actionKey,
+    string $expectedMessage,
+) {
+    expect(fn () => new FeedbackRecord(
+        $id,
+        $message,
+        FeedbackTone::Default,
+        false,
+        $actionLabel,
+        $actionKey,
+    ))->toThrow(InvalidArgumentException::class, $expectedMessage);
+})->with([
+    'blank id' => [' ', 'Saved', null, null, 'non-empty `id`'],
+    'blank message' => ['saved', "\t", null, null, 'non-empty `message`'],
+    'action label without key' => ['saved', 'Saved', 'Undo', null, 'action label and key'],
+    'action key without label' => ['saved', 'Saved', null, 'undo', 'action label and key'],
+    'blank action label' => ['saved', 'Saved', ' ', 'undo', 'non-empty `action label`'],
+    'blank action key' => ['saved', 'Saved', 'Undo', "\n", 'non-empty `action key`'],
+]);
+
+it('preserves valid direct feedback record values', function () {
+    $record = new FeedbackRecord(
+        ' saved ',
+        ' Saved ',
+        FeedbackTone::Success,
+        true,
+        ' Undo ',
+        ' undo ',
+    );
+
+    expect($record->id)->toBe(' saved ')
+        ->and($record->message)->toBe(' Saved ')
+        ->and($record->actionLabel)->toBe(' Undo ')
+        ->and($record->actionKey)->toBe(' undo ');
 });
 
 it('uses the exact supported semantic tones', function () {
