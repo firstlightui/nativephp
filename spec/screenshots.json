@@ -30,6 +30,16 @@
                 "android-dark": "docs/screenshots/button/android-dark.png"
             }
         },
+        "callout": {
+            "route": "/captures/callout",
+            "test": "php artisan test tests/Feature/CalloutCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/callout/ios-light.png",
+                "ios-dark": "docs/screenshots/callout/ios-dark.png",
+                "android-light": "docs/screenshots/callout/android-light.png",
+                "android-dark": "docs/screenshots/callout/android-dark.png"
+            }
+        },
         "checkbox": {
             "route": "/captures/checkbox",
             "test": "php artisan test tests/Feature/CheckboxCaptureTest.php",

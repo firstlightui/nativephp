@@ -80,6 +80,7 @@ Firstlight does not expose a universal checkbox merely to reproduce the same vis
 | --- | --- |
 | `badge` | Show a compact count or short status marker. |
 | `status-label` | Show display-only semantic metadata or status text. |
+| `callout` | Keep a semantic inline message visible, with one optional action. |
 | `progress` | Communicate determinate or indeterminate work. |
 
 An interactive capsule belongs to `pill-group`; a display-only capsule belongs to `status-label`. This distinction keeps behaviour in the component name rather than a visual shape prop.

@@ -41,6 +41,14 @@
             "self_closing": true
         },
         {
+            "type": "firstlight.callout",
+            "element": "FirstlightUI\\Elements\\Callout",
+            "blade": "FirstlightUI\\Components\\Callout",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.CalloutRenderer",
+            "ios_renderer": "CalloutRenderer",
+            "self_closing": true
+        },
+        {
             "type": "firstlight.badge",
             "element": "FirstlightUI\\Elements\\Badge",
             "blade": "FirstlightUI\\Components\\Badge",
