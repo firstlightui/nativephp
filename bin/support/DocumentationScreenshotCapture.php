@@ -844,8 +844,8 @@ final class DocumentationScreenshotCapture
     ): void
     {
         $deadline = microtime(true) + 15;
-        $previousHash = null;
-        $previousPath = null;
+        /** @var list<array{attempt: int, hash: string, path: string}> $recentFrames */
+        $recentFrames = [];
         $attempt = 0;
 
         do {
@@ -859,17 +859,27 @@ final class DocumentationScreenshotCapture
             $this->assertPng($attemptPath);
             $hash = hash_file('sha256', $attemptPath);
 
-            if ($previousHash !== null && (
-                $hash === $previousHash
-                || ($previousPath !== null && $this->screenshotsAreVisuallyStable($previousPath, $attemptPath, $label, $attempt))
-            )) {
-                rename($attemptPath, $finalTemporaryPath);
+            foreach (array_reverse($recentFrames) as $priorFrame) {
+                if (
+                    $hash === $priorFrame['hash']
+                    || $this->screenshotsAreVisuallyStable(
+                        $priorFrame['path'],
+                        $attemptPath,
+                        $label,
+                        $attempt,
+                        $priorFrame['attempt'],
+                    )
+                ) {
+                    rename($attemptPath, $finalTemporaryPath);
 
-                return;
+                    return;
+                }
             }
 
-            $previousHash = $hash;
-            $previousPath = $attemptPath;
+            $recentFrames[] = ['attempt' => $attempt, 'hash' => $hash, 'path' => $attemptPath];
+            if (count($recentFrames) > 12) {
+                array_shift($recentFrames);
+            }
             usleep(100000);
         } while (microtime(true) < $deadline);
 
@@ -881,14 +891,16 @@ final class DocumentationScreenshotCapture
         string $currentPath,
         string $label,
         int $attempt,
+        ?int $priorAttempt = null,
     ): bool {
         $command = ['magick', 'compare', '-metric', 'AE', $previousPath, $currentPath, 'null:'];
-        $this->commands["{$label}-visual-difference-{$attempt}"] = implode(' ', array_map($this->quoteArgument(...), $command));
+        $comparison = $priorAttempt === null ? (string) $attempt : "{$priorAttempt}-{$attempt}";
+        $this->commands["{$label}-visual-difference-{$comparison}"] = implode(' ', array_map($this->quoteArgument(...), $command));
         $result = $this->runner->run($command);
 
         if (! in_array($result['exitCode'], [0, 1], true)) {
             $detail = trim($result['stderr']) ?: trim($result['stdout']);
-            throw new RuntimeException($detail !== '' ? $detail : 'Unable to compare consecutive screenshot frames.');
+            throw new RuntimeException($detail !== '' ? $detail : 'Unable to compare screenshot frames.');
         }
 
         $metric = trim($result['stderr']) ?: trim($result['stdout']);

@@ -724,3 +724,57 @@ it('accepts only minute intentional animation between consecutive capture frames
     expect($method->invoke($capture, '/tmp/previous.png', '/tmp/minor.png', 'ios-light-button', 2))->toBeTrue()
         ->and($method->invoke($capture, '/tmp/previous.png', '/tmp/major.png', 'ios-light-button', 2))->toBeFalse();
 });
+
+it('accepts a visually recurring animation frame from recent capture history', function () {
+    $temporaryRoot = sys_get_temp_dir().'/firstlight-recurring-capture-'.bin2hex(random_bytes(6));
+    mkdir($temporaryRoot, 0700, true);
+    $output = $temporaryRoot.'/ios-light.png';
+    $frames = ['phase-a-1', 'phase-b', 'phase-a-2'];
+    $captureAttempt = 0;
+
+    $runner = new FakeCaptureCommandRunner(function (array $command) use (&$captureAttempt, $frames): array {
+        if (array_slice($command, 0, 5) === ['xcrun', 'simctl', 'io', 'IOS-1', 'screenshot']) {
+            if (! isset($frames[$captureAttempt])) {
+                return ['exitCode' => 1, 'stdout' => '', 'stderr' => 'Capture should have stabilised on the recurring phase.'];
+            }
+
+            file_put_contents($command[5], fakeCapturePng($frames[$captureAttempt++]));
+
+            return ['exitCode' => 0, 'stdout' => '', 'stderr' => ''];
+        }
+
+        if (array_slice($command, 0, 4) === ['magick', 'compare', '-metric', 'AE']) {
+            $firstFrame = str_ends_with($command[4], '.1');
+            $recurringFrame = str_ends_with($command[5], '.3');
+
+            return [
+                'exitCode' => 1,
+                'stdout' => '',
+                'stderr' => $firstFrame && $recurringFrame
+                    ? '20 (5.0e-06)'
+                    : '950 (0.03)',
+            ];
+        }
+
+        return ['exitCode' => 1, 'stdout' => '', 'stderr' => 'Unexpected command: '.implode(' ', $command)];
+    });
+    $capture = new DocumentationScreenshotCapture($runner, __DIR__);
+    $method = new ReflectionMethod($capture, 'captureStable');
+
+    try {
+        $method->invoke(
+            $capture,
+            'ios-light',
+            ['xcrun', 'simctl', 'io', 'IOS-1', 'screenshot'],
+            $output,
+            true,
+        );
+
+        expect(file_get_contents($output))->toBe(fakeCapturePng('phase-a-2'));
+    } finally {
+        foreach (glob($temporaryRoot.'/*') ?: [] as $file) {
+            unlink($file);
+        }
+        rmdir($temporaryRoot);
+    }
+});
