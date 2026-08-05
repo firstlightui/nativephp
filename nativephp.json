@@ -167,6 +167,14 @@
             "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.FirstlightCheckboxRenderer",
             "ios_renderer": "CheckboxRenderer",
             "self_closing": true
+        },
+        {
+            "type": "firstlight.confirmation-dialog",
+            "element": "FirstlightUI\\Elements\\ConfirmationDialog",
+            "blade": "FirstlightUI\\Components\\ConfirmationDialog",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.ConfirmationDialogRenderer",
+            "ios_renderer": "ConfirmationDialogRenderer",
+            "self_closing": true
         }
     ],
     "android": {

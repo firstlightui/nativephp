@@ -15,6 +15,7 @@ sources:
 - [Checkbox component contract](components/checkbox.md) — Defines strict Boolean field semantics, server-authoritative proposals, accessibility, and the paired-renderer boundary.
 - [Badge component contract](components/badge.md) — Defines compact count and marker semantics, strict display sources, tones, accessibility, and the paired-renderer decision.
 - [Choice Group component contract](components/choice-group.md) — Defines visible radio or checkbox choice rows, stable values, state timing, accessibility, and native expression.
+- [Confirmation Dialog component contract](components/confirmation-dialog.md) — Defines server-controlled presentation, native action roles, dismissal, accessibility, and the paired-renderer boundary.
 - [Date Picker component contract](components/date-picker.md) — Defines canonical nullable dates, inclusive bounds, native draft confirmation, internationalisation, accessibility, and the paired-renderer boundary.
 - [Time Picker component contract](components/time-picker.md) — Defines canonical nullable wall-clock times, native draft confirmation, internationalisation, accessibility, and the paired-renderer boundary.
 - [Select component contract](components/select.md) — Defines stable single-selection values, automatic searchable presentation, state timing, accessibility, and the paired-renderer boundary.

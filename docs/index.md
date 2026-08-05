@@ -21,6 +21,7 @@ sources:
 - [Badge](components/badge.md) — Present compact display-only counts or short markers with semantic tones and contextual accessibility.
 - [Checkbox](components/checkbox.md) — Configure strict Boolean form and checklist state with server-authoritative proposals.
 - [Choice Group](components/choice-group.md) — Configure visible single-radio or multiple-checkbox choice rows with stable values.
+- [Confirmation Dialog](components/confirmation-dialog.md) — Ask for one native confirmation with explicit cancellation and destructive action semantics.
 - [Date Picker](components/date-picker.md) — Choose strict nullable calendar dates with inclusive bounds and native confirmation.
 - [Time Picker](components/time-picker.md) — Choose strict nullable wall-clock times with localized native confirmation.
 - [Icon Button](components/icon-button.md) — Configure compact icon-only actions, platform icon overrides, semantic variants, states, and accessibility.

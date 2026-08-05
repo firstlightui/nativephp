@@ -19,6 +19,7 @@
 - [Badge](https://firstlightui.dev/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
 - [Checkbox](https://firstlightui.dev/components/checkbox): Strict Boolean form and checklist state, field metadata, server-authoritative proposals, accessibility, and native platform behaviour.
 - [Choice Group](https://firstlightui.dev/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
+- [Confirmation Dialog](https://firstlightui.dev/components/confirmation-dialog): Ask for one native confirmation with explicit cancellation and destructive action semantics.
 - [Date Picker](https://firstlightui.dev/components/date-picker): Canonical nullable dates, inclusive bounds, native confirmation, localisation, and accessibility for Firstlight Date Picker.
 - [Time Picker](https://firstlightui.dev/components/time-picker): Choose a wall-clock time with a native, server-authoritative picker.
 - [Icon Button](https://firstlightui.dev/components/icon-button): Public API, variants, sizes, loading and disabled states, accessibility, and native platform behaviour for Firstlight Icon Button.
