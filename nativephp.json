@@ -69,6 +69,14 @@
             "self_closing": true
         },
         {
+            "type": "firstlight.list-item",
+            "element": "FirstlightUI\\Elements\\ListItem",
+            "blade": "FirstlightUI\\Components\\ListItem",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.FirstlightListItemRenderer",
+            "ios_renderer": "ListItemRenderer",
+            "self_closing": true
+        },
+        {
             "type": "firstlight.progress",
             "element": "FirstlightUI\\Elements\\Progress",
             "blade": "FirstlightUI\\Components\\Progress",

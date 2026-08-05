@@ -80,6 +80,16 @@
                 "android-dark": "docs/screenshots/icon-button/android-dark.png"
             }
         },
+        "list-item": {
+            "route": "/captures/list-item",
+            "test": "php artisan test tests/Feature/ListItemCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/list-item/ios-light.png",
+                "ios-dark": "docs/screenshots/list-item/ios-dark.png",
+                "android-light": "docs/screenshots/list-item/android-light.png",
+                "android-dark": "docs/screenshots/list-item/android-dark.png"
+            }
+        },
         "pill-group": {
             "route": "/captures/pill-group",
             "test": "php artisan test tests/Feature/PillGroupCaptureTest.php",

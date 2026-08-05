@@ -22,6 +22,7 @@ sources:
 - [Slider component contract](components/slider.md) — Defines strict Float-compatible numeric grids, native gesture drafts, synchronization policies, accessibility, and the paired-renderer boundary.
 - [Stepper component contract](components/stepper.md) — Defines exact integer or float grids, bounded server-authoritative proposals, accessibility, and the paired-renderer boundary.
 - [Icon Button component contract](components/icon-button.md) — Defines compact action semantics, platform icon resolution, strict accessibility, state, and the paired-renderer decision.
+- [List Item component contract](components/list-item.md) — Defines narrow application-row content, action, disabled state, icon resolution, accessibility, and the paired-renderer decision.
 - [Progress component contract](components/progress.md) — Defines determinate and indeterminate display semantics, strict values, accessibility, and the Mobile UI adapter boundary.
 - [Shared icon contract](reference/icons.md) — Defines cross-control icon names, platform overrides, resolution, accessibility, and validation.
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.

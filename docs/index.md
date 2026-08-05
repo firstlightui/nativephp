@@ -25,6 +25,7 @@ sources:
 - [Date Picker](components/date-picker.md) — Choose strict nullable calendar dates with inclusive bounds and native confirmation.
 - [Time Picker](components/time-picker.md) — Choose strict nullable wall-clock times with localized native confirmation.
 - [Icon Button](components/icon-button.md) — Configure compact icon-only actions, platform icon overrides, semantic variants, states, and accessibility.
+- [List Item](components/list-item.md) — Configure tappable application rows with leading identity, trailing affordances, disabled behaviour, and platform icon overrides.
 - [Pill Group](components/pill-group.md) — Configure compact single- or multiple-selection native options.
 - [Progress](components/progress.md) — Communicate determinate or indeterminate work with strict values and native accessibility.
 - [Segmented](components/segmented.md) — Look up the Segmented control's complete public contract and platform evidence.

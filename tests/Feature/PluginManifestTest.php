@@ -84,6 +84,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.list-item',
+            'element' => 'FirstlightUI\\Elements\\ListItem',
+            'blade' => 'FirstlightUI\\Components\\ListItem',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightListItemRenderer',
+            'ios_renderer' => 'ListItemRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.progress',
             'element' => 'FirstlightUI\\Elements\\Progress',
             'blade' => 'FirstlightUI\\Components\\Progress',
@@ -205,6 +213,14 @@ it('registers Activity Indicator as paired Firstlight renderers rather than an a
 it('registers Checkbox as paired Firstlight renderers rather than an adapter', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
     $component = collect($manifest['components'])->firstWhere('type', 'firstlight.checkbox');
+
+    expect($component)->not->toBeNull()
+        ->and($component)->not->toHaveKey('adapter');
+});
+
+it('registers List Item as paired Firstlight renderers rather than an adapter', function () {
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    $component = collect($manifest['components'])->firstWhere('type', 'firstlight.list-item');
 
     expect($component)->not->toBeNull()
         ->and($component)->not->toHaveKey('adapter');
