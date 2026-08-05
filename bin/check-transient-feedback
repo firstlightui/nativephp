@@ -633,45 +633,39 @@ $runBounded = static function (array $command, string $workingDirectory, float $
             'exit_code' => null,
             'output' => '',
             'timed_out' => false,
-            'error' => 'POSIX process-tree controls are unavailable; cleanup cannot be guaranteed',
+            'error' => 'isolated POSIX session wrapper is unavailable: proc_open and posix_kill are required',
         ];
     }
 
-    /** @return array<int, array{ppid: int, identity: string}>|null */
-    $processTable = static function (): ?array {
-        try {
-            $process = new Process(['ps', '-axo', 'pid=,ppid=,lstart=']);
-            $process->setTimeout(1.0);
-            $process->run();
-        } catch (Throwable) {
-            return null;
-        }
-        if (! $process->isSuccessful()) {
-            return null;
-        }
-
-        $table = [];
-        foreach (preg_split('/\R/', $process->getOutput()) ?: [] as $line) {
-            if (preg_match('/^\s*(\d+)\s+(\d+)\s+(.+?)\s*$/', $line, $match) !== 1) {
-                continue;
-            }
-            $table[(int) $match[1]] = ['ppid' => (int) $match[2], 'identity' => $match[3]];
-        }
-
-        return $table === [] ? null : $table;
-    };
-    if ($processTable() === null) {
-        return [
-            'exit_code' => null,
-            'output' => '',
-            'timed_out' => false,
-            'error' => 'unable to inspect the POSIX process table; cleanup cannot be guaranteed',
-        ];
-    }
+    $unsupportedMarker = '__FIRSTLIGHT_FOCUSED_WRAPPER_UNSUPPORTED__';
+    $execFailureMarker = '__FIRSTLIGHT_FOCUSED_WRAPPER_EXEC_FAILED__';
+    $wrapper = <<<'PHP'
+$unsupportedMarker = '__FIRSTLIGHT_FOCUSED_WRAPPER_UNSUPPORTED__';
+$execFailureMarker = '__FIRSTLIGHT_FOCUSED_WRAPPER_EXEC_FAILED__';
+if (getenv('FIRSTLIGHT_TRANSIENT_FEEDBACK_TEST_WRAPPER_MODE') === 'unsupported'
+    || ! function_exists('posix_setsid')
+    || ! function_exists('pcntl_exec')) {
+    fwrite(STDERR, $unsupportedMarker);
+    exit(125);
+}
+$session = @posix_setsid();
+if (! is_int($session) || $session < 1 || $session !== getmypid()) {
+    fwrite(STDERR, $unsupportedMarker);
+    exit(125);
+}
+$command = array_slice($argv, 1);
+if ($command === []) {
+    fwrite(STDERR, $execFailureMarker);
+    exit(126);
+}
+@pcntl_exec($command[0], array_slice($command, 1));
+fwrite(STDERR, $execFailureMarker);
+exit(126);
+PHP;
 
     $pipes = [];
     $process = @proc_open(
-        $command,
+        [PHP_BINARY, '-r', $wrapper, '--', ...$command],
         [
             0 => ['pipe', 'r'],
             1 => ['pipe', 'w'],
@@ -690,143 +684,107 @@ $runBounded = static function (array $command, string $workingDirectory, float $
     stream_set_blocking($pipes[1], false);
     stream_set_blocking($pipes[2], false);
     $output = '';
-    $startedAt = microtime(true);
-    $deadline = $startedAt + $timeout;
+    $startedAt = hrtime(true);
+    $deadline = $startedAt + (int) ($timeout * 1_000_000_000);
     $timedOut = false;
     $exitCode = null;
     $error = null;
-    $nextProcessSnapshotAt = $startedAt;
     $status = proc_get_status($process);
     $rootPid = is_int($status['pid'] ?? null) ? $status['pid'] : null;
-    /** @var array<int, array{identity: string, depth: int}> $tracked */
-    $tracked = [];
+    $groupExists = static function (int $processGroup): bool {
+        if (@posix_kill(-$processGroup, 0)) {
+            return true;
+        }
 
-    $initialTable = $processTable();
-    if ($rootPid === null || $initialTable === null || ! isset($initialTable[$rootPid])) {
+        return posix_get_last_error() !== 3;
+    };
+    $rootHasExited = static function () use ($process, &$exitCode): bool {
+        $status = proc_get_status($process);
         if (($status['running'] ?? false) === true) {
-            @proc_terminate($process, 15);
-            foreach ([$pipes[1], $pipes[2]] as $pipe) {
-                if (is_resource($pipe)) {
-                    fclose($pipe);
-                }
-            }
-            @proc_close($process);
-
-            return [
-                'exit_code' => null,
-                'output' => '',
-                'timed_out' => false,
-                'error' => 'unable to identify the focused-test process; cleanup cannot be guaranteed',
-            ];
-        }
-    } else {
-        $tracked[$rootPid] = ['identity' => $initialTable[$rootPid]['identity'], 'depth' => 0];
-    }
-
-    $refreshTracked = static function () use (&$tracked, $processTable): ?array {
-        $table = $processTable();
-        if ($table === null) {
-            return null;
-        }
-
-        $knownDepths = [];
-        foreach ($tracked as $pid => $record) {
-            if (isset($table[$pid]) && hash_equals($record['identity'], $table[$pid]['identity'])) {
-                $knownDepths[$pid] = $record['depth'];
-            }
-        }
-        do {
-            $found = false;
-            foreach ($table as $pid => $record) {
-                if (isset($knownDepths[$pid]) || ! isset($knownDepths[$record['ppid']])) {
-                    continue;
-                }
-                $depth = $knownDepths[$record['ppid']] + 1;
-                $tracked[$pid] = ['identity' => $record['identity'], 'depth' => $depth];
-                $knownDepths[$pid] = $depth;
-                $found = true;
-            }
-        } while ($found);
-
-        return $table;
-    };
-    $aliveTracked = static function (array $table, bool $includeRoot = true) use (&$tracked): array {
-        $alive = [];
-        foreach ($tracked as $pid => $record) {
-            if ((! $includeRoot && $record['depth'] === 0)
-                || ! isset($table[$pid])
-                || ! hash_equals($record['identity'], $table[$pid]['identity'])) {
-                continue;
-            }
-            $alive[$pid] = $record['depth'];
-        }
-        arsort($alive, SORT_NUMERIC);
-
-        return array_keys($alive);
-    };
-    $terminateTracked = static function () use ($refreshTracked, $aliveTracked): bool {
-        $table = $refreshTracked();
-        if ($table === null) {
             return false;
         }
-        foreach ($aliveTracked($table) as $pid) {
-            @posix_kill($pid, 15);
+        if ($exitCode === null && is_int($status['exitcode'] ?? null) && $status['exitcode'] >= 0) {
+            $exitCode = $status['exitcode'];
         }
 
-        $termDeadline = microtime(true) + 0.5;
-        do {
-            usleep(20_000);
-            $table = $refreshTracked();
-            if ($table === null) {
-                return false;
-            }
-            $alive = $aliveTracked($table);
-            if ($alive === []) {
-                return true;
-            }
-        } while (microtime(true) < $termDeadline);
-
-        foreach ($alive as $pid) {
-            @posix_kill($pid, 9);
-        }
-        $killDeadline = microtime(true) + 0.75;
-        do {
-            usleep(20_000);
-            $table = $refreshTracked();
-            if ($table === null) {
-                return false;
-            }
-            if ($aliveTracked($table, false) === []) {
-                return true;
-            }
-        } while (microtime(true) < $killDeadline);
-
-        return false;
+        return true;
     };
-
-    $drain = static function (array $streams, float $drainDeadline) use (&$output, $outputLimit): void {
-        $chunksRemaining = 512;
-        foreach ($streams as $stream) {
-            while ($chunksRemaining-- > 0 && microtime(true) < $drainDeadline
-                && is_resource($stream) && ! feof($stream)) {
-                $chunk = fread($stream, 8192);
-                if (! is_string($chunk) || $chunk === '') {
-                    break;
+    $nextStream = 0;
+    $drain = static function (array $streams, int $drainDeadline) use (&$nextStream, &$output, $outputLimit): void {
+        $streams = array_values(array_filter($streams, static fn ($stream): bool => is_resource($stream) && ! feof($stream)));
+        $count = count($streams);
+        if ($count === 0) {
+            return;
+        }
+        $chunks = array_fill(0, $count, 0);
+        $bytes = array_fill(0, $count, 0);
+        $madeProgress = true;
+        while ($madeProgress && hrtime(true) < $drainDeadline) {
+            $madeProgress = false;
+            for ($offset = 0; $offset < $count; $offset++) {
+                $index = ($nextStream + $offset) % $count;
+                if ($chunks[$index] >= 64 || $bytes[$index] >= 65_536 || hrtime(true) >= $drainDeadline) {
+                    continue;
                 }
-                $remaining = $outputLimit - strlen($output);
-                if ($remaining > 0) {
-                    $output .= substr($chunk, 0, $remaining);
+                $chunk = fread($streams[$index], min(1024, 65_536 - $bytes[$index]));
+                if (is_string($chunk) && $chunk !== '') {
+                    $madeProgress = true;
+                    $chunks[$index]++;
+                    $bytes[$index] += strlen($chunk);
+                    $remaining = $outputLimit - strlen($output);
+                    if ($remaining > 0) {
+                        $output .= substr($chunk, 0, $remaining);
+                    }
                 }
+                if (hrtime(true) >= $drainDeadline) {
+                    break 2;
+                }
+            }
+            $nextStream = ($nextStream + 1) % $count;
+        }
+    };
+    $closePipes = static function () use (&$pipes): void {
+        foreach ([$pipes[1], $pipes[2]] as $pipe) {
+            if (is_resource($pipe)) {
+                fclose($pipe);
             }
         }
     };
+
+    if ($rootPid === null) {
+        $closePipes();
+        @proc_terminate($process, 9);
+
+        return ['exit_code' => null, 'output' => '', 'timed_out' => false, 'error' => 'unable to identify isolated focused-test process group'];
+    }
+
+    $sessionDeadline = min($deadline, hrtime(true) + 250_000_000);
+    while (! $rootHasExited() && ! $groupExists($rootPid) && hrtime(true) < $sessionDeadline) {
+        $drain([$pipes[1], $pipes[2]], $sessionDeadline);
+        usleep(1000);
+    }
+    if (! $rootHasExited() && ! $groupExists($rootPid)) {
+        @proc_terminate($process, 9);
+        $rootDeadline = hrtime(true) + 500_000_000;
+        while (! $rootHasExited() && hrtime(true) < $rootDeadline) {
+            usleep(5000);
+        }
+        $closePipes();
+        if ($rootHasExited()) {
+            @proc_close($process);
+        }
+
+        return [
+            'exit_code' => $exitCode,
+            'output' => $output,
+            'timed_out' => false,
+            'error' => 'isolated POSIX session wrapper failed to create a dedicated process group',
+        ];
+    }
 
     while (true) {
-        if (microtime(true) >= $deadline) {
+        if (hrtime(true) >= $deadline) {
             $timedOut = true;
-            if (! $terminateTracked()) {
-                $error = 'focused-test process-tree cleanup could not be guaranteed after timeout';
-            }
             break;
         }
 
@@ -837,60 +795,81 @@ $runBounded = static function (array $command, string $workingDirectory, float $
         if ($readable !== []) {
             $writable = null;
             $except = null;
-            $remainingMicroseconds = max(0, (int) (($deadline - microtime(true)) * 1_000_000));
+            $remainingMicroseconds = max(0, intdiv($deadline - hrtime(true), 1000));
             $waitMicroseconds = min(100_000, $remainingMicroseconds);
             $selected = @stream_select($readable, $writable, $except, 0, $waitMicroseconds);
             if ($selected === false) {
                 $error = 'unable to drain focused-test process output';
-                if (! $terminateTracked()) {
-                    $error .= '; process-tree cleanup could not be guaranteed';
-                }
                 break;
             }
             if ($selected > 0) {
-                $drain($readable, $deadline);
+                $drain([$pipes[1], $pipes[2]], $deadline);
             }
         } else {
             usleep(10_000);
         }
 
-        $status = proc_get_status($process);
-        if (! $status['running']) {
-            if (is_int($status['exitcode']) && $status['exitcode'] >= 0) {
-                $exitCode = $status['exitcode'];
-            }
-            $drain([$pipes[1], $pipes[2]], min($deadline, microtime(true) + 0.05));
-            $table = $refreshTracked();
-            if ($table === null) {
-                $error = 'unable to verify focused-test descendant cleanup';
-                $terminateTracked();
-            } elseif ($aliveTracked($table, false) !== []) {
-                $error = 'focused test left descendant processes running';
-                if (! $terminateTracked()) {
-                    $error .= '; process-tree cleanup could not be guaranteed';
-                }
-            }
+        if ($rootHasExited()) {
+            $drain([$pipes[1], $pipes[2]], min($deadline, hrtime(true) + 50_000_000));
             break;
         }
-
-        if (microtime(true) >= $nextProcessSnapshotAt) {
-            if ($refreshTracked() === null) {
-                $error = 'lost access to the POSIX process table; cleanup cannot be guaranteed';
-                $terminateTracked();
-                break;
-            }
-            $nextProcessSnapshotAt = microtime(true) + 0.05;
-        }
     }
 
-    foreach ([$pipes[1], $pipes[2]] as $pipe) {
-        if (is_resource($pipe)) {
-            fclose($pipe);
+    $mustTerminateGroup = $timedOut || $error !== null || ! $rootHasExited();
+    if ($mustTerminateGroup) {
+        @posix_kill(-$rootPid, 15);
+        $termDeadline = hrtime(true) + 500_000_000;
+        while (hrtime(true) < $termDeadline) {
+            $drain([$pipes[1], $pipes[2]], min($termDeadline, hrtime(true) + 20_000_000));
+            $rootHasExited();
+            usleep(5000);
         }
+        @posix_kill(-$rootPid, 9);
     }
-    $closedExitCode = proc_close($process);
+
+    $rootDeadline = hrtime(true) + 750_000_000;
+    while (! $rootHasExited() && hrtime(true) < $rootDeadline) {
+        $drain([$pipes[1], $pipes[2]], min($rootDeadline, hrtime(true) + 20_000_000));
+        usleep(5000);
+    }
+    if (! $rootHasExited()) {
+        @posix_kill(-$rootPid, 9);
+        @proc_terminate($process, 9);
+        $closePipes();
+
+        return [
+            'exit_code' => $exitCode,
+            'output' => $output,
+            'timed_out' => $timedOut,
+            'error' => 'isolated focused-test root did not exit after SIGKILL; refusing an unbounded reap',
+        ];
+    }
+
+    $closePipes();
+    $closedExitCode = @proc_close($process);
     if ($exitCode === null && is_int($closedExitCode) && $closedExitCode >= 0) {
         $exitCode = $closedExitCode;
+    }
+
+    if ($groupExists($rootPid)) {
+        @posix_kill(-$rootPid, 15);
+        usleep(50_000);
+        @posix_kill(-$rootPid, 9);
+        $groupDeadline = hrtime(true) + 750_000_000;
+        while ($groupExists($rootPid) && hrtime(true) < $groupDeadline) {
+            usleep(5000);
+        }
+        if ($groupExists($rootPid)) {
+            $error = 'isolated focused-test process group still exists after SIGKILL; cleanup cannot be guaranteed';
+        } elseif (! $timedOut && $error === null) {
+            $error = 'focused test left descendant processes running in its isolated process group';
+        }
+    }
+
+    if ($exitCode === 125 && str_contains($output, $unsupportedMarker)) {
+        $error = 'isolated POSIX session wrapper is unavailable: posix_setsid and pcntl_exec are required';
+    } elseif ($exitCode === 126 && str_contains($output, $execFailureMarker)) {
+        $error = 'isolated POSIX session wrapper could not exec the focused-test command';
     }
 
     return ['exit_code' => $exitCode, 'output' => $output, 'timed_out' => $timedOut, 'error' => $error];
@@ -1027,6 +1006,24 @@ if (! is_dir($showcase)) {
             }
         }
 
+        $namespace = '';
+        for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
+            if ($testTokens[$index]['id'] !== T_NAMESPACE) {
+                continue;
+            }
+            for ($cursor = $index + 1; $cursor < $count; $cursor++) {
+                $text = $tokenText($testTokens[$cursor]);
+                if (in_array($text, [';', '{'], true)) {
+                    break;
+                }
+                if (in_array($testTokens[$cursor]['id'], [T_STRING, T_NAME_QUALIFIED, T_NS_SEPARATOR], true)) {
+                    $namespace .= $text;
+                }
+            }
+            $namespace = trim($namespace, '\\');
+            break;
+        }
+
         $imports = [];
         $braceDepth = 0;
         for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
@@ -1071,17 +1068,17 @@ if (! is_dir($showcase)) {
             }
         }
 
-        $resolvesClass = static function (array $token, string $class) use ($imports): bool {
+        $resolvesClass = static function (array $token, string $class) use ($imports, $namespace): bool {
             $reference = ltrim((string) $token['text'], '\\');
-            if (strcasecmp($reference, $class) === 0) {
-                return true;
+            if (($token['id'] ?? null) === T_NAME_FULLY_QUALIFIED) {
+                return strcasecmp($reference, $class) === 0;
             }
-            if ($token['id'] !== T_STRING) {
-                return false;
+            if (($token['id'] ?? null) === T_STRING && isset($imports[strtolower($reference)])) {
+                return strcasecmp($imports[strtolower($reference)], $class) === 0;
             }
+            $resolved = $namespace === '' ? $reference : $namespace.'\\'.$reference;
 
-            return isset($imports[strtolower($reference)])
-                && strcasecmp($imports[strtolower($reference)], $class) === 0;
+            return strcasecmp($resolved, $class) === 0;
         };
         $expressionTokens = static function (string $expression) use ($lexPhp): array {
             $tokens = $lexPhp('<?php '.$expression.';');
@@ -1369,7 +1366,7 @@ if (! is_dir($showcase)) {
 
     if (! $development && $showcaseArtifactsComplete && $showcaseRepository !== null) {
         $focusedTest = $runBounded(
-            ['php', 'artisan', 'test', 'tests/Feature/TransientFeedbackCaptureTest.php'],
+            [PHP_BINARY, 'artisan', 'test', 'tests/Feature/TransientFeedbackCaptureTest.php'],
             $showcase,
             $focusedTestTimeoutSeconds,
             $focusedTestOutputLimit,

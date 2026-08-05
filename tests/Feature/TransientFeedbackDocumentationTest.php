@@ -321,13 +321,16 @@ function initializeTransientFeedbackReleaseRepositories(array $fixture, int $tes
     ];
 }
 
-/** @param list<string> $arguments */
-function runTransientFeedbackGate(array $fixture, array $arguments = []): Process
+/**
+ * @param  list<string>  $arguments
+ * @param  array<string, string>  $environment
+ */
+function runTransientFeedbackGate(array $fixture, array $arguments = [], array $environment = []): Process
 {
     $process = new Process([
         $fixture['package'].'/bin/check-transient-feedback',
         ...$arguments,
-    ], $fixture['package']);
+    ], $fixture['package'], $environment === [] ? null : $environment);
     $process->setTimeout(15);
     $process->run();
 
@@ -506,6 +509,10 @@ PHP,
 PHP,
             $test,
         );
+    } elseif ($case === 'namespaced-relative-native') {
+        $test = str_replace("<?php\n", "<?php\n\nnamespace Showcase\\Tests;\n", $test);
+        $test = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', '', $test);
+        $test = str_replace('NativeScreen::visit(', 'Native\\Mobile\\Testing\\Native::visit(', $test);
     } elseif ($case === 'wrong-route') {
         $test = str_replace('/captures/transient-feedback', '/captures/callout', $test);
     } elseif ($case === 'no-visit') {
@@ -563,6 +570,7 @@ PHP,
     'unrelated passing test' => ['unrelated', 'Focused showcase capture test must call Native::visit'],
     'lookalike Native class with correct strings' => ['fake-native', 'Focused showcase capture test must call Native::visit'],
     'visit only in a comment and string' => ['visit-in-comment-and-string', 'Focused showcase capture test must call Native::visit'],
+    'relative Native name inside another namespace' => ['namespaced-relative-native', 'Focused showcase capture test must call Native::visit'],
     'visit to wrong route' => ['wrong-route', 'Focused showcase capture test visits the wrong route'],
     'no Native visit' => ['no-visit', 'Focused showcase capture test must call Native::visit'],
     'no feedback capture assertion' => ['no-feedback-assertion', 'Focused showcase capture test must assert the deterministic feedback record'],
@@ -572,11 +580,11 @@ PHP,
     'capture and feedback expected values are wrong' => ['wrong-expected-values', 'Focused showcase capture test must assert the capture screen identity'],
 ]);
 
-it('release gate continuously drains multi-megabyte focused-test output into a bounded diagnostic', function () {
+it('release gate drains exactly 50 MiB of focused-test output into a bounded diagnostic', function () {
     $fixture = transientFeedbackGateFixture();
     $fixture = initializeTransientFeedbackReleaseRepositories(
         $fixture,
-        artisanBody: "#!/usr/bin/env php\n<?php for (\$chunk = 0; \$chunk < 6144; \$chunk++) { fwrite(STDOUT, str_repeat('X', 8192)); } fwrite(STDERR, 'bounded-tail'); exit(23);\n",
+        artisanBody: "#!/usr/bin/env php\n<?php for (\$chunk = 0; \$chunk < 6400; \$chunk++) { fwrite(STDOUT, str_repeat('X', 8192)); } fwrite(STDERR, 'bounded-tail'); exit(23);\n",
     );
 
     try {
@@ -606,6 +614,7 @@ it('release gate accepts a fully qualified Native testing call before executing 
     writeTransientFeedbackShowcaseContract($fixture, 29);
     $testPath = $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php';
     $test = (string) file_get_contents($testPath);
+    $test = str_replace("<?php\n", "<?php\n\nnamespace Showcase\\Tests;\n", $test);
     $test = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', '', $test);
     $test = str_replace('NativeScreen::visit(', '\\Native\\Mobile\\Testing\\Native::visit(', $test);
     file_put_contents($testPath, $test);
@@ -618,6 +627,28 @@ it('release gate accepts a fully qualified Native testing call before executing 
         expect($process->getExitCode())->toBe(1)
             ->and($process->getErrorOutput())->toContain(
                 'Focused showcase test failed with exit code 29: fixture focused test failure',
+            );
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+});
+
+it('release gate accepts an imported Native alias inside a namespace', function () {
+    $fixture = transientFeedbackGateFixture();
+    writeTransientFeedbackShowcaseContract($fixture, 28);
+    $testPath = $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php';
+    $test = (string) file_get_contents($testPath);
+    $test = str_replace("<?php\n", "<?php\n\nnamespace Showcase\\Tests;\n", $test);
+    file_put_contents($testPath, $test);
+    initializeTransientFeedbackGitRepository($fixture['showcase']);
+    initializeTransientFeedbackGitRepository($fixture['package']);
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain(
+                'Focused showcase test failed with exit code 28: fixture focused test failure',
             );
     } finally {
         removeTransientFeedbackGateFixture($fixture);
@@ -663,7 +694,7 @@ it('release gate terminates a hung focused showcase test within its bounded time
     $fixture = transientFeedbackGateFixture();
     $fixture = initializeTransientFeedbackReleaseRepositories(
         $fixture,
-        artisanBody: "#!/usr/bin/env php\n<?php fwrite(STDERR, 'started-hung-fixture'); sleep(6);\n",
+        artisanBody: "#!/usr/bin/env php\n<?php sleep(7);\n",
     );
     $startedAt = microtime(true);
 
@@ -685,7 +716,8 @@ it('release gate cannot be starved past its timeout by continuously refilled out
         artisanBody: <<<'PHP'
 #!/usr/bin/env php
 <?php
-$writer = proc_open(['/usr/bin/yes', 'continuously-refilled-output'], [0 => ['pipe', 'r'], 1 => STDOUT, 2 => STDERR], $pipes);
+$stdoutWriter = proc_open(['/usr/bin/yes', 'stdout-fairness-marker'], [0 => ['pipe', 'r'], 1 => STDOUT, 2 => STDERR], $stdoutPipes);
+$stderrWriter = proc_open(['/usr/bin/yes', 'stderr-fairness-marker'], [0 => ['pipe', 'r'], 1 => STDERR, 2 => STDERR], $stderrPipes);
 sleep(9);
 PHP,
     );
@@ -699,9 +731,13 @@ PHP,
         $process->setTimeout(12);
         $process->run();
         $diagnostic = $process->getErrorOutput();
+        preg_match('/Focused showcase test timed out after 5 seconds: (.*)/', $diagnostic, $match);
 
         expect($process->getExitCode())->toBe(1)
             ->and($diagnostic)->toContain('Focused showcase test timed out')
+            ->and($match)->not->toBeEmpty()
+            ->and($match[1])->toContain('stdout-fairness-marker', 'stderr-fairness-marker')
+            ->and(strlen($match[1]))->toBeLessThanOrEqual(4000)
             ->and(strlen($diagnostic))->toBeLessThan(12_000)
             ->and(microtime(true) - $startedAt)->toBeLessThan(6.5);
     } finally {
@@ -709,7 +745,7 @@ PHP,
     }
 });
 
-it('release gate terminates the entire noisy focused-test process tree', function () {
+it('release gate terminates a reparented grandchild in the isolated focused-test process group', function () {
     if (! function_exists('posix_kill')) {
         $this->markTestSkipped('Process-tree assertion requires posix_kill.');
     }
@@ -717,19 +753,26 @@ it('release gate terminates the entire noisy focused-test process tree', functio
     $fixture = transientFeedbackGateFixture();
     $rootPidPath = $fixture['showcase'].'/focused-root.pid';
     $childPidPath = $fixture['showcase'].'/focused-child.pid';
-    $heartbeatPath = $fixture['showcase'].'/focused-child-heartbeat';
+    $grandchildPidPath = $fixture['showcase'].'/focused-grandchild.pid';
+    $heartbeatPath = $fixture['showcase'].'/focused-grandchild-heartbeat';
     $childCode = <<<'PHP'
-$deadline = microtime(true) + 9;
 file_put_contents($argv[1], (string) getmypid());
-while (microtime(true) < $deadline) {
-    file_put_contents($argv[2], '.', FILE_APPEND);
-    usleep(20_000);
+$grandchild = pcntl_fork();
+if ($grandchild === 0) {
+    $deadline = microtime(true) + 12;
+    file_put_contents($argv[2], (string) getmypid());
+    while (microtime(true) < $deadline) {
+        file_put_contents($argv[3], '.', FILE_APPEND);
+        usleep(20_000);
+    }
+    exit(0);
 }
+exit(0);
 PHP;
     $artisanBody = "#!/usr/bin/env php\n<?php\n"
         ."file_put_contents(".var_export($rootPidPath, true).", (string) getmypid());\n"
-        .'$child = proc_open(['.var_export(PHP_BINARY, true).", '-r', ".var_export($childCode, true).', '.var_export($childPidPath, true).', '.var_export($heartbeatPath, true)."], [0 => ['pipe', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], \$pipes);\n"
-        ."while (true) { fwrite(STDOUT, str_repeat('R', 8192)); }\n";
+        .'$child = proc_open(['.var_export(PHP_BINARY, true).", '-r', ".var_export($childCode, true).', '.var_export($childPidPath, true).', '.var_export($grandchildPidPath, true).', '.var_export($heartbeatPath, true)."], [0 => ['pipe', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], \$pipes);\n"
+        ."sleep(9);\n";
     $fixture = initializeTransientFeedbackReleaseRepositories($fixture, artisanBody: $artisanBody);
     $startedAt = microtime(true);
     $pids = [];
@@ -737,7 +780,7 @@ PHP;
     try {
         $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
         $diagnostic = $process->getErrorOutput();
-        foreach ([$rootPidPath, $childPidPath] as $pidPath) {
+        foreach ([$rootPidPath, $childPidPath, $grandchildPidPath] as $pidPath) {
             expect(is_file($pidPath))->toBeTrue("Missing PID fixture: {$pidPath}");
             $pids[] = (int) file_get_contents($pidPath);
         }
@@ -746,20 +789,51 @@ PHP;
         $heartbeatBytes = is_file($heartbeatPath) ? filesize($heartbeatPath) : 0;
         usleep(250_000);
         clearstatcache(true, $heartbeatPath);
+        $rootAlive = @posix_kill($pids[0], 0);
+        $childAlive = @posix_kill($pids[1], 0);
+        $grandchildAlive = @posix_kill($pids[2], 0);
+        $groupAlive = @posix_kill(-$pids[0], 0);
+        $groupError = posix_get_last_error();
 
         expect($process->getExitCode())->toBe(1)
             ->and($diagnostic)->toContain('Focused showcase test timed out')
             ->and(strlen($diagnostic))->toBeLessThan(12_000)
             ->and(microtime(true) - $startedAt)->toBeLessThan(7.0)
-            ->and(@posix_kill($pids[0], 0))->toBeFalse()
-            ->and(@posix_kill($pids[1], 0))->toBeFalse()
+            ->and($rootAlive)->toBeFalse()
+            ->and($childAlive)->toBeFalse()
+            ->and($grandchildAlive)->toBeFalse()
+            ->and($groupAlive)->toBeFalse()
+            ->and($groupError)->toBe(3)
             ->and(is_file($heartbeatPath) ? filesize($heartbeatPath) : 0)->toBe($heartbeatBytes);
     } finally {
+        if (($pids[0] ?? 0) > 1 && @posix_kill(-$pids[0], 0)) {
+            @posix_kill(-$pids[0], 9);
+        }
         foreach ($pids as $pid) {
             if ($pid > 1 && @posix_kill($pid, 0)) {
                 @posix_kill($pid, 9);
             }
         }
+        removeTransientFeedbackGateFixture($fixture);
+    }
+});
+
+it('release gate fails actionably when the isolated focused-test wrapper is unsupported', function () {
+    $fixture = transientFeedbackGateFixture();
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture);
+
+    try {
+        $process = runTransientFeedbackGate(
+            $fixture,
+            ['--showcase='.$fixture['showcase']],
+            ['FIRSTLIGHT_TRANSIENT_FEEDBACK_TEST_WRAPPER_MODE' => 'unsupported'],
+        );
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain(
+                'Unable to execute focused showcase test safely: isolated POSIX session wrapper is unavailable',
+            );
+    } finally {
         removeTransientFeedbackGateFixture($fixture);
     }
 });
