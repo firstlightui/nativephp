@@ -160,7 +160,9 @@ Transient Feedback supports the package versions and platform floors in the curr
 
 ## Screenshots
 
-The screenshot manifest reserves `/captures/transient-feedback` and the four paths below. `bin/check-transient-feedback --development` reports missing showcase, image, and review evidence without blocking documentation work. Release mode requires a sibling showcase (or `--showcase=PATH`) with that exact route and `tests/Feature/TransientFeedbackCaptureTest.php`, valid differentiated PNGs, and a current `spec/reviews/transient-feedback-alpha.md` containing exact revisions, affirmative visual approval, and PASS rows for the screenshot, platform, accessibility, lifecycle, and physical-device evidence.
+The screenshot manifest reserves `/captures/transient-feedback` and the four paths below. `bin/check-transient-feedback --development` reports missing showcase, image, and review evidence without blocking documentation work. Release mode requires clean package and showcase Git worktrees, the exact Task 6 route/component/view/test fixture, and a passing manifest-focused test. It structurally decodes each differentiated PNG, including chunk bounds and CRCs, IDAT zlib data, complete phone-sized scanlines, and IEND at end of file.
+
+The current `spec/reviews/transient-feedback-alpha.md` must name a real reviewed package commit that is an ancestor of package HEAD; only the four screenshot files and that review may change afterward. Its showcase revision must equal the clean showcase HEAD. The review records date, reviewer, both release targets, all four exact image paths, and substantive PASS or APPROVED details for capture, platform runtime, lifecycle, VoiceOver, TalkBack, physical-device checks, and visual approval.
 
 | Platform | Light | Dark |
 | --- | --- | --- |

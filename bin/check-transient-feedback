@@ -22,6 +22,7 @@ use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Facade;
 use Native\Mobile\Edge\CallbackRegistry;
+use Symfony\Component\Process\Process;
 
 $arguments = array_slice($argv, 1);
 $development = false;
@@ -585,62 +586,257 @@ try {
     $errors[] = 'Unable to verify generated documentation artefacts: '.$exception->getMessage();
 }
 
+$git = static function (string $repository, array $arguments): Process {
+    $process = new Process(['git', '-C', $repository, ...$arguments]);
+    $process->setTimeout(15);
+    $process->run();
+
+    return $process;
+};
+
+$repositoryState = static function (string $label, string $path) use ($git, $evidenceIssue): ?array {
+    $topLevel = $git($path, ['rev-parse', '--show-toplevel']);
+    if (! $topLevel->isSuccessful()
+        || realpath(trim($topLevel->getOutput())) !== realpath($path)) {
+        $evidenceIssue("{$label} root is not a Git worktree");
+
+        return null;
+    }
+
+    $head = $git($path, ['rev-parse', 'HEAD']);
+    if (! $head->isSuccessful() || preg_match('/^[0-9a-f]{40}$/', trim($head->getOutput())) !== 1) {
+        $evidenceIssue("Unable to resolve {$label} HEAD");
+
+        return null;
+    }
+
+    $status = $git($path, ['status', '--porcelain=v1', '--untracked-files=all']);
+    if (! $status->isSuccessful()) {
+        $evidenceIssue("Unable to inspect {$label} release tree");
+    } elseif (trim($status->getOutput()) !== '') {
+        $evidenceIssue("{$label} release tree is dirty");
+    }
+
+    return ['head' => trim($head->getOutput())];
+};
+
+$packageRepository = $repositoryState('Package', $root);
+$showcaseRepository = null;
+$showcaseArtifactsComplete = true;
+
 if (! is_dir($showcase)) {
     $evidenceIssue("Missing showcase root: {$showcase}");
+    $showcaseArtifactsComplete = false;
 } else {
-    $showcaseRoutes = $showcase.'/routes/native.php';
-    $routeContents = is_file($showcaseRoutes) ? (string) file_get_contents($showcaseRoutes) : '';
+    $showcaseRepository = $repositoryState('Showcase', $showcase);
+
+    $showcaseArtifacts = [
+        'app/NativeComponents/Captures/TransientFeedbackCapture.php' => 'Missing showcase capture component: app/NativeComponents/Captures/TransientFeedbackCapture.php',
+        'resources/views/native/captures/transient-feedback.blade.php' => 'Missing showcase capture view: resources/views/native/captures/transient-feedback.blade.php',
+        'tests/Feature/TransientFeedbackCaptureTest.php' => 'Missing focused showcase capture test: tests/Feature/TransientFeedbackCaptureTest.php',
+        'routes/native.php' => 'Missing canonical showcase routes file: routes/native.php',
+    ];
+    foreach ($showcaseArtifacts as $path => $message) {
+        if (! is_file($showcase.'/'.$path)) {
+            $evidenceIssue($message);
+            $showcaseArtifactsComplete = false;
+        }
+    }
+
+    $routeContents = is_file($showcase.'/routes/native.php')
+        ? (string) file_get_contents($showcase.'/routes/native.php')
+        : '';
     if (preg_match(
         "/Route::native\(\s*['\"]\/captures\/transient-feedback['\"]\s*,\s*TransientFeedbackCapture::class\s*\)/",
         $routeContents,
     ) !== 1) {
         $evidenceIssue('Missing exact showcase capture route: /captures/transient-feedback');
+        $showcaseArtifactsComplete = false;
     }
 
-    $focusedTest = 'tests/Feature/TransientFeedbackCaptureTest.php';
-    $focusedTestPath = $showcase.'/'.$focusedTest;
-    if (! is_file($focusedTestPath)) {
-        $evidenceIssue("Missing focused showcase capture test: {$focusedTest}");
-    } else {
-        $focusedTestContents = (string) file_get_contents($focusedTestPath);
-        if (preg_match(
-            "/Native::visit\(\s*['\"]\/captures\/transient-feedback['\"]\s*\)/",
-            $focusedTestContents,
-        ) !== 1) {
-            $evidenceIssue('Focused showcase capture test does not visit exact route: /captures/transient-feedback');
+    $captureComponentExists = is_file($showcase.'/app/NativeComponents/Captures/TransientFeedbackCapture.php');
+    $captureComponent = $captureComponentExists
+        ? (string) file_get_contents($showcase.'/app/NativeComponents/Captures/TransientFeedbackCapture.php')
+        : '';
+    if ($captureComponentExists) {
+        foreach ([
+            'final class TransientFeedbackCapture extends NativeComponent',
+            "Feedback::success('Appointment saved')",
+            "->id('transient-feedback-capture')",
+            "->action('Undo', 'undo-save')",
+            '->hold()',
+            "view('native.captures.transient-feedback')",
+        ] as $marker) {
+            if (! str_contains($captureComponent, $marker)) {
+                $evidenceIssue("Showcase capture component is missing deterministic contract marker: {$marker}");
+                $showcaseArtifactsComplete = false;
+            }
+        }
+    }
+
+    if (! $development && $showcaseArtifactsComplete && $showcaseRepository !== null) {
+        $focusedTest = new Process(['php', 'artisan', 'test', 'tests/Feature/TransientFeedbackCaptureTest.php'], $showcase);
+        $focusedTest->setTimeout(120);
+        try {
+            $focusedTest->run();
+            if (! $focusedTest->isSuccessful()) {
+                $testOutput = trim($focusedTest->getOutput()."\n".$focusedTest->getErrorOutput());
+                $testOutput = preg_replace('/\s+/', ' ', $testOutput) ?? '';
+                $testOutput = substr($testOutput, 0, 4000);
+                $evidenceIssue("Focused showcase test failed with exit code {$focusedTest->getExitCode()}: {$testOutput}");
+            }
+        } catch (Throwable $exception) {
+            $evidenceIssue('Unable to execute focused showcase test safely: '.$exception->getMessage());
         }
     }
 }
 
-$validPng = static function (string $path): bool {
+$pngError = static function (string $path): ?string {
     if (! is_file($path)) {
-        return false;
+        return 'file is missing';
     }
 
     $contents = file_get_contents($path);
-    if (! is_string($contents) || strlen($contents) < 24
-        || substr($contents, 0, 8) !== "\x89PNG\r\n\x1a\n"
-        || substr($contents, 12, 4) !== 'IHDR') {
-        return false;
+    if (! is_string($contents) || substr($contents, 0, 8) !== "\x89PNG\r\n\x1a\n") {
+        return 'invalid PNG signature';
     }
 
-    $dimensions = unpack('Nwidth/Nheight', substr($contents, 16, 8));
+    $size = strlen($contents);
+    $offset = 8;
+    $chunkIndex = 0;
+    $ihdr = null;
+    $idat = '';
+    $seenIdat = false;
+    $idatEnded = false;
+    $seenIend = false;
 
-    return is_array($dimensions) && $dimensions['width'] > 0 && $dimensions['height'] > 0;
+    while ($offset < $size) {
+        if ($size - $offset < 12) {
+            return 'truncated PNG chunk';
+        }
+
+        $length = unpack('Nlength', substr($contents, $offset, 4))['length'];
+        if ($length > 64 * 1024 * 1024 || $length > $size - $offset - 12) {
+            return 'PNG chunk exceeds file bounds';
+        }
+
+        $type = substr($contents, $offset + 4, 4);
+        if (preg_match('/^[A-Za-z]{4}$/', $type) !== 1) {
+            return 'invalid PNG chunk type';
+        }
+        $data = substr($contents, $offset + 8, $length);
+        $crc = substr($contents, $offset + 8 + $length, 4);
+        if (! hash_equals(pack('N', crc32($type.$data)), $crc)) {
+            return "CRC mismatch for {$type}";
+        }
+
+        $offset += 12 + $length;
+        $chunkIndex++;
+
+        if ($chunkIndex === 1 && $type !== 'IHDR') {
+            return 'IHDR is not the first chunk';
+        }
+        if ($type === 'IHDR') {
+            if ($ihdr !== null || $length !== 13) {
+                return 'IHDR must occur once with length 13';
+            }
+            $ihdr = unpack(
+                'Nwidth/Nheight/CbitDepth/CcolorType/Ccompression/Cfilter/Cinterlace',
+                $data,
+            );
+        } elseif ($type === 'IDAT') {
+            if ($ihdr === null || $idatEnded) {
+                return 'IDAT chunks must be consecutive after IHDR';
+            }
+            $seenIdat = true;
+            $idat .= $data;
+            if (strlen($idat) > 64 * 1024 * 1024) {
+                return 'combined IDAT payload is too large';
+            }
+        } elseif ($type === 'IEND') {
+            if ($length !== 0) {
+                return 'IEND must be empty';
+            }
+            $seenIend = true;
+            if ($offset !== $size) {
+                return 'trailing bytes after IEND';
+            }
+            break;
+        } else {
+            if ($seenIdat) {
+                $idatEnded = true;
+            }
+            if (ctype_upper($type[0]) && ! in_array($type, ['PLTE'], true)) {
+                return "unsupported critical PNG chunk: {$type}";
+            }
+        }
+    }
+
+    if ($ihdr === null) {
+        return 'missing IHDR';
+    }
+    if (! $seenIdat || $idat === '') {
+        return 'missing non-empty IDAT';
+    }
+    if (! $seenIend) {
+        return 'missing IEND at EOF';
+    }
+
+    $width = $ihdr['width'];
+    $height = $ihdr['height'];
+    if ($width < 320 || $height < 568 || $width > 4096 || $height > 8192
+        || $width >= $height || $width * $height > 20_000_000) {
+        return 'dimensions are not a meaningful phone viewport';
+    }
+    if ($ihdr['compression'] !== 0 || $ihdr['filter'] !== 0 || $ihdr['interlace'] !== 0) {
+        return 'unsupported PNG compression filter or interlace method';
+    }
+
+    $channels = [0 => 1, 2 => 3, 3 => 1, 4 => 2, 6 => 4][$ihdr['colorType']] ?? null;
+    $validDepths = [
+        0 => [1, 2, 4, 8, 16],
+        2 => [8, 16],
+        3 => [1, 2, 4, 8],
+        4 => [8, 16],
+        6 => [8, 16],
+    ];
+    if ($channels === null || ! in_array($ihdr['bitDepth'], $validDepths[$ihdr['colorType']], true)) {
+        return 'invalid PNG color type and bit depth';
+    }
+
+    $scanlineBytes = (int) ceil($width * $channels * $ihdr['bitDepth'] / 8);
+    $expectedDecodedBytes = ($scanlineBytes + 1) * $height;
+    if (! function_exists('gzuncompress')) {
+        return 'PHP zlib support is unavailable';
+    }
+    $decoded = @gzuncompress($idat, $expectedDecodedBytes + 1);
+    if (! is_string($decoded)) {
+        return 'IDAT zlib decode failed';
+    }
+    if (strlen($decoded) !== $expectedDecodedBytes || strlen($idat) < 128) {
+        return 'decoded scanline data is truncated or trivial';
+    }
+    for ($row = 0; $row < $height; $row++) {
+        if (ord($decoded[$row * ($scanlineBytes + 1)]) > 4) {
+            return 'invalid PNG scanline filter';
+        }
+    }
+
+    return null;
 };
 
 foreach ($expectedScreenshotEntry['outputs'] as $path) {
     if (! is_file($root.'/'.$path)) {
         $evidenceIssue("Missing screenshot evidence: {$path}");
-    } elseif (! $validPng($root.'/'.$path)) {
-        $evidenceIssue("Invalid screenshot PNG: {$path}");
+    } elseif (($reason = $pngError($root.'/'.$path)) !== null) {
+        $evidenceIssue("Invalid screenshot PNG: {$path} ({$reason})");
     }
 }
 
 foreach ([['ios-light', 'ios-dark'], ['android-light', 'android-dark']] as [$light, $dark]) {
     $lightPath = $expectedScreenshotEntry['outputs'][$light];
     $darkPath = $expectedScreenshotEntry['outputs'][$dark];
-    if ($validPng($root.'/'.$lightPath) && $validPng($root.'/'.$darkPath)
+    if ($pngError($root.'/'.$lightPath) === null && $pngError($root.'/'.$darkPath) === null
         && hash_file('sha256', $root.'/'.$lightPath) === hash_file('sha256', $root.'/'.$darkPath)) {
         $evidenceIssue("Screenshot variants must contain distinct evidence: {$light} and {$dark}");
     }
@@ -654,37 +850,153 @@ if (! is_file($root.'/'.$reviewPath)) {
     $review = (string) file_get_contents($root.'/'.$reviewPath);
 }
 
-$reviewHas = static fn (string $pattern): bool => preg_match($pattern, $review) === 1;
-if (! $reviewHas('/^title:\s*Transient Feedback alpha review evidence\s*$/mi')) {
+$reviewPage = null;
+if ($review !== '') {
+    try {
+        $reviewPage = FirstlightUI\Documentation\DocumentationPage::fromFile($root, $reviewPath);
+    } catch (Throwable $exception) {
+        $evidenceIssue('Release review frontmatter is invalid: '.$exception->getMessage());
+    }
+}
+if ($reviewPage?->title !== 'Transient Feedback alpha review evidence') {
     $evidenceIssue('Release review must use the Transient Feedback alpha review evidence title');
 }
-if (! $reviewHas('/^status:\s*current\s*$/mi')) {
+if ($reviewPage?->status !== 'current') {
     $evidenceIssue('Release review must declare status: current');
 }
-if (! $reviewHas('/^audience:\s*maintainer\s*$/mi')) {
+if ($reviewPage?->audience !== 'maintainer') {
     $evidenceIssue('Release review must declare audience: maintainer');
 }
 
-foreach ([
-    'Component' => 'Transient Feedback',
-    'Capture mode' => 'release',
-] as $field => $value) {
-    if (! $reviewHas('/^\|\s*'.preg_quote($field, '/').'\s*\|\s*'.preg_quote($value, '/').'\s*\|\s*$/mi')) {
-        $evidenceIssue("Release review is missing required identity: {$field}");
+$rows = [];
+foreach (preg_split('/\R/', $review) ?: [] as $line) {
+    $line = trim($line);
+    if (! str_starts_with($line, '|') || ! str_ends_with($line, '|')) {
+        continue;
+    }
+
+    $cells = array_map('trim', explode('|', trim($line, '|')));
+    if ($cells !== [] && preg_match('/^-+$/', str_replace(' ', '', $cells[0])) !== 1) {
+        $rows[$cells[0]][] = $cells;
     }
 }
-foreach (['Package revision', 'Showcase revision'] as $field) {
-    if (! $reviewHas('/^\|\s*'.preg_quote($field, '/').'\s*\|\s*`?[0-9a-f]{40}`?\s*\|\s*$/mi')) {
-        $evidenceIssue("Release review is missing a 40-character revision: {$field}");
+
+$row = static function (string $label, string $kind) use ($rows, $evidenceIssue): ?array {
+    $matches = $rows[$label] ?? [];
+    if ($matches === []) {
+        $evidenceIssue("Release review is missing required {$kind}: {$label}");
+
+        return null;
+    }
+    if (count($matches) > 1) {
+        $evidenceIssue("Duplicate release review {$kind}: {$label}");
+
+        return null;
+    }
+
+    return $matches[0];
+};
+$value = static fn (?string $value): string => trim((string) $value, " \t\n\r\0\x0B`");
+$substantive = static function (string $value, int $minimum): bool {
+    $value = trim($value);
+
+    return strlen($value) >= $minimum
+        && preg_match('/^(?:x|n\/?a|none|tbd|unknown|placeholder)$/i', $value) !== 1;
+};
+
+$componentRow = $row('Component', 'identity');
+if ($componentRow !== null && ($componentRow[1] ?? null) !== 'Transient Feedback') {
+    $evidenceIssue('Release review component identity must be Transient Feedback');
+}
+$modeRow = $row('Capture mode', 'identity');
+if ($modeRow !== null && ($modeRow[1] ?? null) !== 'release') {
+    $evidenceIssue('Release review capture mode must be release');
+}
+$dateRow = $row('Review date', 'identity');
+$reviewDate = $value($dateRow[1] ?? null);
+$parsedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $reviewDate);
+if ($dateRow !== null && ($parsedDate === false || $parsedDate->format('Y-m-d') !== $reviewDate)) {
+    $evidenceIssue('Release review date must use YYYY-MM-DD');
+}
+$identityValues = [];
+foreach (['Reviewer' => 8, 'iOS release target' => 24, 'Android release target' => 24] as $field => $minimum) {
+    $identityRow = $row($field, 'identity');
+    if ($identityRow !== null) {
+        $identityValues[$field] = $value($identityRow[1] ?? null);
+        if (! $substantive($identityValues[$field], $minimum)) {
+            $evidenceIssue("Release review field must be substantive: {$field}");
+        }
     }
 }
-if (! $reviewHas('/^\|\s*Visual approval\s*\|\s*APPROVED:\s*\S.*\|\s*$/mi')) {
-    $evidenceIssue('Release review must contain affirmative visual approval');
+
+$packageRevisionRow = $row('Reviewed package revision', 'identity');
+$reviewedPackageRevision = $value($packageRevisionRow[1] ?? null);
+if ($packageRevisionRow !== null && preg_match('/^[0-9a-f]{40}$/', $reviewedPackageRevision) !== 1) {
+    $evidenceIssue('Reviewed package revision must be a 40-character Git commit');
+}
+$showcaseRevisionRow = $row('Showcase revision', 'identity');
+$reviewedShowcaseRevision = $value($showcaseRevisionRow[1] ?? null);
+if ($showcaseRevisionRow !== null && preg_match('/^[0-9a-f]{40}$/', $reviewedShowcaseRevision) !== 1) {
+    $evidenceIssue('Showcase revision must be a 40-character Git commit');
+}
+
+if (preg_match('/^([0-9a-f])\1{39}$/', $reviewedPackageRevision) === 1) {
+    $evidenceIssue('Reviewed package revision must not be a placeholder hash');
+}
+if (preg_match('/^([0-9a-f])\1{39}$/', $reviewedShowcaseRevision) === 1) {
+    $evidenceIssue('Showcase revision must not be a placeholder hash');
+}
+
+if ($packageRepository !== null && preg_match('/^[0-9a-f]{40}$/', $reviewedPackageRevision) === 1
+    && preg_match('/^([0-9a-f])\1{39}$/', $reviewedPackageRevision) !== 1) {
+    $commit = $git($root, ['cat-file', '-e', $reviewedPackageRevision.'^{commit}']);
+    if (! $commit->isSuccessful()) {
+        $evidenceIssue('Reviewed package revision is not a package commit');
+    } else {
+        $ancestor = $git($root, ['merge-base', '--is-ancestor', $reviewedPackageRevision, 'HEAD']);
+        if (! $ancestor->isSuccessful()) {
+            $evidenceIssue('Reviewed package revision is not an ancestor of package HEAD');
+        } else {
+            $changed = $git($root, ['diff', '--name-only', $reviewedPackageRevision.'..HEAD', '--']);
+            if (! $changed->isSuccessful()) {
+                $evidenceIssue('Unable to audit paths changed after reviewed package revision');
+            } else {
+                $allowedEvidencePaths = [
+                    'docs/screenshots/transient-feedback/ios-light.png',
+                    'docs/screenshots/transient-feedback/ios-dark.png',
+                    'docs/screenshots/transient-feedback/android-light.png',
+                    'docs/screenshots/transient-feedback/android-dark.png',
+                    'spec/reviews/transient-feedback-alpha.md',
+                ];
+                foreach (array_filter(explode("\n", trim($changed->getOutput()))) as $changedPath) {
+                    if (! in_array($changedPath, $allowedEvidencePaths, true)) {
+                        $evidenceIssue("Non-evidence path changed after reviewed package revision: {$changedPath}");
+                    }
+                }
+            }
+        }
+    }
+}
+if ($showcaseRepository !== null && preg_match('/^[0-9a-f]{40}$/', $reviewedShowcaseRevision) === 1
+    && $reviewedShowcaseRevision !== $showcaseRepository['head']) {
+    $evidenceIssue('Showcase revision does not match clean showcase HEAD');
 }
 
 foreach ($expectedScreenshotEntry['outputs'] as $variant => $path) {
-    if (! $reviewHas('/^\|\s*'.preg_quote($variant, '/').'\s*\|\s*`?'.preg_quote($path, '/').'`?\s*\|\s*PASS\s*\|\s*$/mi')) {
-        $evidenceIssue("Release review is missing PASS screenshot row: {$variant}");
+    $screenshotRows = $rows[$variant] ?? [];
+    if (count($screenshotRows) > 1) {
+        $evidenceIssue("Duplicate release review screenshot row: {$variant}");
+        continue;
+    }
+    $screenshotRow = $screenshotRows[0] ?? null;
+    if ($screenshotRow === null
+        || $value($screenshotRow[1] ?? null) !== $path
+        || ($screenshotRow[2] ?? null) !== 'PASS') {
+        $evidenceIssue("Release review is missing exact PASS screenshot row: {$variant}");
+        continue;
+    }
+    if (! $substantive($value($screenshotRow[3] ?? null), 24)) {
+        $evidenceIssue("Release review screenshot detail must be substantive: {$variant}");
     }
 }
 
@@ -698,21 +1010,43 @@ $requiredEvidence = [
     'TalkBack',
     'iOS physical device',
     'Android physical device',
+    'Visual approval',
 ];
 foreach ($requiredEvidence as $evidence) {
-    $row = '/^\|\s*'.preg_quote($evidence, '/').'\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*$/mi';
-    if (preg_match($row, $review, $matches) !== 1) {
+    $evidenceRows = $rows[$evidence] ?? [];
+    if (count($evidenceRows) > 1) {
+        $evidenceIssue("Duplicate release review evidence row: {$evidence}");
+        continue;
+    }
+    $evidenceRow = $evidenceRows[0] ?? null;
+    if ($evidenceRow === null) {
         $evidenceIssue("Release review is missing required evidence row: {$evidence}");
-    } elseif (trim($matches[1]) !== 'PASS' || trim($matches[2]) === '') {
-        $evidenceIssue("Release review evidence row must be PASS: {$evidence}");
+        continue;
+    }
+    $requiredResult = $evidence === 'Visual approval' ? 'APPROVED' : 'PASS';
+    if (($evidenceRow[1] ?? null) !== $requiredResult) {
+        $evidenceIssue("Release review evidence row must be {$requiredResult}: {$evidence}");
+    }
+    if (! $substantive($value($evidenceRow[2] ?? null), 24)) {
+        $evidenceIssue("Release review evidence detail must be substantive: {$evidence}");
+    }
+    if ($evidence === 'Visual approval') {
+        $approvalDetail = $value($evidenceRow[2] ?? null);
+        if (($identityValues['Reviewer'] ?? '') !== '' && ! str_contains($approvalDetail, $identityValues['Reviewer'])) {
+            $evidenceIssue('Visual approval detail must name the recorded reviewer');
+        }
+        if ($reviewDate !== '' && ! str_contains($approvalDetail, $reviewDate)) {
+            $evidenceIssue('Visual approval detail must name the review date');
+        }
     }
 }
 
 if (preg_match('/^\s*-\s*\[\s\]\s/m', $review) === 1) {
     $evidenceIssue("Release review has open checklist rows: {$reviewPath}");
 }
-foreach (['TODO', 'BLOCKED', 'FAILED', 'FAILURE', 'FAIL'] as $status) {
-    if (preg_match('/\b'.preg_quote($status, '/').'\b/i', $review) === 1) {
+foreach (['OPEN', 'PENDING', 'DEFERRED', 'NOT RUN', 'SKIP', 'SKIPPED', 'UNKNOWN', 'TODO', 'BLOCKED', 'FAIL', 'FAILED'] as $status) {
+    $pattern = '/\b'.str_replace('\\ ', '\\s+', preg_quote($status, '/')).'\b/i';
+    if (preg_match($pattern, $review) === 1) {
         $evidenceIssue("Release review contains prohibited unresolved status: {$status}");
     }
 }

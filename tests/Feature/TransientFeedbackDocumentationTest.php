@@ -18,6 +18,8 @@ function transientFeedbackGateFixture(): array
     mkdir($package.'/spec/reviews', 0777, true);
     mkdir($showcase.'/routes', 0777, true);
     mkdir($showcase.'/tests/Feature', 0777, true);
+    mkdir($showcase.'/app/NativeComponents/Captures', 0777, true);
+    mkdir($showcase.'/resources/views/native/captures', 0777, true);
 
     copy($source.'/bin/check-transient-feedback', $package.'/bin/check-transient-feedback');
     chmod($package.'/bin/check-transient-feedback', 0755);
@@ -63,24 +65,44 @@ function removeTransientFeedbackGateFixture(array $fixture): void
     rmdir($root);
 }
 
-function transientFeedbackGatePng(string $variant): string
+function transientFeedbackPngChunk(string $type, string $data, bool $corruptCrc = false): string
 {
-    return "\x89PNG\r\n\x1a\n".pack('N', 13).'IHDR'.pack('NN', 390, 844).$variant;
+    $crc = pack('N', crc32($type.$data));
+    if ($corruptCrc) {
+        $crc[0] = chr(ord($crc[0]) ^ 0xff);
+    }
+
+    return pack('N', strlen($data)).$type.$data.$crc;
+}
+
+function transientFeedbackValidTestPng(
+    string $variant,
+    bool $badIdatCrc = false,
+    bool $invalidZlib = false,
+    bool $includeIend = true,
+): string
+{
+    $width = 320;
+    $height = 568;
+    $seed = array_sum(array_map('ord', str_split($variant))) % 255;
+    $row = chr(0).str_repeat(chr($seed).chr(40).chr(120).chr(255), $width);
+    $raw = str_repeat($row, $height);
+    $idat = $invalidZlib ? 'not-zlib-data' : gzcompress($raw, 9);
+    $png = "\x89PNG\r\n\x1a\n"
+        .transientFeedbackPngChunk('IHDR', pack('NNCCCCC', $width, $height, 8, 6, 0, 0, 0))
+        .transientFeedbackPngChunk('IDAT', $idat, $badIdatCrc);
+
+    if ($includeIend) {
+        $png .= transientFeedbackPngChunk('IEND', '');
+    }
+
+    return $png;
 }
 
 /** @param array{package: string, showcase: string} $fixture */
-function completeTransientFeedbackReleaseEvidence(array $fixture): void
+function writeTransientFeedbackReview(array $fixture, string $packageRevision, string $showcaseRevision): void
 {
-    foreach (['ios-light', 'ios-dark', 'android-light', 'android-dark'] as $variant) {
-        file_put_contents(
-            $fixture['package'].'/docs/screenshots/transient-feedback/'.$variant.'.png',
-            transientFeedbackGatePng($variant),
-        );
-    }
-
-    file_put_contents(
-        $fixture['package'].'/spec/reviews/transient-feedback-alpha.md',
-        <<<'MARKDOWN'
+    $review = <<<MARKDOWN
 ---
 title: Transient Feedback alpha review evidence
 description: Complete release evidence for Transient Feedback.
@@ -98,18 +120,21 @@ sources:
 | --- | --- |
 | Component | Transient Feedback |
 | Capture mode | release |
-| Package revision | `1111111111111111111111111111111111111111` |
-| Showcase revision | `2222222222222222222222222222222222222222` |
-| Visual approval | APPROVED: Maintainer reviewed the complete matrix. |
+| Review date | 2026-08-05 |
+| Reviewer | Firstlight release reviewer |
+| Reviewed package revision | `{$packageRevision}` |
+| Showcase revision | `{$showcaseRevision}` |
+| iOS release target | iPhone 17 Pro, iOS 26.5, simulator release target |
+| Android release target | Pixel 9 Pro, Android API 36, emulator release target |
 
 ## Screenshot evidence
 
-| Variant | Path | Result |
-| --- | --- | --- |
-| ios-light | `docs/screenshots/transient-feedback/ios-light.png` | PASS |
-| ios-dark | `docs/screenshots/transient-feedback/ios-dark.png` | PASS |
-| android-light | `docs/screenshots/transient-feedback/android-light.png` | PASS |
-| android-dark | `docs/screenshots/transient-feedback/android-dark.png` | PASS |
+| Variant | Path | Result | Detail |
+| --- | --- | --- | --- |
+| ios-light | `docs/screenshots/transient-feedback/ios-light.png` | PASS | Release capture reviewed on the recorded iOS target. |
+| ios-dark | `docs/screenshots/transient-feedback/ios-dark.png` | PASS | Dark release capture reviewed on the recorded iOS target. |
+| android-light | `docs/screenshots/transient-feedback/android-light.png` | PASS | Release capture reviewed on the recorded Android target. |
+| android-dark | `docs/screenshots/transient-feedback/android-dark.png` | PASS | Dark release capture reviewed on the recorded Android target. |
 
 ## Required release evidence
 
@@ -124,12 +149,14 @@ sources:
 | TalkBack | PASS | TalkBack live region, focus, and actions were reviewed. |
 | iOS physical device | PASS | Interaction and presentation were reviewed on an iOS device. |
 | Android physical device | PASS | Interaction and presentation were reviewed on an Android device. |
-MARKDOWN,
-    );
+| Visual approval | APPROVED | Firstlight release reviewer approved all four images on 2026-08-05. |
+MARKDOWN;
+
+    file_put_contents($fixture['package'].'/spec/reviews/transient-feedback-alpha.md', $review);
 }
 
 /** @param array{package: string, showcase: string} $fixture */
-function completeTransientFeedbackShowcaseContract(array $fixture): void
+function writeTransientFeedbackShowcaseContract(array $fixture, int $testExit = 0): void
 {
     file_put_contents(
         $fixture['showcase'].'/routes/native.php',
@@ -143,6 +170,38 @@ Route::native('/captures/transient-feedback', TransientFeedbackCapture::class);
 PHP,
     );
     file_put_contents(
+        $fixture['showcase'].'/app/NativeComponents/Captures/TransientFeedbackCapture.php',
+        <<<'PHP'
+<?php
+
+namespace App\NativeComponents\Captures;
+
+use FirstlightUI\Facades\Feedback;
+use Native\Mobile\Edge\NativeComponent;
+
+final class TransientFeedbackCapture extends NativeComponent
+{
+    public function mount(): void
+    {
+        Feedback::success('Appointment saved')
+            ->id('transient-feedback-capture')
+            ->action('Undo', 'undo-save')
+            ->hold()
+            ->send();
+    }
+
+    public function render(): mixed
+    {
+        return view('native.captures.transient-feedback');
+    }
+}
+PHP,
+    );
+    file_put_contents(
+        $fixture['showcase'].'/resources/views/native/captures/transient-feedback.blade.php',
+        "<native:scroll-view><native:text>Stable capture fixture</native:text></native:scroll-view>\n",
+    );
+    file_put_contents(
         $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php',
         <<<'PHP'
 <?php
@@ -154,6 +213,60 @@ it('publishes stable transient feedback capture content', function () {
 });
 PHP,
     );
+    file_put_contents(
+        $fixture['showcase'].'/artisan',
+        "#!/usr/bin/env php\n<?php fwrite(STDERR, 'fixture focused test failure'); exit({$testExit});\n",
+    );
+    chmod($fixture['showcase'].'/artisan', 0755);
+}
+
+function initializeTransientFeedbackGitRepository(string $path): string
+{
+    foreach ([
+        ['git', 'init', '-q'],
+        ['git', 'config', 'user.name', 'Firstlight Gate Test'],
+        ['git', 'config', 'user.email', 'gate-test@example.invalid'],
+        ['git', 'add', '.'],
+        ['git', 'commit', '-q', '-m', 'test fixture'],
+    ] as $command) {
+        $process = new Process($command, $path);
+        $process->run();
+        expect($process->isSuccessful())->toBeTrue($process->getErrorOutput());
+    }
+
+    $revision = new Process(['git', 'rev-parse', 'HEAD'], $path);
+    $revision->run();
+    expect($revision->isSuccessful())->toBeTrue($revision->getErrorOutput());
+
+    return trim($revision->getOutput());
+}
+
+function commitTransientFeedbackFixture(string $path, string $message): string
+{
+    foreach ([['git', 'add', '.'], ['git', 'commit', '-q', '-m', $message]] as $command) {
+        $process = new Process($command, $path);
+        $process->run();
+        expect($process->isSuccessful())->toBeTrue($process->getErrorOutput());
+    }
+
+    $revision = new Process(['git', 'rev-parse', 'HEAD'], $path);
+    $revision->run();
+
+    return trim($revision->getOutput());
+}
+
+/** @return array{package: string, showcase: string, package_revision: string, showcase_revision: string} */
+function initializeTransientFeedbackReleaseRepositories(array $fixture, int $testExit = 0): array
+{
+    writeTransientFeedbackShowcaseContract($fixture, $testExit);
+    $showcaseRevision = initializeTransientFeedbackGitRepository($fixture['showcase']);
+    $packageRevision = initializeTransientFeedbackGitRepository($fixture['package']);
+
+    return [
+        ...$fixture,
+        'package_revision' => $packageRevision,
+        'showcase_revision' => $showcaseRevision,
+    ];
 }
 
 /** @param list<string> $arguments */
@@ -245,31 +358,39 @@ it('executes the Transient Feedback development gate as part of the docs contrac
         ->toContain('Native behavioral suites are structurally required but run separately.');
 });
 
-it('release gate requires the sibling showcase root', function () {
+it('release gate requires real package and showcase Git worktrees', function (string $missing, string $message) {
     $fixture = transientFeedbackGateFixture();
-    completeTransientFeedbackReleaseEvidence($fixture);
+
+    if ($missing === 'showcase') {
+        initializeTransientFeedbackGitRepository($fixture['package']);
+    }
 
     try {
-        $missing = $fixture['showcase'].'-missing';
-        $process = runTransientFeedbackGate($fixture, ['--showcase='.$missing]);
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
 
         expect($process->getExitCode())->toBe(1)
-            ->and($process->getErrorOutput())->toContain('Missing showcase root: '.$missing);
+            ->and($process->getErrorOutput())->toContain($message);
     } finally {
         removeTransientFeedbackGateFixture($fixture);
     }
-});
+})->with([
+    'package' => ['package', 'Package root is not a Git worktree'],
+    'showcase' => ['showcase', 'Showcase root is not a Git worktree'],
+]);
 
-it('release gate requires the exact showcase route and focused capture test', function (string $missing, string $message) {
+it('release gate requires every exact Task 6 showcase artifact', function (string $missing, string $message) {
     $fixture = transientFeedbackGateFixture();
-    completeTransientFeedbackReleaseEvidence($fixture);
-    completeTransientFeedbackShowcaseContract($fixture);
+    writeTransientFeedbackShowcaseContract($fixture);
 
-    if ($missing === 'route') {
-        file_put_contents($fixture['showcase'].'/routes/native.php', "<?php\n");
-    } else {
-        unlink($fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php');
-    }
+    $paths = [
+        'route' => 'routes/native.php',
+        'test' => 'tests/Feature/TransientFeedbackCaptureTest.php',
+        'component' => 'app/NativeComponents/Captures/TransientFeedbackCapture.php',
+        'view' => 'resources/views/native/captures/transient-feedback.blade.php',
+    ];
+    unlink($fixture['showcase'].'/'.$paths[$missing]);
+    initializeTransientFeedbackGitRepository($fixture['showcase']);
+    initializeTransientFeedbackGitRepository($fixture['package']);
 
     try {
         $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
@@ -282,64 +403,179 @@ it('release gate requires the exact showcase route and focused capture test', fu
 })->with([
     'route' => ['route', 'Missing exact showcase capture route: /captures/transient-feedback'],
     'test' => ['test', 'Missing focused showcase capture test: tests/Feature/TransientFeedbackCaptureTest.php'],
+    'component' => ['component', 'Missing showcase capture component: app/NativeComponents/Captures/TransientFeedbackCapture.php'],
+    'view' => ['view', 'Missing showcase capture view: resources/views/native/captures/transient-feedback.blade.php'],
 ]);
 
-it('release gate rejects arbitrary screenshot bytes and an empty alpha review', function () {
+it('release gate executes the exact manifest focused test and bounds its failure output', function () {
     $fixture = transientFeedbackGateFixture();
-    completeTransientFeedbackShowcaseContract($fixture);
-    foreach (['ios-light', 'ios-dark', 'android-light', 'android-dark'] as $variant) {
-        file_put_contents(
-            $fixture['package'].'/docs/screenshots/transient-feedback/'.$variant.'.png',
-            'not-a-png-'.$variant,
-        );
-    }
-    file_put_contents($fixture['package'].'/spec/reviews/transient-feedback-alpha.md', '');
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture, 7);
 
     try {
         $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
 
         expect($process->getExitCode())->toBe(1)
-            ->and($process->getErrorOutput())->toContain('Invalid screenshot PNG: docs/screenshots/transient-feedback/ios-light.png')
-            ->toContain('Release review must declare status: current')
-            ->toContain('Release review is missing required evidence row: VoiceOver');
+            ->and($process->getErrorOutput())->toContain('Focused showcase test failed with exit code 7: fixture focused test failure');
     } finally {
         removeTransientFeedbackGateFixture($fixture);
     }
 });
 
-it('release gate rejects non-affirmative review evidence', function () {
+it('release gate rejects dirty package and showcase release trees', function (string $dirty, string $message) {
     $fixture = transientFeedbackGateFixture();
-    completeTransientFeedbackReleaseEvidence($fixture);
-    completeTransientFeedbackShowcaseContract($fixture);
-    $review = $fixture['package'].'/spec/reviews/transient-feedback-alpha.md';
-    file_put_contents($review, str_replace(
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture);
+    file_put_contents($fixture[$dirty].'/uncommitted.txt', 'dirty');
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain($message);
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'package' => ['package', 'Package release tree is dirty'],
+    'showcase' => ['showcase', 'Showcase release tree is dirty'],
+]);
+
+it('release gate ties review revisions to a real package ancestor and exact showcase head', function (string $case, string $message) {
+    $fixture = transientFeedbackGateFixture();
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture);
+    $packageRevision = $fixture['package_revision'];
+    $showcaseRevision = $fixture['showcase_revision'];
+
+    if ($case === 'nonexistent') {
+        $packageRevision = str_repeat('1234567890', 4);
+    } elseif ($case === 'non-ancestor') {
+        $tree = new Process(['git', 'rev-parse', 'HEAD^{tree}'], $fixture['package']);
+        $tree->run();
+        $commit = new Process(['git', 'commit-tree', trim($tree->getOutput()), '-m', 'unrelated fixture'], $fixture['package']);
+        $commit->run();
+        expect($commit->isSuccessful())->toBeTrue($commit->getErrorOutput());
+        $packageRevision = trim($commit->getOutput());
+    } elseif ($case === 'showcase-mismatch') {
+        $showcaseRevision = $fixture['package_revision'];
+    }
+
+    writeTransientFeedbackReview($fixture, $packageRevision, $showcaseRevision);
+    commitTransientFeedbackFixture($fixture['package'], 'publish review evidence');
+
+    if ($case === 'source-after-review') {
+        file_put_contents($fixture['package'].'/bin/check-transient-feedback', "\n", FILE_APPEND);
+        commitTransientFeedbackFixture($fixture['package'], 'change gate after review');
+    }
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain($message);
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'nonexistent package revision' => ['nonexistent', 'Reviewed package revision is not a package commit'],
+    'non-ancestor package revision' => ['non-ancestor', 'Reviewed package revision is not an ancestor of package HEAD'],
+    'source change after reviewed revision' => ['source-after-review', 'Non-evidence path changed after reviewed package revision: bin/check-transient-feedback'],
+    'mismatched showcase head' => ['showcase-mismatch', 'Showcase revision does not match clean showcase HEAD'],
+]);
+
+it('release gate rejects structurally corrupt PNG evidence', function (string $png, string $reason) {
+    $fixture = transientFeedbackGateFixture();
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture);
+    file_put_contents($fixture['package'].'/docs/screenshots/transient-feedback/ios-light.png', $png);
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain(
+                'Invalid screenshot PNG: docs/screenshots/transient-feedback/ios-light.png ('.$reason.')',
+            );
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'signature and IHDR only' => [
+        "\x89PNG\r\n\x1a\n".transientFeedbackPngChunk('IHDR', pack('NNCCCCC', 320, 568, 8, 6, 0, 0, 0)),
+        'missing non-empty IDAT',
+    ],
+    'bad IDAT CRC' => [transientFeedbackValidTestPng('bad-crc', badIdatCrc: true), 'CRC mismatch for IDAT'],
+    'invalid IDAT zlib stream' => [transientFeedbackValidTestPng('bad-zlib', invalidZlib: true), 'IDAT zlib decode failed'],
+    'missing IEND' => [transientFeedbackValidTestPng('missing-iend', includeIend: false), 'missing IEND at EOF'],
+    'trailing bytes' => [transientFeedbackValidTestPng('trailing').'garbage', 'trailing bytes after IEND'],
+]);
+
+it('release gate rejects incomplete duplicated placeholder and unresolved review evidence', function () {
+    $fixture = transientFeedbackGateFixture();
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture);
+    writeTransientFeedbackReview($fixture, $fixture['package_revision'], $fixture['showcase_revision']);
+    $reviewPath = $fixture['package'].'/spec/reviews/transient-feedback-alpha.md';
+    $review = file_get_contents($reviewPath);
+    $review = str_replace('| Review date | 2026-08-05 |', '| Review date | someday |', $review);
+    $review = str_replace('| Reviewer | Firstlight release reviewer |', '| Reviewer | x |', $review);
+    $review = str_replace(
+        '| iOS release target | iPhone 17 Pro, iOS 26.5, simulator release target |',
+        '| iOS release target | x |',
+        $review,
+    );
+    $review = str_replace(
+        '| android-light | `docs/screenshots/transient-feedback/android-light.png` | PASS | Release capture reviewed on the recorded Android target. |',
+        '| android-light | `docs/screenshots/wrong.png` | PASS | Release capture reviewed on the recorded Android target. |',
+        $review,
+    );
+    $review = str_replace(
         '| VoiceOver | PASS | VoiceOver announcement, focus, and actions were reviewed. |',
-        '| VoiceOver | BLOCKED | Review is pending. |',
-        file_get_contents($review),
-    ));
+        '| VoiceOver | PASS | x |',
+        $review,
+    );
+    $review .= "\n| TalkBack | PASS | Duplicate evidence row with otherwise substantive detail. |\n";
+    $review .= "\nOPEN PENDING DEFERRED NOT RUN SKIP SKIPPED UNKNOWN TODO BLOCKED FAIL FAILED\n";
+    file_put_contents($reviewPath, $review);
+    commitTransientFeedbackFixture($fixture['package'], 'publish malformed review evidence');
 
     try {
         $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+        $output = $process->getErrorOutput();
 
         expect($process->getExitCode())->toBe(1)
-            ->and($process->getErrorOutput())->toContain('Release review contains prohibited unresolved status: BLOCKED')
-            ->toContain('Release review evidence row must be PASS: VoiceOver');
+            ->and($output)->toContain('Release review date must use YYYY-MM-DD')
+            ->toContain('Release review field must be substantive: Reviewer')
+            ->toContain('Release review field must be substantive: iOS release target')
+            ->toContain('Release review is missing exact PASS screenshot row: android-light')
+            ->toContain('Release review evidence detail must be substantive: VoiceOver')
+            ->toContain('Duplicate release review evidence row: TalkBack');
+
+        foreach (['OPEN', 'PENDING', 'DEFERRED', 'NOT RUN', 'SKIP', 'SKIPPED', 'UNKNOWN', 'TODO', 'BLOCKED', 'FAIL', 'FAILED'] as $status) {
+            expect($output)->toContain('Release review contains prohibited unresolved status: '.$status);
+        }
     } finally {
         removeTransientFeedbackGateFixture($fixture);
     }
 });
 
-it('release gate accepts a complete structural release fixture', function () {
+it('release gate rejects placeholder reviewed revisions', function () {
     $fixture = transientFeedbackGateFixture();
-    completeTransientFeedbackReleaseEvidence($fixture);
-    completeTransientFeedbackShowcaseContract($fixture);
+    $fixture = initializeTransientFeedbackReleaseRepositories($fixture);
+    writeTransientFeedbackReview($fixture, str_repeat('0', 40), $fixture['showcase_revision']);
+    commitTransientFeedbackFixture($fixture['package'], 'publish placeholder review evidence');
 
     try {
         $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
 
-        expect($process->isSuccessful())->toBeTrue($process->getErrorOutput())
-            ->and($process->getOutput())->toContain('Transient Feedback structural checks passed.');
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain('Reviewed package revision must not be a placeholder hash');
     } finally {
         removeTransientFeedbackGateFixture($fixture);
     }
+});
+
+it('keeps the real current release gate blocked until Task 8 evidence exists', function () {
+    $root = dirname(__DIR__, 2);
+    $process = new Process([$root.'/bin/check-transient-feedback'], $root);
+    $process->setTimeout(15);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1);
 });

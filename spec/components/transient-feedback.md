@@ -136,4 +136,22 @@ The declared floors are PHP 8.4, NativePHP Mobile 4, NativePHP Mobile UI 0.3, iO
 
 Current executable evidence covers the PHP facade/store/events, child-registry callbacks, navigation refresh, event ordering, queue/tombstones, platform timing, lifecycle suspension, accessibility semantics, init registration, snapshots, large text, RTL, and API 29 compilation. The registered showcase route is `/captures/transient-feedback` with a focused `TransientFeedbackCaptureTest.php` command and four standard image outputs.
 
-The showcase fixture, runtime screenshot matrix, simulator/emulator execution, VoiceOver, TalkBack, and physical-device review are separate evidence. `bin/check-transient-feedback --development` may report absent evidence without failing. Release mode uses the default sibling showcase or `--showcase=PATH` and requires its exact route and focused test, valid differentiated PNGs, and a substantive current `spec/reviews/transient-feedback-alpha.md`. That review records exact package/showcase revisions, release capture mode, affirmative visual approval, all four screenshot paths, and PASS evidence for focused capture, both native runtimes, navigation/background lifecycle, VoiceOver, TalkBack, and both physical-device reviews. Open checkboxes or TODO, BLOCKED, and failure statuses are release-blocking.
+The showcase fixture, runtime screenshot matrix, simulator/emulator execution, VoiceOver, TalkBack, and physical-device review are separate evidence. `bin/check-transient-feedback --development` may report absent evidence without failing. Release mode uses the default sibling showcase or `--showcase=PATH`. Both roots must be clean Git worktrees. The showcase must contain the canonical route plus the exact Task 6 capture component, view, and focused test paths; the gate executes the manifest command with a bounded timeout and output. Each differentiated PNG must have bounded chunks, valid CRCs, one exact IHDR, non-empty and successfully inflated IDAT data, meaningful portrait-phone dimensions, complete non-interlaced scanlines, and an IEND at end of file.
+
+### Release review schema
+
+`spec/reviews/transient-feedback-alpha.md` uses the maintained-page frontmatter title `Transient Feedback alpha review evidence`, `status: current`, and `audience: maintainer`. Its two-column `Field | Evidence` identity table contains exactly one row for each of:
+
+- `Component` with `Transient Feedback`;
+- `Capture mode` with `release`;
+- `Review date` in `YYYY-MM-DD` form;
+- a substantive `Reviewer`;
+- a real `Reviewed package revision`;
+- the exact clean `Showcase revision` HEAD;
+- substantive `iOS release target` and `Android release target` descriptions.
+
+The reviewed package commit must exist and be an ancestor of package HEAD. From that revision through HEAD, the only permitted publication paths are `spec/reviews/transient-feedback-alpha.md` and the four manifest PNG paths. Production, tests, public documentation, specifications, gates, and unrelated generated artefacts cannot change after the reviewed source revision.
+
+The four-column `Variant | Path | Result | Detail` table contains each manifest variant exactly once, its exact manifest path, `PASS`, and at least 24 bytes of meaningful detail. The three-column `Evidence | Result | Detail` table contains exactly one substantive row for each of `Focused showcase test`, `Release screenshot capture`, `iOS platform runtime`, `Android platform runtime`, `Navigation and background lifecycle`, `VoiceOver`, `TalkBack`, `iOS physical device`, `Android physical device`, and `Visual approval`. Every row uses `PASS`, except `Visual approval`, which uses `APPROVED`; every detail is at least 24 meaningful bytes. The visual-approval detail also names the exact recorded reviewer and review date.
+
+Missing or duplicate rows, wrong screenshot paths, placeholder hashes, open checklist items, empty or one-character evidence, and `OPEN`, `PENDING`, `DEFERRED`, `NOT RUN`, `SKIP`, `SKIPPED`, `UNKNOWN`, `TODO`, `BLOCKED`, `FAIL`, or `FAILED` text are release-blocking. The future review file is not created until real Task 8 evidence exists.
