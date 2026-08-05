@@ -17,11 +17,17 @@ use FirstlightUI\Feedback\FeedbackStore;
 use FirstlightUI\Feedback\FeedbackTone;
 use FirstlightUI\Feedback\PendingFeedback;
 use FirstlightUI\NativeComponents\FeedbackCenter as FeedbackCenterComponent;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Facade;
 use Native\Mobile\Edge\CallbackRegistry;
 
 $arguments = array_slice($argv, 1);
 $development = false;
+$root = dirname(__DIR__);
+$showcase = dirname($root).'/firstlight-showcase';
+$showcaseWasSpecified = false;
 
 foreach ($arguments as $argument) {
     if ($argument === '--development' && ! $development) {
@@ -30,13 +36,27 @@ foreach ($arguments as $argument) {
         continue;
     }
 
-    fwrite(STDERR, "Usage: bin/check-transient-feedback [--development]\n");
+    if (str_starts_with($argument, '--showcase=') && ! $showcaseWasSpecified) {
+        $showcase = substr($argument, strlen('--showcase='));
+        $showcaseWasSpecified = true;
+        if ($showcase !== '') {
+            continue;
+        }
+    }
+
+    fwrite(STDERR, "Usage: bin/check-transient-feedback [--development] [--showcase=PATH]\n");
     exit(2);
 }
 
-$root = dirname(__DIR__);
 $errors = [];
 $gaps = [];
+$evidenceIssue = static function (string $message) use ($development, &$errors, &$gaps): void {
+    if ($development) {
+        $gaps[] = $message;
+    } else {
+        $errors[] = $message;
+    }
+};
 
 $required = [
     'src/Facades/Feedback.php',
@@ -133,6 +153,22 @@ if (is_file($root.'/vendor/autoload.php')) {
     require_once $root.'/vendor/autoload.php';
 } else {
     $errors[] = 'Missing Composer autoloader: vendor/autoload.php';
+}
+
+if (! function_exists('app')) {
+    function app(?string $abstract = null): mixed
+    {
+        $container = Container::getInstance();
+
+        return $abstract === null ? $container : $container->make($abstract);
+    }
+}
+
+if (! function_exists('event')) {
+    function event(object $event): mixed
+    {
+        return app('events')->dispatch($event);
+    }
 }
 
 $methodContract = static function (
@@ -267,6 +303,124 @@ try {
     $errors[] = 'Unable to execute the PHP feedback and wire contract: '.$exception->getMessage();
 }
 
+$phpLifecyclePassed = false;
+$previousContainer = Container::getInstance();
+
+try {
+    $container = new Container;
+    Container::setInstance($container);
+    $dispatcher = new Dispatcher($container);
+    $store = new FeedbackStore;
+    $manager = new FeedbackManager($store);
+    $container->instance('events', $dispatcher);
+    $container->instance(DispatcherContract::class, $dispatcher);
+    $container->instance(FeedbackStore::class, $store);
+    $container->instance(FeedbackManager::class, $manager);
+
+    $component = new FeedbackCenterComponent;
+    $observed = [];
+    $removedBeforeAction = false;
+    $dispatcher->listen(FeedbackActionPressed::class, static function (FeedbackActionPressed $event) use ($store, &$observed, &$removedBeforeAction): void {
+        $removedBeforeAction = $store->all() === [];
+        $observed[] = ['action', $event->id, $event->actionKey];
+    });
+    $dispatcher->listen(FeedbackDismissed::class, static function (FeedbackDismissed $event) use (&$observed): void {
+        $observed[] = ['dismissed', $event->id, $event->reason->value];
+    });
+
+    $invokeWire = static function (FeedbackCenterComponent $component, CallbackRegistry $callbacks, int $callbackId): void {
+        $callback = $callbacks->resolve($callbackId);
+        if (! is_array($callback) || ! is_string($callback['method'] ?? null) || ! is_array($callback['args'] ?? null)) {
+            throw new RuntimeException("Unable to resolve callback ID {$callbackId}");
+        }
+
+        $component->{$callback['method']}(...$callback['args']);
+    };
+
+    $manager->success('Saved')->id('saved')->action('Undo', 'undo')->send();
+    $callbacks = new CallbackRegistry;
+    $props = FeedbackItem::fromRecord($store->all()[0])->toArray($callbacks)['props'];
+    $invokeWire($component, $callbacks, $props['on_action']);
+    $invokeWire($component, $callbacks, $props['on_action']);
+
+    if (! $removedBeforeAction || $observed !== [
+        ['action', 'saved', 'undo'],
+        ['dismissed', 'saved', 'action'],
+    ]) {
+        $errors[] = 'Action callback must remove first and dispatch action then dismissal exactly once';
+    }
+
+    $manager->message('Automatic')->id('automatic')->send();
+    $callbacks = new CallbackRegistry;
+    $props = FeedbackItem::fromRecord($store->all()[0])->toArray($callbacks)['props'];
+    $invokeWire($component, $callbacks, $props['on_timeout']);
+
+    $manager->warning('Held')->id('held')->hold()->send();
+    $callbacks = new CallbackRegistry;
+    $props = FeedbackItem::fromRecord($store->all()[0])->toArray($callbacks)['props'];
+    $invokeWire($component, $callbacks, $props['on_manual']);
+
+    $manager->message('Malformed')->id('malformed')->send();
+    $component->dismiss('malformed', 'unsupported');
+    $component->dismiss('malformed', FeedbackDismissReason::Action->value);
+    if (array_map(static fn (FeedbackRecord $record): string => $record->id, $store->all()) !== ['malformed']) {
+        $errors[] = 'Malformed and action dismiss reasons must be inert';
+    }
+    $manager->dismiss('malformed');
+
+    $manager->message('Wrong action')->id('wrong-action')->action('Retry', 'retry')->send();
+    $component->action('wrong-action', 'wrong-key');
+    if ($store->all() !== []) {
+        $errors[] = 'A mismatched action key must remove the addressed record';
+    }
+
+    if ($observed !== [
+        ['action', 'saved', 'undo'],
+        ['dismissed', 'saved', 'action'],
+        ['dismissed', 'automatic', 'timeout'],
+        ['dismissed', 'held', 'manual'],
+    ]) {
+        $errors[] = 'Timeout, manual, malformed, and programmatic event semantics are incorrect';
+    }
+
+    $throwingContainer = new Container;
+    Container::setInstance($throwingContainer);
+    $throwingDispatcher = new Dispatcher($throwingContainer);
+    $throwingStore = new FeedbackStore;
+    $throwingManager = new FeedbackManager($throwingStore);
+    $throwingContainer->instance('events', $throwingDispatcher);
+    $throwingContainer->instance(DispatcherContract::class, $throwingDispatcher);
+    $throwingContainer->instance(FeedbackStore::class, $throwingStore);
+    $throwingContainer->instance(FeedbackManager::class, $throwingManager);
+    $throwingDismissals = [];
+    $throwingDispatcher->listen(FeedbackActionPressed::class, static function (): never {
+        throw new RuntimeException('lifecycle probe listener failed');
+    });
+    $throwingDispatcher->listen(FeedbackDismissed::class, static function (FeedbackDismissed $event) use (&$throwingDismissals): void {
+        $throwingDismissals[] = [$event->id, $event->reason->value];
+    });
+    $throwingManager->message('Retry')->id('throwing')->action('Retry', 'retry')->send();
+
+    try {
+        (new FeedbackCenterComponent)->action('throwing', 'retry');
+        $errors[] = 'Action listener exceptions must propagate';
+    } catch (RuntimeException $exception) {
+        if ($exception->getMessage() !== 'lifecycle probe listener failed') {
+            throw $exception;
+        }
+    }
+
+    if ($throwingStore->all() !== [] || $throwingDismissals !== [['throwing', 'action']]) {
+        $errors[] = 'Action dismissal must dispatch from finally when an action listener throws';
+    }
+
+    $phpLifecyclePassed = true;
+} catch (Throwable $exception) {
+    $errors[] = 'Unable to execute PHP callback lifecycle checks: '.$exception->getMessage();
+} finally {
+    Container::setInstance($previousContainer);
+}
+
 $requireMarkers('src/FirstlightServiceProvider.php', [
     '$this->app->singleton(FeedbackStore::class)',
     '$this->app->singleton(FeedbackManager::class)',
@@ -287,13 +441,28 @@ foreach ([
     'resources/android/FeedbackCenterControl.kt' => ['fun FirstlightFeedbackCenterControl(', 'minWidth = 48.dp, minHeight = 48.dp'],
     'resources/android/FeedbackCenterHost.kt' => ['fun FirstlightFeedbackCenterHost(', 'accessibilityManager::getRecommendedTimeoutMillis', 'Lifecycle.State.RESUMED'],
     'resources/android/FirstlightUIInit.kt' => ['fun registerFirstlightUI(context: Context)', '"firstlight.feedback-center"', 'consumes = "firstlight_feedback_center"'],
-    'tests/ios/FeedbackCenterTests.swift' => ['final class FeedbackCenterTests: XCTestCase'],
-    'tests/ios/FeedbackCenterSnapshotTests.swift' => ['final class FeedbackCenterSnapshotTests: XCTestCase'],
+    'tests/ios/FeedbackCenterTests.swift' => [
+        'final class FeedbackCenterTests: XCTestCase',
+        'testCompletionTombstoneBlocksStaleFramesUntilAbsence',
+        'testBackgroundPauseAndResumeExcludeSuspendedTime',
+        'testStaleTimeoutCannotCompleteOrChargeTheNextItem',
+        'testProgrammaticAbsenceAdvancesWithoutEmittingAnEvent',
+    ],
+    'tests/ios/FeedbackCenterSnapshotTests.swift' => [
+        'final class FeedbackCenterSnapshotTests: XCTestCase',
+        'testOneTimeAnnouncementAndReducedMotionPoliciesAreDeterministic',
+    ],
     'tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/FeedbackCenterTest.kt' => [
         'class FeedbackCenterQueueTest',
         'class FeedbackCenterSemanticsTest',
         'class FeedbackCenterInitContractTest',
         'class FeedbackCenterAndroidApi29Test',
+        'completion tombstone blocks stale frames until an absence epoch',
+        'pause resume excludes suspended time and repeated calls are safe',
+        'stale timeout cannot complete or charge the next item',
+        'production host owns exactly one id keyed live region',
+        'host dismiss semantics enumerate and route automatic actionable held and empty states',
+        'production lifecycle below resumed pauses and resumed excludes background time',
     ],
 ] as $path => $markers) {
     $requireMarkers($path, $markers);
@@ -327,7 +496,9 @@ $featureSources = array_values(array_unique(array_merge(
         $root.'/src/Elements/FeedbackCenter.php',
         $root.'/src/Elements/FeedbackItem.php',
         $root.'/src/NativeComponents/FeedbackCenter.php',
+        $root.'/src/Support/CallbackExpression.php',
         $root.'/src/FirstlightServiceProvider.php',
+        $root.'/resources/views/native/feedback-center.blade.php',
         $root.'/resources/ios/FeedbackCenterState.swift',
         $root.'/resources/ios/FeedbackCenterControl.swift',
         $root.'/resources/ios/FeedbackCenterHost.swift',
@@ -414,31 +585,135 @@ try {
     $errors[] = 'Unable to verify generated documentation artefacts: '.$exception->getMessage();
 }
 
-foreach ($expectedScreenshotEntry['outputs'] as $path) {
-    if (! is_file($root.'/'.$path)) {
-        $message = "Missing screenshot evidence: {$path}";
-        if ($development) {
-            $gaps[] = $message;
-        } else {
-            $errors[] = $message;
+if (! is_dir($showcase)) {
+    $evidenceIssue("Missing showcase root: {$showcase}");
+} else {
+    $showcaseRoutes = $showcase.'/routes/native.php';
+    $routeContents = is_file($showcaseRoutes) ? (string) file_get_contents($showcaseRoutes) : '';
+    if (preg_match(
+        "/Route::native\(\s*['\"]\/captures\/transient-feedback['\"]\s*,\s*TransientFeedbackCapture::class\s*\)/",
+        $routeContents,
+    ) !== 1) {
+        $evidenceIssue('Missing exact showcase capture route: /captures/transient-feedback');
+    }
+
+    $focusedTest = 'tests/Feature/TransientFeedbackCaptureTest.php';
+    $focusedTestPath = $showcase.'/'.$focusedTest;
+    if (! is_file($focusedTestPath)) {
+        $evidenceIssue("Missing focused showcase capture test: {$focusedTest}");
+    } else {
+        $focusedTestContents = (string) file_get_contents($focusedTestPath);
+        if (preg_match(
+            "/Native::visit\(\s*['\"]\/captures\/transient-feedback['\"]\s*\)/",
+            $focusedTestContents,
+        ) !== 1) {
+            $evidenceIssue('Focused showcase capture test does not visit exact route: /captures/transient-feedback');
         }
     }
 }
 
-$reviewPath = 'spec/reviews/transient-feedback-alpha.md';
-if (! is_file($root.'/'.$reviewPath)) {
-    $message = "Missing release review: {$reviewPath}";
-    if ($development) {
-        $gaps[] = $message;
-    } else {
-        $errors[] = $message;
+$validPng = static function (string $path): bool {
+    if (! is_file($path)) {
+        return false;
     }
-} elseif (preg_match('/^\s*-\s*\[\s\]\s/m', (string) file_get_contents($root.'/'.$reviewPath)) === 1) {
-    $message = "Release review has open checklist rows: {$reviewPath}";
-    if ($development) {
-        $gaps[] = $message;
-    } else {
-        $errors[] = $message;
+
+    $contents = file_get_contents($path);
+    if (! is_string($contents) || strlen($contents) < 24
+        || substr($contents, 0, 8) !== "\x89PNG\r\n\x1a\n"
+        || substr($contents, 12, 4) !== 'IHDR') {
+        return false;
+    }
+
+    $dimensions = unpack('Nwidth/Nheight', substr($contents, 16, 8));
+
+    return is_array($dimensions) && $dimensions['width'] > 0 && $dimensions['height'] > 0;
+};
+
+foreach ($expectedScreenshotEntry['outputs'] as $path) {
+    if (! is_file($root.'/'.$path)) {
+        $evidenceIssue("Missing screenshot evidence: {$path}");
+    } elseif (! $validPng($root.'/'.$path)) {
+        $evidenceIssue("Invalid screenshot PNG: {$path}");
+    }
+}
+
+foreach ([['ios-light', 'ios-dark'], ['android-light', 'android-dark']] as [$light, $dark]) {
+    $lightPath = $expectedScreenshotEntry['outputs'][$light];
+    $darkPath = $expectedScreenshotEntry['outputs'][$dark];
+    if ($validPng($root.'/'.$lightPath) && $validPng($root.'/'.$darkPath)
+        && hash_file('sha256', $root.'/'.$lightPath) === hash_file('sha256', $root.'/'.$darkPath)) {
+        $evidenceIssue("Screenshot variants must contain distinct evidence: {$light} and {$dark}");
+    }
+}
+
+$reviewPath = 'spec/reviews/transient-feedback-alpha.md';
+$review = '';
+if (! is_file($root.'/'.$reviewPath)) {
+    $evidenceIssue("Missing release review: {$reviewPath}");
+} else {
+    $review = (string) file_get_contents($root.'/'.$reviewPath);
+}
+
+$reviewHas = static fn (string $pattern): bool => preg_match($pattern, $review) === 1;
+if (! $reviewHas('/^title:\s*Transient Feedback alpha review evidence\s*$/mi')) {
+    $evidenceIssue('Release review must use the Transient Feedback alpha review evidence title');
+}
+if (! $reviewHas('/^status:\s*current\s*$/mi')) {
+    $evidenceIssue('Release review must declare status: current');
+}
+if (! $reviewHas('/^audience:\s*maintainer\s*$/mi')) {
+    $evidenceIssue('Release review must declare audience: maintainer');
+}
+
+foreach ([
+    'Component' => 'Transient Feedback',
+    'Capture mode' => 'release',
+] as $field => $value) {
+    if (! $reviewHas('/^\|\s*'.preg_quote($field, '/').'\s*\|\s*'.preg_quote($value, '/').'\s*\|\s*$/mi')) {
+        $evidenceIssue("Release review is missing required identity: {$field}");
+    }
+}
+foreach (['Package revision', 'Showcase revision'] as $field) {
+    if (! $reviewHas('/^\|\s*'.preg_quote($field, '/').'\s*\|\s*`?[0-9a-f]{40}`?\s*\|\s*$/mi')) {
+        $evidenceIssue("Release review is missing a 40-character revision: {$field}");
+    }
+}
+if (! $reviewHas('/^\|\s*Visual approval\s*\|\s*APPROVED:\s*\S.*\|\s*$/mi')) {
+    $evidenceIssue('Release review must contain affirmative visual approval');
+}
+
+foreach ($expectedScreenshotEntry['outputs'] as $variant => $path) {
+    if (! $reviewHas('/^\|\s*'.preg_quote($variant, '/').'\s*\|\s*`?'.preg_quote($path, '/').'`?\s*\|\s*PASS\s*\|\s*$/mi')) {
+        $evidenceIssue("Release review is missing PASS screenshot row: {$variant}");
+    }
+}
+
+$requiredEvidence = [
+    'Focused showcase test',
+    'Release screenshot capture',
+    'iOS platform runtime',
+    'Android platform runtime',
+    'Navigation and background lifecycle',
+    'VoiceOver',
+    'TalkBack',
+    'iOS physical device',
+    'Android physical device',
+];
+foreach ($requiredEvidence as $evidence) {
+    $row = '/^\|\s*'.preg_quote($evidence, '/').'\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*$/mi';
+    if (preg_match($row, $review, $matches) !== 1) {
+        $evidenceIssue("Release review is missing required evidence row: {$evidence}");
+    } elseif (trim($matches[1]) !== 'PASS' || trim($matches[2]) === '') {
+        $evidenceIssue("Release review evidence row must be PASS: {$evidence}");
+    }
+}
+
+if (preg_match('/^\s*-\s*\[\s\]\s/m', $review) === 1) {
+    $evidenceIssue("Release review has open checklist rows: {$reviewPath}");
+}
+foreach (['TODO', 'BLOCKED', 'FAILED', 'FAILURE', 'FAIL'] as $status) {
+    if (preg_match('/\b'.preg_quote($status, '/').'\b/i', $review) === 1) {
+        $evidenceIssue("Release review contains prohibited unresolved status: {$status}");
     }
 }
 
@@ -454,6 +729,10 @@ if ($errors !== []) {
 }
 
 fwrite(STDOUT, "Transient Feedback structural checks passed.\n");
+if ($phpLifecyclePassed) {
+    fwrite(STDOUT, "PHP callback lifecycle checks passed.\n");
+}
+fwrite(STDOUT, "Native behavioral suites are structurally required but run separately.\n");
 if ($gaps !== []) {
     fwrite(STDOUT, "Development evidence gaps (allowed):\n");
     foreach ($gaps as $gap) {

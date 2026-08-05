@@ -102,7 +102,7 @@ Each platform retains eligible published records in FIFO order and renders only 
 
 Completing an item inserts a native tombstone and advances immediately. A stale frame cannot resurrect or re-complete that ID; the tombstone is released only after a later publication omits the ID. Stale action, timeout, manual-dismiss, and host-dismiss results are bound to the initiating semantic ID and cannot affect its successor.
 
-Duplicate IDs in one frame, blank identity/message, unsupported tone, incomplete action pairs, and missing lifetime callbacks are ineligible. Automatic records require `on_timeout`. Held records require `on_manual`. Android additionally requires `on_manual` on all eligible records because its native snackbar dismiss semantic exists independently of Firstlight's visible held-only close control. A fully empty center resets queue timing and the absence epoch.
+Duplicate IDs in one frame, blank identity/message, unsupported tone, and missing lifetime callbacks are ineligible. An incomplete action label/callback pair normalizes to no action; it does not make an otherwise eligible record ineligible. Automatic records require `on_timeout`. Held records require `on_manual`. Android additionally requires `on_manual` on all eligible records because its native snackbar dismiss semantic exists independently of Firstlight's visible held-only close control. A fully empty center resets queue timing and the absence epoch.
 
 ## Timing, focus, and lifecycle
 
@@ -126,7 +126,7 @@ Native visuals need not have pixel parity. Both hosts must preserve FIFO identit
 
 ## Failure and exclusion boundary
 
-PHP validation throws `InvalidArgumentException` before publication for blank authored data or incomplete direct records. Native decoders omit malformed records without crashing. Unsupported dismiss reasons, wrong action keys, duplicates, zero callbacks, incomplete actions, and stale results fail closed. No code path silently substitutes a different tone for an eligible malformed record.
+PHP validation throws `InvalidArgumentException` before publication for blank authored data or incomplete direct records. Native decoders omit records with invalid identity, message, tone, or required lifetime callbacks without crashing, while incomplete action metadata normalizes to no action. Unsupported dismiss reasons, wrong action keys, duplicates, zero lifetime callbacks, and stale results fail closed. No code path silently substitutes a different tone for an eligible malformed record.
 
 Excluded public capabilities are Blade authoring, host installation, arbitrary duration or position, multiple actions, disabled/loading/model state, rich content, custom icons, swipe configuration, per-platform copy, untyped styling, durable persistence, and external queue mutation. Any such addition requires a new shared contract and paired-platform evidence.
 
@@ -136,4 +136,4 @@ The declared floors are PHP 8.4, NativePHP Mobile 4, NativePHP Mobile UI 0.3, iO
 
 Current executable evidence covers the PHP facade/store/events, child-registry callbacks, navigation refresh, event ordering, queue/tombstones, platform timing, lifecycle suspension, accessibility semantics, init registration, snapshots, large text, RTL, and API 29 compilation. The registered showcase route is `/captures/transient-feedback` with a focused `TransientFeedbackCaptureTest.php` command and four standard image outputs.
 
-The showcase fixture, runtime screenshot matrix, simulator/emulator execution, VoiceOver, TalkBack, and physical-device review are separate evidence. At this documentation stage the four PNGs and `spec/reviews/transient-feedback-alpha.md` are absent and visual approval is explicitly deferred. Development gates may report these gaps; release mode must fail until every image exists and the alpha review has no open checklist row.
+The showcase fixture, runtime screenshot matrix, simulator/emulator execution, VoiceOver, TalkBack, and physical-device review are separate evidence. `bin/check-transient-feedback --development` may report absent evidence without failing. Release mode uses the default sibling showcase or `--showcase=PATH` and requires its exact route and focused test, valid differentiated PNGs, and a substantive current `spec/reviews/transient-feedback-alpha.md`. That review records exact package/showcase revisions, release capture mode, affirmative visual approval, all four screenshot paths, and PASS evidence for focused capture, both native runtimes, navigation/background lifecycle, VoiceOver, TalkBack, and both physical-device reviews. Open checkboxes or TODO, BLOCKED, and failure statuses are release-blocking.

@@ -17,12 +17,16 @@ sources:
   - src/Events/FeedbackActionPressed.php
   - src/Events/FeedbackDismissed.php
   - src/NativeComponents/FeedbackCenter.php
+  - src/FirstlightServiceProvider.php
+  - resources/views/native/feedback-center.blade.php
   - resources/ios/FeedbackCenterState.swift
   - resources/ios/FeedbackCenterControl.swift
   - resources/ios/FeedbackCenterHost.swift
+  - resources/ios/FirstlightUIInit.swift
   - resources/android/FeedbackCenterState.kt
   - resources/android/FeedbackCenterControl.kt
   - resources/android/FeedbackCenterHost.kt
+  - resources/android/FirstlightUIInit.kt
   - tests/Feature/TransientFeedbackApiTest.php
   - tests/Feature/FeedbackCenterTest.php
   - tests/ios/FeedbackCenterTests.swift
@@ -140,7 +144,7 @@ iOS doubles the automatic duration while VoiceOver or Switch Control is active a
 
 Messages passed to a factory and values passed to `id()` or `action()` must be non-empty after trimming. Invalid values throw `InvalidArgumentException` before publication; surrounding non-blank whitespace is preserved. The action label and key are always authored together through `action()`. `Feedback::dismiss()` returns `false` for an unknown ID, including a blank ID, rather than publishing an event.
 
-Native decoding fails closed for blank identities or messages, unsupported tones, duplicate IDs in one frame, missing required lifetime callbacks, and incomplete actions. Invalid native data is omitted rather than rendered as inert feedback. Repeated or stale callbacks produce no duplicate events.
+Defensive native decoding treats incomplete native action metadata as no action; an otherwise eligible item remains visible without an action. Blank or invalid identity, message, or tone, duplicate IDs in one frame, and a missing required lifetime callback make an item ineligible. Repeated or stale callbacks produce no duplicate events.
 
 Disabled, loading, model binding, rich content, multiple actions, icons, per-platform copy, arbitrary colours, and renderer-specific styling do not apply. There is no consumer-authored feedback-center host and no supported direct construction of the internal wire elements.
 
@@ -156,7 +160,7 @@ Transient Feedback supports the package versions and platform floors in the curr
 
 ## Screenshots
 
-The screenshot manifest reserves `/captures/transient-feedback` and the four paths below. Capture and visual approval are deferred until the stable showcase fixture exists; the images below are not release evidence until that review is complete.
+The screenshot manifest reserves `/captures/transient-feedback` and the four paths below. `bin/check-transient-feedback --development` reports missing showcase, image, and review evidence without blocking documentation work. Release mode requires a sibling showcase (or `--showcase=PATH`) with that exact route and `tests/Feature/TransientFeedbackCaptureTest.php`, valid differentiated PNGs, and a current `spec/reviews/transient-feedback-alpha.md` containing exact revisions, affirmative visual approval, and PASS rows for the screenshot, platform, accessibility, lifecycle, and physical-device evidence.
 
 | Platform | Light | Dark |
 | --- | --- | --- |
