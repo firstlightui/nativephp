@@ -4,15 +4,22 @@ import com.nativephp.mobile.ui.nativerender.GenericProps
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
@@ -24,11 +31,17 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import android.content.Context
@@ -357,67 +370,320 @@ class FeedbackCenterQueueTest {
 @RunWith(RobolectricTestRunner::class)
 class FeedbackCenterSemanticsTest {
     @Test
-    fun `real compose tree exposes one polite pane full message one action and no decorative name`() = runComposeUiTest {
+    fun `production host owns exactly one id keyed live region and keeps same id announcement stable`() = runComposeUiTest {
+        val events = mutableListOf<Pair<Int, Int>>()
+        var now = 0L
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = now,
+            recommendTimeoutMillis = { base, _ -> base },
+            sendPress = { callback, node -> events += callback to node },
+            nowMillis = { now },
+        )
+        var center by mutableStateOf(centerNode(
+            feedbackNode(id = "one", nodeId = 1, message = "Original message", action = 51),
+            feedbackNode(id = "two", nodeId = 2, message = "Second message", hold = true, timeout = 0, manual = 62),
+        ))
         setContent {
             MaterialTheme {
-                FirstlightFeedbackCenterControl(
-                    configuration = configuration(action = 51),
-                    announce = true,
-                    actionOnNewLine = false,
-                    onAction = {},
-                    onDismiss = {},
-                    onFocusChanged = {},
-                )
+                FirstlightFeedbackCenterHost(centerNode = center, runtime = runtime) { Text("Screen") }
             }
         }
 
-        onNodeWithText("Appointment saved").assertIsDisplayed()
-        onNodeWithText("Undo").assertIsDisplayed().assertHasClickAction().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
-        onAllNodes(hasText("Undo")).assertCountEquals(1)
-        onAllNodes(hasTestTag(FeedbackCenterSemantics.LiveRegionTag)).assertCountEquals(1)
-        onNode(hasTestTag(FeedbackCenterSemantics.LiveRegionTag)).assert(
+        val liveRegion = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
+        onAllNodes(liveRegion).assertCountEquals(1)
+        onNode(liveRegion).assert(
             androidx.compose.ui.test.SemanticsMatcher.expectValue(
-                androidx.compose.ui.semantics.SemanticsProperties.LiveRegion,
+                SemanticsProperties.LiveRegion,
                 LiveRegionMode.Polite,
             ),
         )
+        onNodeWithText("Original message").assertIsDisplayed()
+        onNodeWithText("Undo").assertIsDisplayed().assertHasClickAction().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
         onNodeWithContentDescription("Feedback tone").assertDoesNotExist()
+
+        runOnIdle {
+            center = centerNode(
+                feedbackNode(id = "one", nodeId = 11, message = "Updated visible copy", tone = "danger", action = 151),
+                feedbackNode(id = "two", nodeId = 2, message = "Second message", hold = true, timeout = 0, manual = 62),
+            )
+        }
+        onAllNodes(liveRegion).assertCountEquals(1)
+        onNodeWithText("Original message").assertIsDisplayed()
+        onNodeWithText("Updated visible copy").assertDoesNotExist()
+        runOnIdle {
+            assertEquals("Updated visible copy", runtime.visible?.message)
+            assertEquals(FeedbackCenterTone.Danger, runtime.visible?.tone)
+            assertEquals(151, runtime.visible?.actionCallback)
+        }
+
+        onNodeWithText("Undo").performClick()
+        runOnIdle { assertEquals(listOf(151 to 11), events) }
+        onAllNodes(liveRegion).assertCountEquals(1)
+        onNodeWithText("Second message").assertIsDisplayed()
+
+        onNode(androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss))
+            .performSemanticsAction(SemanticsActions.Dismiss)
+        runOnIdle { assertEquals(listOf(151 to 11, 62 to 2), events) }
+        onAllNodes(liveRegion).assertCountEquals(0)
     }
 
     @Test
-    fun `held item exposes a real 48dp dismiss action and automatic item has no inert dismiss`() = runComposeUiTest {
+    fun `host semantics dismiss completes held id once and stale result cannot affect next item`() = runComposeUiTest {
+        val events = mutableListOf<Pair<Int, Int>>()
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = 0,
+            recommendTimeoutMillis = { base, _ -> base },
+            sendPress = { callback, node -> events += callback to node },
+            nowMillis = { 0 },
+        )
+        var center by mutableStateOf(centerNode(
+            feedbackNode(id = "one", nodeId = 1, hold = true, timeout = 0, manual = 61),
+            feedbackNode(id = "two", nodeId = 2, hold = true, timeout = 0, manual = 62),
+        ))
         setContent {
             MaterialTheme {
-                FirstlightFeedbackCenterControl(
-                    configuration = configuration(hold = true, timeout = 0, manual = 61),
-                    announce = true,
-                    actionOnNewLine = false,
-                    onAction = {},
-                    onDismiss = {},
-                    onFocusChanged = {},
-                )
+                FirstlightFeedbackCenterHost(centerNode = center, runtime = runtime) { Text("Screen") }
             }
         }
 
-        onNodeWithContentDescription("Dismiss feedback")
-            .assertIsDisplayed()
-            .assertHasClickAction()
-            .assertWidthIsAtLeast(48.dp)
-            .assertHeightIsAtLeast(48.dp)
+        val dismiss = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss)
+        onAllNodes(dismiss).assertCountEquals(1)
+        onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
+        runOnIdle {
+            assertEquals(listOf(61 to 1), events)
+            assertEquals("two", runtime.visible?.feedbackId)
+            runtime.snackbarDismissed("one")
+            runtime.snackbarDismissed("one")
+            assertEquals(listOf(61 to 1), events)
+            assertEquals("two", runtime.visible?.feedbackId)
+            center = centerNode(
+                feedbackNode(id = "one", nodeId = 11, hold = true, timeout = 0, manual = 161),
+                feedbackNode(id = "two", nodeId = 2, hold = true, timeout = 0, manual = 62),
+            )
+        }
+        runOnIdle {
+            assertEquals("two", runtime.visible?.feedbackId)
+            assertEquals(emptyList<String>(), runtime.pendingIds)
+        }
     }
 
     @Test
-    fun `passive automatic item does not publish inert action controls`() = runComposeUiTest {
+    fun `host semantics dismiss is inert for automatic feedback and re-presents the same id`() = runComposeUiTest {
+        val events = mutableListOf<Pair<Int, Int>>()
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = 0,
+            recommendTimeoutMillis = { _, _ -> 100_000 },
+            sendPress = { callback, node -> events += callback to node },
+            nowMillis = { 0 },
+        )
         setContent {
             MaterialTheme {
-                FirstlightFeedbackCenterControl(
-                    configuration = configuration(action = 0),
-                    announce = true,
-                    actionOnNewLine = false,
-                    onAction = {},
-                    onDismiss = {},
-                    onFocusChanged = {},
-                )
+                FirstlightFeedbackCenterHost(
+                    centerNode = centerNode(feedbackNode(id = "automatic", nodeId = 3, timeout = 73)),
+                    runtime = runtime,
+                ) { Text("Screen") }
+            }
+        }
+
+        val dismiss = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss)
+        val liveRegion = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
+        onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
+        waitForIdle()
+        onAllNodes(dismiss).assertCountEquals(1)
+        onAllNodes(liveRegion).assertCountEquals(1)
+        runOnIdle {
+            assertEquals("automatic", runtime.visible?.feedbackId)
+            assertEquals(emptyList<Pair<Int, Int>>(), events)
+        }
+
+        onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
+        waitForIdle()
+        onAllNodes(dismiss).assertCountEquals(1)
+        runOnIdle {
+            assertEquals("automatic", runtime.visible?.feedbackId)
+            assertEquals(emptyList<Pair<Int, Int>>(), events)
+        }
+    }
+
+    @Test
+    fun `programmatic reconciliation cancels snackbar lifecycle without a dismiss callback`() = runComposeUiTest {
+        val events = mutableListOf<Pair<Int, Int>>()
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = 0,
+            recommendTimeoutMillis = { base, _ -> base },
+            sendPress = { callback, node -> events += callback to node },
+            nowMillis = { 0 },
+        )
+        var center by mutableStateOf(centerNode(
+            feedbackNode(id = "programmatic", nodeId = 7, hold = true, timeout = 0, manual = 67),
+        ))
+        val liveRegion = androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
+        setContent {
+            MaterialTheme {
+                FirstlightFeedbackCenterHost(centerNode = center, runtime = runtime) { Text("Screen") }
+            }
+        }
+
+        onAllNodes(liveRegion).assertCountEquals(1)
+        runOnIdle { center = centerNode() }
+        onAllNodes(liveRegion).assertCountEquals(0)
+        runOnIdle {
+            assertNull(runtime.visible)
+            assertEquals(emptyList<Pair<Int, Int>>(), events)
+        }
+    }
+
+    @Test
+    fun `production action explicit dismiss and focus route through one runtime`() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        val events = mutableListOf<Pair<Int, Int>>()
+        var now = 0L
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = now,
+            recommendTimeoutMillis = { _, flags ->
+                if (flags and AccessibilityManager.FLAG_CONTENT_CONTROLS != 0) 100_000 else 100
+            },
+            sendPress = { callback, node -> events += callback to node },
+            nowMillis = { now },
+        )
+        val owner = TestFeedbackLifecycleOwner(Lifecycle.State.RESUMED)
+        var center by mutableStateOf(centerNode(
+            feedbackNode(id = "action", nodeId = 1, action = 51),
+            feedbackNode(id = "held", nodeId = 2, hold = true, timeout = 0, manual = 62),
+        ))
+        setContent {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                MaterialTheme {
+                    FirstlightFeedbackCenterHost(centerNode = center, runtime = runtime) {
+                        Button(onClick = {}, modifier = Modifier.testTag("outside-focus")) { Text("Outside") }
+                    }
+                }
+            }
+        }
+
+        mainClock.advanceTimeBy(1_000)
+        onNodeWithText("Undo").performSemanticsAction(SemanticsActions.RequestFocus)
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertTrue(runtime.isPaused) }
+        onNode(hasTestTag("outside-focus")).performSemanticsAction(SemanticsActions.RequestFocus)
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertFalse(runtime.isPaused) }
+        onNodeWithText("Undo").performClick()
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle { assertEquals(listOf(51 to 1), events) }
+
+        onNodeWithContentDescription("Dismiss feedback")
+            .assertHasClickAction()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertTrue(runtime.isPaused) }
+        onNode(hasTestTag("outside-focus")).performSemanticsAction(SemanticsActions.RequestFocus)
+        mainClock.advanceTimeByFrame()
+        runOnIdle { assertFalse(runtime.isPaused) }
+        onNodeWithContentDescription("Dismiss feedback").performClick()
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle {
+            assertEquals(listOf(51 to 1, 62 to 2), events)
+            runtime.snackbarDismissed("held")
+            assertEquals(listOf(51 to 1, 62 to 2), events)
+            assertNull(runtime.visible)
+        }
+    }
+
+    @Test
+    fun `production timeout advances once and stale timer cannot affect next item`() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        val events = mutableListOf<Pair<Int, Int>>()
+        var now = 0L
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = now,
+            recommendTimeoutMillis = { _, _ -> 1_000 },
+            sendPress = { callback, node -> events += callback to node },
+            nowMillis = { now },
+        )
+        setContent {
+            MaterialTheme {
+                FirstlightFeedbackCenterHost(
+                    centerNode = centerNode(
+                        feedbackNode(id = "timeout", nodeId = 3, timeout = 73),
+                        feedbackNode(id = "next", nodeId = 4, hold = true, timeout = 0, manual = 84),
+                    ),
+                    runtime = runtime,
+                ) { Text("Screen") }
+            }
+        }
+
+        repeat(10) { mainClock.advanceTimeByFrame() }
+        runOnIdle { assertEquals("timeout", runtime.visible?.feedbackId) }
+        now = 1_000
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle {
+            assertEquals(listOf(73 to 3), events)
+            assertEquals("next", runtime.visible?.feedbackId)
+            runtime.timeout("timeout")
+            assertEquals(listOf(73 to 3), events)
+            assertEquals("next", runtime.visible?.feedbackId)
+        }
+    }
+
+    @Test
+    fun `production lifecycle below resumed pauses and resumed excludes background time`() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        var now = 0L
+        val runtime = FeedbackCenterHostRuntime(
+            initialNowMillis = now,
+            recommendTimeoutMillis = { _, _ -> 100_000 },
+            sendPress = { _, _ -> },
+            nowMillis = { now },
+        )
+        val owner = TestFeedbackLifecycleOwner(Lifecycle.State.CREATED)
+        setContent {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                MaterialTheme {
+                    FirstlightFeedbackCenterHost(
+                        centerNode = centerNode(feedbackNode(id = "lifecycle", timeout = 73)),
+                        runtime = runtime,
+                    ) { Text("Screen") }
+                }
+            }
+        }
+
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle {
+            assertTrue(runtime.isPaused)
+            assertEquals(0, runtime.elapsedMillis)
+        }
+
+        now = 1_000
+        runOnIdle { owner.moveTo(Lifecycle.State.RESUMED) }
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle { assertFalse(runtime.isPaused) }
+
+        now = 1_100
+        runOnIdle { owner.moveTo(Lifecycle.State.CREATED) }
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle {
+            assertTrue(runtime.isPaused)
+            assertEquals(100, runtime.elapsedMillis)
+        }
+
+        now = 2_000
+        runOnIdle { owner.moveTo(Lifecycle.State.RESUMED) }
+        mainClock.advanceTimeBy(1_000)
+        runOnIdle {
+            assertFalse(runtime.isPaused)
+            assertEquals(100, runtime.elapsedMillis)
+        }
+    }
+
+    @Test
+    fun `passive automatic item does not publish inert explicit controls`() = runComposeUiTest {
+        val runtime = FeedbackCenterHostRuntime(0, { base, _ -> base }, { _, _ -> }, { 0 })
+        setContent {
+            MaterialTheme {
+                FirstlightFeedbackCenterHost(centerNode(feedbackNode(action = 0)), runtime) { Text("Screen") }
             }
         }
 
@@ -436,14 +702,17 @@ class FeedbackCenterSemanticsTest {
         assertFalse(FeedbackCenterRenderingPolicy.actionOnNewLine(maxWidthDp = 600, fontScale = 1f))
     }
 
-    private fun configuration(
-        hold: Boolean = false,
-        action: Int = 0,
-        timeout: Int = 12,
-        manual: Int = 13,
-        tone: String = "success",
-        message: String = "Appointment saved",
-    ) = FeedbackCenterItemConfiguration(feedbackNode(hold, action, timeout, manual, tone, message))
+}
+
+private class TestFeedbackLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
+    private val registry = LifecycleRegistry(this)
+    override val lifecycle: Lifecycle get() = registry
+
+    init { registry.currentState = initialState }
+
+    fun moveTo(state: Lifecycle.State) {
+        registry.currentState = state
+    }
 }
 
 class FeedbackCenterAnnouncementStateTest {
@@ -510,6 +779,25 @@ class FeedbackCenterAndroidApi29Test {
         )
         assertTrue(androidFeedbackTimeoutPolicy(manager)(actionable) >= FeedbackCenterTiming.MinimumDurationMillis)
     }
+
+    @Test
+    fun `injectable production timeout adapter receives exact base and content flags and returns duration`() {
+        var capturedBase = 0
+        var capturedFlags = 0
+        val actionable = FeedbackCenterItemConfiguration(feedbackNode(action = 51, message = "Saved"))
+        val policy = androidFeedbackTimeoutPolicy { base, flags ->
+            capturedBase = base
+            capturedFlags = flags
+            12_345
+        }
+
+        assertEquals(12_345, policy(actionable))
+        assertEquals(FeedbackCenterTiming.automaticBaseMillis("Saved", hasAction = true).toInt(), capturedBase)
+        assertEquals(
+            AccessibilityManager.FLAG_CONTENT_TEXT or AccessibilityManager.FLAG_CONTENT_ICONS or AccessibilityManager.FLAG_CONTENT_CONTROLS,
+            capturedFlags,
+        )
+    }
 }
 
 class FeedbackCenterPaparazziCases {
@@ -539,7 +827,6 @@ class FeedbackCenterPaparazziCases {
                             configuration = FeedbackCenterItemConfiguration(
                                 feedbackNode(hold, action, if (hold) 0 else 12, 13, tone.wireName, message),
                             ),
-                            announce = true,
                             actionOnNewLine = action != 0 && message.length > 60,
                             onAction = {},
                             onDismiss = {},
@@ -560,7 +847,6 @@ class FeedbackCenterFontScalePaparazziCase {
             MaterialTheme {
                 FirstlightFeedbackCenterControl(
                     FeedbackCenterItemConfiguration(feedbackNode(action = 51)),
-                    announce = true,
                     actionOnNewLine = true,
                     onAction = {},
                     onDismiss = {},
@@ -580,7 +866,6 @@ class FeedbackCenterRtlPaparazziCase {
                 MaterialTheme {
                     FirstlightFeedbackCenterControl(
                         FeedbackCenterItemConfiguration(feedbackNode(action = 51)),
-                        announce = true,
                         actionOnNewLine = false,
                         onAction = {},
                         onDismiss = {},
@@ -599,9 +884,11 @@ private fun feedbackNode(
     manual: Int = 13,
     tone: String = "success",
     message: String = "Appointment saved",
+    id: String = "feedback-one",
+    nodeId: Int = 1,
 ): NativeUINode {
     val props = mutableMapOf<String, Any>(
-        "feedback_id" to "feedback-one",
+        "feedback_id" to id,
         "message" to message,
         "tone" to tone,
         "hold" to hold,
@@ -612,5 +899,12 @@ private fun feedbackNode(
         props["action_label"] = "Undo"
         props["on_action"] = action
     }
-    return NativeUINode(id = 1, type = "firstlight.feedback-item", props = GenericProps(props))
+    return NativeUINode(id = nodeId, type = "firstlight.feedback-item", props = GenericProps(props))
 }
+
+private fun centerNode(vararg items: NativeUINode): NativeUINode = NativeUINode(
+    id = 10,
+    type = "firstlight_feedback_center",
+    props = GenericProps(),
+    children = items.toList(),
+)

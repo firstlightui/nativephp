@@ -1,7 +1,6 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -25,23 +24,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-
-internal object FeedbackCenterSemantics {
-    const val LiveRegionTag = "firstlight-feedback-live-region"
-}
 
 class FeedbackCenterAnnouncementState {
     private var announcedId: String? = null
+    var snapshot: String? = null
+        private set
+
+    fun update(visible: FeedbackCenterItemConfiguration?) {
+        if (visible == null) {
+            announcedId = null
+            snapshot = null
+        } else if (announcedId != visible.feedbackId) {
+            announcedId = visible.feedbackId
+            snapshot = visible.message
+        }
+    }
 
     fun consume(visibleId: String?): Boolean {
         if (visibleId == null) {
             announcedId = null
+            snapshot = null
             return false
         }
         if (announcedId == visibleId) return false
@@ -120,7 +128,6 @@ private fun feedbackCenterColors(tone: FeedbackCenterTone): FeedbackCenterColors
 @Composable
 fun FirstlightFeedbackCenterControl(
     configuration: FeedbackCenterItemConfiguration,
-    announce: Boolean,
     announcementMessage: String = configuration.message,
     actionOnNewLine: Boolean,
     onAction: () -> Unit,
@@ -132,21 +139,8 @@ fun FirstlightFeedbackCenterControl(
     var actionFocused by remember(configuration.feedbackId) { mutableStateOf(false) }
     var dismissFocused by remember(configuration.feedbackId) { mutableStateOf(false) }
 
-    Box {
-        if (announce) {
-            Box(
-                Modifier
-                    .size(1.dp)
-                    .testTag(FeedbackCenterSemantics.LiveRegionTag)
-                    .clearAndSetSemantics {
-                        contentDescription = announcementMessage
-                        liveRegion = LiveRegionMode.Polite
-                    },
-            )
-        }
-
-        Snackbar(
-            modifier = modifier.testTag("firstlight-feedback-snackbar"),
+    Snackbar(
+        modifier = modifier.testTag("firstlight-feedback-snackbar"),
             action = if (configuration.hasAction) {
                 {
                     TextButton(
@@ -185,12 +179,16 @@ fun FirstlightFeedbackCenterControl(
             contentColor = colors.content,
             actionContentColor = colors.action,
             dismissActionContentColor = colors.dismiss,
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ToneIcon(configuration.tone, colors.accent)
-                Spacer(Modifier.width(12.dp))
-                Text(configuration.message)
-            }
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ToneIcon(configuration.tone, colors.accent)
+            Spacer(Modifier.width(12.dp))
+            Text(
+                configuration.message,
+                Modifier.clearAndSetSemantics {
+                    text = AnnotatedString(announcementMessage)
+                },
+            )
         }
     }
 }
