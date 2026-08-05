@@ -37,7 +37,7 @@ struct FirstlightCheckboxControl: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .frame(maxWidth: .infinity, minHeight: minimumTarget, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: minimumTarget, alignment: .topLeading)
             }
             .contentShape(Rectangle())
         }

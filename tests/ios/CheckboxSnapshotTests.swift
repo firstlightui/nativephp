@@ -218,7 +218,11 @@ final class CheckboxSnapshotTests: XCTestCase {
                 onProposal: {}
             )
             FirstlightCheckboxControl(
-                configuration: CheckboxRendererConfiguration(node: self.makeNode(value: true, disabled: true)),
+                configuration: CheckboxRendererConfiguration(node: self.makeNode(
+                    value: true,
+                    disabled: true,
+                    helper: ""
+                )),
                 tokens: .checkboxTest,
                 onProposal: {}
             )
