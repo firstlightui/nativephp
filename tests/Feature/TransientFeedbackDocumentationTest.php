@@ -272,6 +272,14 @@ PHP,
     chmod($fixture['showcase'].'/artisan', 0755);
 }
 
+function bracketTransientFeedbackCaptureTest(string $test, string $namespace): string
+{
+    $body = preg_replace('/^<\?php\s*/', '', $test) ?? $test;
+    $declaration = $namespace === '' ? 'namespace {' : "namespace {$namespace} {";
+
+    return "<?php\n\n{$declaration}\n{$body}\n}\n";
+}
+
 function initializeTransientFeedbackGitRepository(string $path): string
 {
     foreach ([
@@ -654,6 +662,102 @@ it('release gate accepts an imported Native alias inside a namespace', function 
         removeTransientFeedbackGateFixture($fixture);
     }
 });
+
+it('release gate does not leak Native aliases or non-import uses between namespace scopes', function (string $case) {
+    $fixture = transientFeedbackGateFixture();
+    writeTransientFeedbackShowcaseContract(
+        $fixture,
+        artisanBody: "#!/usr/bin/env php\n<?php file_put_contents(__DIR__.'/focused-test-executed', 'yes'); exit(0);\n",
+    );
+    $testPath = $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php';
+    $test = (string) file_get_contents($testPath);
+    $test = preg_replace('/^<\?php\s*/', '', $test) ?? $test;
+    $test = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', '', $test);
+    if ($case === 'a-import-does-not-authorize-b') {
+        $test = "<?php\n\nnamespace NamespaceA;\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n\nnamespace NamespaceB;\n{$test}";
+    } elseif ($case === 'b-spoof-not-overridden') {
+        $test .= "\nnamespace NamespaceA;\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n";
+        $test = "<?php\n\nnamespace NamespaceB;\nuse Tests\\FakeNativeScreen as NativeScreen;\n{$test}";
+    } elseif (in_array($case, ['bracketed-no-import', 'bracketed-spoof'], true)) {
+        $bImport = $case === 'bracketed-spoof'
+            ? "use Tests\\FakeNativeScreen as NativeScreen;\n"
+            : '';
+        $test = "<?php\n\nnamespace {\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n}\n\nnamespace NamespaceA {\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n}\n\nnamespace NamespaceB {\n{$bImport}{$test}\n}\n";
+    } else {
+        $nonImportUse = $case === 'closure-use'
+            ? "\n    \$capturedAlias = null;\n    \$closure = static function () use (\$capturedAlias): void {};\n"
+            : "\n    final class UsesNativeScreenAsTrait {\n        use NativeScreen;\n    }\n";
+        $test = str_replace(
+            "\nit('publishes stable transient feedback capture content'",
+            "{$nonImportUse}\nit('publishes stable transient feedback capture content'",
+            $test,
+        );
+        $test = "<?php\n\nnamespace NamespaceB;\n{$test}";
+    }
+    file_put_contents($testPath, $test);
+    initializeTransientFeedbackGitRepository($fixture['showcase']);
+    initializeTransientFeedbackGitRepository($fixture['package']);
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain('Focused showcase capture test must call Native::visit')
+            ->and(is_file($fixture['showcase'].'/focused-test-executed'))->toBeFalse();
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'namespace A import cannot authorize namespace B' => 'a-import-does-not-authorize-b',
+    'later namespace A import cannot override namespace B spoof alias' => 'b-spoof-not-overridden',
+    'bracketed global and A imports cannot authorize B' => 'bracketed-no-import',
+    'bracketed B spoof alias is not overridden by global or A' => 'bracketed-spoof',
+    'closure capture use is not a namespace import' => 'closure-use',
+    'trait use is not a namespace import' => 'trait-use',
+]);
+
+it('release gate resolves aliases independently in bracketed and repeated namespace scopes', function (string $case, int $exitCode) {
+    $fixture = transientFeedbackGateFixture();
+    writeTransientFeedbackShowcaseContract($fixture, $exitCode);
+    $testPath = $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php';
+    $test = (string) file_get_contents($testPath);
+
+    if ($case === 'bracketed-global') {
+        $test = bracketTransientFeedbackCaptureTest($test, '');
+    } elseif ($case === 'bracketed-named-alias') {
+        $test = bracketTransientFeedbackCaptureTest($test, 'NamespaceB');
+    } elseif ($case === 'bracketed-named-fqcn') {
+        $test = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', '', $test);
+        $test = str_replace('NativeScreen::visit(', '\\Native\\Mobile\\Testing\\Native::visit(', $test);
+        $test = bracketTransientFeedbackCaptureTest($test, 'NamespaceB');
+    } else {
+        $body = preg_replace('/^<\?php\s*/', '', $test) ?? $test;
+        $body = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', '', $body);
+        $test = $case === 'bracketed-reused-alias'
+            ? "<?php\n\nnamespace {\nuse Tests\\GlobalFakeNativeScreen as NativeScreen;\n}\n\nnamespace NamespaceA {\nuse Tests\\FakeNativeScreen as NativeScreen;\n}\n\nnamespace NamespaceB {\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n{$body}\n}\n"
+            : "<?php\n\nnamespace NamespaceA;\nuse Tests\\FakeNativeScreen as NativeScreen;\n\nnamespace NamespaceB;\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n{$body}";
+    }
+    file_put_contents($testPath, $test);
+    initializeTransientFeedbackGitRepository($fixture['showcase']);
+    initializeTransientFeedbackGitRepository($fixture['package']);
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain(
+                "Focused showcase test failed with exit code {$exitCode}: fixture focused test failure",
+            );
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'bracketed global namespace alias' => ['bracketed-global', 31],
+    'bracketed named namespace alias' => ['bracketed-named-alias', 32],
+    'bracketed named namespace FQCN' => ['bracketed-named-fqcn', 33],
+    'same alias maps differently in namespaces A and B' => ['unbracketed-reused-alias', 34],
+    'same alias maps differently in bracketed global A and B scopes' => ['bracketed-reused-alias', 35],
+]);
 
 it('release gate accepts screen assertions chained directly to an assigned Native visit result', function () {
     $fixture = transientFeedbackGateFixture();

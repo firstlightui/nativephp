@@ -1006,28 +1006,47 @@ if (! is_dir($showcase)) {
             }
         }
 
-        $namespace = '';
-        for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
-            if ($testTokens[$index]['id'] !== T_NAMESPACE) {
-                continue;
-            }
-            for ($cursor = $index + 1; $cursor < $count; $cursor++) {
-                $text = $tokenText($testTokens[$cursor]);
-                if (in_array($text, [';', '{'], true)) {
-                    break;
-                }
-                if (in_array($testTokens[$cursor]['id'], [T_STRING, T_NAME_QUALIFIED, T_NS_SEPARATOR], true)) {
-                    $namespace .= $text;
-                }
-            }
-            $namespace = trim($namespace, '\\');
-            break;
-        }
-
-        $imports = [];
+        $scopeNames = [0 => ''];
+        $scopeTopDepths = [0 => 0];
+        $importsByScope = [0 => []];
+        $currentScope = 0;
+        $nextScope = 1;
         $braceDepth = 0;
+        $bracketedNamespaceScope = null;
         for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
             $text = $tokenText($testTokens[$index]);
+            $testTokens[$index]['namespace_scope'] = $currentScope;
+            $testTokens[$index]['brace_depth'] = $braceDepth;
+
+            if ($testTokens[$index]['id'] === T_NAMESPACE && $braceDepth === 0) {
+                $namespace = '';
+                $terminator = null;
+                for ($cursor = $index + 1; $cursor < $count; $cursor++) {
+                    $cursorText = $tokenText($testTokens[$cursor]);
+                    if (in_array($cursorText, [';', '{'], true)) {
+                        $terminator = $cursor;
+
+                        break;
+                    }
+                    if (in_array($testTokens[$cursor]['id'], [T_STRING, T_NAME_QUALIFIED, T_NS_SEPARATOR], true)) {
+                        $namespace .= $cursorText;
+                    }
+                }
+                if ($terminator !== null) {
+                    $currentScope = $nextScope++;
+                    $scopeNames[$currentScope] = trim($namespace, '\\');
+                    $scopeTopDepths[$currentScope] = $tokenText($testTokens[$terminator]) === '{' ? 1 : 0;
+                    $importsByScope[$currentScope] = [];
+                    for ($cursor = $index; $cursor <= $terminator; $cursor++) {
+                        $testTokens[$cursor]['namespace_scope'] = $currentScope;
+                        $testTokens[$cursor]['brace_depth'] = $braceDepth;
+                    }
+                    $bracketedNamespaceScope = $tokenText($testTokens[$terminator]) === '{'
+                        ? $currentScope
+                        : null;
+                }
+            }
+
             if ($text === '{') {
                 $braceDepth++;
 
@@ -1035,46 +1054,127 @@ if (! is_dir($showcase)) {
             }
             if ($text === '}') {
                 $braceDepth--;
+                if ($bracketedNamespaceScope === $currentScope
+                    && $braceDepth < $scopeTopDepths[$currentScope]) {
+                    $currentScope = 0;
+                    $bracketedNamespaceScope = null;
+                }
 
                 continue;
             }
-            if ($braceDepth !== 0 || $testTokens[$index]['id'] !== T_USE) {
-                continue;
+        }
+
+        $parseUseSegment = static function (array $tokens, string $prefix = '') use ($tokenText): ?array {
+            if ($tokens === [] || in_array($tokens[0]['id'] ?? null, [T_FUNCTION, T_CONST], true)) {
+                return null;
             }
 
             $name = '';
             $alias = null;
             $readingAlias = false;
-            for ($cursor = $index + 1; $cursor < $count && $tokenText($testTokens[$cursor]) !== ';'; $cursor++) {
-                if ($testTokens[$cursor]['id'] === T_AS) {
+            foreach ($tokens as $token) {
+                if (($token['id'] ?? null) === T_AS) {
                     $readingAlias = true;
 
                     continue;
                 }
-                if (! in_array($testTokens[$cursor]['id'], [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NS_SEPARATOR], true)) {
-                    $name = '';
-                    break;
+                if (! in_array($token['id'] ?? null, [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NS_SEPARATOR], true)) {
+                    return null;
                 }
                 if ($readingAlias) {
-                    $alias = $tokenText($testTokens[$cursor]);
+                    $alias .= $tokenText($token);
                 } else {
-                    $name .= $tokenText($testTokens[$cursor]);
+                    $name .= $tokenText($token);
                 }
             }
-            $name = ltrim($name, '\\');
-            if ($name !== '') {
-                $separator = strrpos($name, '\\');
-                $imports[strtolower($alias ?? ($separator === false ? $name : substr($name, $separator + 1)))] = $name;
+
+            $name = trim($prefix.'\\'.ltrim($name, '\\'), '\\');
+            if ($name === '') {
+                return null;
+            }
+            $separator = strrpos($name, '\\');
+
+            return [strtolower($alias ?? ($separator === false ? $name : substr($name, $separator + 1))), $name];
+        };
+        $registerUseSegments = static function (array $tokens, string $prefix, array &$imports) use ($parseUseSegment, $tokenText): void {
+            $segment = [];
+            foreach ([...$tokens, ['id' => null, 'text' => ',', 'value' => ',']] as $token) {
+                if ($tokenText($token) !== ',') {
+                    $segment[] = $token;
+
+                    continue;
+                }
+                $parsed = $parseUseSegment($segment, $prefix);
+                if ($parsed !== null) {
+                    [$alias, $name] = $parsed;
+                    $imports[$alias] = $name;
+                }
+                $segment = [];
+            }
+        };
+
+        for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
+            $scope = $testTokens[$index]['namespace_scope'] ?? 0;
+            if (($testTokens[$index]['brace_depth'] ?? 0) !== $scopeTopDepths[$scope]
+                || $testTokens[$index]['id'] !== T_USE
+                || ($index > 0 && ! in_array($tokenText($testTokens[$index - 1]), [';', '{', '}'], true))) {
+                continue;
+            }
+
+            $statement = [];
+            for ($cursor = $index + 1; $cursor < $count; $cursor++) {
+                if ($tokenText($testTokens[$cursor]) === ';') {
+                    break;
+                }
+                $statement[] = $testTokens[$cursor];
+            }
+
+            $groupOpen = null;
+            foreach ($statement as $offset => $token) {
+                if ($tokenText($token) === '{') {
+                    $groupOpen = $offset;
+
+                    break;
+                }
+            }
+            if ($groupOpen === null) {
+                $registerUseSegments($statement, '', $importsByScope[$scope]);
+
+                continue;
+            }
+
+            $prefix = '';
+            foreach (array_slice($statement, 0, $groupOpen) as $token) {
+                if (! in_array($token['id'] ?? null, [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NS_SEPARATOR], true)) {
+                    $prefix = '';
+
+                    break;
+                }
+                $prefix .= $tokenText($token);
+            }
+            $groupClose = array_search('}', array_map($tokenText, $statement), true);
+            if ($prefix !== '' && $groupClose !== false) {
+                $registerUseSegments(
+                    array_slice($statement, $groupOpen + 1, $groupClose - $groupOpen - 1),
+                    trim($prefix, '\\'),
+                    $importsByScope[$scope],
+                );
             }
         }
 
-        $resolvesClass = static function (array $token, string $class) use ($imports, $namespace): bool {
+        $resolvesClass = static function (array $token, string $class) use ($importsByScope, $scopeNames): bool {
+            $scope = $token['namespace_scope'] ?? 0;
+            $imports = $importsByScope[$scope] ?? [];
+            $namespace = $scopeNames[$scope] ?? '';
             $reference = ltrim((string) $token['text'], '\\');
             if (($token['id'] ?? null) === T_NAME_FULLY_QUALIFIED) {
                 return strcasecmp($reference, $class) === 0;
             }
-            if (($token['id'] ?? null) === T_STRING && isset($imports[strtolower($reference)])) {
-                return strcasecmp($imports[strtolower($reference)], $class) === 0;
+            $parts = explode('\\', $reference, 2);
+            if (isset($imports[strtolower($parts[0])])) {
+                $resolved = $imports[strtolower($parts[0])].(isset($parts[1]) ? '\\'.$parts[1] : '');
+
+                return strcasecmp($resolved, $class) === 0;
             }
             $resolved = $namespace === '' ? $reference : $namespace.'\\'.$reference;
 
