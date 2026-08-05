@@ -623,6 +623,115 @@ $repositoryState = static function (string $label, string $path) use ($git, $evi
 $packageRepository = $repositoryState('Package', $root);
 $showcaseRepository = null;
 $showcaseArtifactsComplete = true;
+$focusedTestTimeoutSeconds = 5.0;
+$focusedTestOutputLimit = 4000;
+
+/** @return array{exit_code: ?int, output: string, timed_out: bool, error: ?string} */
+$runBounded = static function (array $command, string $workingDirectory, float $timeout, int $outputLimit): array {
+    if (! function_exists('proc_open')) {
+        return ['exit_code' => null, 'output' => '', 'timed_out' => false, 'error' => 'proc_open is unavailable'];
+    }
+
+    $pipes = [];
+    $process = @proc_open(
+        $command,
+        [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ],
+        $pipes,
+        $workingDirectory,
+        null,
+        ['bypass_shell' => true],
+    );
+    if (! is_resource($process)) {
+        return ['exit_code' => null, 'output' => '', 'timed_out' => false, 'error' => 'unable to start process'];
+    }
+
+    fclose($pipes[0]);
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+    $output = '';
+    $startedAt = microtime(true);
+    $timedOut = false;
+    $exitCode = null;
+
+    $drain = static function (array $streams) use (&$output, $outputLimit): void {
+        foreach ($streams as $stream) {
+            while (is_resource($stream) && ! feof($stream)) {
+                $chunk = fread($stream, 8192);
+                if (! is_string($chunk) || $chunk === '') {
+                    break;
+                }
+                $remaining = $outputLimit - strlen($output);
+                if ($remaining > 0) {
+                    $output .= substr($chunk, 0, $remaining);
+                }
+            }
+        }
+    };
+
+    while (true) {
+        $readable = array_values(array_filter(
+            [$pipes[1], $pipes[2]],
+            static fn ($pipe): bool => is_resource($pipe) && ! feof($pipe),
+        ));
+        if ($readable !== []) {
+            $writable = null;
+            $except = null;
+            $selected = @stream_select($readable, $writable, $except, 0, 100_000);
+            if ($selected === false) {
+                proc_terminate($process);
+                $timedOut = false;
+                $output = substr($output.' unable to drain process output', 0, $outputLimit);
+                break;
+            }
+            if ($selected > 0) {
+                $drain($readable);
+            }
+        } else {
+            usleep(10_000);
+        }
+
+        $status = proc_get_status($process);
+        if (! $status['running']) {
+            if (is_int($status['exitcode']) && $status['exitcode'] >= 0) {
+                $exitCode = $status['exitcode'];
+            }
+            $drain([$pipes[1], $pipes[2]]);
+            break;
+        }
+
+        if (microtime(true) - $startedAt >= $timeout) {
+            $timedOut = true;
+            proc_terminate($process);
+            $terminationDeadline = microtime(true) + 0.5;
+            do {
+                $drain([$pipes[1], $pipes[2]]);
+                usleep(10_000);
+                $status = proc_get_status($process);
+            } while ($status['running'] && microtime(true) < $terminationDeadline);
+            if ($status['running']) {
+                proc_terminate($process, 9);
+            }
+            $drain([$pipes[1], $pipes[2]]);
+            break;
+        }
+    }
+
+    foreach ([$pipes[1], $pipes[2]] as $pipe) {
+        if (is_resource($pipe)) {
+            fclose($pipe);
+        }
+    }
+    $closedExitCode = proc_close($process);
+    if ($exitCode === null && is_int($closedExitCode) && $closedExitCode >= 0) {
+        $exitCode = $closedExitCode;
+    }
+
+    return ['exit_code' => $exitCode, 'output' => $output, 'timed_out' => $timedOut, 'error' => null];
+};
 
 if (! is_dir($showcase)) {
     $evidenceIssue("Missing showcase root: {$showcase}");
@@ -665,6 +774,7 @@ if (! is_dir($showcase)) {
             "->id('transient-feedback-capture')",
             "->action('Undo', 'undo-save')",
             '->hold()',
+            "return 'Firstlight Transient Feedback';",
             "view('native.captures.transient-feedback')",
         ] as $marker) {
             if (! str_contains($captureComponent, $marker)) {
@@ -674,19 +784,93 @@ if (! is_dir($showcase)) {
         }
     }
 
-    if (! $development && $showcaseArtifactsComplete && $showcaseRepository !== null) {
-        $focusedTest = new Process(['php', 'artisan', 'test', 'tests/Feature/TransientFeedbackCaptureTest.php'], $showcase);
-        $focusedTest->setTimeout(120);
-        try {
-            $focusedTest->run();
-            if (! $focusedTest->isSuccessful()) {
-                $testOutput = trim($focusedTest->getOutput()."\n".$focusedTest->getErrorOutput());
-                $testOutput = preg_replace('/\s+/', ' ', $testOutput) ?? '';
-                $testOutput = substr($testOutput, 0, 4000);
-                $evidenceIssue("Focused showcase test failed with exit code {$focusedTest->getExitCode()}: {$testOutput}");
+    $captureTestExists = is_file($showcase.'/tests/Feature/TransientFeedbackCaptureTest.php');
+    $captureTest = $captureTestExists
+        ? (string) file_get_contents($showcase.'/tests/Feature/TransientFeedbackCaptureTest.php')
+        : '';
+    if ($captureTestExists) {
+        $tokens = token_get_all($captureTest);
+        $testCode = '';
+        foreach ($tokens as $token) {
+            if (is_array($token) && in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
             }
-        } catch (Throwable $exception) {
-            $evidenceIssue('Unable to execute focused showcase test safely: '.$exception->getMessage());
+            $testCode .= is_array($token) ? $token[1] : $token;
+        }
+        $testCode = preg_replace('/^<\?php/', '', $testCode) ?? $testCode;
+
+        $nativeAliases = [];
+        if (preg_match_all('/use([^;]+);/i', $testCode, $nativeImports) !== false) {
+            foreach ($nativeImports[1] as $nativeImport) {
+                $nativeImport = ltrim($nativeImport, '\\');
+                $nativeClass = 'Native\\Mobile\\Testing\\Native';
+                if ($nativeImport === $nativeClass) {
+                    $nativeAliases[] = 'Native';
+                } elseif (str_starts_with($nativeImport, $nativeClass.'as')) {
+                    $alias = substr($nativeImport, strlen($nativeClass.'as'));
+                    if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $alias) === 1) {
+                        $nativeAliases[] = $alias;
+                    }
+                }
+            }
+        }
+        $testNames = str_replace('\\', '/', $testCode);
+        $nativeReferences = [preg_quote('Native/Mobile/Testing/Native', '/'), ...array_map(
+            static fn (string $alias): string => preg_quote($alias, '/'),
+            $nativeAliases,
+        )];
+        $nativeReferencePattern = '\/?(?:'.implode('|', array_unique($nativeReferences)).')';
+        $hasNativeVisit = preg_match('/'.$nativeReferencePattern.'::visit\(/i', $testNames) === 1;
+        $hasExactVisit = preg_match(
+            '/'.$nativeReferencePattern.'::visit\([\'"]\/captures\/transient-feedback[\'"](?:,|\))/i',
+            $testNames,
+        ) === 1;
+        if (! $hasExactVisit) {
+            $evidenceIssue($hasNativeVisit
+                ? 'Focused showcase capture test visits the wrong route; expected /captures/transient-feedback'
+                : "Focused showcase capture test must call Native::visit('/captures/transient-feedback')");
+            $showcaseArtifactsComplete = false;
+        }
+
+        $screenMarkers = ['Firstlight Transient Feedback', '->tree()', "['title']", "['back']", '->toBeFalse()'];
+        if (array_any($screenMarkers, static fn (string $marker): bool => ! str_contains($testCode, $marker))) {
+            $evidenceIssue('Focused showcase capture test must assert the capture screen identity');
+            $showcaseArtifactsComplete = false;
+        }
+
+        $feedbackMarkers = [
+            'FeedbackStore::class',
+            '->all()',
+            '->toHaveCount(1)',
+            'Appointment saved',
+            'transient-feedback-capture',
+            'FeedbackTone::Success',
+            'Undo',
+            'undo-save',
+            '->hold',
+            '->toBeTrue()',
+        ];
+        if (array_any($feedbackMarkers, static fn (string $marker): bool => ! str_contains($testCode, $marker))) {
+            $evidenceIssue('Focused showcase capture test must assert the deterministic feedback record');
+            $showcaseArtifactsComplete = false;
+        }
+    }
+
+    if (! $development && $showcaseArtifactsComplete && $showcaseRepository !== null) {
+        $focusedTest = $runBounded(
+            ['php', 'artisan', 'test', 'tests/Feature/TransientFeedbackCaptureTest.php'],
+            $showcase,
+            $focusedTestTimeoutSeconds,
+            $focusedTestOutputLimit,
+        );
+        $testOutput = trim(preg_replace('/\s+/', ' ', $focusedTest['output']) ?? '');
+        if ($focusedTest['error'] !== null) {
+            $evidenceIssue('Unable to execute focused showcase test safely: '.$focusedTest['error']);
+        } elseif ($focusedTest['timed_out']) {
+            $evidenceIssue("Focused showcase test timed out after 5 seconds: {$testOutput}");
+        } elseif ($focusedTest['exit_code'] !== 0) {
+            $exitCode = $focusedTest['exit_code'] ?? 'unknown';
+            $evidenceIssue("Focused showcase test failed with exit code {$exitCode}: {$testOutput}");
         }
     }
 }
@@ -696,133 +880,273 @@ $pngError = static function (string $path): ?string {
         return 'file is missing';
     }
 
-    $contents = file_get_contents($path);
-    if (! is_string($contents) || substr($contents, 0, 8) !== "\x89PNG\r\n\x1a\n") {
-        return 'invalid PNG signature';
+    $fileCeiling = 32 * 1024 * 1024;
+    $chunkCeiling = 16 * 1024 * 1024;
+    $decodedCeiling = 64 * 1024 * 1024;
+    $fileSize = filesize($path);
+    if (! is_int($fileSize)) {
+        return 'unable to inspect file size';
+    }
+    if ($fileSize > $fileCeiling) {
+        return 'file exceeds 32 MiB ceiling';
     }
 
-    $size = strlen($contents);
-    $offset = 8;
-    $chunkIndex = 0;
-    $ihdr = null;
-    $idat = '';
-    $seenIdat = false;
-    $idatEnded = false;
-    $seenIend = false;
-
-    while ($offset < $size) {
-        if ($size - $offset < 12) {
-            return 'truncated PNG chunk';
+    $file = fopen($path, 'rb');
+    if (! is_resource($file)) {
+        return 'unable to open file';
+    }
+    $readExact = static function ($stream, int $length): ?string {
+        $data = '';
+        while (strlen($data) < $length) {
+            $chunk = fread($stream, $length - strlen($data));
+            if (! is_string($chunk) || $chunk === '') {
+                return null;
+            }
+            $data .= $chunk;
         }
 
-        $length = unpack('Nlength', substr($contents, $offset, 4))['length'];
-        if ($length > 64 * 1024 * 1024 || $length > $size - $offset - 12) {
-            return 'PNG chunk exceeds file bounds';
+        return $data;
+    };
+
+    try {
+        if ($readExact($file, 8) !== "\x89PNG\r\n\x1a\n") {
+            return 'invalid PNG signature';
         }
 
-        $type = substr($contents, $offset + 4, 4);
-        if (preg_match('/^[A-Za-z]{4}$/', $type) !== 1) {
-            return 'invalid PNG chunk type';
-        }
-        $data = substr($contents, $offset + 8, $length);
-        $crc = substr($contents, $offset + 8 + $length, 4);
-        if (! hash_equals(pack('N', crc32($type.$data)), $crc)) {
-            return "CRC mismatch for {$type}";
-        }
+        $chunkIndex = 0;
+        $ihdr = null;
+        $seenIdat = false;
+        $idatEnded = false;
+        $seenIend = false;
+        $idatBytes = 0;
+        $expectedDecodedBytes = null;
+        $decodedBytes = 0;
+        $inflate = null;
+        $rowGroups = [];
+        $rowGroupIndex = 0;
+        $rowsRemaining = 0;
+        $rowOffset = 0;
 
-        $offset += 12 + $length;
-        $chunkIndex++;
+        $consumeDecoded = static function (string $decoded) use (
+            &$decodedBytes,
+            &$expectedDecodedBytes,
+            &$rowGroups,
+            &$rowGroupIndex,
+            &$rowsRemaining,
+            &$rowOffset,
+        ): ?string {
+            $length = strlen($decoded);
+            $decodedBytes += $length;
+            if ($expectedDecodedBytes === null || $decodedBytes > $expectedDecodedBytes) {
+                return 'decoded PNG data exceeds expected scanline bytes';
+            }
 
-        if ($chunkIndex === 1 && $type !== 'IHDR') {
-            return 'IHDR is not the first chunk';
-        }
-        if ($type === 'IHDR') {
-            if ($ihdr !== null || $length !== 13) {
+            $cursor = 0;
+            while ($cursor < $length) {
+                while ($rowsRemaining === 0 && isset($rowGroups[$rowGroupIndex])) {
+                    $rowsRemaining = $rowGroups[$rowGroupIndex]['rows'];
+                    $rowOffset = 0;
+                    if ($rowsRemaining === 0) {
+                        $rowGroupIndex++;
+                    }
+                }
+                if (! isset($rowGroups[$rowGroupIndex])) {
+                    return 'decoded PNG data exceeds expected scanline bytes';
+                }
+
+                $stride = $rowGroups[$rowGroupIndex]['stride'];
+                if ($rowOffset === 0 && ord($decoded[$cursor]) > 4) {
+                    return 'invalid PNG scanline filter';
+                }
+                $take = min($length - $cursor, $stride - $rowOffset);
+                $cursor += $take;
+                $rowOffset += $take;
+                if ($rowOffset === $stride) {
+                    $rowsRemaining--;
+                    $rowOffset = 0;
+                    if ($rowsRemaining === 0) {
+                        $rowGroupIndex++;
+                    }
+                }
+            }
+
+            return null;
+        };
+
+        while (ftell($file) < $fileSize) {
+            $header = $readExact($file, 8);
+            if ($header === null) {
+                return 'truncated PNG chunk';
+            }
+            $length = unpack('Nlength', substr($header, 0, 4))['length'];
+            $type = substr($header, 4, 4);
+            if ($length > $chunkCeiling) {
+                return 'PNG chunk exceeds 16 MiB ceiling';
+            }
+            $position = ftell($file);
+            if ($length > $fileSize - $position - 4) {
+                return 'PNG chunk exceeds file bounds';
+            }
+            if (preg_match('/^[A-Za-z]{4}$/', $type) !== 1) {
+                return 'invalid PNG chunk type';
+            }
+
+            $chunkIndex++;
+            if ($chunkIndex === 1 && $type !== 'IHDR') {
+                return 'IHDR is not the first chunk';
+            }
+            if ($type === 'IHDR' && ($ihdr !== null || $length !== 13)) {
                 return 'IHDR must occur once with length 13';
             }
-            $ihdr = unpack(
-                'Nwidth/Nheight/CbitDepth/CcolorType/Ccompression/Cfilter/Cinterlace',
-                $data,
-            );
-        } elseif ($type === 'IDAT') {
-            if ($ihdr === null || $idatEnded) {
-                return 'IDAT chunks must be consecutive after IHDR';
-            }
-            $seenIdat = true;
-            $idat .= $data;
-            if (strlen($idat) > 64 * 1024 * 1024) {
-                return 'combined IDAT payload is too large';
-            }
-        } elseif ($type === 'IEND') {
-            if ($length !== 0) {
+            if ($type === 'IDAT') {
+                if ($ihdr === null || $idatEnded) {
+                    return 'IDAT chunks must be consecutive after IHDR';
+                }
+                if (! $seenIdat) {
+                    $width = $ihdr['width'];
+                    $height = $ihdr['height'];
+                    if ($width < 320 || $height < 568 || $width > 4096 || $height > 8192
+                        || $width >= $height || $width * $height > 20_000_000) {
+                        return 'dimensions exceed meaningful portrait phone screenshot ceiling';
+                    }
+                    if ($ihdr['compression'] !== 0 || $ihdr['filter'] !== 0
+                        || ! in_array($ihdr['interlace'], [0, 1], true)) {
+                        return 'unsupported PNG compression filter or interlace method';
+                    }
+
+                    $channels = [0 => 1, 2 => 3, 3 => 1, 4 => 2, 6 => 4][$ihdr['colorType']] ?? null;
+                    $validDepths = [
+                        0 => [1, 2, 4, 8, 16],
+                        2 => [8, 16],
+                        3 => [1, 2, 4, 8],
+                        4 => [8, 16],
+                        6 => [8, 16],
+                    ];
+                    if ($channels === null || ! in_array($ihdr['bitDepth'], $validDepths[$ihdr['colorType']], true)) {
+                        return 'invalid PNG color type and bit depth';
+                    }
+
+                    $bitsPerPixel = $channels * $ihdr['bitDepth'];
+                    $passes = $ihdr['interlace'] === 0
+                        ? [[0, 0, 1, 1]]
+                        : [
+                            [0, 0, 8, 8],
+                            [4, 0, 8, 8],
+                            [0, 4, 4, 8],
+                            [2, 0, 4, 4],
+                            [0, 2, 2, 4],
+                            [1, 0, 2, 2],
+                            [0, 1, 1, 2],
+                        ];
+                    foreach ($passes as [$startX, $startY, $stepX, $stepY]) {
+                        $passWidth = $width <= $startX ? 0 : intdiv($width - $startX + $stepX - 1, $stepX);
+                        $passHeight = $height <= $startY ? 0 : intdiv($height - $startY + $stepY - 1, $stepY);
+                        if ($passWidth === 0 || $passHeight === 0) {
+                            continue;
+                        }
+                        $stride = intdiv($passWidth * $bitsPerPixel + 7, 8) + 1;
+                        $rowGroups[] = ['stride' => $stride, 'rows' => $passHeight];
+                        $expectedDecodedBytes = ($expectedDecodedBytes ?? 0) + ($stride * $passHeight);
+                    }
+                    if ($expectedDecodedBytes === null || $expectedDecodedBytes > $decodedCeiling) {
+                        return 'expected decoded PNG data exceeds 64 MiB ceiling';
+                    }
+                    if (! function_exists('inflate_init') || ! function_exists('inflate_add')) {
+                        return 'PHP incremental zlib support is unavailable';
+                    }
+                    $inflate = @inflate_init(ZLIB_ENCODING_DEFLATE);
+                    if ($inflate === false) {
+                        return 'unable to initialize PNG zlib decoder';
+                    }
+                    $rowsRemaining = $rowGroups[0]['rows'] ?? 0;
+                }
+                $seenIdat = true;
+            } elseif ($type === 'IEND' && $length !== 0) {
                 return 'IEND must be empty';
-            }
-            $seenIend = true;
-            if ($offset !== $size) {
-                return 'trailing bytes after IEND';
-            }
-            break;
-        } else {
-            if ($seenIdat) {
-                $idatEnded = true;
-            }
-            if (ctype_upper($type[0]) && ! in_array($type, ['PLTE'], true)) {
+            } elseif (! in_array($type, ['IHDR', 'IEND'], true) && ctype_upper($type[0]) && $type !== 'PLTE') {
                 return "unsupported critical PNG chunk: {$type}";
             }
+
+            $crcContext = hash_init('crc32b');
+            hash_update($crcContext, $type);
+            $remaining = $length;
+            $ihdrData = '';
+            while ($remaining > 0) {
+                $data = $readExact($file, min(256, $remaining));
+                if ($data === null) {
+                    return 'truncated PNG chunk';
+                }
+                $remaining -= strlen($data);
+                hash_update($crcContext, $data);
+                if ($type === 'IHDR') {
+                    $ihdrData .= $data;
+                } elseif ($type === 'IDAT') {
+                    $idatBytes += strlen($data);
+                    if ($idatBytes > $fileCeiling) {
+                        return 'combined IDAT payload exceeds 32 MiB ceiling';
+                    }
+                    $decoded = @inflate_add($inflate, $data, ZLIB_SYNC_FLUSH);
+                    if (! is_string($decoded)) {
+                        return 'IDAT zlib decode failed';
+                    }
+                    if (($reason = $consumeDecoded($decoded)) !== null) {
+                        return $reason;
+                    }
+                }
+            }
+
+            $actualCrc = $readExact($file, 4);
+            if ($actualCrc === null) {
+                return 'truncated PNG chunk CRC';
+            }
+            if (! hash_equals(hash_final($crcContext, true), $actualCrc)) {
+                return "CRC mismatch for {$type}";
+            }
+
+            if ($type === 'IHDR') {
+                $ihdr = unpack(
+                    'Nwidth/Nheight/CbitDepth/CcolorType/Ccompression/Cfilter/Cinterlace',
+                    $ihdrData,
+                );
+            } elseif ($type === 'IEND') {
+                if (! $seenIdat || $idatBytes === 0) {
+                    return 'missing non-empty IDAT';
+                }
+                $decoded = @inflate_add($inflate, '', ZLIB_FINISH);
+                if (! is_string($decoded)) {
+                    return 'IDAT zlib decode failed';
+                }
+                if (($reason = $consumeDecoded($decoded)) !== null) {
+                    return $reason;
+                }
+                if ($decodedBytes !== $expectedDecodedBytes || $idatBytes < 128
+                    || $rowGroupIndex !== count($rowGroups) || $rowOffset !== 0) {
+                    return 'decoded scanline data is truncated or trivial';
+                }
+                $seenIend = true;
+                if (ftell($file) !== $fileSize) {
+                    return 'trailing bytes after IEND';
+                }
+                break;
+            } elseif ($seenIdat && $type !== 'IDAT') {
+                $idatEnded = true;
+            }
         }
-    }
 
-    if ($ihdr === null) {
-        return 'missing IHDR';
-    }
-    if (! $seenIdat || $idat === '') {
-        return 'missing non-empty IDAT';
-    }
-    if (! $seenIend) {
-        return 'missing IEND at EOF';
-    }
-
-    $width = $ihdr['width'];
-    $height = $ihdr['height'];
-    if ($width < 320 || $height < 568 || $width > 4096 || $height > 8192
-        || $width >= $height || $width * $height > 20_000_000) {
-        return 'dimensions are not a meaningful phone viewport';
-    }
-    if ($ihdr['compression'] !== 0 || $ihdr['filter'] !== 0 || $ihdr['interlace'] !== 0) {
-        return 'unsupported PNG compression filter or interlace method';
-    }
-
-    $channels = [0 => 1, 2 => 3, 3 => 1, 4 => 2, 6 => 4][$ihdr['colorType']] ?? null;
-    $validDepths = [
-        0 => [1, 2, 4, 8, 16],
-        2 => [8, 16],
-        3 => [1, 2, 4, 8],
-        4 => [8, 16],
-        6 => [8, 16],
-    ];
-    if ($channels === null || ! in_array($ihdr['bitDepth'], $validDepths[$ihdr['colorType']], true)) {
-        return 'invalid PNG color type and bit depth';
-    }
-
-    $scanlineBytes = (int) ceil($width * $channels * $ihdr['bitDepth'] / 8);
-    $expectedDecodedBytes = ($scanlineBytes + 1) * $height;
-    if (! function_exists('gzuncompress')) {
-        return 'PHP zlib support is unavailable';
-    }
-    $decoded = @gzuncompress($idat, $expectedDecodedBytes + 1);
-    if (! is_string($decoded)) {
-        return 'IDAT zlib decode failed';
-    }
-    if (strlen($decoded) !== $expectedDecodedBytes || strlen($idat) < 128) {
-        return 'decoded scanline data is truncated or trivial';
-    }
-    for ($row = 0; $row < $height; $row++) {
-        if (ord($decoded[$row * ($scanlineBytes + 1)]) > 4) {
-            return 'invalid PNG scanline filter';
+        if ($ihdr === null) {
+            return 'missing IHDR';
         }
-    }
+        if (! $seenIdat || $idatBytes === 0) {
+            return 'missing non-empty IDAT';
+        }
+        if (! $seenIend) {
+            return 'missing IEND at EOF';
+        }
 
-    return null;
+        return null;
+    } finally {
+        fclose($file);
+    }
 };
 
 foreach ($expectedScreenshotEntry['outputs'] as $path) {
@@ -903,17 +1227,37 @@ $substantive = static function (string $value, int $minimum): bool {
     return strlen($value) >= $minimum
         && preg_match('/^(?:x|n\/?a|none|tbd|unknown|placeholder)$/i', $value) !== 1;
 };
+$placeholderToken = static function (string $value): ?string {
+    $pattern = '/(?<![A-Z0-9_])(?:PLACEHOLDER|TBD|TBC|UNKNOWN|OPEN|PENDING|DEFERRED|NOT[\s_-]+(?:RUN|REVIEWED|TESTED)|SKIPPED|SKIP|TODO|FIXME|SAMPLE|FAKE|DUMMY|BLOCKED|FAILED|FAIL|DRAFT|UNREVIEWED|EXAMPLE|NONE|N\/?A)(?![A-Z0-9_])/i';
+    if (preg_match($pattern, $value, $match) !== 1) {
+        return null;
+    }
+
+    return strtoupper((string) preg_replace('/[\s_-]+/', ' ', $match[0]));
+};
+$checkPlaceholder = static function (string $field, string $value, string $kind = 'field') use ($placeholderToken, $evidenceIssue): void {
+    if (($token = $placeholderToken($value)) !== null) {
+        $evidenceIssue("Release review {$kind} contains placeholder token: {$field} ({$token})");
+    }
+};
 
 $componentRow = $row('Component', 'identity');
 if ($componentRow !== null && ($componentRow[1] ?? null) !== 'Transient Feedback') {
     $evidenceIssue('Release review component identity must be Transient Feedback');
 }
+if ($componentRow !== null) {
+    $checkPlaceholder('Component', $value($componentRow[1] ?? null));
+}
 $modeRow = $row('Capture mode', 'identity');
 if ($modeRow !== null && ($modeRow[1] ?? null) !== 'release') {
     $evidenceIssue('Release review capture mode must be release');
 }
+if ($modeRow !== null) {
+    $checkPlaceholder('Capture mode', $value($modeRow[1] ?? null));
+}
 $dateRow = $row('Review date', 'identity');
 $reviewDate = $value($dateRow[1] ?? null);
+$checkPlaceholder('Review date', $reviewDate);
 $parsedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $reviewDate);
 if ($dateRow !== null && ($parsedDate === false || $parsedDate->format('Y-m-d') !== $reviewDate)) {
     $evidenceIssue('Release review date must use YYYY-MM-DD');
@@ -923,6 +1267,7 @@ foreach (['Reviewer' => 8, 'iOS release target' => 24, 'Android release target' 
     $identityRow = $row($field, 'identity');
     if ($identityRow !== null) {
         $identityValues[$field] = $value($identityRow[1] ?? null);
+        $checkPlaceholder($field, $identityValues[$field]);
         if (! $substantive($identityValues[$field], $minimum)) {
             $evidenceIssue("Release review field must be substantive: {$field}");
         }
@@ -931,11 +1276,13 @@ foreach (['Reviewer' => 8, 'iOS release target' => 24, 'Android release target' 
 
 $packageRevisionRow = $row('Reviewed package revision', 'identity');
 $reviewedPackageRevision = $value($packageRevisionRow[1] ?? null);
+$checkPlaceholder('Reviewed package revision', $reviewedPackageRevision);
 if ($packageRevisionRow !== null && preg_match('/^[0-9a-f]{40}$/', $reviewedPackageRevision) !== 1) {
     $evidenceIssue('Reviewed package revision must be a 40-character Git commit');
 }
 $showcaseRevisionRow = $row('Showcase revision', 'identity');
 $reviewedShowcaseRevision = $value($showcaseRevisionRow[1] ?? null);
+$checkPlaceholder('Showcase revision', $reviewedShowcaseRevision);
 if ($showcaseRevisionRow !== null && preg_match('/^[0-9a-f]{40}$/', $reviewedShowcaseRevision) !== 1) {
     $evidenceIssue('Showcase revision must be a 40-character Git commit');
 }
@@ -998,6 +1345,7 @@ foreach ($expectedScreenshotEntry['outputs'] as $variant => $path) {
     if (! $substantive($value($screenshotRow[3] ?? null), 24)) {
         $evidenceIssue("Release review screenshot detail must be substantive: {$variant}");
     }
+    $checkPlaceholder($variant, $value($screenshotRow[3] ?? null), 'screenshot detail');
 }
 
 $requiredEvidence = [
@@ -1027,11 +1375,13 @@ foreach ($requiredEvidence as $evidence) {
     if (($evidenceRow[1] ?? null) !== $requiredResult) {
         $evidenceIssue("Release review evidence row must be {$requiredResult}: {$evidence}");
     }
-    if (! $substantive($value($evidenceRow[2] ?? null), 24)) {
+    $evidenceDetail = $value($evidenceRow[2] ?? null);
+    if (! $substantive($evidenceDetail, 24)) {
         $evidenceIssue("Release review evidence detail must be substantive: {$evidence}");
     }
+    $checkPlaceholder($evidence, $evidenceDetail, 'evidence detail');
     if ($evidence === 'Visual approval') {
-        $approvalDetail = $value($evidenceRow[2] ?? null);
+        $approvalDetail = $evidenceDetail;
         if (($identityValues['Reviewer'] ?? '') !== '' && ! str_contains($approvalDetail, $identityValues['Reviewer'])) {
             $evidenceIssue('Visual approval detail must name the recorded reviewer');
         }
@@ -1044,7 +1394,7 @@ foreach ($requiredEvidence as $evidence) {
 if (preg_match('/^\s*-\s*\[\s\]\s/m', $review) === 1) {
     $evidenceIssue("Release review has open checklist rows: {$reviewPath}");
 }
-foreach (['OPEN', 'PENDING', 'DEFERRED', 'NOT RUN', 'SKIP', 'SKIPPED', 'UNKNOWN', 'TODO', 'BLOCKED', 'FAIL', 'FAILED'] as $status) {
+foreach (['PLACEHOLDER', 'TBD', 'TBC', 'UNKNOWN', 'OPEN', 'PENDING', 'DEFERRED', 'NOT RUN', 'SKIP', 'SKIPPED', 'TODO', 'FIXME', 'SAMPLE', 'FAKE', 'DUMMY', 'BLOCKED', 'FAIL', 'FAILED'] as $status) {
     $pattern = '/\b'.str_replace('\\ ', '\\s+', preg_quote($status, '/')).'\b/i';
     if (preg_match($pattern, $review) === 1) {
         $evidenceIssue("Release review contains prohibited unresolved status: {$status}");
