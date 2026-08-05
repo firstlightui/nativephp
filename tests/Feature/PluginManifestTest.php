@@ -23,6 +23,8 @@ it('registers the Feedback Center root host without feature bridge functions', f
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest['ios']['init_function'])->toBe('registerFirstlightUI')
+        ->and($manifest['android']['init_function'])->toBe('dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI')
+        ->and($manifest['android'])->not->toHaveKey('bridge_functions')
         ->and($manifest['ios'])->not->toHaveKey('bridge_functions');
 });
 

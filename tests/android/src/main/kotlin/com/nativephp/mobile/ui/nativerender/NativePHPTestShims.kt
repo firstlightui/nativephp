@@ -14,6 +14,7 @@ data class NativeUITree(val root: NativeUINode)
 
 data class NativeUINode(
     val id: Int,
+    val type: String = "",
     val props: GenericProps,
     val onPress: Int = 0,
     val children: List<NativeUINode> = emptyList(),

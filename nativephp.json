@@ -187,6 +187,7 @@
     ],
     "android": {
         "min_version": 29,
+        "init_function": "dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI",
         "dependencies": {
             "implementation": []
         }
