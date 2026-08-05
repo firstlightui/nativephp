@@ -759,6 +759,85 @@ it('release gate resolves aliases independently in bracketed and repeated namesp
     'same alias maps differently in bracketed global A and B scopes' => ['bracketed-reused-alias', 35],
 ]);
 
+it('release gate executes the focused test for supported class import forms', function (string $case) {
+    $fixture = transientFeedbackGateFixture();
+    writeTransientFeedbackShowcaseContract(
+        $fixture,
+        artisanBody: "#!/usr/bin/env php\n<?php file_put_contents(__DIR__.'/focused-test-executed', 'yes'); fwrite(STDERR, 'import-form-focused-test'); exit(41);\n",
+    );
+    $testPath = $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php';
+    $test = (string) file_get_contents($testPath);
+    $test = preg_replace('/^<\?php\s*/', '', $test) ?? $test;
+    $test = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', '', $test);
+
+    if ($case === 'comma') {
+        $test = "<?php\n\nnamespace NamespaceB;\nuse Tests\\UnusedNative, Native\\Mobile\\Testing\\Native as NativeScreen;\n{$test}";
+    } elseif ($case === 'group') {
+        $test = "<?php\n\nnamespace NamespaceB;\nuse Native\\Mobile\\Testing\\{Native as NativeScreen};\n{$test}";
+    } elseif ($case === 'comma-namespace-local') {
+        $test = "<?php\n\nnamespace NamespaceA;\nuse Tests\\UnusedNative, Tests\\FakeNativeScreen as NativeScreen;\n\nnamespace NamespaceB;\nuse Tests\\UnusedNative, Native\\Mobile\\Testing\\Native as NativeScreen;\n{$test}";
+    } elseif ($case === 'group-namespace-local') {
+        $test = "<?php\n\nnamespace NamespaceA;\nuse Tests\\{UnusedNative, FakeNativeScreen as NativeScreen};\n\nnamespace NamespaceB;\nuse Native\\Mobile\\Testing\\{Native as NativeScreen};\n{$test}";
+    } else {
+        $nonClassUse = $case === 'function-plus-class'
+            ? 'use function Tests\\native_screen as NativeScreen;'
+            : 'use const Tests\\NATIVE_SCREEN as NativeScreen;';
+        $test = "<?php\n\nnamespace NamespaceB;\n{$nonClassUse}\nuse Native\\Mobile\\Testing\\Native as NativeScreen;\n{$test}";
+    }
+    file_put_contents($testPath, $test);
+    initializeTransientFeedbackGitRepository($fixture['showcase']);
+    initializeTransientFeedbackGitRepository($fixture['package']);
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain(
+                'Focused showcase test failed with exit code 41: import-form-focused-test',
+            )
+            ->and(file_get_contents($fixture['showcase'].'/focused-test-executed'))->toBe('yes');
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'comma-separated class alias' => 'comma',
+    'group class alias' => 'group',
+    'comma alias reused in separate namespaces' => 'comma-namespace-local',
+    'group alias reused in separate namespaces' => 'group-namespace-local',
+    'function import beside a valid class import' => 'function-plus-class',
+    'const import beside a valid class import' => 'const-plus-class',
+]);
+
+it('release gate rejects spoof and non-class import forms before executing the focused test', function (string $classUse) {
+    $fixture = transientFeedbackGateFixture();
+    writeTransientFeedbackShowcaseContract(
+        $fixture,
+        artisanBody: "#!/usr/bin/env php\n<?php file_put_contents(__DIR__.'/focused-test-executed', 'yes'); exit(0);\n",
+    );
+    $testPath = $fixture['showcase'].'/tests/Feature/TransientFeedbackCaptureTest.php';
+    $test = (string) file_get_contents($testPath);
+    $test = str_replace('use Native\\Mobile\\Testing\\Native as NativeScreen;', $classUse, $test);
+    $test = str_replace("<?php\n", "<?php\n\nnamespace NamespaceB;\n", $test);
+    file_put_contents($testPath, $test);
+    initializeTransientFeedbackGitRepository($fixture['showcase']);
+    initializeTransientFeedbackGitRepository($fixture['package']);
+
+    try {
+        $process = runTransientFeedbackGate($fixture, ['--showcase='.$fixture['showcase']]);
+
+        expect($process->getExitCode())->toBe(1)
+            ->and($process->getErrorOutput())->toContain('Focused showcase capture test must call Native::visit')
+            ->and(is_file($fixture['showcase'].'/focused-test-executed'))->toBeFalse();
+    } finally {
+        removeTransientFeedbackGateFixture($fixture);
+    }
+})->with([
+    'comma-separated spoof alias' => 'use Native\\Mobile\\Testing\\Native as RealNative, Tests\\FakeNativeScreen as NativeScreen;',
+    'group spoof alias' => 'use Tests\\{FakeNativeScreen as NativeScreen};',
+    'function import only' => 'use function Native\\Mobile\\Testing\\Native as NativeScreen;',
+    'const import only' => 'use const Native\\Mobile\\Testing\\Native as NativeScreen;',
+]);
+
 it('release gate accepts screen assertions chained directly to an assigned Native visit result', function () {
     $fixture = transientFeedbackGateFixture();
     writeTransientFeedbackShowcaseContract($fixture, 30);
