@@ -19,6 +19,13 @@ it('declares the Firstlight package identity', function () {
         ->and($manifest['ios']['min_version'])->toBe('18.0');
 });
 
+it('registers the Feedback Center root host without feature bridge functions', function () {
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($manifest['ios']['init_function'])->toBe('registerFirstlightUI')
+        ->and($manifest['ios'])->not->toHaveKey('bridge_functions');
+});
+
 it('registers the production component catalogue with canonical renderers', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 

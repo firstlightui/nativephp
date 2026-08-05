@@ -193,6 +193,7 @@
     },
     "ios": {
         "min_version": "18.0",
+        "init_function": "registerFirstlightUI",
         "dependencies": {
             "swift_packages": [],
             "pods": []
