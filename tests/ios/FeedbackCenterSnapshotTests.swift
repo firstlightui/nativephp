@@ -55,6 +55,38 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
         )
     }
 
+    func testReusableButtonLabelConstructsActionAndDismissHitTargets() throws {
+        let action = try XCTUnwrap(FeedbackCenterRenderingPolicy(configuration: configuration(
+            message: "Appointment saved",
+            actionLabel: "Undo",
+            actionCallback: 41
+        )).action)
+        let dismiss = try XCTUnwrap(FeedbackCenterRenderingPolicy(configuration: configuration(
+            message: "Connection lost",
+            hold: true,
+            timeoutCallback: nil,
+            manualCallback: 51
+        )).dismiss)
+
+        let actionLabel = FeedbackCenterButtonLabel(renderingPolicy: action)
+        let dismissLabel = FeedbackCenterButtonLabel(renderingPolicy: dismiss)
+
+        _ = actionLabel
+        _ = dismissLabel
+    }
+
+    func testReusableButtonLabelsLayoutToAtLeast44Points() throws {
+        for policy in try buttonLabelPolicies() {
+            let host = UIHostingController(rootView: FeedbackCenterButtonLabel(
+                renderingPolicy: policy
+            ).fixedSize())
+            let size = host.sizeThatFits(in: CGSize(width: 1_000, height: 1_000))
+
+            XCTAssertGreaterThanOrEqual(size.width, 44)
+            XCTAssertGreaterThanOrEqual(size.height, 44)
+        }
+    }
+
     func testOneTimeAnnouncementAndReducedMotionPoliciesAreDeterministic() {
         var announcements = FeedbackCenterAnnouncementState()
         let first = configuration(message: "Saved", feedbackID: "one")
@@ -125,6 +157,32 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
         )
     }
 
+    func testReusableButtonLabelHitTargetSnapshot() throws {
+        let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
+            "FIRSTLIGHT_RECORD_SNAPSHOTS"
+        ] == "1" ? .all : .never
+        let policies = try buttonLabelPolicies()
+        let labels = HStack(spacing: 8) {
+            ForEach(Array(policies.enumerated()), id: \.offset) { _, policy in
+                Button {} label: {
+                    FeedbackCenterButtonLabel(renderingPolicy: policy)
+                        .background(Color.blue.opacity(0.16))
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(12)
+        .background(Color(uiColor: .systemBackground))
+        let host = UIHostingController(rootView: labels)
+
+        assertSnapshot(
+            of: host,
+            as: .image(size: CGSize(width: 220, height: 84)),
+            named: "reusable-button-label-hit-targets",
+            record: record
+        )
+    }
+
     private func makeControl(
         configuration: FeedbackCenterItemConfiguration
     ) -> FirstlightFeedbackCenterControl {
@@ -150,6 +208,22 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
         host.overrideUserInterfaceStyle = style
         host.traitOverrides.preferredContentSizeCategory = contentSize
         return host
+    }
+
+    private func buttonLabelPolicies() throws -> [FeedbackCenterActionRenderingPolicy] {
+        let action = try XCTUnwrap(FeedbackCenterRenderingPolicy(configuration: configuration(
+            message: "Appointment saved",
+            actionLabel: "Undo",
+            actionCallback: 41
+        )).action)
+        let dismiss = try XCTUnwrap(FeedbackCenterRenderingPolicy(configuration: configuration(
+            message: "Connection lost",
+            hold: true,
+            timeoutCallback: nil,
+            manualCallback: 51
+        )).dismiss)
+
+        return [action, dismiss]
     }
 
     private func configuration(

@@ -109,6 +109,25 @@ struct FeedbackCenterRenderingPolicy: Equatable {
     }
 }
 
+struct FeedbackCenterButtonLabel: View {
+    let renderingPolicy: FeedbackCenterActionRenderingPolicy
+
+    var body: some View {
+        HStack(spacing: renderingPolicy.symbol == nil ? 0 : 5) {
+            if let symbol = renderingPolicy.symbol {
+                Image(systemName: symbol.systemName)
+                    .accessibilityHidden(symbol.accessibilityHidden)
+            }
+            Text(renderingPolicy.visibleLabel)
+        }
+        .frame(
+            minWidth: renderingPolicy.minimumTarget.width,
+            minHeight: renderingPolicy.minimumTarget.height
+        )
+        .contentShape(Rectangle())
+    }
+}
+
 struct FirstlightFeedbackCenterControl: View {
     let configuration: FeedbackCenterItemConfiguration
     let tokens: NativeUITokens
@@ -196,16 +215,14 @@ struct FirstlightFeedbackCenterControl: View {
     private var actions: some View {
         HStack(spacing: 4) {
             if let action = renderingPolicy.action {
-                Button(action.visibleLabel) {
+                Button {
                     onAction()
+                } label: {
+                    FeedbackCenterButtonLabel(renderingPolicy: action)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.regular)
                 .tint(accentColor)
-                .frame(
-                    minWidth: action.minimumTarget.width,
-                    minHeight: action.minimumTarget.height
-                )
                 .accessibilityLabel(Text(action.accessibilityLabel))
                 .accessibilityFocused($focusedControl, equals: .action)
             }
@@ -214,20 +231,10 @@ struct FirstlightFeedbackCenterControl: View {
                 Button {
                     onDismiss()
                 } label: {
-                    HStack(spacing: 5) {
-                        if let symbol = dismiss.symbol {
-                            Image(systemName: symbol.systemName)
-                                .accessibilityHidden(symbol.accessibilityHidden)
-                        }
-                        Text(dismiss.visibleLabel)
-                    }
+                    FeedbackCenterButtonLabel(renderingPolicy: dismiss)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.regular)
-                .frame(
-                    minWidth: dismiss.minimumTarget.width,
-                    minHeight: dismiss.minimumTarget.height
-                )
                 .accessibilityLabel(Text(dismiss.accessibilityLabel))
                 .accessibilityFocused($focusedControl, equals: .dismiss)
             }
