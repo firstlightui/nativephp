@@ -171,41 +171,44 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
 
     $frame = renderFeedbackCenterFrame($store);
     $tree = $frame['tree'];
+    $automaticProps = $tree['children'][0]['props'];
+    $heldProps = $tree['children'][1]['props'];
+    $actionCallback = $automaticProps['on_action'];
+    $timeoutCallback = $automaticProps['on_timeout'];
+    $manualCallback = $heldProps['on_manual'];
 
     expect($tree['type'])->toBe('firstlight.feedback-center')
-        ->and(array_column($tree['children'], 'props', 'type'))->toHaveKeys([
+        ->and(array_column($tree['children'], 'type'))->toBe([
+            'firstlight.feedback-item',
             'firstlight.feedback-item',
         ])
         ->and($tree['children'])->toHaveCount(2)
-        ->and($tree['children'][0]['props'])->toMatchArray([
+        ->and($automaticProps)->toBe([
             'feedback_id' => 'saved',
             'message' => 'Saved',
             'tone' => 'success',
             'hold' => false,
             'action_label' => 'Undo',
+            'on_action' => $actionCallback,
+            'on_timeout' => $timeoutCallback,
         ])
-        ->and($tree['children'][0]['props']['on_action'])->toBeInt()->not->toBe(0)
-        ->and($tree['children'][0]['props']['on_timeout'])->toBeInt()->not->toBe(0)
-        ->and($tree['children'][0]['props'])->not->toHaveKey('on_manual')
-        ->and($tree['children'][1]['props'])->toMatchArray([
+        ->and($actionCallback)->toBeInt()->not->toBe(0)
+        ->and($timeoutCallback)->toBeInt()->not->toBe(0)
+        ->and($heldProps)->toBe([
             'feedback_id' => 'offline',
             'message' => 'Offline',
             'tone' => 'warning',
             'hold' => true,
+            'on_manual' => $manualCallback,
         ])
-        ->and($tree['children'][1]['props']['on_manual'])->toBeInt()->not->toBe(0)
-        ->and($tree['children'][1]['props'])->not->toHaveKeys([
-            'action_label',
-            'on_action',
-            'on_timeout',
-        ])
+        ->and($manualCallback)->toBeInt()->not->toBe(0)
         ->and($tree)->not->toHaveKeys(['layout', 'style'])
         ->and($tree['children'][0])->not->toHaveKeys(['layout', 'style']);
 
     foreach ([
-        $tree['children'][0]['props']['on_action'],
-        $tree['children'][0]['props']['on_timeout'],
-        $tree['children'][1]['props']['on_manual'],
+        $actionCallback,
+        $timeoutCallback,
+        $manualCallback,
     ] as $callbackId) {
 
         expect($frame['consumer']->resolve($callbackId))->toBeNull()
@@ -214,9 +217,11 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
 });
 
 it('removes an action first and dispatches action then dismissal exactly once', function () {
+    $feedbackId = "saved'\"|,()\\path";
+    $actionKey = "undo'\"|,()\\key";
     $store = app(FeedbackStore::class);
-    app(FeedbackManager::class)->success('Saved')->id('saved')
-        ->action('Undo', 'undo-save')->send();
+    app(FeedbackManager::class)->success('Saved')->id($feedbackId)
+        ->action('Undo', $actionKey)->send();
 
     $observed = [];
     $this->events->listen(FeedbackActionPressed::class, function (FeedbackActionPressed $event) use ($store, &$observed): void {
@@ -232,16 +237,37 @@ it('removes an action first and dispatches action then dismissal exactly once', 
 
     expect($frame['host']->feedbackCallbacks()->resolve($callbackId))->toBe([
         'method' => 'action',
-        'args' => ['saved', 'undo-save'],
+        'args' => [$feedbackId, $actionKey],
     ]);
 
     $frame['host']->dispatchFeedbackCallback($callbackId);
     $frame['host']->dispatchFeedbackCallback($callbackId);
 
     expect($observed)->toBe([
-        ['action', 'saved', 'undo-save'],
-        ['dismissed', 'saved', FeedbackDismissReason::Action],
+        ['action', $feedbackId, $actionKey],
+        ['dismissed', $feedbackId, FeedbackDismissReason::Action],
     ])->and($store->all())->toBe([]);
+});
+
+it('removes a record before rejecting a mismatched action key without dispatching events', function () {
+    $feedbackId = "saved'\"|,()\\path";
+    $store = app(FeedbackStore::class);
+    app(FeedbackManager::class)->success('Saved')->id($feedbackId)
+        ->action('Undo', "undo'\"|,()\\key")->send();
+
+    $observed = [];
+    $this->events->listen(FeedbackActionPressed::class, function (FeedbackActionPressed $event) use (&$observed): void {
+        $observed[] = $event;
+    });
+    $this->events->listen(FeedbackDismissed::class, function (FeedbackDismissed $event) use (&$observed): void {
+        $observed[] = $event;
+    });
+
+    $frame = renderFeedbackCenterFrame($store);
+    $frame['host']->feedbackCenter()->action($feedbackId, "wrong'\"|,()\\key");
+
+    expect($store->all())->toBe([])
+        ->and($observed)->toBe([]);
 });
 
 it('guarantees action dismissal when an action listener throws without swallowing the failure', function () {
@@ -319,22 +345,33 @@ it('refreshes callback ids across navigation without reordering updated semantic
     $store = app(FeedbackStore::class);
     app(FeedbackManager::class)->success('Saved')->id('saved')
         ->action('Undo', 'undo-save')->send();
-    app(FeedbackManager::class)->warning('Offline')->id('offline')->send();
+    app(FeedbackManager::class)->warning('Offline')->id('offline')->hold()->send();
 
-    $first = renderFeedbackCenter($store);
+    $first = renderFeedbackCenterFrame($store);
 
     app(FeedbackManager::class)->success('Saved again')->id('saved')
         ->action('Undo', 'undo-save')->send();
+    app(FeedbackManager::class)->warning('Offline again')->id('offline')->hold()->send();
 
-    $second = renderFeedbackCenter($store);
+    $second = renderFeedbackCenterFrame($store);
 
-    expect(array_column(array_column($second['children'], 'props'), 'feedback_id'))
+    expect(array_column(array_column($second['tree']['children'], 'props'), 'feedback_id'))
         ->toBe(['saved', 'offline'])
-        ->and($second['children'][0]['props']['message'])->toBe('Saved again')
-        ->and($second['children'][0]['props']['on_action'])
-        ->not->toBe($first['children'][0]['props']['on_action'])
-        ->and($second['children'][0]['props']['on_timeout'])
-        ->not->toBe($first['children'][0]['props']['on_timeout']);
+        ->and($second['tree']['children'][0]['props']['message'])->toBe('Saved again')
+        ->and($second['tree']['children'][1]['props']['message'])->toBe('Offline again');
+
+    foreach ([
+        [0, 'on_action'],
+        [0, 'on_timeout'],
+        [1, 'on_manual'],
+    ] as [$itemIndex, $callbackProp]) {
+        $priorCallback = $first['tree']['children'][$itemIndex]['props'][$callbackProp];
+        $refreshedCallback = $second['tree']['children'][$itemIndex]['props'][$callbackProp];
+
+        expect($refreshedCallback)->toBeInt()->not->toBe(0)->not->toBe($priorCallback)
+            ->and($second['consumer']->resolve($refreshedCallback))->toBeNull()
+            ->and($second['host']->feedbackCallbacks()->resolve($refreshedCallback))->not->toBeNull();
+    }
 });
 
 it('registers package chrome that always renders the empty feedback sentinel', function () {
