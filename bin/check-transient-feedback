@@ -628,8 +628,45 @@ $focusedTestOutputLimit = 4000;
 
 /** @return array{exit_code: ?int, output: string, timed_out: bool, error: ?string} */
 $runBounded = static function (array $command, string $workingDirectory, float $timeout, int $outputLimit): array {
-    if (! function_exists('proc_open')) {
-        return ['exit_code' => null, 'output' => '', 'timed_out' => false, 'error' => 'proc_open is unavailable'];
+    if (! function_exists('proc_open') || ! function_exists('posix_kill')) {
+        return [
+            'exit_code' => null,
+            'output' => '',
+            'timed_out' => false,
+            'error' => 'POSIX process-tree controls are unavailable; cleanup cannot be guaranteed',
+        ];
+    }
+
+    /** @return array<int, array{ppid: int, identity: string}>|null */
+    $processTable = static function (): ?array {
+        try {
+            $process = new Process(['ps', '-axo', 'pid=,ppid=,lstart=']);
+            $process->setTimeout(1.0);
+            $process->run();
+        } catch (Throwable) {
+            return null;
+        }
+        if (! $process->isSuccessful()) {
+            return null;
+        }
+
+        $table = [];
+        foreach (preg_split('/\R/', $process->getOutput()) ?: [] as $line) {
+            if (preg_match('/^\s*(\d+)\s+(\d+)\s+(.+?)\s*$/', $line, $match) !== 1) {
+                continue;
+            }
+            $table[(int) $match[1]] = ['ppid' => (int) $match[2], 'identity' => $match[3]];
+        }
+
+        return $table === [] ? null : $table;
+    };
+    if ($processTable() === null) {
+        return [
+            'exit_code' => null,
+            'output' => '',
+            'timed_out' => false,
+            'error' => 'unable to inspect the POSIX process table; cleanup cannot be guaranteed',
+        ];
     }
 
     $pipes = [];
@@ -654,12 +691,124 @@ $runBounded = static function (array $command, string $workingDirectory, float $
     stream_set_blocking($pipes[2], false);
     $output = '';
     $startedAt = microtime(true);
+    $deadline = $startedAt + $timeout;
     $timedOut = false;
     $exitCode = null;
+    $error = null;
+    $nextProcessSnapshotAt = $startedAt;
+    $status = proc_get_status($process);
+    $rootPid = is_int($status['pid'] ?? null) ? $status['pid'] : null;
+    /** @var array<int, array{identity: string, depth: int}> $tracked */
+    $tracked = [];
 
-    $drain = static function (array $streams) use (&$output, $outputLimit): void {
+    $initialTable = $processTable();
+    if ($rootPid === null || $initialTable === null || ! isset($initialTable[$rootPid])) {
+        if (($status['running'] ?? false) === true) {
+            @proc_terminate($process, 15);
+            foreach ([$pipes[1], $pipes[2]] as $pipe) {
+                if (is_resource($pipe)) {
+                    fclose($pipe);
+                }
+            }
+            @proc_close($process);
+
+            return [
+                'exit_code' => null,
+                'output' => '',
+                'timed_out' => false,
+                'error' => 'unable to identify the focused-test process; cleanup cannot be guaranteed',
+            ];
+        }
+    } else {
+        $tracked[$rootPid] = ['identity' => $initialTable[$rootPid]['identity'], 'depth' => 0];
+    }
+
+    $refreshTracked = static function () use (&$tracked, $processTable): ?array {
+        $table = $processTable();
+        if ($table === null) {
+            return null;
+        }
+
+        $knownDepths = [];
+        foreach ($tracked as $pid => $record) {
+            if (isset($table[$pid]) && hash_equals($record['identity'], $table[$pid]['identity'])) {
+                $knownDepths[$pid] = $record['depth'];
+            }
+        }
+        do {
+            $found = false;
+            foreach ($table as $pid => $record) {
+                if (isset($knownDepths[$pid]) || ! isset($knownDepths[$record['ppid']])) {
+                    continue;
+                }
+                $depth = $knownDepths[$record['ppid']] + 1;
+                $tracked[$pid] = ['identity' => $record['identity'], 'depth' => $depth];
+                $knownDepths[$pid] = $depth;
+                $found = true;
+            }
+        } while ($found);
+
+        return $table;
+    };
+    $aliveTracked = static function (array $table, bool $includeRoot = true) use (&$tracked): array {
+        $alive = [];
+        foreach ($tracked as $pid => $record) {
+            if ((! $includeRoot && $record['depth'] === 0)
+                || ! isset($table[$pid])
+                || ! hash_equals($record['identity'], $table[$pid]['identity'])) {
+                continue;
+            }
+            $alive[$pid] = $record['depth'];
+        }
+        arsort($alive, SORT_NUMERIC);
+
+        return array_keys($alive);
+    };
+    $terminateTracked = static function () use ($refreshTracked, $aliveTracked): bool {
+        $table = $refreshTracked();
+        if ($table === null) {
+            return false;
+        }
+        foreach ($aliveTracked($table) as $pid) {
+            @posix_kill($pid, 15);
+        }
+
+        $termDeadline = microtime(true) + 0.5;
+        do {
+            usleep(20_000);
+            $table = $refreshTracked();
+            if ($table === null) {
+                return false;
+            }
+            $alive = $aliveTracked($table);
+            if ($alive === []) {
+                return true;
+            }
+        } while (microtime(true) < $termDeadline);
+
+        foreach ($alive as $pid) {
+            @posix_kill($pid, 9);
+        }
+        $killDeadline = microtime(true) + 0.75;
+        do {
+            usleep(20_000);
+            $table = $refreshTracked();
+            if ($table === null) {
+                return false;
+            }
+            if ($aliveTracked($table, false) === []) {
+                return true;
+            }
+        } while (microtime(true) < $killDeadline);
+
+        return false;
+    };
+
+    $drain = static function (array $streams, float $drainDeadline) use (&$output, $outputLimit): void {
+        $chunksRemaining = 512;
         foreach ($streams as $stream) {
-            while (is_resource($stream) && ! feof($stream)) {
+            while ($chunksRemaining-- > 0 && microtime(true) < $drainDeadline
+                && is_resource($stream) && ! feof($stream)) {
                 $chunk = fread($stream, 8192);
                 if (! is_string($chunk) || $chunk === '') {
                     break;
@@ -673,6 +822,14 @@ $runBounded = static function (array $command, string $workingDirectory, float $
     };
 
     while (true) {
+        if (microtime(true) >= $deadline) {
+            $timedOut = true;
+            if (! $terminateTracked()) {
+                $error = 'focused-test process-tree cleanup could not be guaranteed after timeout';
+            }
+            break;
+        }
+
         $readable = array_values(array_filter(
             [$pipes[1], $pipes[2]],
             static fn ($pipe): bool => is_resource($pipe) && ! feof($pipe),
@@ -680,15 +837,18 @@ $runBounded = static function (array $command, string $workingDirectory, float $
         if ($readable !== []) {
             $writable = null;
             $except = null;
-            $selected = @stream_select($readable, $writable, $except, 0, 100_000);
+            $remainingMicroseconds = max(0, (int) (($deadline - microtime(true)) * 1_000_000));
+            $waitMicroseconds = min(100_000, $remainingMicroseconds);
+            $selected = @stream_select($readable, $writable, $except, 0, $waitMicroseconds);
             if ($selected === false) {
-                proc_terminate($process);
-                $timedOut = false;
-                $output = substr($output.' unable to drain process output', 0, $outputLimit);
+                $error = 'unable to drain focused-test process output';
+                if (! $terminateTracked()) {
+                    $error .= '; process-tree cleanup could not be guaranteed';
+                }
                 break;
             }
             if ($selected > 0) {
-                $drain($readable);
+                $drain($readable, $deadline);
             }
         } else {
             usleep(10_000);
@@ -699,24 +859,27 @@ $runBounded = static function (array $command, string $workingDirectory, float $
             if (is_int($status['exitcode']) && $status['exitcode'] >= 0) {
                 $exitCode = $status['exitcode'];
             }
-            $drain([$pipes[1], $pipes[2]]);
+            $drain([$pipes[1], $pipes[2]], min($deadline, microtime(true) + 0.05));
+            $table = $refreshTracked();
+            if ($table === null) {
+                $error = 'unable to verify focused-test descendant cleanup';
+                $terminateTracked();
+            } elseif ($aliveTracked($table, false) !== []) {
+                $error = 'focused test left descendant processes running';
+                if (! $terminateTracked()) {
+                    $error .= '; process-tree cleanup could not be guaranteed';
+                }
+            }
             break;
         }
 
-        if (microtime(true) - $startedAt >= $timeout) {
-            $timedOut = true;
-            proc_terminate($process);
-            $terminationDeadline = microtime(true) + 0.5;
-            do {
-                $drain([$pipes[1], $pipes[2]]);
-                usleep(10_000);
-                $status = proc_get_status($process);
-            } while ($status['running'] && microtime(true) < $terminationDeadline);
-            if ($status['running']) {
-                proc_terminate($process, 9);
+        if (microtime(true) >= $nextProcessSnapshotAt) {
+            if ($refreshTracked() === null) {
+                $error = 'lost access to the POSIX process table; cleanup cannot be guaranteed';
+                $terminateTracked();
+                break;
             }
-            $drain([$pipes[1], $pipes[2]]);
-            break;
+            $nextProcessSnapshotAt = microtime(true) + 0.05;
         }
     }
 
@@ -730,7 +893,7 @@ $runBounded = static function (array $command, string $workingDirectory, float $
         $exitCode = $closedExitCode;
     }
 
-    return ['exit_code' => $exitCode, 'output' => $output, 'timed_out' => $timedOut, 'error' => null];
+    return ['exit_code' => $exitCode, 'output' => $output, 'timed_out' => $timedOut, 'error' => $error];
 };
 
 if (! is_dir($showcase)) {
@@ -789,68 +952,416 @@ if (! is_dir($showcase)) {
         ? (string) file_get_contents($showcase.'/tests/Feature/TransientFeedbackCaptureTest.php')
         : '';
     if ($captureTestExists) {
-        $tokens = token_get_all($captureTest);
-        $testCode = '';
-        foreach ($tokens as $token) {
-            if (is_array($token) && in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
-                continue;
-            }
-            $testCode .= is_array($token) ? $token[1] : $token;
-        }
-        $testCode = preg_replace('/^<\?php/', '', $testCode) ?? $testCode;
-
-        $nativeAliases = [];
-        if (preg_match_all('/use([^;]+);/i', $testCode, $nativeImports) !== false) {
-            foreach ($nativeImports[1] as $nativeImport) {
-                $nativeImport = ltrim($nativeImport, '\\');
-                $nativeClass = 'Native\\Mobile\\Testing\\Native';
-                if ($nativeImport === $nativeClass) {
-                    $nativeAliases[] = 'Native';
-                } elseif (str_starts_with($nativeImport, $nativeClass.'as')) {
-                    $alias = substr($nativeImport, strlen($nativeClass.'as'));
-                    if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $alias) === 1) {
-                        $nativeAliases[] = $alias;
+        /** @return list<array{id: ?int, text: string, value: mixed}> */
+        $lexPhp = static function (string $php): array {
+            $lexed = [];
+            foreach (token_get_all($php, TOKEN_PARSE) as $token) {
+                if (is_array($token)) {
+                    if (in_array($token[0], [T_OPEN_TAG, T_CLOSE_TAG, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                        continue;
                     }
+                    $value = $token[1];
+                    if ($token[0] === T_CONSTANT_ENCAPSED_STRING) {
+                        $quote = $token[1][0] ?? '';
+                        $inner = substr($token[1], 1, -1);
+                        $value = $quote === "'"
+                            ? str_replace(["\\\\", "\\'"], ["\\", "'"], $inner)
+                            : stripcslashes($inner);
+                    }
+                    $lexed[] = ['id' => $token[0], 'text' => $token[1], 'value' => $value];
+
+                    continue;
+                }
+                $lexed[] = ['id' => null, 'text' => $token, 'value' => $token];
+            }
+
+            return $lexed;
+        };
+        $tokenText = static fn (array $token): string => $token['text'] ?? '';
+        $tokenValue = static fn (array $token): mixed => $token['value'] ?? null;
+        $matchingDelimiter = static function (array $tokens, int $openIndex) use ($tokenText): ?int {
+            $pairs = ['(' => ')', '[' => ']', '{' => '}'];
+            $open = $tokenText($tokens[$openIndex]);
+            $close = $pairs[$open] ?? null;
+            if ($close === null) {
+                return null;
+            }
+            $depth = 0;
+            for ($index = $openIndex, $count = count($tokens); $index < $count; $index++) {
+                $text = $tokenText($tokens[$index]);
+                if ($text === $open) {
+                    $depth++;
+                } elseif ($text === $close && --$depth === 0) {
+                    return $index;
                 }
             }
+
+            return null;
+        };
+        $sameTokens = static function (array $left, array $right): bool {
+            if (count($left) !== count($right)) {
+                return false;
+            }
+            foreach ($left as $index => $token) {
+                if ($token['id'] !== $right[$index]['id'] || $token['value'] !== $right[$index]['value']) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        try {
+            $testTokens = $lexPhp($captureTest);
+        } catch (ParseError) {
+            $testTokens = [];
         }
-        $testNames = str_replace('\\', '/', $testCode);
-        $nativeReferences = [preg_quote('Native/Mobile/Testing/Native', '/'), ...array_map(
-            static fn (string $alias): string => preg_quote($alias, '/'),
-            $nativeAliases,
-        )];
-        $nativeReferencePattern = '\/?(?:'.implode('|', array_unique($nativeReferences)).')';
-        $hasNativeVisit = preg_match('/'.$nativeReferencePattern.'::visit\(/i', $testNames) === 1;
-        $hasExactVisit = preg_match(
-            '/'.$nativeReferencePattern.'::visit\([\'"]\/captures\/transient-feedback[\'"](?:,|\))/i',
-            $testNames,
-        ) === 1;
-        if (! $hasExactVisit) {
+
+        $bracePairs = [];
+        $braceStack = [];
+        foreach ($testTokens as $index => $token) {
+            if ($tokenText($token) === '{') {
+                $braceStack[] = $index;
+            } elseif ($tokenText($token) === '}' && $braceStack !== []) {
+                $bracePairs[(int) array_pop($braceStack)] = $index;
+            }
+        }
+
+        $imports = [];
+        $braceDepth = 0;
+        for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
+            $text = $tokenText($testTokens[$index]);
+            if ($text === '{') {
+                $braceDepth++;
+
+                continue;
+            }
+            if ($text === '}') {
+                $braceDepth--;
+
+                continue;
+            }
+            if ($braceDepth !== 0 || $testTokens[$index]['id'] !== T_USE) {
+                continue;
+            }
+
+            $name = '';
+            $alias = null;
+            $readingAlias = false;
+            for ($cursor = $index + 1; $cursor < $count && $tokenText($testTokens[$cursor]) !== ';'; $cursor++) {
+                if ($testTokens[$cursor]['id'] === T_AS) {
+                    $readingAlias = true;
+
+                    continue;
+                }
+                if (! in_array($testTokens[$cursor]['id'], [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NS_SEPARATOR], true)) {
+                    $name = '';
+                    break;
+                }
+                if ($readingAlias) {
+                    $alias = $tokenText($testTokens[$cursor]);
+                } else {
+                    $name .= $tokenText($testTokens[$cursor]);
+                }
+            }
+            $name = ltrim($name, '\\');
+            if ($name !== '') {
+                $separator = strrpos($name, '\\');
+                $imports[strtolower($alias ?? ($separator === false ? $name : substr($name, $separator + 1)))] = $name;
+            }
+        }
+
+        $resolvesClass = static function (array $token, string $class) use ($imports): bool {
+            $reference = ltrim((string) $token['text'], '\\');
+            if (strcasecmp($reference, $class) === 0) {
+                return true;
+            }
+            if ($token['id'] !== T_STRING) {
+                return false;
+            }
+
+            return isset($imports[strtolower($reference)])
+                && strcasecmp($imports[strtolower($reference)], $class) === 0;
+        };
+        $expressionTokens = static function (string $expression) use ($lexPhp): array {
+            $tokens = $lexPhp('<?php '.$expression.';');
+            array_pop($tokens);
+
+            return $tokens;
+        };
+        $isExpectationEntry = static function (array $tokens, int $index) use ($tokenText): bool {
+            $isExpect = ($tokens[$index]['id'] ?? null) === T_STRING
+                && strcasecmp($tokenText($tokens[$index]), 'expect') === 0
+                && ($index === 0 || $tokenText($tokens[$index - 1]) !== '->');
+            $isAnd = ($tokens[$index]['id'] ?? null) === T_STRING
+                && strcasecmp($tokenText($tokens[$index]), 'and') === 0
+                && $index > 0
+                && $tokenText($tokens[$index - 1]) === '->';
+            if (! $isAnd) {
+                return $isExpect;
+            }
+            for ($cursor = $index - 1; $cursor >= 0; $cursor--) {
+                if (in_array($tokenText($tokens[$cursor]), [';', '{', '}'], true)) {
+                    break;
+                }
+                if (($tokens[$cursor]['id'] ?? null) === T_STRING
+                    && strcasecmp($tokenText($tokens[$cursor]), 'expect') === 0
+                    && ($cursor === 0 || $tokenText($tokens[$cursor - 1]) !== '->')
+                    && $tokenText($tokens[$cursor + 1] ?? []) === '(') {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+        $hasExpectation = static function (
+            array $tokens,
+            array $subject,
+            string $assertion,
+            array $arguments,
+        ) use ($isExpectationEntry, $matchingDelimiter, $sameTokens, $tokenText): bool {
+            for ($index = 0, $count = count($tokens); $index < $count; $index++) {
+                if (! $isExpectationEntry($tokens, $index) || ($tokenText($tokens[$index + 1] ?? []) !== '(')) {
+                    continue;
+                }
+                $subjectClose = $matchingDelimiter($tokens, $index + 1);
+                if ($subjectClose === null || ! $sameTokens(array_slice($tokens, $index + 2, $subjectClose - $index - 2), $subject)) {
+                    continue;
+                }
+                if ($tokenText($tokens[$subjectClose + 1] ?? []) !== '->'
+                    || strcasecmp($tokenText($tokens[$subjectClose + 2] ?? []), $assertion) !== 0
+                    || $tokenText($tokens[$subjectClose + 3] ?? []) !== '(') {
+                    continue;
+                }
+                $argumentClose = $matchingDelimiter($tokens, $subjectClose + 3);
+                if ($argumentClose !== null
+                    && $sameTokens(array_slice($tokens, $subjectClose + 4, $argumentClose - $subjectClose - 4), $arguments)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+        $hasReceiverMethod = static function (
+            array $tokens,
+            string $receiver,
+            string $method,
+            array $arguments,
+        ) use ($matchingDelimiter, $sameTokens, $tokenText): bool {
+            for ($index = 0, $count = count($tokens); $index < $count; $index++) {
+                if ($tokens[$index]['id'] !== T_VARIABLE
+                    || $tokenText($tokens[$index]) !== $receiver) {
+                    continue;
+                }
+                $cursor = $index;
+                while ($tokenText($tokens[$cursor + 1] ?? []) === '->'
+                    && ($tokens[$cursor + 2]['id'] ?? null) === T_STRING
+                    && $tokenText($tokens[$cursor + 3] ?? []) === '(') {
+                    $close = $matchingDelimiter($tokens, $cursor + 3);
+                    if ($close === null) {
+                        break;
+                    }
+                    if (strcasecmp($tokenText($tokens[$cursor + 2]), $method) === 0
+                        && $sameTokens(array_slice($tokens, $cursor + 4, $close - $cursor - 4), $arguments)) {
+                        return true;
+                    }
+                    $cursor = $close;
+                }
+            }
+
+            return false;
+        };
+        $hasCallChainMethod = static function (
+            array $tokens,
+            int $callClose,
+            string $method,
+            array $arguments,
+        ) use ($matchingDelimiter, $sameTokens, $tokenText): bool {
+            $cursor = $callClose;
+            while ($tokenText($tokens[$cursor + 1] ?? []) === '->'
+                && ($tokens[$cursor + 2]['id'] ?? null) === T_STRING
+                && $tokenText($tokens[$cursor + 3] ?? []) === '(') {
+                $close = $matchingDelimiter($tokens, $cursor + 3);
+                if ($close === null) {
+                    return false;
+                }
+                if (strcasecmp($tokenText($tokens[$cursor + 2]), $method) === 0
+                    && $sameTokens(array_slice($tokens, $cursor + 4, $close - $cursor - 4), $arguments)) {
+                    return true;
+                }
+                $cursor = $close;
+            }
+
+            return false;
+        };
+
+        $hasNativeVisit = false;
+        $exactVisits = [];
+        for ($index = 0, $count = count($testTokens); $index < $count; $index++) {
+            if (! $resolvesClass($testTokens[$index], 'Native\\Mobile\\Testing\\Native')
+                || $tokenText($testTokens[$index + 1] ?? []) !== '::'
+                || strcasecmp($tokenText($testTokens[$index + 2] ?? []), 'visit') !== 0
+                || $tokenText($testTokens[$index + 3] ?? []) !== '(') {
+                continue;
+            }
+            $hasNativeVisit = true;
+            $close = $matchingDelimiter($testTokens, $index + 3);
+            if ($close === null) {
+                continue;
+            }
+            $arguments = array_slice($testTokens, $index + 4, $close - $index - 4);
+            if (count($arguments) === 2 && $tokenText($arguments[1]) === ',') {
+                array_pop($arguments);
+            }
+            if (count($arguments) !== 1 || $arguments[0]['id'] !== T_CONSTANT_ENCAPSED_STRING
+                || $tokenValue($arguments[0]) !== '/captures/transient-feedback') {
+                continue;
+            }
+            $assignedVariable = null;
+            if ($index >= 2 && $testTokens[$index - 2]['id'] === T_VARIABLE && $tokenText($testTokens[$index - 1]) === '=') {
+                $assignedVariable = $tokenText($testTokens[$index - 2]);
+            }
+            $scopeStart = 0;
+            $scopeEnd = count($testTokens);
+            foreach ($bracePairs as $open => $scopeClose) {
+                if ($open < $index && $scopeClose > $index && $open >= $scopeStart) {
+                    $scopeStart = $open + 1;
+                    $scopeEnd = $scopeClose;
+                }
+            }
+            $exactVisits[] = [
+                'variable' => $assignedVariable,
+                'close' => $close,
+                'scope_start' => $scopeStart,
+                'scope_end' => $scopeEnd,
+            ];
+        }
+
+        if ($exactVisits === []) {
             $evidenceIssue($hasNativeVisit
                 ? 'Focused showcase capture test visits the wrong route; expected /captures/transient-feedback'
                 : "Focused showcase capture test must call Native::visit('/captures/transient-feedback')");
             $showcaseArtifactsComplete = false;
         }
 
-        $screenMarkers = ['Firstlight Transient Feedback', '->tree()', "['title']", "['back']", '->toBeFalse()'];
-        if (array_any($screenMarkers, static fn (string $marker): bool => ! str_contains($testCode, $marker))) {
+        $screenContractSatisfied = false;
+        $contractTokens = [];
+        foreach ($exactVisits as $visit) {
+            $screen = $visit['variable'];
+            if (! is_string($screen)) {
+                continue;
+            }
+            $screenTokens = array_slice(
+                $testTokens,
+                $visit['close'] + 1,
+                $visit['scope_end'] - $visit['close'] - 1,
+            );
+            for ($index = 0, $count = count($screenTokens); $index + 1 < $count; $index++) {
+                if ($screenTokens[$index]['id'] === T_VARIABLE
+                    && $tokenText($screenTokens[$index]) === $screen
+                    && $tokenText($screenTokens[$index + 1]) === '=') {
+                    $screenTokens = array_slice($screenTokens, 0, $index);
+                    break;
+                }
+            }
+            $hasExpectedSee = $hasReceiverMethod(
+                $screenTokens,
+                $screen,
+                'assertSee',
+                $expressionTokens("'Stable capture fixture'"),
+            ) || $hasCallChainMethod(
+                $testTokens,
+                $visit['close'],
+                'assertSee',
+                $expressionTokens("'Stable capture fixture'"),
+            );
+            $hasAccessibilityAssertion = $hasReceiverMethod($screenTokens, $screen, 'assertAccessible', [])
+                || $hasCallChainMethod($testTokens, $visit['close'], 'assertAccessible', []);
+            $screenContractSatisfied = $hasExpectedSee && $hasAccessibilityAssertion
+                && $hasExpectation(
+                    $screenTokens,
+                    $expressionTokens("{$screen}->tree()['props']['title'] ?? null"),
+                    'toBe',
+                    $expressionTokens("'Firstlight Transient Feedback'"),
+                )
+                && $hasExpectation(
+                    $screenTokens,
+                    $expressionTokens("{$screen}->tree()['props']['back'] ?? null"),
+                    'toBeFalse',
+                    [],
+                );
+            if ($screenContractSatisfied) {
+                $contractTokens = $screenTokens;
+                break;
+            }
+        }
+        if (! $screenContractSatisfied) {
             $evidenceIssue('Focused showcase capture test must assert the capture screen identity');
             $showcaseArtifactsComplete = false;
         }
 
-        $feedbackMarkers = [
-            'FeedbackStore::class',
-            '->all()',
-            '->toHaveCount(1)',
-            'Appointment saved',
-            'transient-feedback-capture',
-            'FeedbackTone::Success',
-            'Undo',
-            'undo-save',
-            '->hold',
-            '->toBeTrue()',
-        ];
-        if (array_any($feedbackMarkers, static fn (string $marker): bool => ! str_contains($testCode, $marker))) {
+        $feedbackVariable = null;
+        $feedbackStart = null;
+        for ($index = 0, $count = count($contractTokens); $index + 10 < $count; $index++) {
+            if ($contractTokens[$index]['id'] === T_VARIABLE
+                && $tokenText($contractTokens[$index + 1]) === '='
+                && strcasecmp($tokenText($contractTokens[$index + 2]), 'app') === 0
+                && $tokenText($contractTokens[$index + 3]) === '('
+                && $resolvesClass($contractTokens[$index + 4], 'FirstlightUI\\Feedback\\FeedbackStore')
+                && $tokenText($contractTokens[$index + 5]) === '::'
+                && strcasecmp($tokenText($contractTokens[$index + 6]), 'class') === 0
+                && $tokenText($contractTokens[$index + 7]) === ')'
+                && $tokenText($contractTokens[$index + 8]) === '->'
+                && strcasecmp($tokenText($contractTokens[$index + 9]), 'all') === 0
+                && $tokenText($contractTokens[$index + 10]) === '(') {
+                $feedbackVariable = $tokenText($contractTokens[$index]);
+                $feedbackStart = $index;
+                break;
+            }
+        }
+        $feedbackTokens = is_int($feedbackStart) ? array_slice($contractTokens, $feedbackStart) : [];
+        if (is_string($feedbackVariable)) {
+            for ($index = 1, $count = count($feedbackTokens); $index + 1 < $count; $index++) {
+                if ($feedbackTokens[$index]['id'] === T_VARIABLE
+                    && $tokenText($feedbackTokens[$index]) === $feedbackVariable
+                    && $tokenText($feedbackTokens[$index + 1]) === '=') {
+                    $feedbackTokens = array_slice($feedbackTokens, 0, $index);
+                    break;
+                }
+            }
+        }
+        $feedbackContractSatisfied = is_string($feedbackVariable)
+            && $hasExpectation($feedbackTokens, $expressionTokens($feedbackVariable), 'toHaveCount', $expressionTokens('1'))
+            && $hasExpectation($feedbackTokens, $expressionTokens("{$feedbackVariable}[0]->message"), 'toBe', $expressionTokens("'Appointment saved'"))
+            && $hasExpectation($feedbackTokens, $expressionTokens("{$feedbackVariable}[0]->id"), 'toBe', $expressionTokens("'transient-feedback-capture'"))
+            && $hasExpectation($feedbackTokens, $expressionTokens("{$feedbackVariable}[0]->actionLabel"), 'toBe', $expressionTokens("'Undo'"))
+            && $hasExpectation($feedbackTokens, $expressionTokens("{$feedbackVariable}[0]->actionKey"), 'toBe', $expressionTokens("'undo-save'"))
+            && $hasExpectation($feedbackTokens, $expressionTokens("{$feedbackVariable}[0]->hold"), 'toBeTrue', []);
+        $toneAssertion = false;
+        if (is_string($feedbackVariable)) {
+            $toneSubject = $expressionTokens("{$feedbackVariable}[0]->tone");
+            for ($index = 0, $count = count($feedbackTokens); $index < $count; $index++) {
+                if (! $isExpectationEntry($feedbackTokens, $index)
+                    || $tokenText($feedbackTokens[$index + 1] ?? []) !== '(') {
+                    continue;
+                }
+                $subjectClose = $matchingDelimiter($feedbackTokens, $index + 1);
+                if ($subjectClose === null
+                    || ! $sameTokens(array_slice($feedbackTokens, $index + 2, $subjectClose - $index - 2), $toneSubject)
+                    || $tokenText($feedbackTokens[$subjectClose + 1] ?? []) !== '->'
+                    || strcasecmp($tokenText($feedbackTokens[$subjectClose + 2] ?? []), 'toBe') !== 0
+                    || $tokenText($feedbackTokens[$subjectClose + 3] ?? []) !== '('
+                    || ! $resolvesClass($feedbackTokens[$subjectClose + 4] ?? [], 'FirstlightUI\\Feedback\\FeedbackTone')
+                    || $tokenText($feedbackTokens[$subjectClose + 5] ?? []) !== '::'
+                    || strcasecmp($tokenText($feedbackTokens[$subjectClose + 6] ?? []), 'Success') !== 0
+                    || $tokenText($feedbackTokens[$subjectClose + 7] ?? []) !== ')') {
+                    continue;
+                }
+                $toneAssertion = true;
+                break;
+            }
+        }
+        if (! $feedbackContractSatisfied || ! $toneAssertion) {
             $evidenceIssue('Focused showcase capture test must assert the deterministic feedback record');
             $showcaseArtifactsComplete = false;
         }
