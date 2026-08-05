@@ -4,18 +4,39 @@ import SwiftUI
 func registerFirstlightUI() {
     NativeRootHostRegistry.shared.register(
         "firstlight.feedback-center",
-        consumes: "firstlight_feedback_center"
-    ) { root, content in
+        consumes: "firstlight_feedback_center",
+        host: firstlightFeedbackCenterRootHost
+    )
+}
+
+private struct FeedbackCenterUncheckedTransfer<Value>: @unchecked Sendable {
+    let value: Value
+}
+
+func firstlightFeedbackCenterRootHost(
+    _ root: NativeUINode,
+    _ content: AnyView
+) -> AnyView {
+    // NativeRootHostRegistry.wrap is invoked from SwiftUI's main-actor render
+    // path. Preserve the registry's exact nonisolated production signature and
+    // assert that official invocation context before constructing a View.
+    let input = FeedbackCenterUncheckedTransfer(value: (root, content))
+    let output = MainActor.assumeIsolated {
+        let (root, content) = input.value
         let center = root.children.first { $0.type == "firstlight_feedback_center" }
-        return AnyView(FirstlightFeedbackCenterHost(centerNode: center) { content })
+        return FeedbackCenterUncheckedTransfer(value: AnyView(
+            FirstlightFeedbackCenterHost(centerNode: center) { content }
+        ))
     }
+
+    return output.value
 }
 
 #if SWIFT_PACKAGE
 final class NativeRootHostRegistry: @unchecked Sendable {
     static let shared = NativeRootHostRegistry()
 
-    typealias Host = @MainActor (_ root: NativeUINode, _ content: AnyView) -> AnyView
+    typealias Host = (_ root: NativeUINode, _ content: AnyView) -> AnyView
 
     private struct Entry {
         let consumedType: String?
@@ -39,7 +60,6 @@ final class NativeRootHostRegistry: @unchecked Sendable {
         return entries.contains { $0.consumedType == type }
     }
 
-    @MainActor
     func wrap(root: NativeUINode, content: AnyView) -> AnyView {
         lock.lock()
         let hosts = entries

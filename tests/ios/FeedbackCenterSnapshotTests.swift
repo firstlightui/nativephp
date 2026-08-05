@@ -7,12 +7,23 @@ import XCTest
 
 @MainActor
 final class FeedbackCenterSnapshotTests: XCTestCase {
+    func testRootHostRegistrationUsesTheExactProductionSignature() {
+        let exactHost: (NativeUINode, AnyView) -> AnyView = firstlightFeedbackCenterRootHost
+        let registryHost: NativeRootHostRegistry.Host = firstlightFeedbackCenterRootHost
+
+        _ = exactHost
+        _ = registryHost
+    }
+
     func testControlConstructionOwnsAccessibleNativeActions() {
         let automatic = makeControl(configuration: configuration(message: "Saved"))
-        XCTAssertTrue(automatic.symbolIsDecorative)
-        XCTAssertFalse(automatic.hasActionButton)
-        XCTAssertFalse(automatic.hasDismissButton)
-        XCTAssertGreaterThanOrEqual(automatic.minimumTarget, 44)
+        XCTAssertTrue(automatic.renderingPolicy.toneSymbol.accessibilityHidden)
+        XCTAssertNil(automatic.renderingPolicy.action)
+        XCTAssertNil(automatic.renderingPolicy.dismiss)
+        XCTAssertEqual(
+            automatic.renderingPolicy.layoutCandidates,
+            [.horizontal, .vertical]
+        )
 
         let actionable = makeControl(configuration: configuration(
             message: "Appointment saved",
@@ -20,9 +31,13 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
             actionLabel: "Undo",
             actionCallback: 41
         ))
-        XCTAssertTrue(actionable.hasActionButton)
-        XCTAssertEqual(actionable.actionAccessibilityLabel, "Undo")
-        XCTAssertFalse(actionable.hasDismissButton)
+        XCTAssertEqual(actionable.renderingPolicy.action?.visibleLabel, "Undo")
+        XCTAssertEqual(actionable.renderingPolicy.action?.accessibilityLabel, "Undo")
+        XCTAssertNil(actionable.renderingPolicy.dismiss)
+        XCTAssertEqual(
+            actionable.renderingPolicy.action?.minimumTarget,
+            CGSize(width: 44, height: 44)
+        )
 
         let held = makeControl(configuration: configuration(
             message: "Connection lost",
@@ -31,9 +46,13 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
             timeoutCallback: nil,
             manualCallback: 51
         ))
-        XCTAssertTrue(held.hasDismissButton)
-        XCTAssertEqual(held.dismissAccessibilityLabel, "Dismiss feedback")
-        XCTAssertTrue(held.reflowsActionsWhenConstrained)
+        XCTAssertEqual(held.renderingPolicy.dismiss?.visibleLabel, "Dismiss")
+        XCTAssertEqual(held.renderingPolicy.dismiss?.accessibilityLabel, "Dismiss feedback")
+        XCTAssertTrue(held.renderingPolicy.dismiss?.symbol?.accessibilityHidden == true)
+        XCTAssertEqual(
+            held.renderingPolicy.dismiss?.minimumTarget,
+            CGSize(width: 44, height: 44)
+        )
     }
 
     func testOneTimeAnnouncementAndReducedMotionPoliciesAreDeterministic() {

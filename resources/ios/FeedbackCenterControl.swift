@@ -42,49 +42,115 @@ struct FeedbackCenterAnnouncementState {
     }
 }
 
+enum FeedbackCenterLayoutCandidate: Equatable {
+    case horizontal
+    case vertical
+}
+
+struct FeedbackCenterSymbolRenderingPolicy: Equatable {
+    let systemName: String
+    let accessibilityHidden: Bool
+}
+
+struct FeedbackCenterActionRenderingPolicy: Equatable {
+    let visibleLabel: String
+    let accessibilityLabel: String
+    let minimumTarget: CGSize
+    let symbol: FeedbackCenterSymbolRenderingPolicy?
+}
+
+struct FeedbackCenterRenderingPolicy: Equatable {
+    static let minimumActionTarget = CGSize(width: 44, height: 44)
+
+    let toneSymbol: FeedbackCenterSymbolRenderingPolicy
+    let action: FeedbackCenterActionRenderingPolicy?
+    let dismiss: FeedbackCenterActionRenderingPolicy?
+    let layoutCandidates: [FeedbackCenterLayoutCandidate]
+
+    init(configuration: FeedbackCenterItemConfiguration) {
+        let toneSymbolName = switch configuration.tone {
+        case .default: "info.circle.fill"
+        case .success: "checkmark.circle.fill"
+        case .warning: "exclamationmark.triangle.fill"
+        case .danger: "exclamationmark.octagon.fill"
+        }
+        toneSymbol = FeedbackCenterSymbolRenderingPolicy(
+            systemName: toneSymbolName,
+            accessibilityHidden: true
+        )
+
+        if let label = configuration.actionLabel,
+           configuration.actionCallback != nil {
+            action = FeedbackCenterActionRenderingPolicy(
+                visibleLabel: label,
+                accessibilityLabel: label,
+                minimumTarget: Self.minimumActionTarget,
+                symbol: nil
+            )
+        } else {
+            action = nil
+        }
+
+        if configuration.hold, configuration.manualCallback != nil {
+            dismiss = FeedbackCenterActionRenderingPolicy(
+                visibleLabel: "Dismiss",
+                accessibilityLabel: "Dismiss feedback",
+                minimumTarget: Self.minimumActionTarget,
+                symbol: FeedbackCenterSymbolRenderingPolicy(
+                    systemName: "xmark",
+                    accessibilityHidden: true
+                )
+            )
+        } else {
+            dismiss = nil
+        }
+
+        layoutCandidates = [.horizontal, .vertical]
+    }
+}
+
 struct FirstlightFeedbackCenterControl: View {
     let configuration: FeedbackCenterItemConfiguration
     let tokens: NativeUITokens
     let onAction: () -> Void
     let onDismiss: () -> Void
     let onAccessibilityFocusChanged: (Bool) -> Void
+    let renderingPolicy: FeedbackCenterRenderingPolicy
 
     @AccessibilityFocusState private var focusedControl: FeedbackCenterFocusedControl?
 
-    let symbolIsDecorative = true
-    let minimumTarget: CGFloat = 44
-    let reflowsActionsWhenConstrained = true
-    let dismissAccessibilityLabel = "Dismiss feedback"
-
-    var hasActionButton: Bool {
-        configuration.actionLabel != nil && configuration.actionCallback != nil
+    init(
+        configuration: FeedbackCenterItemConfiguration,
+        tokens: NativeUITokens,
+        onAction: @escaping () -> Void,
+        onDismiss: @escaping () -> Void,
+        onAccessibilityFocusChanged: @escaping (Bool) -> Void
+    ) {
+        self.configuration = configuration
+        self.tokens = tokens
+        self.onAction = onAction
+        self.onDismiss = onDismiss
+        self.onAccessibilityFocusChanged = onAccessibilityFocusChanged
+        renderingPolicy = FeedbackCenterRenderingPolicy(configuration: configuration)
     }
 
-    var hasDismissButton: Bool {
-        configuration.hold && configuration.manualCallback != nil
-    }
-
-    var actionAccessibilityLabel: String? { configuration.actionLabel }
-
+    @ViewBuilder
     var body: some View {
-        ViewThatFits(in: .horizontal) {
+        if renderingPolicy.layoutCandidates.contains(.vertical) {
+            ViewThatFits(in: .horizontal) {
+                horizontalLayout
+                verticalLayout
+            }
+            .feedbackCenterNoticeChrome(tokens: tokens)
+            .onChange(of: focusedControl) { _, focusedControl in
+                onAccessibilityFocusChanged(focusedControl != nil)
+            }
+        } else {
             horizontalLayout
-            verticalLayout
-        }
-        .padding(.leading, 16)
-        .padding(.trailing, 10)
-        .padding(.vertical, 10)
-        .foregroundStyle(tokens.onSurface)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(uiColor: .separator).opacity(0.35), lineWidth: 0.5)
-                .allowsHitTesting(false)
-        }
-        .shadow(color: .black.opacity(0.12), radius: 14, y: 5)
-        .fixedSize(horizontal: false, vertical: true)
-        .onChange(of: focusedControl) { _, focusedControl in
-            onAccessibilityFocusChanged(focusedControl != nil)
+                .feedbackCenterNoticeChrome(tokens: tokens)
+                .onChange(of: focusedControl) { _, focusedControl in
+                    onAccessibilityFocusChanged(focusedControl != nil)
+                }
         }
     }
 
@@ -104,7 +170,7 @@ struct FirstlightFeedbackCenterControl: View {
                 message
             }
 
-            if hasActionButton || hasDismissButton {
+            if renderingPolicy.action != nil || renderingPolicy.dismiss != nil {
                 actions
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -120,53 +186,51 @@ struct FirstlightFeedbackCenterControl: View {
     }
 
     private var toneSymbol: some View {
-        Image(systemName: symbolName)
+        Image(systemName: renderingPolicy.toneSymbol.systemName)
             .font(.title3.weight(.semibold))
             .foregroundStyle(accentColor)
-            .accessibilityHidden(true)
+            .accessibilityHidden(renderingPolicy.toneSymbol.accessibilityHidden)
     }
 
     @ViewBuilder
     private var actions: some View {
         HStack(spacing: 4) {
-            if let label = configuration.actionLabel,
-               configuration.actionCallback != nil {
-                Button(label) {
+            if let action = renderingPolicy.action {
+                Button(action.visibleLabel) {
                     onAction()
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.regular)
                 .tint(accentColor)
-                .frame(minHeight: minimumTarget)
-                .accessibilityLabel(Text(label))
+                .frame(
+                    minWidth: action.minimumTarget.width,
+                    minHeight: action.minimumTarget.height
+                )
+                .accessibilityLabel(Text(action.accessibilityLabel))
                 .accessibilityFocused($focusedControl, equals: .action)
             }
 
-            if configuration.hold, configuration.manualCallback != nil {
+            if let dismiss = renderingPolicy.dismiss {
                 Button {
                     onDismiss()
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: "xmark")
-                            .accessibilityHidden(true)
-                        Text("Dismiss")
+                        if let symbol = dismiss.symbol {
+                            Image(systemName: symbol.systemName)
+                                .accessibilityHidden(symbol.accessibilityHidden)
+                        }
+                        Text(dismiss.visibleLabel)
                     }
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.regular)
-                .frame(minHeight: minimumTarget)
-                .accessibilityLabel(Text(dismissAccessibilityLabel))
+                .frame(
+                    minWidth: dismiss.minimumTarget.width,
+                    minHeight: dismiss.minimumTarget.height
+                )
+                .accessibilityLabel(Text(dismiss.accessibilityLabel))
                 .accessibilityFocused($focusedControl, equals: .dismiss)
             }
-        }
-    }
-
-    private var symbolName: String {
-        switch configuration.tone {
-        case .default: "info.circle.fill"
-        case .success: "checkmark.circle.fill"
-        case .warning: "exclamationmark.triangle.fill"
-        case .danger: "exclamationmark.octagon.fill"
         }
     }
 
@@ -177,5 +241,25 @@ struct FirstlightFeedbackCenterControl: View {
         case .warning: Color(uiColor: .systemOrange)
         case .danger: tokens.destructive
         }
+    }
+}
+
+private extension View {
+    func feedbackCenterNoticeChrome(tokens: NativeUITokens) -> some View {
+        padding(.leading, 16)
+            .padding(.trailing, 10)
+            .padding(.vertical, 10)
+            .foregroundStyle(tokens.onSurface)
+            .background(
+                .regularMaterial,
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color(uiColor: .separator).opacity(0.35), lineWidth: 0.5)
+                    .allowsHitTesting(false)
+            }
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 5)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }

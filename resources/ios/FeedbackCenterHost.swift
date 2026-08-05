@@ -55,8 +55,12 @@ struct FirstlightFeedbackCenterHost<Content: View>: View {
                 FirstlightFeedbackCenterControl(
                     configuration: visible,
                     tokens: themeStore.resolve(for: colorScheme),
-                    onAction: performAction,
-                    onDismiss: performManualDismiss,
+                    onAction: {
+                        performAction(feedbackID: visible.feedbackID)
+                    },
+                    onDismiss: {
+                        performManualDismiss(feedbackID: visible.feedbackID)
+                    },
                     onAccessibilityFocusChanged: { focused in
                         accessibilityControlFocused = focused
                     }
@@ -99,49 +103,58 @@ struct FirstlightFeedbackCenterHost<Content: View>: View {
             announceVisibleItem()
         }
         .task(id: schedule) {
-            await scheduleAutomaticTimeout()
+            await scheduleAutomaticTimeout(schedule)
         }
     }
 
     private func reconcile(_ configurations: [FeedbackCenterItemConfiguration]) {
         let previousVisibleID = queue.visible?.feedbackID
-        queue.reconcile(configurations, now: Self.now)
+        let event = queue.reconcile(configurations, now: Self.now)
         if queue.visible?.feedbackID != previousVisibleID {
             accessibilityControlFocused = false
         }
+        send(event)
         updateSuspension()
     }
 
     private func updateSuspension() {
         if isSuspended {
-            queue.pause(at: Self.now)
+            send(queue.pause(at: Self.now))
         } else {
-            queue.resume(at: Self.now)
+            send(queue.resume(at: Self.now))
         }
     }
 
     private func updateAssistiveTechnology() {
-        queue.setAssistiveTechnologyActive(
-            voiceOverEnabled || switchControlEnabled
-        )
+        send(queue.setAssistiveTechnologyActive(
+            voiceOverEnabled || switchControlEnabled,
+            at: Self.now
+        ))
     }
 
-    private func performAction() {
+    private func performAction(feedbackID: String) {
         accessibilityControlFocused = false
-        send(queue.action())
+        send(queue.action(feedbackID: feedbackID, now: Self.now))
     }
 
-    private func performManualDismiss() {
+    private func performManualDismiss(feedbackID: String) {
         accessibilityControlFocused = false
-        send(queue.manualDismiss())
+        send(queue.manualDismiss(feedbackID: feedbackID, now: Self.now))
     }
 
-    private func scheduleAutomaticTimeout() async {
-        guard !schedule.suspended,
-              !schedule.held,
-              queue.visible != nil,
-              queue.remaining.isFinite,
-              queue.remaining > 0 else { return }
+    private func scheduleAutomaticTimeout(
+        _ scheduled: FeedbackCenterSchedule
+    ) async {
+        guard let scheduledID = scheduled.feedbackID,
+              !scheduled.suspended,
+              !scheduled.held,
+              queue.visible?.feedbackID == scheduledID,
+              queue.remaining.isFinite else { return }
+
+        guard queue.remaining > 0 else {
+            send(queue.timeout(feedbackID: scheduledID, now: Self.now))
+            return
+        }
 
         let delay = queue.remaining
         do {
@@ -151,7 +164,7 @@ struct FirstlightFeedbackCenterHost<Content: View>: View {
         }
         guard !Task.isCancelled else { return }
 
-        send(queue.advance(by: queue.remaining))
+        send(queue.timeout(feedbackID: scheduledID, now: Self.now))
     }
 
     private func send(_ event: FeedbackCenterWireEvent?) {

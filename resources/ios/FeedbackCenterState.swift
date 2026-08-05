@@ -171,14 +171,22 @@ struct FeedbackCenterQueueState {
         max(0, visibleDuration - elapsed)
     }
 
-    mutating func setAssistiveTechnologyActive(_ active: Bool) {
+    @discardableResult
+    mutating func setAssistiveTechnologyActive(
+        _ active: Bool,
+        at now: TimeInterval
+    ) -> FeedbackCenterWireEvent? {
+        let expectedID = visible?.feedbackID
+        synchronize(to: now)
         assistiveTechnologyActive = active
+        return timeoutIfDue(feedbackID: expectedID, now: now)
     }
 
+    @discardableResult
     mutating func reconcile(
         _ published: [FeedbackCenterItemConfiguration],
         now: TimeInterval
-    ) {
+    ) -> FeedbackCenterWireEvent? {
         synchronize(to: now)
 
         let publishedIDs = Set(
@@ -212,56 +220,88 @@ struct FeedbackCenterQueueState {
             elapsed = 0
             clock = now
         }
+
+        return timeoutIfDue(feedbackID: previousVisibleID, now: now)
     }
 
-    mutating func action() -> FeedbackCenterWireEvent? {
+    mutating func action(
+        feedbackID: String,
+        now: TimeInterval
+    ) -> FeedbackCenterWireEvent? {
+        guard visible?.feedbackID == feedbackID else { return nil }
+        synchronize(to: now)
         guard let visible, let callbackID = visible.actionCallback else { return nil }
         return complete(
             feedbackID: visible.feedbackID,
-            event: .press(callbackID: callbackID, nodeID: visible.nodeID)
+            event: .press(callbackID: callbackID, nodeID: visible.nodeID),
+            now: now
         )
     }
 
-    mutating func timeout() -> FeedbackCenterWireEvent? {
+    mutating func timeout(
+        feedbackID: String,
+        now: TimeInterval
+    ) -> FeedbackCenterWireEvent? {
+        guard !isPaused, visible?.feedbackID == feedbackID else { return nil }
+        synchronize(to: now)
         guard let visible, !visible.hold, let callbackID = visible.timeoutCallback else {
             return nil
         }
         return complete(
             feedbackID: visible.feedbackID,
-            event: .press(callbackID: callbackID, nodeID: visible.nodeID)
+            event: .press(callbackID: callbackID, nodeID: visible.nodeID),
+            now: now
         )
     }
 
-    mutating func manualDismiss() -> FeedbackCenterWireEvent? {
+    mutating func manualDismiss(
+        feedbackID: String,
+        now: TimeInterval
+    ) -> FeedbackCenterWireEvent? {
+        guard visible?.feedbackID == feedbackID else { return nil }
+        synchronize(to: now)
         guard let visible, visible.hold, let callbackID = visible.manualCallback else {
             return nil
         }
         return complete(
             feedbackID: visible.feedbackID,
-            event: .press(callbackID: callbackID, nodeID: visible.nodeID)
+            event: .press(callbackID: callbackID, nodeID: visible.nodeID),
+            now: now
         )
     }
 
     @discardableResult
-    mutating func advance(by interval: TimeInterval) -> FeedbackCenterWireEvent? {
-        guard interval > 0 else { return nil }
-        clock += interval
+    mutating func advance(
+        by interval: TimeInterval,
+        feedbackID: String
+    ) -> FeedbackCenterWireEvent? {
+        guard interval > 0,
+              !isPaused,
+              let visible,
+              visible.feedbackID == feedbackID,
+              !visible.hold else { return nil }
 
-        guard !isPaused, let visible, !visible.hold else { return nil }
-        elapsed = min(visibleDuration, elapsed + interval)
-        return remaining == 0 ? timeout() : nil
+        let advancedTime = clock + interval
+        synchronize(to: advancedTime)
+        return timeoutIfDue(feedbackID: feedbackID, now: advancedTime)
     }
 
-    mutating func pause(at now: TimeInterval) {
-        guard !isPaused else { return }
+    @discardableResult
+    mutating func pause(at now: TimeInterval) -> FeedbackCenterWireEvent? {
+        guard !isPaused else { return nil }
+        let expectedID = visible?.feedbackID
         synchronize(to: now)
+        let event = timeoutIfDue(feedbackID: expectedID, now: now)
         isPaused = true
+        return event
     }
 
-    mutating func resume(at now: TimeInterval) {
-        guard isPaused else { return }
+    @discardableResult
+    mutating func resume(at now: TimeInterval) -> FeedbackCenterWireEvent? {
+        guard isPaused else { return nil }
         clock = now
         isPaused = false
+        return timeoutIfDue(feedbackID: visible?.feedbackID, now: now)
     }
 
     private mutating func synchronize(to now: TimeInterval) {
@@ -272,13 +312,28 @@ struct FeedbackCenterQueueState {
 
     private mutating func complete(
         feedbackID: String,
-        event: FeedbackCenterWireEvent
+        event: FeedbackCenterWireEvent,
+        now: TimeInterval
     ) -> FeedbackCenterWireEvent? {
         guard visible?.feedbackID == feedbackID else { return nil }
 
         tombstones.insert(feedbackID)
         items.removeFirst()
         elapsed = 0
+        clock = max(clock, now)
         return event
+    }
+
+    private mutating func timeoutIfDue(
+        feedbackID: String?,
+        now: TimeInterval
+    ) -> FeedbackCenterWireEvent? {
+        guard !isPaused,
+              let feedbackID,
+              visible?.feedbackID == feedbackID,
+              visible?.hold == false,
+              remaining == 0 else { return nil }
+
+        return timeout(feedbackID: feedbackID, now: now)
     }
 }
