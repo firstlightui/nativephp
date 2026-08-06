@@ -4,7 +4,7 @@ import SwiftUI
 func registerFirstlightUI() {
     NativeRootHostRegistry.shared.register(
         "firstlight.feedback-center",
-        consumes: "firstlight_feedback_center",
+        consumes: "firstlight.feedback-center",
         host: firstlightFeedbackCenterRootHost
     )
 }
@@ -23,7 +23,7 @@ func firstlightFeedbackCenterRootHost(
     let input = FeedbackCenterUncheckedTransfer(value: (root, content))
     let output = MainActor.assumeIsolated {
         let (root, content) = input.value
-        let center = root.children.first { $0.type == "firstlight_feedback_center" }
+        let center = root.children.first { $0.type == "firstlight.feedback-center" }
         return FeedbackCenterUncheckedTransfer(value: AnyView(
             FirstlightFeedbackCenterHost(centerNode: center) { content }
         ))

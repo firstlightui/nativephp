@@ -10,9 +10,9 @@ fun registerFirstlightUI(context: Context) {
     // not retain it because composition resolves the current Activity context.
     NativeRootHostRegistry.register(
         "firstlight.feedback-center",
-        consumes = "firstlight_feedback_center",
+        consumes = "firstlight.feedback-center",
     ) { root, content ->
-        val center = root.children.firstOrNull { it.type == "firstlight_feedback_center" }
+        val center = root.children.firstOrNull { it.type == "firstlight.feedback-center" }
         FirstlightFeedbackCenterHost(centerNode = center, content = content)
     }
 }

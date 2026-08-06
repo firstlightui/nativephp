@@ -437,11 +437,11 @@ foreach ([
     'resources/ios/FeedbackCenterState.swift' => ['struct FeedbackCenterQueueState', 'private var tombstones: Set<String>'],
     'resources/ios/FeedbackCenterControl.swift' => ['struct FirstlightFeedbackCenterControl', 'minimumActionTarget = CGSize(width: 44, height: 44)'],
     'resources/ios/FeedbackCenterHost.swift' => ['struct FirstlightFeedbackCenterHost<Content: View>', '@Environment(\\.scenePhase)', '@Environment(\\.accessibilityReduceMotion)'],
-    'resources/ios/FirstlightUIInit.swift' => ['func registerFirstlightUI()', '"firstlight.feedback-center"', 'consumes: "firstlight_feedback_center"'],
+    'resources/ios/FirstlightUIInit.swift' => ['func registerFirstlightUI()', '"firstlight.feedback-center"', 'consumes: "firstlight.feedback-center"'],
     'resources/android/FeedbackCenterState.kt' => ['class FeedbackCenterQueueState', 'private val tombstones = mutableSetOf<String>()'],
     'resources/android/FeedbackCenterControl.kt' => ['fun FirstlightFeedbackCenterControl(', 'minWidth = 48.dp, minHeight = 48.dp'],
     'resources/android/FeedbackCenterHost.kt' => ['fun FirstlightFeedbackCenterHost(', 'accessibilityManager::getRecommendedTimeoutMillis', 'Lifecycle.State.RESUMED'],
-    'resources/android/FirstlightUIInit.kt' => ['fun registerFirstlightUI(context: Context)', '"firstlight.feedback-center"', 'consumes = "firstlight_feedback_center"'],
+    'resources/android/FirstlightUIInit.kt' => ['fun registerFirstlightUI(context: Context)', '"firstlight.feedback-center"', 'consumes = "firstlight.feedback-center"'],
     'tests/ios/FeedbackCenterTests.swift' => [
         'final class FeedbackCenterTests: XCTestCase',
         'testCompletionTombstoneBlocksStaleFramesUntilAbsence',

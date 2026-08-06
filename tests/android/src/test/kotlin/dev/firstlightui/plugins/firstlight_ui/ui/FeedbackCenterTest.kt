@@ -849,13 +849,13 @@ class FeedbackCenterInitContractTest {
         NativeRootHostRegistry.clearForTests()
         registerFirstlightUI(ApplicationProvider.getApplicationContext())
 
-        assertTrue(NativeRootHostRegistry.consumes("firstlight_feedback_center"))
+        assertTrue(NativeRootHostRegistry.consumes("firstlight.feedback-center"))
         val registration = NativeRootHostRegistry.registration("firstlight.feedback-center")
-        assertEquals("firstlight_feedback_center", registration?.consumes)
+        assertEquals("firstlight.feedback-center", registration?.consumes)
 
         val center = NativeUINode(
             id = 10,
-            type = "firstlight_feedback_center",
+            type = "firstlight.feedback-center",
             props = GenericProps(),
             children = listOf(feedbackNode()),
         )
@@ -1016,7 +1016,7 @@ private fun feedbackNode(
 
 private fun centerNode(vararg items: NativeUINode): NativeUINode = NativeUINode(
     id = 10,
-    type = "firstlight_feedback_center",
+    type = "firstlight.feedback-center",
     props = GenericProps(),
     children = items.toList(),
 )

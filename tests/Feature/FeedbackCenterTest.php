@@ -400,3 +400,16 @@ it('registers package chrome that always renders the empty feedback sentinel', f
         ->and($published[0]->toArray($consumer)['type'])->toBe('firstlight.feedback-center')
         ->and($published[0]->toArray($consumer))->not->toHaveKey('children');
 });
+
+it('keeps native root hosts aligned with the published feedback center wire type', function () {
+    $wireType = FeedbackCenterElement::make()->toArray(new CallbackRegistry)['type'];
+    $root = dirname(__DIR__, 2);
+    $ios = file_get_contents($root.'/resources/ios/FirstlightUIInit.swift');
+    $android = file_get_contents($root.'/resources/android/FirstlightUIInit.kt');
+
+    expect($wireType)->toBe('firstlight.feedback-center')
+        ->and($ios)->toContain('consumes: "'.$wireType.'"')
+        ->toContain('$0.type == "'.$wireType.'"')
+        ->and($android)->toContain('consumes = "'.$wireType.'"')
+        ->toContain('it.type == "'.$wireType.'"');
+});
