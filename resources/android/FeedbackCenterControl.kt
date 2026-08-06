@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -167,6 +168,7 @@ fun FirstlightFeedbackCenterControl(
                                 actionFocused = it.isFocused
                                 onFocusChanged(actionFocused || dismissFocused)
                             },
+                        colors = ButtonDefaults.textButtonColors(contentColor = colors.action),
                     ) {
                         Text(configuration.actionLabel.orEmpty())
                     }
