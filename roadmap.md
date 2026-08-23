@@ -24,20 +24,28 @@ details behind the same coherent Firstlight API.
 - Segmented
 - Status Label
 - Text Field
+- Text Area
+- Search Field
 - Button
 - Icon Button
-- Pill Group
-- Progress
 - Switch
-- Badge
-- Search Field
-- Text Area
-- Date Picker
+- Checkbox
 - Choice Group
-- Time Picker
+- Pill Group
 - Select
+- Date Picker
+- Time Picker
 - Slider
 - Stepper
+- Badge
+- Progress
+- Activity Indicator
+- Callout
+- Confirmation Dialog
+- Transient Feedback
+- List Item
+- List
+- List Section
 
 ## Completion boundary
 
