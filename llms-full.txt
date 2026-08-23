@@ -1156,6 +1156,123 @@ than generic text when the consequence can be named.
 | iOS | ![Confirmation Dialog on iOS in light mode](../screenshots/confirmation-dialog/ios-light.png) | ![Confirmation Dialog on iOS in dark mode](../screenshots/confirmation-dialog/ios-dark.png) |
 | Android | ![Confirmation Dialog on Android in light mode](../screenshots/confirmation-dialog/android-light.png) | ![Confirmation Dialog on Android in dark mode](../screenshots/confirmation-dialog/android-dark.png) |
 
+--- Source: docs/components/modal.md ---
+
+# Modal
+
+Modal presents authored content in a full-screen native overlay. PHP owns
+whether the overlay is requested; each platform owns cover or dialog chrome
+and motion.
+
+Use [Confirmation Dialog](confirmation-dialog.md) for a single confirm/cancel
+decision. Use [Bottom Sheet](bottom-sheet.md) for a panel that slides up from
+the bottom.
+
+## Complete example
+
+```blade
+<firstlight:modal
+    :visible="$showingAccount"
+    a11y-label="Account details"
+    @dismiss="closeAccount"
+>
+    <firstlight:status-label label="Account details" />
+</firstlight:modal>
+```
+
+The dismiss handler should set `$showingAccount` to `false`.
+
+## Props
+
+| API | Accepted type | Purpose |
+| --- | --- | --- |
+| `visible` | `bool` | Server-controlled presentation request. Defaults to closed. |
+| `dismissible` | `bool` | When true, native close, back, and outside dismissal are enabled. Defaults to the upstream native default of `true`. The `dismissable` alias is accepted. |
+| `a11y-label` | non-empty `string` | Accessible name for the presented surface. |
+| `a11y-hint` | non-empty `string` | Supplementary screen-reader guidance. |
+| `class` | `string` | External EDGE layout utilities. |
+
+## Events
+
+`@dismiss` is required. It runs when the user closes the overlay. Set the
+bound visibility property to `false` in that handler. Dismiss handlers must
+be safe to run more than once because the delegated iOS cover can also notify
+PHP when a programmatic close is published.
+
+There is no overlay `@press`, `native:model`, or detent API. Actions belong
+on child controls.
+
+## Platform expression
+
+Modal is an adapter over Mobile UI `modal`. iOS uses SwiftUI
+`.fullScreenCover`; Android uses a Material full-screen dialog. Theme tokens
+own surface colour. Close controls, when shown, use the native Close name.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Modal on iOS in light mode](../screenshots/modal/ios-light.png) | ![Modal on iOS in dark mode](../screenshots/modal/ios-dark.png) |
+| Android | ![Modal on Android in light mode](../screenshots/modal/android-light.png) | ![Modal on Android in dark mode](../screenshots/modal/android-dark.png) |
+
+--- Source: docs/components/bottom-sheet.md ---
+
+# Bottom Sheet
+
+Bottom Sheet presents authored content in a panel that slides up from the
+bottom of the screen. PHP owns whether the sheet is requested; each platform
+owns sheet chrome, drag to dismiss, and height stops.
+
+Use [Modal](modal.md) for a full-screen overlay. Use
+[Confirmation Dialog](confirmation-dialog.md) for a single confirm/cancel
+decision.
+
+## Complete example
+
+```blade
+<firstlight:bottom-sheet
+    :visible="$showingFilters"
+    a11y-label="Filters"
+    @dismiss="closeFilters"
+>
+    <firstlight:status-label label="Filters" />
+</firstlight:bottom-sheet>
+```
+
+The dismiss handler should set `$showingFilters` to `false`.
+
+## Props
+
+| API | Accepted type | Purpose |
+| --- | --- | --- |
+| `visible` | `bool` | Server-controlled presentation request. Defaults to closed. |
+| `a11y-label` | non-empty `string` | Accessible name for the sheet. |
+| `a11y-hint` | non-empty `string` | Supplementary screen-reader guidance. |
+| `class` | `string` | External EDGE layout utilities. |
+
+## Events
+
+`@dismiss` is required. It runs when the user drags the sheet down, taps
+outside, or uses system back. Set the bound visibility property to `false` in
+that handler.
+
+There is no overlay `@press`, `native:model`, `dismissible`, or shared
+`detents` API. Height stops stay native so iOS detents and Material sheet
+stops are not forced into one geometry.
+
+## Platform expression
+
+Bottom Sheet is an adapter over Mobile UI `bottom_sheet`. iOS uses SwiftUI
+`.sheet` with a drag indicator. Android uses Material 3 `ModalBottomSheet`.
+Theme tokens own surface and scrim colour.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Bottom Sheet on iOS in light mode](../screenshots/bottom-sheet/ios-light.png) | ![Bottom Sheet on iOS in dark mode](../screenshots/bottom-sheet/ios-dark.png) |
+| Android | ![Bottom Sheet on Android in light mode](../screenshots/bottom-sheet/android-light.png) | ![Bottom Sheet on Android in dark mode](../screenshots/bottom-sheet/android-dark.png) |
+
 --- Source: docs/components/date-picker.md ---
 
 # Date Picker

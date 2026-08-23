@@ -4,3 +4,5 @@
 /.swiftpm/
 .DS_Store
 *.log
+/roadmap-v2.md
+/roadmap-v3.md

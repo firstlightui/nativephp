@@ -215,6 +215,30 @@
             "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.ConfirmationDialogRenderer",
             "ios_renderer": "ConfirmationDialogRenderer",
             "self_closing": true
+        },
+        {
+            "type": "firstlight.modal",
+            "element": "FirstlightUI\\Elements\\Modal",
+            "blade": "FirstlightUI\\Components\\Modal",
+            "android_renderer": "com.nativephp.plugins.native_ui.ui.ModalRenderer",
+            "ios_renderer": "NativeUIModalRenderer",
+            "self_closing": false,
+            "adapter": {
+                "package": "nativephp/mobile-ui",
+                "type": "modal"
+            }
+        },
+        {
+            "type": "firstlight.bottom-sheet",
+            "element": "FirstlightUI\\Elements\\BottomSheet",
+            "blade": "FirstlightUI\\Components\\BottomSheet",
+            "android_renderer": "com.nativephp.plugins.native_ui.ui.BottomSheetRenderer",
+            "ios_renderer": "NativeUIBottomSheetRenderer",
+            "self_closing": false,
+            "adapter": {
+                "package": "nativephp/mobile-ui",
+                "type": "bottom_sheet"
+            }
         }
     ],
     "android": {

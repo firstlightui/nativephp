@@ -250,6 +250,28 @@
                 "android-light": "docs/screenshots/confirmation-dialog/android-light.png",
                 "android-dark": "docs/screenshots/confirmation-dialog/android-dark.png"
             }
+        },
+        "modal": {
+            "route": "/captures/modal",
+            "test": "php artisan test tests/Feature/ModalCaptureTest.php",
+            "ready-text": "Signed in as Alex",
+            "outputs": {
+                "ios-light": "docs/screenshots/modal/ios-light.png",
+                "ios-dark": "docs/screenshots/modal/ios-dark.png",
+                "android-light": "docs/screenshots/modal/android-light.png",
+                "android-dark": "docs/screenshots/modal/android-dark.png"
+            }
+        },
+        "bottom-sheet": {
+            "route": "/captures/bottom-sheet",
+            "test": "php artisan test tests/Feature/BottomSheetCaptureTest.php",
+            "ready-text": "Unread only",
+            "outputs": {
+                "ios-light": "docs/screenshots/bottom-sheet/ios-light.png",
+                "ios-dark": "docs/screenshots/bottom-sheet/ios-dark.png",
+                "android-light": "docs/screenshots/bottom-sheet/android-light.png",
+                "android-dark": "docs/screenshots/bottom-sheet/android-dark.png"
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ final class FirstlightTagPrecompiler
     private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|callout|badge|button|icon-button|list-item|pill-group|choice-group|progress|activity-indicator|text-field|search-field|text-area|date-picker|time-picker|select|slider|stepper|switch|checkbox|confirmation-dialog)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
     /** @var list<string> */
-    private const NESTED_PAIRED_CONTAINER_TAGS = ['list-section', 'list'];
+    private const NESTED_PAIRED_CONTAINER_TAGS = ['list-section', 'list', 'bottom-sheet', 'modal'];
 
     private const FIRSTLIGHT_PAIRED_BUTTON_TAG = '~<\s*firstlight\s*:\s*(button)(?=\s|>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</\s*firstlight\s*:\s*\1\s*>~s';
 

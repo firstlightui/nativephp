@@ -43,6 +43,8 @@ details behind the same coherent Firstlight API.
 - Callout
 - Confirmation Dialog
 - Transient Feedback
+- Modal
+- Bottom Sheet
 - List Item
 - List
 - List Section
