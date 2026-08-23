@@ -49,6 +49,27 @@ details behind the same coherent Firstlight API.
 - List
 - List Section
 
+## Laravel SuperNative extensions
+
+These are PHP services over existing controls, not extra catalogue tags.
+Validation is on main: `ValidatesFields` binds Laravel `MessageBag` text to
+field `error` slots. See `docs/how-to/validate-fields.md`.
+
+Approved follow-on extensions (not shipped, not alpha-gate items):
+
+- form submit helper (Button `loading` + `validate()`)
+- Gate/Policy helpers on actions
+- List paginator binding
+- media field (the first follow-on that may add a catalogue tag)
+- destructive list actions
+- Notification → Feedback/push bridge
+- package-owned locale chrome
+
+Do not add layout primitives, navigation chrome, input masks, or a
+schema/form builder to the Firstlight catalogue. Mobile UI owns those
+foundations. The maintainer record is
+`spec/designs/2026-08-23-firstlight-laravel-supernative-extensions-design.md`.
+
 ## Completion boundary
 
 A component is complete only when its semantic contract, PHP and EDGE API,

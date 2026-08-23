@@ -28,6 +28,9 @@ sources:
 | `Package.swift` | Swift package, scheme, iOS floor, source target, and iOS test target | Authored; Apple build authority |
 | `src/Components/` | Public NativePHP Blade component adapters and Element Tree type selection | Authored |
 | `src/Elements/` | Public value validation, primitive props, callback registration, and Element Tree contracts | Authored |
+| `src/Concerns/` | Screen-level PHP extensions such as Laravel field validation | Authored |
+| `src/Validation/` | MessageBag request-scope binding onto field `error` slots | Authored |
+| `src/NativeComponent.php` | NativePHP screen base that includes `ValidatesFields` | Authored |
 | `src/Support/` | Shared normalization and callback helpers used by element contracts | Authored |
 | `src/Exceptions/` | Actionable public-contract diagnostics | Authored |
 | `src/FirstlightServiceProvider.php` | Laravel/Blade package boot integration | Authored |
@@ -81,6 +84,7 @@ The showcase must not define package renderer code or a competing public API. Pa
 - Put consumer guidance in `docs/` and make it independently understandable.
 - Put current maintainer or agent contracts in an indexed `spec/` page.
 - Put a dated design or plan in its historical directory and do not present it as current truth.
+- Treat Laravel-shaped behaviour as a PHP SuperNative extension unless [Catalogue boundary](catalogue-boundary.md) requires a new control.
 - Add a component's public page to `docs/index.md`, its registration to `nativephp.json`, and its capture contract to `spec/screenshots.json`.
 - Add or update a repository skill only when a repeated operational workflow has a stable boundary.
 - Do not hand-edit LLM artefacts, generated native hosts, dependency trees, build directories, or captured images.

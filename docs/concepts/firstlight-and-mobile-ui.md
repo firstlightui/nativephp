@@ -19,6 +19,10 @@ sources:
   - spec/components/stepper.md
   - spec/reviews/search-field-development.md
   - spec/reviews/text-area-development.md
+  - src/Concerns/ValidatesFields.php
+  - src/Validation/FieldErrorBinder.php
+  - docs/how-to/validate-fields.md
+  - spec/components/transient-feedback.md
 ---
 
 # How Firstlight Complements NativePHP Mobile UI
@@ -90,6 +94,12 @@ Across the catalogue, Firstlight applies the same rules:
 - the same authored component works on iOS and Android while each platform retains its native geometry, motion, presentation, and accessibility behaviour.
 
 Firstlight deliberately exposes fewer visual escape hatches and platform-only options than a general-purpose primitive library. This narrower surface keeps application code portable and allows the components to behave consistently as the native platforms evolve.
+
+## Laravel-shaped PHP extensions
+
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md).
+
+Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
 ## Reusing Mobile UI when it already fits
 

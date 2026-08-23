@@ -407,6 +407,12 @@ Across the catalogue, Firstlight applies the same rules:
 
 Firstlight deliberately exposes fewer visual escape hatches and platform-only options than a general-purpose primitive library. This narrower surface keeps application code portable and allows the components to behave consistently as the native platforms evolve.
 
+## Laravel-shaped PHP extensions
+
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md).
+
+Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
+
 ## Reusing Mobile UI when it already fits
 
 Firstlight does not maintain duplicate native code merely to put every control under its own namespace. **Button** and **Progress** currently keep public Firstlight element types while delegating directly to the official Mobile UI SwiftUI and Material 3 renderers.
