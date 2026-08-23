@@ -77,9 +77,12 @@ prefix, suffix, or styling escape props.
 
 ## Validation and accessibility
 
-Values and textual metadata are strict strings. Boolean flags require real
-booleans. Line counts require positive integers, the range must be ordered,
-and invalid capitalization or sync modes fail with actionable exceptions.
+Contract exceptions still reject invalid types, unordered line bounds, and
+unsupported sync modes before publication. User validation is separate:
+screens that `use ValidatesFields` auto-bind the first MessageBag message for
+the field's `native:model` or `error-for` name. An authored `error` wins.
+`required` is display metadata and does not run Laravel rules. See
+[Validate fields](../how-to/validate-fields.md).
 
 A visible `label` or explicit `a11y-label` is required during development.
 Error text replaces helper text while preserving the current accessible name

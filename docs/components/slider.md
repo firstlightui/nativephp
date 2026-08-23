@@ -92,6 +92,11 @@ already reconciles every publication it receives.
 
 ## Accessibility and platform behavior
 
+Contract exceptions still reject invalid numeric grids before publication.
+User validation is separate: screens that `use ValidatesFields` auto-bind the
+first MessageBag message for the field's `native:model` or `error-for` name.
+An authored `error` wins. See [Validate fields](../how-to/validate-fields.md).
+
 A visible `label` or explicit `a11y-label` is required during development.
 Error text replaces helper text, without replacing the accessible name or
 current value. `a11y-value` can add units or domain language; otherwise the

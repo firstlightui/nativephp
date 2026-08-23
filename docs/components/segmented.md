@@ -98,7 +98,14 @@ Provide either a visible `label` or an explicit `a11y-label`. Firstlight warns d
 
 ## Validation and failure behaviour
 
-Firstlight throws an actionable exception for mixed string and integer values, duplicate values, missing rich-option fields, unknown rich-option fields, non-string labels, non-boolean disabled flags, unsupported value types, or a selected value whose type differs from the options. A same-typed value absent from `options` remains visibly unselected rather than selecting the first option.
+Contract exceptions still reject mixed or duplicate option values and
+unsupported types before publication. User validation is separate: screens
+that `use ValidatesFields` auto-bind the first MessageBag message for the
+field's `native:model` or `error-for` name. An authored `error` wins.
+`required` is display metadata and does not run Laravel rules. See
+[Validate fields](../how-to/validate-fields.md). A same-typed value absent
+from `options` remains visibly unselected rather than selecting the first
+option.
 
 ## Platform behaviour
 

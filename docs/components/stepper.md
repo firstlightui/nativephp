@@ -92,6 +92,11 @@ accepted changes already reconcile normally.
 
 ## Accessibility and platform behavior
 
+Contract exceptions still reject invalid numeric grids before publication.
+User validation is separate: screens that `use ValidatesFields` auto-bind the
+first MessageBag message for the field's `native:model` or `error-for` name.
+An authored `error` wins. See [Validate fields](../how-to/validate-fields.md).
+
 Provide a visible `label` or an explicit `a11y-label`. VoiceOver and TalkBack
 receive the accepted value, hint, helper or error, disabled state, and named
 decrease/increase actions. At a boundary, only the unavailable direction is

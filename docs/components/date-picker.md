@@ -89,9 +89,12 @@ necessary, but does not publish until confirmation.
 
 ## Validation and accessibility
 
-Locale must be a nonblank, well-formed BCP-47 language tag. Timezone must be a
-known IANA identifier; fixed numeric offsets are not accepted. Both affect
-native display context only and never alter the canonical wire string.
+Contract exceptions still reject malformed locale or timezone values before
+publication. User validation is separate: screens that `use ValidatesFields`
+auto-bind the first MessageBag message for the field's `native:model` or
+`error-for` name. An authored `error` wins. `required` is display metadata
+and does not run Laravel rules. See
+[Validate fields](../how-to/validate-fields.md).
 
 A visible `label` or explicit `a11y-label` is required during development.
 Error text replaces helper text without replacing the control's accessible

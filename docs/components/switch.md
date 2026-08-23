@@ -114,7 +114,12 @@ Provide a visible `label` or an explicit `a11y-label`; Firstlight warns during d
 
 ## Validation and failure behaviour
 
-Firstlight throws an actionable exception when `value` is not a boolean, when `required` or `placement` is used, or when a deferred sync mode is requested. Use `error` to present validation feedback. An error takes precedence over helper text in the native renderer and is included in accessibility semantics.
+Contract exceptions still reject non-Boolean values, unsupported `required` or
+`placement`, and deferred sync modes before publication. User validation is
+separate: screens that `use ValidatesFields` auto-bind the first MessageBag
+message for the field's `native:model` or `error-for` name. An authored
+`error` wins. See [Validate fields](../how-to/validate-fields.md). An error
+takes precedence over helper text and is included in accessibility semantics.
 
 ## Platform behaviour
 

@@ -53,8 +53,12 @@ presentation styles, clear affordances, read-only state, icons, or colours.
 
 ## Validation and accessibility
 
-Firstlight does not trim or coerce time values. For example, `09:05` is valid;
-`9:05`, `09:05:00`, `24:00`, and whitespace-padded values are not.
+Contract exceptions still reject coerced or non-canonical time strings before
+publication. User validation is separate: screens that `use ValidatesFields`
+auto-bind the first MessageBag message for the field's `native:model` or
+`error-for` name. An authored `error` wins. `required` is display metadata
+and does not run Laravel rules. See
+[Validate fields](../how-to/validate-fields.md).
 
 Always provide either a visible `label` or `a11y-label`. Errors replace helper
 text visually and are announced by platform semantics. The native presentation

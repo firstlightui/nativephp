@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use FirstlightUI\Support\CallbackExpression;
+use FirstlightUI\Validation\FieldErrorBinder;
 use FirstlightUI\Support\NormalizedOption;
 use FirstlightUI\Support\NormalizedOptions;
 use FirstlightUI\Support\OptionNormalizer;
@@ -93,6 +94,7 @@ class Select extends Element
         }
 
         $this->applyA11yAttributes($attrs);
+        FieldErrorBinder::apply($this, $attrs);
     }
 
     /** @param array<int|string, mixed> $options */

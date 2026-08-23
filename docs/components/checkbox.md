@@ -144,12 +144,13 @@ scaling.
 
 ## Validation and failure behaviour
 
-Firstlight throws an actionable exception for non-Boolean `value`, `required`,
-or `disabled` props. It also rejects unsupported indeterminate state, deferred
-binding modes, placement, icons, colours, variants, `@press`, and `@submit`.
-The component is self-closing and does not accept a content slot. Use `error`
-for validation feedback; it replaces helper text and is included in
-accessibility semantics.
+Contract exceptions still reject non-Boolean props and unsupported attributes
+before publication. User validation is separate: screens that
+`use ValidatesFields` auto-bind the first MessageBag message for the field's
+`native:model` or `error-for` name. An authored `error` wins. `required` is
+display metadata and does not run Laravel rules. See
+[Validate fields](../how-to/validate-fields.md). Error text replaces helper
+text and is included in accessibility semantics.
 
 ## Platform behaviour
 

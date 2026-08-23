@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -94,6 +95,7 @@ final class Checkbox extends Element
         }
 
         $this->applyA11yAttributes($attrs);
+        FieldErrorBinder::apply($this, $attrs);
     }
 
     public function value(bool $value): static

@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use FirstlightUI\Support\FiniteNumber;
+use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -93,6 +94,7 @@ final class Slider extends Element
         if (array_key_exists('a11y-value', $attrs) || array_key_exists('a11yValue', $attrs)) {
             $this->extraProps['a11y_value'] = $attrs['a11y-value'] ?? $attrs['a11yValue'];
         }
+        FieldErrorBinder::apply($this, $attrs);
     }
 
     public function value(mixed $value): static

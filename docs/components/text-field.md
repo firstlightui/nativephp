@@ -96,15 +96,18 @@ publishes the password value.
 
 ## Validation and accessibility
 
-Values and textual attributes are strict strings. Invalid enum values,
-incomplete trailing actions, conflicting affordances, `revealable` without
-`secure`, and debounce durations below 50 ms fail with actionable exceptions.
-A visible `label` or explicit `a11y-label` is required during development.
+Contract exceptions still reject invalid types, unsupported enums, incomplete
+trailing actions, and conflicting affordances before publication. User
+validation is separate: screens that `use ValidatesFields` auto-bind the first
+MessageBag message for the field's `native:model` or `error-for` name. An
+authored `error` wins. `required` is display metadata and does not run Laravel
+rules. See [Validate fields](../how-to/validate-fields.md).
 
 Error text replaces helper text without replacing the field's accessible name
 or value. Decorative icons stay hidden from assistive technology. Icon actions
 are separate native accessibility nodes with a minimum 44-point target on iOS
-and 48-dp target on Android.
+and 48-dp target on Android. A visible `label` or explicit `a11y-label` is
+required during development.
 
 ## Platform behaviour
 

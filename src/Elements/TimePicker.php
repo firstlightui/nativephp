@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use DateTimeZone;
+use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -86,6 +87,7 @@ final class TimePicker extends Element
             }
         }
         $this->applyA11yAttributes($attrs);
+        FieldErrorBinder::apply($this, $attrs);
     }
 
     public function value(mixed $value): static

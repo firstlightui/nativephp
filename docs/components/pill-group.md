@@ -119,7 +119,14 @@ Provide either a visible `label` or an explicit `a11y-label`. Firstlight warns d
 
 ## Validation and failure behaviour
 
-Firstlight throws an actionable exception for malformed options, mixed or duplicate option values, a selection with the wrong type or shape, duplicate or mixed multiple selections, unsupported presentation props, and deferred sync modes. A same-typed selected value absent from `options` remains unselected rather than selecting a fallback.
+Contract exceptions still reject malformed options, mixed selections, and
+unsupported presentation props before publication. User validation is
+separate: screens that `use ValidatesFields` auto-bind the first MessageBag
+message for the field's `native:model` or `error-for` name. An authored
+`error` wins. `required` is display metadata and does not run Laravel rules.
+See [Validate fields](../how-to/validate-fields.md). A same-typed selected
+value absent from `options` remains unselected rather than selecting a
+fallback.
 
 ## Platform behaviour
 
