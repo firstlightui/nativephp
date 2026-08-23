@@ -26,7 +26,7 @@ Reviewed package revision `72d410431f7cdb8a987c1f40fa105f983564d212` on `main`.
 | PHP (`vendor/bin/pest --compact`) | PASS | 1097 passed, 5 skipped, 1 deprecated |
 | PHP (`composer test`) | PASS (re-checked 2026-08-24) | 1097 passed; earlier POSIX session-wrapper flake did not reproduce |
 | Android unit + Paparazzi (`testDebugUnitTest` + `verifyPaparazziDebug`) | PASS | Java 21 required; full suite green after golden refresh |
-| iOS snapshot suites | FAIL | 5 suites missing on-disk references |
+| iOS snapshot suites | PASS (fixed 2026-08-24) | Missing Badge/Callout/Feedback Center/Icon Button/Text Area goldens recorded by temporarily forcing `.all`, then restored env-gated record mode |
 | iOS behavioral suites | PASS | FeedbackCenter (18); SearchField/Segmented/Switch/TextField contracts pass |
 | `bin/check-component … --development` (24 components) | PASS | All manifest components |
 | `bin/check-docs --development` | PASS | |
