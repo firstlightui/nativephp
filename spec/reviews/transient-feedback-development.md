@@ -26,6 +26,76 @@ sources:
 
 # Transient Feedback Development Review
 
+## Development refresh — 2026-08-23
+
+Reviewed against package revision `fa8dec5d55931e729c8397aee45b5d2552d210fa`
+and showcase revision `6b68bf87d9f6e328ef7303a8848e8658b9bcb4a4` on `main`.
+
+**Off-device implementation verdict:** PASS
+
+**Development verdict:** BLOCKED
+
+**Component-release verdict:** BLOCKED
+
+**Catalogue verdict:** BLOCKED
+
+The callback-refresh publication generation, focused PHP tests, executed iOS
+XCTest suite, recorded Transient Feedback Paparazzi goldens, approved
+documentation matrix, and `bin/check-transient-feedback --development` pass.
+Development remains blocked because VoiceOver, TalkBack, navigation and
+background lifecycle observation, and dated physical-device evidence are still
+open.
+
+### Refresh evidence
+
+```text
+vendor/bin/pest tests/Feature/TransientFeedbackApiTest.php tests/Feature/FeedbackCenterTest.php
+PASS — 36 tests, 168 assertions
+
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home \
+  tests/android/gradlew -p tests/android recordPaparazziDebug \
+  --tests "dev.firstlightui.plugins.firstlight_ui.ui.FeedbackCenterPaparazziCases" \
+  --tests "dev.firstlightui.plugins.firstlight_ui.ui.FeedbackCenterFontScalePaparazziCase" \
+  --tests "dev.firstlightui.plugins.firstlight_ui.ui.FeedbackCenterRtlPaparazziCase"
+PASS — 10 Transient Feedback goldens recorded
+
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home \
+  tests/android/gradlew -p tests/android verifyPaparazziDebug \
+  --tests "dev.firstlightui.plugins.firstlight_ui.ui.FeedbackCenterPaparazziCases" \
+  --tests "dev.firstlightui.plugins.firstlight_ui.ui.FeedbackCenterFontScalePaparazziCase" \
+  --tests "dev.firstlightui.plugins.firstlight_ui.ui.FeedbackCenterRtlPaparazziCase"
+PASS — 10 tests, 0 failures
+
+xcodebuild -scheme FirstlightIOSControls \
+  -destination 'platform=iOS Simulator,id=EB44C64E-1579-4C13-A1F9-C44FBD496763' \
+  test -only-testing:FirstlightIOSControlsTests/FeedbackCenterTests
+PASS — 18 tests, 0 failures
+
+bin/capture-doc-screenshots TransientFeedback \
+  --showcase=../firstlight-showcase \
+  --ios=EB44C64E-1579-4C13-A1F9-C44FBD496763 \
+  --android=emulator-5554
+PASS — complete restored four-image matrix
+
+bin/check-transient-feedback --development
+PASS — release-review rows remain intentionally absent
+```
+
+The maintainer authorized iPhone 17 Pro `EB44C64E-1579-4C13-A1F9-C44FBD496763`
+and Pixel 9 Pro `emulator-5554`. The approved documentation matrix is:
+
+- `docs/screenshots/transient-feedback/ios-light.png`
+- `docs/screenshots/transient-feedback/ios-dark.png`
+- `docs/screenshots/transient-feedback/android-light.png`
+- `docs/screenshots/transient-feedback/android-dark.png`
+
+All four images show the held success fixture with **Appointment saved**,
+**Undo**, and native dismiss chrome on both platforms. Manual VoiceOver,
+TalkBack, navigation/background lifecycle, and physical-device rows remain
+required before component-release or catalogue claims.
+
+---
+
 Reviewed on 2026-08-05 against package implementation revision
 `f3fc853a1a41c23528cf9fe46c99df52607e2109` and showcase revision
 `cf9345937fea4aade07960cf95411bd415db5112` on `main`. The package started
