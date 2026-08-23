@@ -1581,6 +1581,116 @@ both Firstlight-owned native renderers declared by the package manifest.
 | iOS | ![List Item on iOS in light mode](../screenshots/list-item/ios-light.png) | ![List Item on iOS in dark mode](../screenshots/list-item/ios-dark.png) |
 | Android | ![List Item on Android in light mode](../screenshots/list-item/android-light.png) | ![List Item on Android in dark mode](../screenshots/list-item/android-dark.png) |
 
+--- Source: docs/components/list.md ---
+
+# List
+
+List presents a finite vertical collection of application rows. Compose rows
+with [List Item](list-item.md) and optional grouped sections with
+[List Section](list-section.md).
+
+## Complete example
+
+```blade
+<firstlight:list separator @refresh="reloadItems" @end-reached="loadMore">
+    <firstlight:list-item headline="Account" @press="openAccount" />
+
+    <firstlight:list-section header="Preferences" footer="Changes sync automatically">
+        <firstlight:list-item headline="Notifications" @press="openNotifications" />
+        <firstlight:list-item headline="Privacy" @press="openPrivacy" />
+    </firstlight:list-section>
+</firstlight:list>
+```
+
+List is a paired container. Only List Item and List Section children are
+accepted.
+
+## Props
+
+| API | Accepted type | Purpose |
+| --- | --- | --- |
+| `separator` | `bool` | Shows native dividers between rows. Defaults to `false`. |
+| `plain` | `bool` | When sections are present, keeps flat rows with sticky headers instead of grouped inset cards. Defaults to `false`. |
+| `shows-indicators` | `bool` | Controls native scroll indicator visibility. Defaults to upstream platform behaviour when omitted. |
+| `class` | `string` | External EDGE layout utilities. |
+
+## Events
+
+`@refresh` enables native pull-to-refresh and invokes the named PHP action when
+the user pulls to refresh.
+
+`@end-reached` invokes the named PHP action when the viewport nears the final
+leaf row. It is intended for pagination rather than precise scroll offsets.
+
+## Composition rules
+
+- Every row is a `firstlight:list-item` with its own required `@press` handler.
+- Group related rows with `firstlight:list-section`. Sections require at least
+  one List Item child.
+- Horizontal lists, virtualized windows, selectable collections, and arbitrary
+  child components are outside the Firstlight List contract.
+
+## Platform expression
+
+List delegates scrolling, separators, grouped section chrome, pull-to-refresh,
+and end-reached detection to the official Mobile UI list renderer on both
+platforms while retaining Firstlight List Item rows.
+
+## Adapter note
+
+List is an adapter over Mobile UI `list`. List Section publishes the upstream
+wire type `list_section` so the delegated renderer recognizes grouped sections
+while the public tag remains `<firstlight:list-section>`.
+
+--- Source: docs/components/list-section.md ---
+
+# List Section
+
+List Section groups related [List Item](list-item.md) rows under an optional
+header and footer inside a parent [List](list.md).
+
+## Complete example
+
+```blade
+<firstlight:list>
+    <firstlight:list-section header="Account" footer="Signed in as Alex">
+        <firstlight:list-item headline="Profile" @press="openProfile" />
+        <firstlight:list-item headline="Security" @press="openSecurity" />
+    </firstlight:list-section>
+</firstlight:list>
+```
+
+List Section is a paired container and must live inside List. A section
+authored on its own does not render application content.
+
+## Props
+
+| API | Accepted type | Purpose |
+| --- | --- | --- |
+| `header` | non-empty `string` | Optional section title. |
+| `footer` | non-empty `string` | Optional section footnote. |
+
+At least one List Item child is required.
+
+## Composition rules
+
+- Child slot accepts only `firstlight:list-item`.
+- Nested sections, refresh hooks, separators, and field props belong on the
+  parent List instead.
+
+## Platform expression
+
+The parent List renderer consumes List Section inline:
+
+- iOS renders SwiftUI section headers and footers.
+- Android renders sticky headers, grouped card rows, and footer text.
+
+## Adapter note
+
+The public tag is `<firstlight:list-section>`, but the published wire type
+remains `list_section` so the delegated Mobile UI list renderer can apply
+grouped section styling.
+
 --- Source: docs/components/pill-group.md ---
 
 # Pill Group
@@ -2196,11 +2306,12 @@ There is no parallel input, click, press, or submit event. Programmatic PHP
 publications emit nothing. A publication is authoritative and replaces the
 native draft, including when PHP rejects a proposal and keeps the prior value.
 
-NativePHP Mobile 4.0.1 must expose a publication epoch even when the accepted
-value is identical for that rejection path to be observable by the renderer.
-Slider's component-release evidence remains blocked until that upstream
-runtime behavior is available and verified; the renderer already reconciles
-every publication it receives.
+NativePHP Mobile 4.2.0 must expose a publication acknowledgement even when the
+accepted value is identical for that rejection path to be observable by the
+renderer. Slider's component-release evidence remains blocked until that
+upstream runtime behaviour is available and verified
+([#365](https://github.com/NativePHP/mobile-air/issues/365)); the renderer
+already reconciles every publication it receives.
 
 ## Accessibility and platform behavior
 
@@ -2297,10 +2408,11 @@ again. This prevents stale rapid taps from calculating against an old accepted
 value. The control does not change optimistically and performs no arithmetic on
 the device.
 
-NativePHP Mobile 4.0.1 still needs verified publication notification when PHP
-rejects a proposal and republishes an identical accepted value. Stepper remains
-release-blocked on that upstream behavior; accepted changes already reconcile
-normally.
+NativePHP Mobile 4.2.0 still needs a content-independent publication
+acknowledgement from the bundled PHP runtime when PHP rejects a proposal and
+republishes an identical accepted value. Stepper remains release-blocked on
+that upstream behaviour ([#365](https://github.com/NativePHP/mobile-air/issues/365));
+accepted changes already reconcile normally.
 
 ## Accessibility and platform behavior
 
@@ -2712,8 +2824,8 @@ Switch supports the versions listed in the current [compatibility reference](../
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.0` |
-| NativePHP Mobile UI | `^0.3` |
+| NativePHP Mobile | `^4.2` |
+| NativePHP Mobile UI | `^0.4` |
 | iOS application target | iOS 18.0 or later |
 | Android application target | API 29 or later |
 | Firstlight Swift package | iOS 18 or later |
@@ -2721,24 +2833,23 @@ Switch supports the versions listed in the current [compatibility reference](../
 
 These are the package's current declared floors. Firstlight does not promise support for earlier versions. Both the iOS and Android renderers are required for a public component; the same documented EDGE example works on both platforms.
 
+After changing NativePHP versions, run `composer update` and `php artisan native:install --force` so bundled PHP binaries, native project files, and plugin copies match the resolved release.
+
 ## Pre-alpha runtime limitation
 
-The `^4.0` Composer constraint expresses package and source compatibility; it
-does not currently mean that NativePHP Mobile 4.0.1 passes Firstlight's public
-release gate. Its bundled PHP Element Runtime can suppress a byte-identical
-tree publication before either platform renderer receives it. An identical
+The Composer constraints express package and source compatibility; they do not
+currently mean that NativePHP Mobile 4.2.0 passes Firstlight's public release
+gate. The bundled PHP Element Runtime can still suppress a byte-identical tree
+publication before either platform renderer receives it. An identical
 publication still matters when PHP rejects an event or deliberately keeps the
 current value.
 
 Known consequences include a rejected Segmented selection remaining visible,
 or a server-authoritative Switch or Pill Group remaining pending and ignoring
-later input. Firstlight development therefore uses an unreleased mobile-air
-branch for Android publication revisions and a guarded, Android-only binary
-proof in the showcase. Neither is a supported release dependency, and the
-patched PHP binary must not be distributed.
+later input.
 
-The public-alpha runtime gate remains blocked until an official NativePHP
-release includes a content-independent publication acknowledgement in its
-bundled PHP runtime. Track the upstream
-[runtime issue](https://github.com/NativePHP/mobile-air/issues/279) and
-[implementation work](https://github.com/NativePHP/mobile-air/pull/280).
+NativePHP Mobile 4.1.0 shipped Android `treePublicationId` ([#280](https://github.com/NativePHP/mobile-air/pull/280)), which lets plugin renderers observe equal-tree republications **after** Kotlin has received and posted a tree. That fixes Compose equal-assignment suppression only. It does not help when the shared C runtime returns early on an identical encoded frame and never calls either platform reader — the cross-platform gap tracked in the [publication acknowledgement issue](https://github.com/NativePHP/mobile-air/issues/365).
+
+Firstlight development may still use unreleased mobile-air branches or guarded binary proofs in the showcase while validating reconciliation behaviour. Those patches must not ship as supported release dependencies.
+
+The public-alpha runtime gate remains blocked until an official NativePHP release includes a content-independent publication acknowledgement in its bundled PHP runtime (C `nphp_element_publish()` / `nphp_frame_end()` and both platform readers). See also the closed Android-only report ([#279](https://github.com/NativePHP/mobile-air/issues/279)) and the partial Android fix ([#280](https://github.com/NativePHP/mobile-air/pull/280)) for context.

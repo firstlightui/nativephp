@@ -85,6 +85,30 @@
             "self_closing": true
         },
         {
+            "type": "firstlight.list",
+            "element": "FirstlightUI\\Elements\\ListContainer",
+            "blade": "FirstlightUI\\Components\\ListContainer",
+            "android_renderer": "com.nativephp.plugins.native_ui.ui.ListRenderer",
+            "ios_renderer": "NativeUIListRenderer",
+            "self_closing": false,
+            "adapter": {
+                "package": "nativephp/mobile-ui",
+                "type": "list"
+            }
+        },
+        {
+            "type": "firstlight.list-section",
+            "element": "FirstlightUI\\Elements\\ListSection",
+            "blade": "FirstlightUI\\Components\\ListSection",
+            "android_renderer": "com.nativephp.plugins.native_ui.ui.EmptyRenderer",
+            "ios_renderer": "NativeUIEmptyRenderer",
+            "self_closing": false,
+            "adapter": {
+                "package": "nativephp/mobile-ui",
+                "type": "list_section"
+            }
+        },
+        {
             "type": "firstlight.progress",
             "element": "FirstlightUI\\Elements\\Progress",
             "blade": "FirstlightUI\\Components\\Progress",

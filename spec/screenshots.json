@@ -110,6 +110,26 @@
                 "android-dark": "docs/screenshots/list-item/android-dark.png"
             }
         },
+        "list": {
+            "route": "/captures/list",
+            "test": "php artisan test tests/Feature/ListCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/list/ios-light.png",
+                "ios-dark": "docs/screenshots/list/ios-dark.png",
+                "android-light": "docs/screenshots/list/android-light.png",
+                "android-dark": "docs/screenshots/list/android-dark.png"
+            }
+        },
+        "list-section": {
+            "route": "/captures/list",
+            "test": "php artisan test tests/Feature/ListCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/list-section/ios-light.png",
+                "ios-dark": "docs/screenshots/list-section/ios-dark.png",
+                "android-light": "docs/screenshots/list-section/android-light.png",
+                "android-dark": "docs/screenshots/list-section/android-dark.png"
+            }
+        },
         "pill-group": {
             "route": "/captures/pill-group",
             "test": "php artisan test tests/Feature/PillGroupCaptureTest.php",
