@@ -24,10 +24,10 @@ Reviewed package revision `72d410431f7cdb8a987c1f40fa105f983564d212` on `main`.
 | Layer | Verdict | Notes |
 | --- | --- | --- |
 | PHP (`vendor/bin/pest --compact`) | PASS | 1097 passed, 5 skipped, 1 deprecated |
-| PHP (`composer test`) | FAIL | `TransientFeedbackDocumentationTest` release-gate isolation test — POSIX session wrapper unavailable in this environment |
+| PHP (`composer test`) | PASS (re-checked 2026-08-24) | 1097 passed; earlier POSIX session-wrapper flake did not reproduce |
 | Android unit + Paparazzi (`testDebugUnitTest` + `verifyPaparazziDebug`) | PASS | Java 21 required; full suite green after golden refresh |
-| iOS snapshot suites | FAIL | 5 suites missing on-disk references; 1 contract failure |
-| iOS behavioral suites | PASS | FeedbackCenter (18), Segmented/Switch/TextField contract tests pass |
+| iOS snapshot suites | FAIL | 5 suites missing on-disk references |
+| iOS behavioral suites | PASS | FeedbackCenter (18); SearchField/Segmented/Switch/TextField contracts pass |
 | `bin/check-component … --development` (24 components) | PASS | All manifest components |
 | `bin/check-docs --development` | PASS | |
 | `bin/check-transient-feedback --development` | PASS | Release rows intentionally absent |
@@ -117,7 +117,7 @@ Only seven snapshot test classes have committed `tests/ios/__Snapshots__/` PNGs 
 
 | Test | Verdict | Detail |
 | --- | --- | --- |
-| SearchFieldRendererContractTests.testUIKitConfigurationUsesNativeSearchAndAccessibilitySemantics | FAIL | `intrinsicContentSize.height` is 28.0; test requires ≥ 36.0 for minimum tap target |
+| SearchFieldRendererContractTests.testUIKitConfigurationUsesNativeSearchAndAccessibilitySemantics | PASS (fixed 2026-08-24) | `FirstlightSearchTextField` enforces `firstlightSearchFieldMinimumHeight` (36) over bare `UISearchTextField`'s ~28pt intrinsic height |
 
 All other executed behavioral suites pass, including `FeedbackCenterTests` (18 tests).
 
@@ -138,6 +138,9 @@ All twenty-four manifest components pass `bin/check-component <Name> --developme
 ## Follow-up before manual simulator session
 
 1. Record missing iOS snapshot references for Badge, Callout, Feedback Center, Icon Button, and Text Area using a host that propagates `FIRSTLIGHT_RECORD_SNAPSHOTS=1` (local Xcode scheme Test Action environment variables, or run from a machine where the env reaches the test runner).
-2. Investigate SearchField minimum tap-target height (`UISearchTextField` reports 28 pt intrinsic height on iPhone 17 Pro / iOS 26.5).
-3. Re-run `composer test` in an environment with POSIX session isolation for the Transient Feedback documentation gate fixture test.
-4. When simulators are available: manual VoiceOver/TalkBack, navigation/background lifecycle, physical-device evidence, and optional doc-screenshot refresh.
+2. When simulators are available: manual VoiceOver/TalkBack, navigation/background lifecycle, physical-device evidence, and optional doc-screenshot refresh.
+
+### Fixed after the sweep (2026-08-24)
+
+- SearchField tap target: `FirstlightSearchTextField` floors intrinsic height at 36 pt; contract suite green.
+- `composer test`: 1097 passed (Transient Feedback documentation gate green in this environment).

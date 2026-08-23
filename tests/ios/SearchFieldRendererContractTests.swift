@@ -58,7 +58,7 @@ final class SearchFieldRendererContractTests: XCTestCase {
     }
 
     func testUIKitConfigurationUsesNativeSearchAndAccessibilitySemantics() {
-        let field = UISearchTextField()
+        let field = FirstlightSearchTextField()
         configureSearchTextField(field, configuration: SearchFieldRendererConfiguration(node: node()))
 
         XCTAssertEqual(field.placeholder, "Search specialties")
@@ -68,7 +68,8 @@ final class SearchFieldRendererContractTests: XCTestCase {
         XCTAssertEqual(field.clearButtonMode, .whileEditing)
         XCTAssertEqual(field.autocapitalizationType, .words)
         XCTAssertEqual(field.autocorrectionType, .no)
-        XCTAssertGreaterThanOrEqual(field.intrinsicContentSize.height, 36)
+        XCTAssertGreaterThanOrEqual(field.intrinsicContentSize.height, firstlightSearchFieldMinimumHeight)
+        XCTAssertEqual(firstlightSearchFieldMinimumHeight, 36)
     }
 
     func testRendererCompilesAgainstNativePHPContractShims() {

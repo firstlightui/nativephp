@@ -1,6 +1,20 @@
 import SwiftUI
 import UIKit
 
+/// Bare `UISearchTextField` reports ~28pt intrinsic height outside `UISearchBar`.
+/// Firstlight enforces a floor so the control remains a viable tap target on its own.
+let firstlightSearchFieldMinimumHeight: CGFloat = 36
+
+final class FirstlightSearchTextField: UISearchTextField {
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width,
+            height: max(size.height, firstlightSearchFieldMinimumHeight)
+        )
+    }
+}
+
 struct FirstlightSearchFieldControl: UIViewRepresentable {
     let configuration: SearchFieldRendererConfiguration
     @Binding var text: String
@@ -12,8 +26,8 @@ struct FirstlightSearchFieldControl: UIViewRepresentable {
         Coordinator(parent: self)
     }
 
-    func makeUIView(context: Context) -> UISearchTextField {
-        let field = UISearchTextField(frame: .zero)
+    func makeUIView(context: Context) -> FirstlightSearchTextField {
+        let field = FirstlightSearchTextField(frame: .zero)
         field.delegate = context.coordinator
         field.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
         field.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -23,7 +37,7 @@ struct FirstlightSearchFieldControl: UIViewRepresentable {
         return field
     }
 
-    func updateUIView(_ field: UISearchTextField, context: Context) {
+    func updateUIView(_ field: FirstlightSearchTextField, context: Context) {
         context.coordinator.parent = self
         configureSearchTextField(field, configuration: configuration)
 
