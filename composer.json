@@ -23,8 +23,8 @@
     },
     "require": {
         "php": "^8.4",
-        "nativephp/mobile": "^4.0",
-        "nativephp/mobile-ui": "^0.3",
+        "nativephp/mobile": "^4.2",
+        "nativephp/mobile-ui": "^0.4",
         "ramsey/uuid": "^4.7"
     },
     "autoload": {

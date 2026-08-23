@@ -84,10 +84,11 @@ again. This prevents stale rapid taps from calculating against an old accepted
 value. The control does not change optimistically and performs no arithmetic on
 the device.
 
-NativePHP Mobile 4.0.1 still needs verified publication notification when PHP
-rejects a proposal and republishes an identical accepted value. Stepper remains
-release-blocked on that upstream behavior; accepted changes already reconcile
-normally.
+NativePHP Mobile 4.2.0 still needs a content-independent publication
+acknowledgement from the bundled PHP runtime when PHP rejects a proposal and
+republishes an identical accepted value. Stepper remains release-blocked on
+that upstream behaviour ([#365](https://github.com/NativePHP/mobile-air/issues/365));
+accepted changes already reconcile normally.
 
 ## Accessibility and platform behavior
 

@@ -14,17 +14,20 @@ php artisan native:install --force
 
 ## Pre-alpha NativePHP requirement
 
-Firstlight is not currently release-ready on NativePHP Mobile 4.0.1. Its
-package API works against 4.0.1, but the bundled PHP Element Runtime can
-suppress a byte-identical tree publication before iOS or Android receives it.
-Stateful controls may then fail to reconcile a rejected or unchanged PHP
-response.
+Firstlight is not currently release-ready on the latest supported NativePHP
+Mobile constraint (`^4.2`). Its package API works against 4.2.0, but the
+bundled PHP Element Runtime can suppress a byte-identical tree publication
+before iOS or Android receives it. Stateful controls may then fail to reconcile
+a rejected or unchanged PHP response.
 
-Firstlight development temporarily pins a mobile-air development branch and
-uses a guarded Android binary proof in the showcase. That patched binary must
-not ship. The public-alpha release gate is waiting for an official NativePHP
-release with a content-independent publication acknowledgement. See
-[Compatibility](docs/reference/compatibility.md#pre-alpha-runtime-limitation)
+NativePHP Mobile 4.1.0 added Android equal-tree publication revisions
+([#280](https://github.com/NativePHP/mobile-air/pull/280)); that is necessary
+but not sufficient. The remaining cross-platform gap is tracked upstream as
+[#365](https://github.com/NativePHP/mobile-air/issues/365).
+
+The public-alpha release gate is waiting for an official NativePHP release with
+a content-independent publication acknowledgement in the bundled PHP runtime.
+See [Compatibility](docs/reference/compatibility.md#pre-alpha-runtime-limitation)
 for the affected behaviour and upstream tracking.
 
 ## Example
