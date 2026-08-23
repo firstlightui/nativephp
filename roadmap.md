@@ -19,7 +19,7 @@ details behind the same coherent Firstlight API.
 
 ## Current state
 
-### On main
+### On main — V1 alpha catalogue (17)
 
 - Segmented
 - Status Label
@@ -39,6 +39,24 @@ details behind the same coherent Firstlight API.
 - Slider
 - Stepper
 
+### On main — V2 additions (4)
+
+- Activity Indicator
+- Checkbox
+- List Item
+- Confirmation Dialog
+
+### In progress — V2 service (not a manifest component)
+
+- **Transient Feedback** — `FirstlightUI\Facades\Feedback` with package-owned
+  root chrome (`firstlight.feedback-center`). Implementation, PHP/platform
+  tests, showcase dogfood, and Android Paparazzi goldens are on `main`. Release
+  capture, four documentation screenshots, and dated physical-device
+  accessibility evidence remain open. See [roadmap-v2.md](roadmap-v2.md).
+
+Structural and collection work (List, Modal, app chrome, layout adapters) is
+tracked in [roadmap-v3.md](roadmap-v3.md).
+
 ## Completion boundary
 
 A component is complete only when its semantic contract, PHP and EDGE API,
@@ -49,29 +67,24 @@ checks, consumer builds, device evidence, and constitutional review all pass.
 No individual component changes the public-alpha status. The alpha remains
 unreleased until the complete catalogue passes the shared release gate.
 
-## Shared alpha release gate — 2026-08-04
+## Shared alpha release gate
 
-The catalogue implementation and current automated/host gates are complete:
+The catalogue implementation and current automated/host gates are largely
+complete on `main`, but the public-alpha release gate remains blocked by work
+outside another component build:
 
-- package: 748 tests, 2,160 assertions, five model evaluations skipped;
-- Android JVM/Paparazzi: 131 tests, zero failures/errors, seven
-  controller-gated evidence skips;
-- exact-lock showcase: 93 tests, 1,467 assertions at package `b7cb3f9` and
-  showcase `a07da05`;
-- all ten new development component checks, docs build/check, strict Composer
-  validation, plugin validation, and repository diff checks pass;
-- Pixel 9 Pro debug install/launch and serialized component interaction pass;
-  the same lock passes Android `assembleRelease`;
-- iPhone 17 Pro debug reports `BUILD SUCCEEDED`, clean-installs, and launches
-  the complete catalogue.
+- NativePHP must ship an observable identical-publication epoch for server-
+  authoritative controls (Choice Group, Pill Group, Segmented, Select, Slider,
+  Stepper, Switch). Until [NativePHP/mobile-air#365](https://github.com/NativePHP/mobile-air/issues/365)
+  lands, consumers may need the documented `libphp.a` publication workaround on
+  supported NativePHP 4.2.x runtimes.
+- Clean **release-mode** captures and dated physical-device evidence for
+  VoiceOver, TalkBack, scaling, contrast, Reduced Motion, right-to-left
+  layout, offline behaviour, reconciliation, and rapid input remain open for
+  the catalogue as a whole.
+- **Transient Feedback** still needs the four registered documentation
+  screenshots and `spec/reviews/transient-feedback-alpha.md` before its release
+  row closes.
 
-The public-alpha release gate remains blocked by work outside another component
-build:
-
-- NativePHP must ship an observable identical-publication epoch for Choice
-  Group, Select, Slider, and Stepper;
-- exact iOS component XCTest/direct-runtime rows and dated physical-device
-  VoiceOver/TalkBack, scaling, contrast, RTL, motion, offline, and
-  reconciliation evidence remain open;
-- the catalogue must not be described as public-alpha ready until those rows
-  close.
+The catalogue must not be described as public-alpha ready until those rows
+close.

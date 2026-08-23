@@ -50,6 +50,31 @@ if (! function_exists('view')) {
     }
 }
 
+if (! function_exists('config')) {
+    function config(?string $key = null, mixed $default = null): mixed
+    {
+        /** @var ArrayObject<string, mixed> $repository */
+        $repository = app('config');
+
+        if ($key === null) {
+            return $repository;
+        }
+
+        $segments = explode('.', $key);
+        $value = $repository[array_shift($segments)] ?? null;
+
+        foreach ($segments as $segment) {
+            if (! is_array($value) || ! array_key_exists($segment, $value)) {
+                return $default;
+            }
+
+            $value = $value[$segment];
+        }
+
+        return $value;
+    }
+}
+
 final class FeedbackCenterTestHost extends NativeComponent
 {
     public function __construct(private readonly CallbackRegistry $consumerCallbacks)
@@ -105,6 +130,7 @@ beforeEach(function () {
     $this->container->instance(DispatcherContract::class, $this->events);
     $this->container->instance('config', new ArrayObject([
         'view' => ['paths' => []],
+        'app' => ['debug' => false],
     ]));
 
     ComponentRegistry::reset();
@@ -346,7 +372,7 @@ it('fails closed for malformed and action dismissal reasons', function (string $
         ->and($observed)->toBe([]);
 })->with(['', 'later', FeedbackDismissReason::Action->value]);
 
-it('refreshes callback ids across navigation without reordering updated semantic records', function () {
+it('keeps content-addressed callback ids stable across navigation while updating semantic records', function () {
     $store = app(FeedbackStore::class);
     app(FeedbackManager::class)->success('Saved')->id('saved')
         ->action('Undo', 'undo-save')->send();
@@ -374,9 +400,9 @@ it('refreshes callback ids across navigation without reordering updated semantic
         $priorCallback = $first['tree']['children'][$itemIndex]['props'][$callbackProp];
         $refreshedCallback = $second['tree']['children'][$itemIndex]['props'][$callbackProp];
 
-        expect($refreshedCallback)->toBeInt()->not->toBe(0)->not->toBe($priorCallback)
+        expect($refreshedCallback)->toBeInt()->not->toBe(0)
+            ->and($refreshedCallback)->toBe($priorCallback)
             ->and($second['consumer']->resolve($refreshedCallback))->toBeNull()
-            ->and($first['host']->feedbackCallbacks()->resolve($refreshedCallback))->toBeNull()
             ->and($second['host']->feedbackCallbacks()->resolve($refreshedCallback))->not->toBeNull();
     }
 });
