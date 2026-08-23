@@ -1,12 +1,15 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -31,6 +34,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import com.nativephp.plugins.native_ui.NativeUITheme
+import com.nativephp.plugins.native_ui.NativeUITokens
 
 class FeedbackCenterAnnouncementState {
     private var announcedId: String? = null
@@ -61,17 +66,17 @@ class FeedbackCenterAnnouncementState {
 
 enum class FeedbackCenterToneColorRole {
     InverseSurface,
-    TertiaryContainer,
-    SecondaryContainer,
-    ErrorContainer,
+    Success,
+    Accent,
+    Destructive,
 }
 
 data class FeedbackCenterRenderingPolicy(val tone: FeedbackCenterTone) {
     val colorRole: FeedbackCenterToneColorRole = when (tone) {
         FeedbackCenterTone.Default -> FeedbackCenterToneColorRole.InverseSurface
-        FeedbackCenterTone.Success -> FeedbackCenterToneColorRole.TertiaryContainer
-        FeedbackCenterTone.Warning -> FeedbackCenterToneColorRole.SecondaryContainer
-        FeedbackCenterTone.Danger -> FeedbackCenterToneColorRole.ErrorContainer
+        FeedbackCenterTone.Success -> FeedbackCenterToneColorRole.Success
+        FeedbackCenterTone.Warning -> FeedbackCenterToneColorRole.Accent
+        FeedbackCenterTone.Danger -> FeedbackCenterToneColorRole.Destructive
     }
     val iconTestTag: String = "firstlight-feedback-tone-${tone.wireName}"
 
@@ -84,7 +89,7 @@ data class FeedbackCenterRenderingPolicy(val tone: FeedbackCenterTone) {
     }
 }
 
-private data class FeedbackCenterColors(
+internal data class FeedbackCenterColors(
     val container: Color,
     val content: Color,
     val action: Color,
@@ -93,8 +98,18 @@ private data class FeedbackCenterColors(
 )
 
 @Composable
-private fun feedbackCenterColors(tone: FeedbackCenterTone): FeedbackCenterColors {
-    val scheme = MaterialTheme.colorScheme
+private fun feedbackCenterColors(tone: FeedbackCenterTone): FeedbackCenterColors =
+    feedbackCenterColors(
+        tone,
+        MaterialTheme.colorScheme,
+        if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
+    )
+
+internal fun feedbackCenterColors(
+    tone: FeedbackCenterTone,
+    scheme: ColorScheme,
+    tokens: NativeUITokens,
+): FeedbackCenterColors {
     return when (FeedbackCenterRenderingPolicy(tone).colorRole) {
         FeedbackCenterToneColorRole.InverseSurface -> FeedbackCenterColors(
             container = scheme.inverseSurface,
@@ -103,26 +118,26 @@ private fun feedbackCenterColors(tone: FeedbackCenterTone): FeedbackCenterColors
             dismiss = scheme.inverseOnSurface,
             accent = scheme.inversePrimary,
         )
-        FeedbackCenterToneColorRole.TertiaryContainer -> FeedbackCenterColors(
-            container = scheme.tertiaryContainer,
-            content = scheme.onTertiaryContainer,
-            action = scheme.tertiary,
-            dismiss = scheme.onTertiaryContainer,
-            accent = scheme.tertiary,
+        FeedbackCenterToneColorRole.Success -> FeedbackCenterColors(
+            container = tokens.success,
+            content = tokens.onSuccess,
+            action = tokens.onSuccess,
+            dismiss = tokens.onSuccess,
+            accent = tokens.onSuccess,
         )
-        FeedbackCenterToneColorRole.SecondaryContainer -> FeedbackCenterColors(
-            container = scheme.secondaryContainer,
-            content = scheme.onSecondaryContainer,
-            action = scheme.secondary,
-            dismiss = scheme.onSecondaryContainer,
-            accent = scheme.secondary,
+        FeedbackCenterToneColorRole.Accent -> FeedbackCenterColors(
+            container = tokens.accent,
+            content = tokens.onAccent,
+            action = tokens.onAccent,
+            dismiss = tokens.onAccent,
+            accent = tokens.onAccent,
         )
-        FeedbackCenterToneColorRole.ErrorContainer -> FeedbackCenterColors(
-            container = scheme.errorContainer,
-            content = scheme.onErrorContainer,
-            action = scheme.error,
-            dismiss = scheme.onErrorContainer,
-            accent = scheme.error,
+        FeedbackCenterToneColorRole.Destructive -> FeedbackCenterColors(
+            container = tokens.destructive,
+            content = tokens.onDestructive,
+            action = tokens.onDestructive,
+            dismiss = tokens.onDestructive,
+            accent = tokens.onDestructive,
         )
     }
 }
@@ -153,6 +168,7 @@ fun FirstlightFeedbackCenterControl(
                                 actionFocused = it.isFocused
                                 onFocusChanged(actionFocused || dismissFocused)
                             },
+                        colors = ButtonDefaults.textButtonColors(contentColor = colors.action),
                     ) {
                         Text(configuration.actionLabel.orEmpty())
                     }

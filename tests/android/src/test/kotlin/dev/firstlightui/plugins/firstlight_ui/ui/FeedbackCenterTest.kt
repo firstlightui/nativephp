@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -48,6 +49,8 @@ import android.content.Context
 import android.view.accessibility.AccessibilityManager
 import androidx.test.core.app.ApplicationProvider
 import com.nativephp.mobile.ui.nativerender.NativeRootHostRegistry
+import com.nativephp.plugins.native_ui.NativeUITheme
+import com.nativephp.plugins.native_ui.NativeUITokens
 import dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -425,7 +428,7 @@ class FeedbackCenterSemanticsTest {
         runOnIdle {
             assertEquals("Updated visible copy", runtime.visible?.message)
             assertEquals(FeedbackCenterTone.Danger, runtime.visible?.tone)
-            assertEquals(FeedbackCenterToneColorRole.ErrorContainer, FeedbackCenterRenderingPolicy(runtime.visible!!.tone).colorRole)
+            assertEquals(FeedbackCenterToneColorRole.Destructive, FeedbackCenterRenderingPolicy(runtime.visible!!.tone).colorRole)
             assertEquals(151, runtime.visible?.actionCallback)
             assertEquals(161, runtime.visible?.manualCallback)
         }
@@ -806,12 +809,60 @@ class FeedbackCenterSemanticsTest {
     @Test
     fun `rendering policy uses semantic tone and reflows constrained or scaled layouts`() {
         assertEquals(FeedbackCenterToneColorRole.InverseSurface, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Default).colorRole)
-        assertEquals(FeedbackCenterToneColorRole.TertiaryContainer, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Success).colorRole)
-        assertEquals(FeedbackCenterToneColorRole.SecondaryContainer, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Warning).colorRole)
-        assertEquals(FeedbackCenterToneColorRole.ErrorContainer, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Danger).colorRole)
+        assertEquals(FeedbackCenterToneColorRole.Success, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Success).colorRole)
+        assertEquals(FeedbackCenterToneColorRole.Accent, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Warning).colorRole)
+        assertEquals(FeedbackCenterToneColorRole.Destructive, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Danger).colorRole)
         assertTrue(FeedbackCenterRenderingPolicy.actionOnNewLine(maxWidthDp = 360, fontScale = 1f))
         assertTrue(FeedbackCenterRenderingPolicy.actionOnNewLine(maxWidthDp = 600, fontScale = 2f))
         assertFalse(FeedbackCenterRenderingPolicy.actionOnNewLine(maxWidthDp = 600, fontScale = 1f))
+    }
+
+    @Test
+    fun `semantic tones use Native UI color pairs`() {
+        val scheme = lightColorScheme(tertiaryContainer = Color(0xFFFFD8E4))
+        val tokens = NativeUITokens.fallback.copy(
+            success = Color(0xFF15803D),
+            onSuccess = Color.White,
+            accent = Color(0xFFB45309),
+            onAccent = Color.Black,
+            destructive = Color(0xFFB91C1C),
+            onDestructive = Color.White,
+        )
+
+        assertEquals(
+            FeedbackCenterColors(
+                container = tokens.success,
+                content = tokens.onSuccess,
+                action = tokens.onSuccess,
+                dismiss = tokens.onSuccess,
+                accent = tokens.onSuccess,
+            ),
+            feedbackCenterColors(FeedbackCenterTone.Success, scheme, tokens),
+        )
+        assertEquals(
+            FeedbackCenterColors(
+                container = tokens.accent,
+                content = tokens.onAccent,
+                action = tokens.onAccent,
+                dismiss = tokens.onAccent,
+                accent = tokens.onAccent,
+            ),
+            feedbackCenterColors(FeedbackCenterTone.Warning, scheme, tokens),
+        )
+        assertEquals(
+            FeedbackCenterColors(
+                container = tokens.destructive,
+                content = tokens.onDestructive,
+                action = tokens.onDestructive,
+                dismiss = tokens.onDestructive,
+                accent = tokens.onDestructive,
+            ),
+            feedbackCenterColors(FeedbackCenterTone.Danger, scheme, tokens),
+        )
+        assertEquals(
+            NativeUITheme.dark.success,
+            feedbackCenterColors(FeedbackCenterTone.Success, darkColorScheme(), NativeUITheme.dark).container,
+        )
     }
 
 }
