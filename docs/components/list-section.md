@@ -57,3 +57,10 @@ The parent List renderer consumes List Section inline:
 The public tag is `<firstlight:list-section>`, but the published wire type
 remains `list_section` so the delegated Mobile UI list renderer can apply
 grouped section styling.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![List Section on iOS in light mode](../screenshots/list-section/ios-light.png) | ![List Section on iOS in dark mode](../screenshots/list-section/ios-dark.png) |
+| Android | ![List Section on Android in light mode](../screenshots/list-section/android-light.png) | ![List Section on Android in dark mode](../screenshots/list-section/android-dark.png) |

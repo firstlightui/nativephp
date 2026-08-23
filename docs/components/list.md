@@ -69,3 +69,10 @@ platforms while retaining Firstlight List Item rows.
 List is an adapter over Mobile UI `list`. List Section publishes the upstream
 wire type `list_section` so the delegated renderer recognizes grouped sections
 while the public tag remains `<firstlight:list-section>`.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![List on iOS in light mode](../screenshots/list/ios-light.png) | ![List on iOS in dark mode](../screenshots/list/ios-dark.png) |
+| Android | ![List on Android in light mode](../screenshots/list/android-light.png) | ![List on Android in dark mode](../screenshots/list/android-dark.png) |

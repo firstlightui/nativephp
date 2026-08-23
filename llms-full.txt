@@ -1759,6 +1759,13 @@ List is an adapter over Mobile UI `list`. List Section publishes the upstream
 wire type `list_section` so the delegated renderer recognizes grouped sections
 while the public tag remains `<firstlight:list-section>`.
 
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![List on iOS in light mode](../screenshots/list/ios-light.png) | ![List on iOS in dark mode](../screenshots/list/ios-dark.png) |
+| Android | ![List on Android in light mode](../screenshots/list/android-light.png) | ![List on Android in dark mode](../screenshots/list/android-dark.png) |
+
 --- Source: docs/components/list-section.md ---
 
 # List Section
@@ -1807,6 +1814,13 @@ The parent List renderer consumes List Section inline:
 The public tag is `<firstlight:list-section>`, but the published wire type
 remains `list_section` so the delegated Mobile UI list renderer can apply
 grouped section styling.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![List Section on iOS in light mode](../screenshots/list-section/ios-light.png) | ![List Section on iOS in dark mode](../screenshots/list-section/ios-dark.png) |
+| Android | ![List Section on Android in light mode](../screenshots/list-section/android-light.png) | ![List Section on Android in dark mode](../screenshots/list-section/android-dark.png) |
 
 --- Source: docs/components/pill-group.md ---
 
