@@ -8,14 +8,19 @@ final class FirstlightTagPrecompiler
 {
     private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|callout|badge|button|icon-button|list-item|pill-group|choice-group|progress|activity-indicator|text-field|search-field|text-area|date-picker|time-picker|select|slider|stepper|switch|checkbox|confirmation-dialog)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
-    private const FIRSTLIGHT_PAIRED_BUTTON_TAG = '~<\s*firstlight\s*:\s*(button)(?=\s|>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</\s*firstlight\s*:\s*\1\s*>~s';
+    /** @var list<string> */
+    private const NESTED_PAIRED_CONTAINER_TAGS = ['list-section', 'list'];
 
-    private const COMPILED_MARKER = '<?php '.NativeTagPrecompiler::COMPILED_MARKER.' ?>';
+    private const FIRSTLIGHT_PAIRED_BUTTON_TAG = '~<\s*firstlight\s*:\s*(button)(?=\s|>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</\s*firstlight\s*:\s*\1\s*>~s';
 
     public function __invoke(string $value): string
     {
         if (! NativeTagPrecompiler::active()) {
             return $value;
+        }
+
+        foreach (self::NESTED_PAIRED_CONTAINER_TAGS as $tag) {
+            $value = $this->compilePairedTag($value, $tag);
         }
 
         $value = preg_replace_callback(
@@ -30,6 +35,19 @@ final class FirstlightTagPrecompiler
             $value,
         ) ?? $value;
     }
+
+    private function compilePairedTag(string $value, string $tag): string
+    {
+        $pattern = '~<\s*firstlight\s*:\s*'.preg_quote($tag, '~').'(?=\s|>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</\s*firstlight\s*:\s*'.preg_quote($tag, '~').'\s*>~s';
+
+        return preg_replace_callback(
+            $pattern,
+            fn (array $match): string => $this->compileTag($match[0], $tag, paired: true),
+            $value,
+        ) ?? $value;
+    }
+
+    private const COMPILED_MARKER = '<?php '.NativeTagPrecompiler::COMPILED_MARKER.' ?>';
 
     private function compileTag(string $source, string $tag, bool $paired): string
     {

@@ -28,6 +28,8 @@ sources:
 - [Time Picker](components/time-picker.md) — Choose strict nullable wall-clock times with localized native confirmation.
 - [Icon Button](components/icon-button.md) — Configure compact icon-only actions, platform icon overrides, semantic variants, states, and accessibility.
 - [List Item](components/list-item.md) — Configure tappable application rows with leading identity, trailing affordances, disabled behaviour, and platform icon overrides.
+- [List](components/list.md) — Compose finite vertical collections of List Item rows with optional grouped sections and refresh or pagination hooks.
+- [List Section](components/list-section.md) — Group List Item rows with optional headers and footers inside a parent List.
 - [Pill Group](components/pill-group.md) — Configure compact single- or multiple-selection native options.
 - [Progress](components/progress.md) — Communicate determinate or indeterminate work with strict values and native accessibility.
 - [Segmented](components/segmented.md) — Look up the Segmented control's complete public contract and platform evidence.
