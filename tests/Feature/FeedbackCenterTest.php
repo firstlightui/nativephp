@@ -41,6 +41,20 @@ if (! function_exists('event')) {
     }
 }
 
+if (! function_exists('config')) {
+    function config(?string $key = null, mixed $default = null): mixed
+    {
+        if ($key === null) {
+            return app('config');
+        }
+
+        return match ($key) {
+            'app.debug' => false,
+            default => $default,
+        };
+    }
+}
+
 if (! function_exists('view')) {
     function view(?string $view = null, array $data = []): Factory|View
     {
@@ -104,6 +118,7 @@ beforeEach(function () {
     $this->container->instance('events', $this->events);
     $this->container->instance(DispatcherContract::class, $this->events);
     $this->container->instance('config', new ArrayObject([
+        'app' => ['debug' => false],
         'view' => ['paths' => []],
     ]));
 
@@ -241,7 +256,7 @@ it('removes an action first and dispatches action then dismissal exactly once', 
 
     expect($frame['host']->feedbackCallbacks()->resolve($callbackId))->toBe([
         'method' => 'action',
-        'args' => [$feedbackId, $actionKey],
+        'args' => [$feedbackId, $actionKey, 1],
     ]);
 
     $frame['host']->dispatchFeedbackCallback($callbackId);
@@ -315,7 +330,7 @@ it('dispatches only the supported user dismissal reason', function (
 
     expect($frame['host']->feedbackCallbacks()->resolve($callbackId))->toBe([
         'method' => 'dismiss',
-        'args' => ['status', $expectedReason->value],
+        'args' => ['status', $expectedReason->value, 1],
     ]);
 
     $frame['host']->dispatchFeedbackCallback($callbackId);

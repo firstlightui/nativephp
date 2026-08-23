@@ -17,15 +17,22 @@ final class FeedbackCenter extends NativeComponent
     {
         $center = FeedbackCenterElement::make();
 
-        foreach (app(FeedbackStore::class)->all() as $record) {
-            $center->addChild(FeedbackItem::fromRecord($record));
+        $store = app(FeedbackStore::class);
+
+        foreach ($store->all() as $record) {
+            $center->addChild(FeedbackItem::fromRecord(
+                $record,
+                $store->publicationGeneration($record->id),
+            ));
         }
 
         return $center;
     }
 
-    public function action(string $id, string $key): void
+    public function action(string $id, string $key, int $publicationGeneration = 0): void
     {
+        unset($publicationGeneration);
+
         $record = app(FeedbackStore::class)->remove($id);
         if ($record === null || $record->actionKey !== $key) {
             return;
@@ -38,8 +45,10 @@ final class FeedbackCenter extends NativeComponent
         }
     }
 
-    public function dismiss(string $id, string $reason): void
+    public function dismiss(string $id, string $reason, int $publicationGeneration = 0): void
     {
+        unset($publicationGeneration);
+
         $dismissReason = FeedbackDismissReason::tryFrom($reason);
         if ($dismissReason === null || $dismissReason === FeedbackDismissReason::Action) {
             return;

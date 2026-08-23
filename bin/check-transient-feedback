@@ -205,8 +205,8 @@ foreach ([
     [PendingFeedback::class, 'action', ['string', 'string'], PendingFeedback::class],
     [PendingFeedback::class, 'hold', [], PendingFeedback::class],
     [PendingFeedback::class, 'send', [], 'string'],
-    [FeedbackCenterComponent::class, 'action', ['string', 'string'], 'void'],
-    [FeedbackCenterComponent::class, 'dismiss', ['string', 'string'], 'void'],
+    [FeedbackCenterComponent::class, 'action', ['string', 'string', 'int'], 'void'],
+    [FeedbackCenterComponent::class, 'dismiss', ['string', 'string', 'int'], 'void'],
 ] as [$class, $method, $parameterTypes, $returnType]) {
     $methodContract($class, $method, $parameterTypes, $returnType);
 }
@@ -275,10 +275,10 @@ try {
     $callbacks = new CallbackRegistry;
     $automatic = FeedbackItem::fromRecord(new FeedbackRecord(
         'automatic', 'Saved', FeedbackTone::Success, false, 'Undo', 'undo',
-    ));
+    ), 1);
     $held = FeedbackItem::fromRecord(new FeedbackRecord(
         'held', 'Offline', FeedbackTone::Warning, true, null, null,
-    ));
+    ), 1);
     $tree = FeedbackCenterElement::make($automatic, $held)->toArray($callbacks);
     $automaticProps = $tree['children'][0]['props'] ?? [];
     $heldProps = $tree['children'][1]['props'] ?? [];
@@ -340,7 +340,8 @@ try {
 
     $manager->success('Saved')->id('saved')->action('Undo', 'undo')->send();
     $callbacks = new CallbackRegistry;
-    $props = FeedbackItem::fromRecord($store->all()[0])->toArray($callbacks)['props'];
+    $record = $store->all()[0];
+    $props = FeedbackItem::fromRecord($record, $store->publicationGeneration($record->id))->toArray($callbacks)['props'];
     $invokeWire($component, $callbacks, $props['on_action']);
     $invokeWire($component, $callbacks, $props['on_action']);
 
@@ -353,12 +354,14 @@ try {
 
     $manager->message('Automatic')->id('automatic')->send();
     $callbacks = new CallbackRegistry;
-    $props = FeedbackItem::fromRecord($store->all()[0])->toArray($callbacks)['props'];
+    $record = $store->all()[0];
+    $props = FeedbackItem::fromRecord($record, $store->publicationGeneration($record->id))->toArray($callbacks)['props'];
     $invokeWire($component, $callbacks, $props['on_timeout']);
 
     $manager->warning('Held')->id('held')->hold()->send();
     $callbacks = new CallbackRegistry;
-    $props = FeedbackItem::fromRecord($store->all()[0])->toArray($callbacks)['props'];
+    $record = $store->all()[0];
+    $props = FeedbackItem::fromRecord($record, $store->publicationGeneration($record->id))->toArray($callbacks)['props'];
     $invokeWire($component, $callbacks, $props['on_manual']);
 
     $manager->message('Malformed')->id('malformed')->send();

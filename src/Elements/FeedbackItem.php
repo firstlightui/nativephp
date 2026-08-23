@@ -20,9 +20,10 @@ final class FeedbackItem extends Element
         private readonly bool $hold,
         private readonly ?string $actionLabel,
         private readonly ?string $actionKey,
+        private readonly int $publicationGeneration,
     ) {}
 
-    public static function fromRecord(FeedbackRecord $record): self
+    public static function fromRecord(FeedbackRecord $record, int $publicationGeneration): self
     {
         return new self(
             $record->id,
@@ -31,6 +32,7 @@ final class FeedbackItem extends Element
             $record->hold,
             $record->actionLabel,
             $record->actionKey,
+            $publicationGeneration,
         );
     }
 
@@ -54,23 +56,34 @@ final class FeedbackItem extends Element
         ];
 
         if ($this->actionLabel !== null && $this->actionKey !== null) {
-            $action = CallbackExpression::appendValue('action', $this->feedbackId);
-            $action = CallbackExpression::appendValue($action, $this->actionKey);
-
             $props['action_label'] = $this->actionLabel;
-            $props['on_action'] = $registry->register($action);
+            $props['on_action'] = $this->registerCallback($registry, 'action', $this->actionKey);
         }
 
         if (! $this->hold) {
-            $timeout = CallbackExpression::appendValue('dismiss', $this->feedbackId);
-            $timeout = CallbackExpression::appendValue($timeout, FeedbackDismissReason::Timeout->value);
-            $props['on_timeout'] = $registry->register($timeout);
+            $props['on_timeout'] = $this->registerCallback(
+                $registry,
+                'dismiss',
+                FeedbackDismissReason::Timeout->value,
+            );
         }
 
-        $manual = CallbackExpression::appendValue('dismiss', $this->feedbackId);
-        $manual = CallbackExpression::appendValue($manual, FeedbackDismissReason::Manual->value);
-        $props['on_manual'] = $registry->register($manual);
+        $props['on_manual'] = $this->registerCallback(
+            $registry,
+            'dismiss',
+            FeedbackDismissReason::Manual->value,
+        );
 
         return $props;
+    }
+
+    private function registerCallback(CallbackRegistry $registry, string $method, string $argument): int
+    {
+        $expression = CallbackExpression::appendValue($method, $this->feedbackId);
+        $expression = CallbackExpression::appendValue($expression, $argument);
+
+        return $registry->register(
+            CallbackExpression::appendInteger($expression, $this->publicationGeneration),
+        );
     }
 }

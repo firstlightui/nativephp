@@ -7,11 +7,20 @@ final class FeedbackStore
     /** @var array<string, FeedbackRecord> */
     private array $records = [];
 
+    /** @var array<string, int> */
+    private array $publicationGenerations = [];
+
     public function put(FeedbackRecord $record): string
     {
         $this->records[$record->id] = $record;
+        $this->publicationGenerations[$record->id] = ($this->publicationGenerations[$record->id] ?? 0) + 1;
 
         return $record->id;
+    }
+
+    public function publicationGeneration(string $id): int
+    {
+        return $this->publicationGenerations[$id] ?? 0;
     }
 
     public function remove(string $id): ?FeedbackRecord
@@ -19,7 +28,7 @@ final class FeedbackStore
         $record = $this->records[$id] ?? null;
 
         if ($record !== null) {
-            unset($this->records[$id]);
+            unset($this->records[$id], $this->publicationGenerations[$id]);
         }
 
         return $record;
@@ -34,5 +43,6 @@ final class FeedbackStore
     public function reset(): void
     {
         $this->records = [];
+        $this->publicationGenerations = [];
     }
 }
