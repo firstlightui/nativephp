@@ -12,7 +12,7 @@ sources:
 
 - [Installation](getting-started/installation.md) — Install Firstlight and make its native renderers available to a NativePHP application.
 - [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
-- [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()` and `validateOnly()`.
+- [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()`, `validateOnly()`, and Form Requests.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.
@@ -44,4 +44,5 @@ sources:
 - [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
 - [Text Area](components/text-area.md) — Configure native multiline editing, line bounds, validation, accessibility, and synchronisation.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.
+- [ValidatesFields](reference/validates-fields.md) — Look up the public `validate()` contract, MessageBag binding, and current limitations.
 - [Compatibility](reference/compatibility.md) — Check the currently supported PHP, NativePHP, iOS, Android, and Swift versions.

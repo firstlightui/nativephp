@@ -56,4 +56,4 @@ Use `@change` when the selection should call a method instead of directly synchr
 />
 ```
 
-The method receives the selected string value. See the [Segmented reference](../components/segmented.md) for integer values, disabled choices, accessibility, and validation rules.
+The method receives the selected string value. See the [Segmented reference](../components/segmented.md) for integer values, disabled choices, accessibility, and validation rules. When the screen should show Laravel messages on Firstlight fields, follow [Validate fields](../how-to/validate-fields.md).

@@ -10,7 +10,7 @@
 
 - [Install Firstlight UI](https://firstlightui.dev/getting-started/installation): Install Firstlight, register its NativePHP plugin, and rebuild the native projects.
 - [Add your first Firstlight component](https://firstlightui.dev/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
-- [Validate Firstlight fields](https://firstlightui.dev/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate() and validateOnly().
+- [Validate Firstlight fields](https://firstlightui.dev/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate(), validateOnly(), and Form Requests.
 - [Theme Firstlight components](https://firstlightui.dev/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
 - [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
 - [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
@@ -42,4 +42,5 @@
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
 - [Text Area](https://firstlightui.dev/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.
 - [Switch](https://firstlightui.dev/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
+- [ValidatesFields](https://firstlightui.dev/reference/validates-fields): Public contract for Firstlight Laravel field validation, MessageBag binding, and validate() timing.
 - [Compatibility](https://firstlightui.dev/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.
