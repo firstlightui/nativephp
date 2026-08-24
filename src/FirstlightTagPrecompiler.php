@@ -6,7 +6,7 @@ use Native\Mobile\Edge\NativeTagPrecompiler;
 
 final class FirstlightTagPrecompiler
 {
-    private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|callout|badge|button|icon-button|list-item|pill-group|choice-group|progress|activity-indicator|text-field|search-field|text-area|date-picker|time-picker|select|slider|stepper|switch|checkbox|alert-dialog|confirmation-dialog)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
+    private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|status-label|callout|badge|button|icon-button|list-item|pill-group|choice-group|progress|activity-indicator|text-field|search-field|text-area|media|date-picker|time-picker|select|slider|stepper|switch|checkbox|alert-dialog|confirmation-dialog)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
     /** @var list<string> */
     private const NESTED_PAIRED_CONTAINER_TAGS = ['list-section', 'list', 'bottom-sheet', 'modal'];
@@ -18,6 +18,9 @@ final class FirstlightTagPrecompiler
         if (! NativeTagPrecompiler::active()) {
             return $value;
         }
+
+        // Media clear is Firstlight-owned; NativeTagPrecompiler does not map @clear.
+        $value = preg_replace('/@clear=/', '_clear=', $value) ?? $value;
 
         foreach (self::NESTED_PAIRED_CONTAINER_TAGS as $tag) {
             $value = $this->compilePairedTag($value, $tag);
