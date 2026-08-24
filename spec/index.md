@@ -29,6 +29,10 @@ sources:
 - [List Item component contract](components/list-item.md) — Defines narrow application-row content, action, disabled state, icon resolution, accessibility, and the paired-renderer decision.
 - [Progress component contract](components/progress.md) — Defines determinate and indeterminate display semantics, strict values, accessibility, and the Mobile UI adapter boundary.
 - [Shared icon contract](reference/icons.md) — Defines cross-control icon names, platform overrides, resolution, accessibility, and validation.
+- [Field validation](reference/field-validation.md) — Defines Laravel Validator binding onto field `error` slots without a native rule engine.
+- [Form submission](reference/form-submit.md) — Defines guarded validation, form actions, success Feedback, and honest Button state timing.
+- [Action authorization](reference/action-authorization.md) — Defines Laravel Gate and Policy evaluation for hiding, disabling, and guarding Firstlight actions.
+- [Catalogue boundary](reference/catalogue-boundary.md) — Defines what belongs in the Firstlight catalogue, what is a PHP SuperNative extension, and what stays in Mobile UI.
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
 - [Text Area component contract](components/text-area.md) — Defines focused multiline editing, line bounds, sync policies, accessibility, and the paired-renderer boundary.

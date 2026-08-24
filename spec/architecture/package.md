@@ -10,6 +10,14 @@ sources:
   - Package.swift
   - src/FirstlightServiceProvider.php
   - src/FirstlightTagPrecompiler.php
+  - src/Concerns/ValidatesFields.php
+  - src/Concerns/SubmitsForms.php
+  - src/Concerns/AuthorizesActions.php
+  - src/Validation/FieldErrorBinder.php
+  - spec/reference/field-validation.md
+  - spec/reference/form-submit.md
+  - spec/reference/action-authorization.md
+  - spec/reference/catalogue-boundary.md
   - src/Components/Button.php
   - src/Elements/Button.php
   - src/Components/Progress.php
@@ -68,6 +76,8 @@ Segmented demonstrates the current boundary:
 - integer choices use registered per-option callbacks so PHP receives the original integer.
 
 Validation belongs before publication. Unsupported types, mixed value types, duplicates, malformed options, and mismatched selected values fail with actionable PHP exceptions rather than becoming renderer-specific behaviour.
+
+Laravel user-input validation is a separate PHP extension. `ValidatesFields` and `FieldErrorBinder` publish `MessageBag` text into existing field `error` slots; they do not add a native rule engine. See [Field validation](../reference/field-validation.md). Form submission and action authorization are further PHP extensions over Button, Feedback, and existing `disabled`/`visible` props; see [Form submission](../reference/form-submit.md) and [Action authorization](../reference/action-authorization.md). Catalogue membership versus PHP extensions is defined in [Catalogue boundary](../reference/catalogue-boundary.md).
 
 ## State ownership
 

@@ -19,7 +19,7 @@ Define one public contract through official SuperNative seams. Adapt an adequate
 
 ## Required Authorities
 
-Read `Constitution.md`, `spec/designs/2026-08-04-firstlight-alpha-component-system-design.md`, the closest implemented contract, and current official NativePHP plus platform documentation. When icons apply, also read `spec/reference/icons.md`. Resolve public API ambiguity before scaffolding.
+Read `Constitution.md`, `spec/designs/2026-08-04-firstlight-alpha-component-system-design.md`, [Catalogue boundary](../../../spec/reference/catalogue-boundary.md), the closest implemented contract, and current official NativePHP plus platform documentation. When icons apply, also read `spec/reference/icons.md`. Resolve public API ambiguity before scaffolding. If the work is a Laravel-shaped PHP service rather than a control, do not scaffold a component.
 
 ## State Classification
 
@@ -59,6 +59,8 @@ Record the commit, path decision, tests, consumer builds, screenshots, accessibi
 - Scaffolding before auditing the official primitive.
 - Inventing `ios-icon`, `android-icon`, or another icon vocabulary instead of applying `spec/reference/icons.md`.
 - Replacing shared showcase chrome, changing its start route, or overwriting concurrent fixtures.
+- Adding layout primitives, navigation chrome, input masks, or a Filament-style schema builder to the Firstlight catalogue.
+- Implementing Laravel validation, authorization, or pagination as a new native widget instead of a PHP extension over existing `error`, `loading`, list, confirmation, and Feedback APIs.
 
 ## Stop Conditions
 

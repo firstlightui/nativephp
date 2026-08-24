@@ -356,6 +356,246 @@ These development screenshots were captured from the dedicated
 | iOS | ![Failed Laravel field validation on iOS in light mode](../screenshots/validate-fields/ios-light.png) | ![Failed Laravel field validation on iOS in dark mode](../screenshots/validate-fields/ios-dark.png) |
 | Android | ![Failed Laravel field validation on Android in light mode](../screenshots/validate-fields/android-light.png) | ![Failed Laravel field validation on Android in dark mode](../screenshots/validate-fields/android-dark.png) |
 
+--- Source: docs/how-to/submit-forms.md ---
+
+# Submit Firstlight Forms
+
+Firstlight submits forms through an ordinary Button press and a PHP screen
+method. There is no `<firstlight:form>` container, client-side validator, or
+form schema.
+
+## Declare the screen
+
+Extend `FirstlightUI\NativeComponent` to use the form submission and field
+validation helpers. Declare Laravel rules against the public properties bound
+by your fields:
+
+```php
+<?php
+
+namespace App\Native;
+
+use App\Models\Profile;
+use FirstlightUI\NativeComponent;
+
+class EditProfileScreen extends NativeComponent
+{
+    public string $name = '';
+
+    public string $email = '';
+
+    protected array $rules = [
+        'name' => 'required',
+        'email' => 'required|email',
+    ];
+
+    public function save(): void
+    {
+        $this->submit(
+            action: fn () => Profile::query()->updateOrCreate(
+                ['user_id' => auth()->id()],
+                ['name' => $this->name, 'email' => $this->email],
+            ),
+            successMessage: 'Profile saved',
+        );
+    }
+}
+```
+
+Screens that extend `Native\Mobile\Edge\NativeComponent` directly can opt in
+with both `FirstlightUI\Concerns\ValidatesFields` and
+`FirstlightUI\Concerns\SubmitsForms`.
+
+## Bind the fields and Button
+
+Use the existing fields, `native:model`, and Button:
+
+```blade
+<firstlight:text-field
+    label="Name"
+    native:model.blur="name"
+/>
+
+<firstlight:text-field
+    label="Email"
+    native:model.blur="email"
+/>
+
+<firstlight:button @press="save">
+    Save profile
+</firstlight:button>
+```
+
+`submit()` runs `$this->validate()` first. A validation failure returns
+`false`, skips the callable and success Feedback, and lets
+`ValidatesFields` publish each first Laravel message through the matching
+field's native `error` slot. See [Validate Firstlight fields](validate-fields.md)
+for rule sources, Form Requests, custom messages, and explicit error binding. The
+[ValidatesFields reference](../reference/validates-fields.md) lists the method
+contract and participating fields.
+
+After successful validation, `submit()` runs the callable and sends
+`Feedback::success($successMessage)->send()` when the message is non-empty.
+It then returns `true`. Pass `validate: false` only when the action does not
+need field validation:
+
+```php
+$sent = $this->submit(
+    action: fn () => $this->sendVerificationEmail(),
+    successMessage: 'Verification email sent',
+    validate: false,
+);
+```
+
+Unexpected exceptions from the callable are not converted to Feedback or
+swallowed.
+
+## Loading and duplicate submissions
+
+`$submitting` is `true` while validation and the callable run. Re-entering
+`submit()` on the same PHP component during that interval returns `false`
+without validating, calling the action, or sending Feedback. `submit()` always
+clears `$submitting` in `finally`, so binding Button `loading` or `disabled` to
+`$this->submitting` does not flash during the default one-request path.
+
+NativePHP handles a press and then compiles one Element Tree afterward. A
+device-visible loading frame requires application code to set `$this->submitting
+= true` outside `submit()`, publish that tree, and clear the flag on a later
+request.
+
+The helper does not publish an intermediate tree, call `publishPlaceholder()`,
+or add a client-side loading mechanism. `publishPlaceholder()` belongs to
+lazy screen mounting, not form submission.
+
+--- Source: docs/how-to/authorize-actions.md ---
+
+# Authorize Firstlight Actions
+
+Extend `FirstlightUI\NativeComponent` (or `use AuthorizesActions`) so a screen
+can evaluate the current Laravel Gate or Policy before publishing or performing
+an action:
+
+```php
+use App\Models\Post;
+use FirstlightUI\NativeComponent;
+
+class PostScreen extends NativeComponent
+{
+    public Post $post;
+    public bool $confirmingDeletion = false;
+
+    public function updatePost(): void
+    {
+        if (! $this->authorize('update', $this->post)) {
+            return;
+        }
+
+        $this->post->save();
+    }
+}
+```
+
+`allows()` and `denies()` return booleans. `authorize()` also returns a
+boolean; unlike Laravel's throwing Gate method, a denial publishes danger
+Feedback with `This action is unauthorized.` and returns `false`. Keep the
+guard at the start of every PHP action, even when the published control is
+already hidden or disabled, because authorization can change after a frame is
+published.
+
+## Choose hide or disable
+
+Hide an ordinary action when its absence is unsurprising:
+
+```blade
+@if ($this->allows('edit', $post))
+    <firstlight:button @press="editPost">
+        Edit post
+    </firstlight:button>
+@endif
+```
+
+Disable an action when preserving its location helps explain the available
+workflow:
+
+```blade
+<firstlight:list-item
+    headline="Publishing settings"
+    supporting="Only editors can change publication access"
+    :disabled="$this->denies('update', $post)"
+    @press="openPublishingSettings"
+/>
+```
+
+Button, Icon Button, and List Item all accept the existing `disabled` prop.
+Firstlight does not add a `can` attribute or evaluate authorization in a
+native renderer.
+
+## Keep destructive actions visible
+
+Never silently omit a destructive action. Keep the Button, Icon Button, or
+List Item visible and disable it when denied. Supporting copy should explain
+why the action is unavailable when the surrounding interface does not make
+that clear.
+
+```blade
+<firstlight:button
+    variant="destructive"
+    :disabled="$this->denies('delete', $post)"
+    @press="requestDeletion"
+>
+    Delete post
+</firstlight:button>
+```
+
+Confirmation Dialog has no `disabled` or `loading` prop. Authorize before
+setting its `visible` state, and authorize again when confirmation arrives:
+
+```php
+public function requestDeletion(): void
+{
+    if (! $this->authorize('delete', $this->post)) {
+        $this->confirmingDeletion = false;
+
+        return;
+    }
+
+    $this->confirmingDeletion = true;
+}
+
+public function deletePost(): void
+{
+    $this->confirmingDeletion = false;
+
+    if (! $this->authorize('delete', $this->post)) {
+        return;
+    }
+
+    $this->post->delete();
+}
+
+public function cancelDeletion(): void
+{
+    $this->confirmingDeletion = false;
+}
+```
+
+```blade
+<firstlight:confirmation-dialog
+    :visible="$confirmingDeletion"
+    title="Delete post?"
+    message="This action cannot be undone."
+    confirm-label="Delete"
+    cancel-label="Keep post"
+    tone="destructive"
+    @press="deletePost"
+    @dismiss="cancelDeletion"
+/>
+```
+
+The denied request does not open the dialog, and `authorize()` supplies danger
+Feedback instead of allowing an uncaught `AuthorizationException` to reach
+NativePHP's error overlay.
+
 --- Source: docs/getting-started/theming.md ---
 
 # Theme Firstlight Components
@@ -555,6 +795,12 @@ Across the catalogue, Firstlight applies the same rules:
 - the same authored component works on iOS and Android while each platform retains its native geometry, motion, presentation, and accessibility behaviour.
 
 Firstlight deliberately exposes fewer visual escape hatches and platform-only options than a general-purpose primitive library. This narrower surface keeps application code portable and allows the components to behave consistently as the native platforms evolve.
+
+## Laravel-shaped PHP extensions
+
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), and [Authorize actions](../how-to/authorize-actions.md).
+
+Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
 ## Reusing Mobile UI when it already fits
 

@@ -13,6 +13,8 @@ sources:
 - [Installation](getting-started/installation.md) — Install Firstlight and make its native renderers available to a NativePHP application.
 - [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
 - [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()`, `validateOnly()`, and Form Requests.
+- [Submit forms](how-to/submit-forms.md) — Validate Firstlight fields, run a PHP action once, and publish success Feedback.
+- [Authorize actions](how-to/authorize-actions.md) — Hide, disable, or guard Firstlight actions with Laravel Gate and Policy decisions.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.

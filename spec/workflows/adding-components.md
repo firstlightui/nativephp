@@ -8,6 +8,7 @@ sources:
   - spec/documentation-constitution.md
   - nativephp.json
   - spec/reference/icons.md
+  - spec/reference/catalogue-boundary.md
   - bin/scaffold-component
   - bin/check-component
   - .agents/skills/firstlight-create-component/SKILL.md
@@ -28,7 +29,7 @@ Use `firstlight-create-component` as the coordinating skill. It delegates platfo
 
 ## Workflow
 
-1. **Define the semantic contract.** State the purpose, stable values, `null` or empty behaviour, events, field metadata, disabled/loading/error behaviour, accessibility semantics, and intended expression on both platforms. Resolve ambiguity before scaffolding.
+1. **Define the semantic contract.** State the purpose, stable values, `null` or empty behaviour, events, field metadata, disabled/loading/error behaviour, accessibility semantics, and intended expression on both platforms. Resolve ambiguity before scaffolding. If the work is a Laravel-shaped PHP service rather than a control, stop and follow [Catalogue boundary](../reference/catalogue-boundary.md) instead of this workflow.
 2. **Apply the shared icon contract when applicable.** Preserve the component's established base icon prop, append `-ios` and `-android` overrides, resolve through NativePHP's typed icon resolver, preserve Android variants, and define decorative or interactive accessibility according to `spec/reference/icons.md`.
 3. **Classify state.** Choose discrete, focused text, continuous value, or action/display. This determines native buffering, publication timing, reconciliation, and applicable review evidence.
 4. **Audit the official primitive.** Compare the contract with the current `nativephp/mobile-ui` primitive and extension seams.
@@ -67,3 +68,7 @@ The component and documentation release checkers share `spec/reviews/<slug>-alph
 Stop rather than describing the component as complete when the contract is unresolved, the official seam cannot express it, platforms diverge, a production renderer is excluded from tests, server reconciliation harms native interaction, accessibility evidence is incomplete, the exact package does not build in the showcase, documented states are absent, screenshots are rejected, a physical-device release row is missing, or review returns `FAIL` or `BLOCKED`.
 
 Do not publish, tag, add WebViews or ad hoc bridges, edit generated hosts, invent parallel binding vocabulary, or turn a component-development pass into a catalogue or alpha-readiness claim.
+
+## Out of catalogue
+
+Do not start this workflow for layout primitives, navigation chrome, input masks, Filament-style schema builders, auth kits, or a client-side validator. Those are excluded by [Catalogue boundary](../reference/catalogue-boundary.md). PHP SuperNative extensions such as field validation, form submission, and action authorization publish through existing `error`, `loading`, list, confirmation, and Feedback APIs; they do not receive a new `<firstlight:...>` tag unless no current control can express the contract.
