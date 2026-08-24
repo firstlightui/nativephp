@@ -4,5 +4,7 @@
 /.swiftpm/
 .DS_Store
 *.log
+/roadmap.md
 /roadmap-v2.md
 /roadmap-v3.md
+/mobile-ui-component-gap-scratchpad.md

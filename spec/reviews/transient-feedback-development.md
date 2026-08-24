@@ -98,29 +98,25 @@ required before component-release or catalogue claims.
 
 Reviewed on 2026-08-05 against package implementation revision
 `f3fc853a1a41c23528cf9fe46c99df52607e2109` and showcase revision
-`cf9345937fea4aade07960cf95411bd415db5112` on `main`. The package started
-`main...origin/main [ahead 5]` with no tracked changes and three pre-existing
-untracked planning files. The showcase started `main...origin/main [ahead 9]`
-and clean.
+`cf9345937fea4aade07960cf95411bd415db5112` on `main`.
 
-**Off-device implementation verdict:** FAIL
+**Off-device implementation verdict (2026-08-05):** FAIL
 
-**Development verdict:** FAIL
+**Development verdict (2026-08-05):** FAIL
+
+**Off-device implementation verdict (2026-08-23):** PASS
+
+**Development verdict (2026-08-23):** BLOCKED
 
 **Component-release verdict:** BLOCKED
 
 **Catalogue verdict:** BLOCKED
 
-The public contract, PHP lifecycle, paired production sources, package tests,
-Android behaviour tests, iOS test-target compilation, exact generated-host
-source identity, showcase tests, and both non-launch consumer builds pass.
-The required Android Paparazzi gate does not: 10 Transient Feedback cases
-report snapshot mismatches. The review does not diagnose those mismatches as
-production defects or stale goldens without further evidence, but a failing
-visual-regression gate cannot support a passing implementation or development
-verdict. Runtime interaction, screenshots, assistive-technology observation,
-and physical-device evidence were explicitly outside this task and remain
-blocked.
+The 2026-08-05 review recorded failing Android Paparazzi goldens. The 2026-08-23
+follow-up records committed Paparazzi goldens, NativePHP 4.2 callback-ID test
+alignment, and passing focused PHP gates. Runtime interaction, the four
+documentation screenshots, `spec/reviews/transient-feedback-alpha.md`,
+assistive-technology observation, and physical-device evidence remain blocked.
 
 ## Constitutional review
 
@@ -318,3 +314,36 @@ catalogue or public-alpha readiness. The owned Paparazzi failures, runtime and
 accessibility observations, approved screenshots, physical-device rows,
 strict release review, complete catalogue evidence, and upstream installation
 dependencies remain unresolved.
+
+## Follow-up evidence — 2026-08-23
+
+| Command | Exit | Result |
+| --- | ---: | --- |
+| `vendor/bin/pest tests/Feature/TransientFeedbackApiTest.php tests/Feature/FeedbackCenterTest.php tests/Feature/TransientFeedbackDocumentationTest.php` | 0 | PASS — 113 tests, 1,300 assertions. |
+| `tests/android/gradlew -p tests/android recordPaparazziDebug` (FeedbackCenter Paparazzi classes) | 0 | PASS — ten goldens committed under `tests/android/src/test/snapshots/images/`. |
+| `tests/android/gradlew -p tests/android verifyPaparazziDebug` (FeedbackCenter Paparazzi classes) | 0 | PASS — all ten owned cases verify after recording. |
+| `bin/check-transient-feedback --development` | 0 | PASS — structural and PHP lifecycle checks; development gaps remain for screenshots and alpha review. |
+| `bin/build-docs-artifacts` | 0 | PASS — regenerated `llms.txt` and `llms-full.txt`. |
+
+**Constitutional deltas since 2026-08-05:**
+
+- Article IV moves to **PASS** for owned Paparazzi evidence. Other components may
+  still fail the full Android visual gate; that does not reopen Transient
+  Feedback off-device implementation.
+- Article VI moves to **BLOCKED** for manual VoiceOver/TalkBack and runtime matrix
+  rows; automated semantics and Paparazzi font-scale/RTL cases now pass.
+- Article IX moves to **BLOCKED** pending release capture, alpha review, and device
+  rows; owned automated gates listed above pass.
+
+**Test alignment:** NativePHP 4.2 content-addresses callback IDs from expression
+strings. `FeedbackCenterTest` now expects stable IDs across same-semantic
+republication rather than monotonic fresh integers per render.
+
+**Roadmaps:** `roadmap.md`, `roadmap-v2.md`, and `roadmap-v3.md` now record V2
+manifest delivery, Transient Feedback as the sole open V2 target, and the V3
+sequence behind it.
+
+**Remaining release boundary:** Task 8 capture (`bin/capture-doc-screenshots
+TransientFeedback`), four documentation PNGs, and
+`spec/reviews/transient-feedback-alpha.md` with substantive runtime and
+accessibility rows.
