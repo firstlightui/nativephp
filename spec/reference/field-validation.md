@@ -25,6 +25,7 @@ sources:
   - tests/Feature/ValidatesFieldsTest.php
   - spec/reference/form-submit.md
   - docs/how-to/validate-fields.md
+  - docs/reference/validates-fields.md
 ---
 
 # Firstlight Field Validation Contract
@@ -97,4 +98,4 @@ Action, presentation, display, and collection components (Button, Icon Button, C
 
 iOS and Android field renderers already treat a non-empty `error` as visible and accessible validation feedback. PHP validation publishes that string through the ordinary Element Tree. No additional native validation engine, focus-stealing overlay, or WebView error list is permitted.
 
-Consumer guidance lives in [Validate fields](../../docs/how-to/validate-fields.md). Guarded submit plus success Feedback lives in [Form submission](form-submit.md). Catalogue expansion rules live in [Catalogue boundary](catalogue-boundary.md).
+Consumer guidance lives in [Validate fields](../../docs/how-to/validate-fields.md) and the [ValidatesFields reference](../../docs/reference/validates-fields.md). Guarded submit plus success Feedback lives in [Form submission](form-submit.md). Catalogue expansion rules live in [Catalogue boundary](catalogue-boundary.md).

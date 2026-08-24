@@ -84,7 +84,9 @@ Use the existing fields, `native:model`, and Button:
 `false`, skips the callable and success Feedback, and lets
 `ValidatesFields` publish each first Laravel message through the matching
 field's native `error` slot. See [Validate Firstlight fields](validate-fields.md)
-for rule sources, custom messages, and explicit error binding.
+for rule sources, Form Requests, custom messages, and explicit error binding. The
+[ValidatesFields reference](../reference/validates-fields.md) lists the method
+contract and participating fields.
 
 After successful validation, `submit()` runs the callable and sends
 `Feedback::success($successMessage)->send()` when the message is non-empty.

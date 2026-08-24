@@ -10,7 +10,7 @@
 
 - [Install Firstlight UI](https://firstlightui.dev/getting-started/installation): Install Firstlight, register its NativePHP plugin, and rebuild the native projects.
 - [Add your first Firstlight component](https://firstlightui.dev/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
-- [Validate Firstlight fields](https://firstlightui.dev/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate() and validateOnly().
+- [Validate Firstlight fields](https://firstlightui.dev/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate(), validateOnly(), and Form Requests.
 - [Submit Firstlight forms](https://firstlightui.dev/how-to/submit-forms): Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize Firstlight actions](https://firstlightui.dev/how-to/authorize-actions): Apply Laravel Gate and Policy decisions to Firstlight actions with explicit hide, disable, and destructive confirmation patterns.
 - [Theme Firstlight components](https://firstlightui.dev/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
@@ -44,4 +44,5 @@
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
 - [Text Area](https://firstlightui.dev/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.
 - [Switch](https://firstlightui.dev/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
+- [ValidatesFields](https://firstlightui.dev/reference/validates-fields): Public contract for Firstlight Laravel field validation, MessageBag binding, and validate() timing.
 - [Compatibility](https://firstlightui.dev/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.

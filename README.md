@@ -40,8 +40,6 @@ for the affected behaviour and upstream tracking.
 />
 ```
 
-Firstlight is preparing its first public alpha. Segmented is its first paired iOS and Android control.
-
 Read the [documentation index](docs/index.md) or the governing [Firstlight constitution](Constitution.md).
 
 ## Licence
