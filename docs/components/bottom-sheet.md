@@ -18,7 +18,8 @@ bottom of the screen. PHP owns whether the sheet is requested; each platform
 owns sheet chrome, drag to dismiss, and height stops.
 
 Use [Modal](modal.md) for a full-screen overlay. Use
-[Confirmation Dialog](confirmation-dialog.md) for a single confirm/cancel
+[Alert Dialog](alert-dialog.md) for a single acknowledgement. Use
+[Confirmation Dialog](confirmation-dialog.md) for a confirm/cancel
 decision.
 
 ## Complete example

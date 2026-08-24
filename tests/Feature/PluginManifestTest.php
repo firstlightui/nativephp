@@ -233,6 +233,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.alert-dialog',
+            'element' => 'FirstlightUI\\Elements\\AlertDialog',
+            'blade' => 'FirstlightUI\\Components\\AlertDialog',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.AlertDialogRenderer',
+            'ios_renderer' => 'AlertDialogRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.confirmation-dialog',
             'element' => 'FirstlightUI\\Elements\\ConfirmationDialog',
             'blade' => 'FirstlightUI\\Components\\ConfirmationDialog',
@@ -286,6 +294,14 @@ it('registers Checkbox as paired Firstlight renderers rather than an adapter', f
 it('registers List Item as paired Firstlight renderers rather than an adapter', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
     $component = collect($manifest['components'])->firstWhere('type', 'firstlight.list-item');
+
+    expect($component)->not->toBeNull()
+        ->and($component)->not->toHaveKey('adapter');
+});
+
+it('registers Alert Dialog as paired Firstlight renderers rather than an adapter', function () {
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    $component = collect($manifest['components'])->firstWhere('type', 'firstlight.alert-dialog');
 
     expect($component)->not->toBeNull()
         ->and($component)->not->toHaveKey('adapter');

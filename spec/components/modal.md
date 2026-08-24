@@ -21,8 +21,9 @@ above the current screen. It is an action/display presentation: PHP owns
 `visible` and the dismiss callback; native code owns cover/dialog chrome,
 focus containment, close controls, and motion.
 
-Modal is not a Confirmation Dialog, a Bottom Sheet, a modelled field, or a
-layout primitive. Confirmation Dialog remains the contract for a single
+Modal is not a Confirmation Dialog, an Alert Dialog, a Bottom Sheet, a modelled field, or a
+layout primitive. Alert Dialog remains the contract for a one-action
+acknowledgement. Confirmation Dialog remains the contract for a single
 confirm/cancel decision. Bottom Sheet remains the contract for a detent-height
 panel that slides up from the bottom.
 

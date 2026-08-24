@@ -15,7 +15,7 @@ sources:
 
 `<firstlight:callout>` presents a persistent inline semantic message with one optional labelled action. It is an action/display component: it has no model, change event, dismissal lifecycle, timeout, queue, loading state, or validation state.
 
-Callout is for information that must remain visible in the authored layout until the server publishes a tree without it. Brief queued outcomes belong to Transient Feedback; confirmation belongs to Confirmation Dialog; compact metadata belongs to Status Label.
+Callout is for information that must remain visible in the authored layout until the server publishes a tree without it. Brief queued outcomes belong to Transient Feedback; one-action acknowledgement belongs to Alert Dialog; confirmation belongs to Confirmation Dialog; compact metadata belongs to Status Label.
 
 ## Public API
 

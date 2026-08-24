@@ -50,7 +50,9 @@ request.
 
 The component always presents one confirm action and one cancel action. It
 does not support arbitrary action lists, icons, loading or disabled states,
-`native:model`, per-platform styling, or an undismissable mode.
+`native:model`, per-platform styling, or an undismissable mode. Use
+[Alert Dialog](alert-dialog.md) when the user only needs to acknowledge a
+message.
 
 ## Behavior and accessibility
 

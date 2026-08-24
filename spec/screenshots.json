@@ -250,6 +250,17 @@
                 "android-dark": "docs/screenshots/switch/android-dark.png"
             }
         },
+        "alert-dialog": {
+            "route": "/captures/alert-dialog",
+            "test": "php artisan test tests/Feature/AlertDialogCaptureTest.php",
+            "ready-text": "Changes saved",
+            "outputs": {
+                "ios-light": "docs/screenshots/alert-dialog/ios-light.png",
+                "ios-dark": "docs/screenshots/alert-dialog/ios-dark.png",
+                "android-light": "docs/screenshots/alert-dialog/android-light.png",
+                "android-dark": "docs/screenshots/alert-dialog/android-dark.png"
+            }
+        },
         "confirmation-dialog": {
             "route": "/captures/confirmation-dialog",
             "test": "php artisan test tests/Feature/ConfirmationDialogCaptureTest.php",

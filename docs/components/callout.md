@@ -54,7 +54,7 @@ Callout has no value or model. PHP controls whether it is present and may publis
 
 ## Persistence and dismissal
 
-Callout remains in its authored position until the next Element Tree omits it. It has no timeout, close button, swipe gesture, `dismissible` prop, or dismissal event. Use Transient Feedback for brief queued outcomes and Confirmation Dialog when work must pause for a decision.
+Callout remains in its authored position until the next Element Tree omits it. It has no timeout, close button, swipe gesture, `dismissible` prop, or dismissal event. Use Transient Feedback for brief queued outcomes, Alert Dialog when the user must acknowledge one message, and Confirmation Dialog when work must pause for a confirm/cancel decision.
 
 ## Disabled, loading, and error behaviour
 
