@@ -182,7 +182,12 @@ class MediaRendererState(node: NativeUINode) {
 
     fun serverPublished(tree: NativeUITree): Boolean {
         val published = tree.root.findNode(configuration.nodeId) ?: return false
-        configuration = MediaRendererConfiguration(published)
+        return serverPublished(published)
+    }
+
+    fun serverPublished(node: NativeUINode): Boolean {
+        if (node.id != configuration.nodeId) return false
+        configuration = MediaRendererConfiguration(node)
         pendingTempPath = null
         return true
     }
