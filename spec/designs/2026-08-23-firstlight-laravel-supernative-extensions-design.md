@@ -120,9 +120,14 @@ of Status Label, Callout, and Button. No Empty primitive or second scroll-event
 vocabulary was added. The maintained contract is
 [List pagination](../reference/list-pagination.md).
 
-### 4. Media field (new component, after the PHP layer is stable)
+### 4. Media field (designed 2026-08-24 — not yet implemented)
 
-Form-grade image or file field using NativePHP Camera/Photos plugins, Laravel `Storage`, and `image` / `file` rules lighting the same `error` slot as Text Field. v1 is one image or one document, PHP-owned path, native picker or camera sheet. No crop editor and no gallery CMS. This is the first ranked item that may add a catalogue tag, because Mobile UI does not ship a form-grade media field.
+Form-grade `<firstlight:media>` for one image or one document, `MediaValue` on
+Laravel Storage (default `mobile_public`), ValidatesFields integration, and
+Firstlight-owned crop when `aspect` / `crop` require it. Camera + library for
+images; system file picker for documents. See
+[Media field design](2026-08-24-firstlight-media-field-design.md). This
+supersedes the earlier “no crop” sketch for this item only.
 
 ### 5. Destructive list actions (implemented)
 
