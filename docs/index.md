@@ -28,6 +28,7 @@ sources:
 - [Badge](components/badge.md) — Present compact display-only counts or short markers with semantic tones and contextual accessibility.
 - [Checkbox](components/checkbox.md) — Configure strict Boolean form and checklist state with server-authoritative proposals.
 - [Choice Group](components/choice-group.md) — Configure visible single-radio or multiple-checkbox choice rows with stable values.
+- [Media](components/media.md) — Capture one image or document into Storage with optional crop and ValidatesFields.
 - [Alert Dialog](components/alert-dialog.md) — Present one native acknowledgement with a single action.
 - [Confirmation Dialog](components/confirmation-dialog.md) — Ask for one native confirmation with explicit cancellation and destructive action semantics.
 - [Modal](components/modal.md) — Present authored content in a full-screen native overlay with server-controlled dismissal.

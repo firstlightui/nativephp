@@ -15,6 +15,7 @@ sources:
 - [Callout component contract](components/callout.md) — Defines persistent semantic messages, optional actions, tone-owned affordances, accessibility, and the paired-renderer boundary.
 - [Transient Feedback maintained contract](components/transient-feedback.md) — Defines the service API, package-owned wire, native queue, lifecycle, accessibility, failures, and evidence boundary.
 - [Checkbox component contract](components/checkbox.md) — Defines strict Boolean field semantics, server-authoritative proposals, accessibility, and the paired-renderer boundary.
+- [Media component contract](components/media.md) — Defines image-or-document MediaValue Storage, crop composition, ValidatesFields participation, and paired crop sheets.
 - [Badge component contract](components/badge.md) — Defines compact count and marker semantics, strict display sources, tones, accessibility, and the paired-renderer decision.
 - [Choice Group component contract](components/choice-group.md) — Defines visible radio or checkbox choice rows, stable values, state timing, accessibility, and native expression.
 - [Alert Dialog component contract](components/alert-dialog.md) — Defines server-controlled one-action acknowledgement, dismissal, accessibility, and the paired-renderer boundary.

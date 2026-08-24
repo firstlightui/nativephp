@@ -120,6 +120,16 @@
                 "android-dark": "docs/screenshots/list/android-dark.png"
             }
         },
+        "media": {
+            "route": "/captures/media",
+            "test": "php artisan test tests/Feature/MediaCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/media/ios-light.png",
+                "ios-dark": "docs/screenshots/media/ios-dark.png",
+                "android-light": "docs/screenshots/media/android-light.png",
+                "android-dark": "docs/screenshots/media/android-dark.png"
+            }
+        },
         "list-section": {
             "route": "/captures/list",
             "test": "php artisan test tests/Feature/ListCaptureTest.php",

@@ -71,12 +71,13 @@ The binder does not set `required`, `disabled`, `helper`, or any other prop.
 
 ## Validation surface
 
-These twelve elements call `FieldErrorBinder::apply()` and expose an `error` string that replaces helper text when non-empty:
+These thirteen elements call `FieldErrorBinder::apply()` and expose an `error` string that replaces helper text when non-empty:
 
 | Element | `required` metadata |
 | --- | --- |
 | Text Field | yes |
 | Text Area | yes |
+| Media | yes |
 | Checkbox | yes |
 | Choice Group | yes |
 | Pill Group | yes |
