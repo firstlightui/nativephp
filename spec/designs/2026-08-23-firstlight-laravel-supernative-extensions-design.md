@@ -1,18 +1,25 @@
 ---
 title: Firstlight Laravel SuperNative extensions design
-description: Approved layering for Laravel-shaped PHP extensions on SuperNative, the current field-validation contract, and the ranked queue after validation.
+description: Approved layering for Laravel-shaped PHP extensions on SuperNative, the implemented validation, submission, and authorization contracts, and the remaining ranked queue.
 status: historical
 sources:
   - Constitution.md
   - spec/reference/catalogue-boundary.md
   - spec/reference/field-validation.md
+  - spec/reference/form-submit.md
+  - spec/reference/action-authorization.md
   - spec/components/transient-feedback.md
   - spec/components/list.md
   - spec/components/button.md
   - spec/components/confirmation-dialog.md
   - src/Concerns/ValidatesFields.php
+  - src/Concerns/SubmitsForms.php
+  - src/Concerns/AuthorizesActions.php
+  - src/Authorization/GateEvaluator.php
   - src/Validation/FieldErrorBinder.php
   - docs/how-to/validate-fields.md
+  - docs/how-to/submit-forms.md
+  - docs/how-to/authorize-actions.md
 ---
 
 # Firstlight Laravel SuperNative Extensions Design
@@ -21,7 +28,7 @@ Date: 2026-08-23
 
 Status: approved
 
-This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md) and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
+This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
 
 ## Objective
 
@@ -49,22 +56,48 @@ Validation is the model extension. It is implemented:
 - `FieldErrorBinder` writes `MessageBag::first($key)` into the field `error` slot when the author did not supply a non-empty `error`.
 - Keys resolve from `error-for`, then `native:model` / `native:model.*`, then compiled `__syncProperty`.
 - Twelve fields participate. Search Field does not. `required` stays authored metadata and is not inferred from rules. Switch, Slider, and Stepper reject `required` and still accept bound `error`.
-- Submit remains a Button `@press` that calls `validate()` or `validateOnly()`.
+- Submit remains a Button `@press`; screens may call `validate()` directly or
+  use the implemented `SubmitsForms::submit()` workflow described below.
 - No Swift/Kotlin rule engine and no sibling HTML-style `@error` directive.
 
 Follow-on validation work, if any, must stay inside this binder: optional form-level Callout or Feedback summary, optional moving VoiceOver/TalkBack focus to the first invalid field, still without a native validator.
 
-## Ranked queue after validation
+## Ranked extensions after validation
 
-These items are approved as PHP SuperNative extensions. They are not catalogue commitments and are not implemented by this record.
+These items are approved as PHP SuperNative extensions, not catalogue
+commitments. Implementation state is recorded on each item.
 
-### 1. Form submit helper
+### 1. Form submit helper (implemented)
 
-Collect named field models, run `validate()` on submit, set Button `loading`, republish field errors, and on success use Transient Feedback. Not a layout container. Modal and Bottom Sheet already host content.
+`FirstlightUI\Concerns\SubmitsForms` exposes public
+`bool $submitting = false` and
+`submit(callable $action, ?string $successMessage = null, bool $validate = true): bool`.
+It rejects re-entry while the synchronous callable runs, validates through
+`ValidatesFields` by default, returns `false` for validation failure, invokes
+the callable, and sends non-blank success copy through
+`Feedback::success(...)->send()`. Unexpected exceptions propagate.
 
-### 2. Authorization on actions
+The guard resets in `finally`. NativePHP compiles one tree after dispatch, so
+the default `true` then `false` transition cannot flash Button `loading`
+inside one request. Authors may bind `:loading="$this->submitting"` for a
+workflow that deliberately publishes `true` across a round-trip, but the
+helper does not invent an intermediate publication or use the lazy-mount-only
+`publishPlaceholder()`. It is not a layout container.
 
-Map `Gate` / `Policy` onto Button, Icon Button, List Item, and Confirmation Dialog as explicit hide-versus-disable behaviour. Destructive actions stay visible when denied, with helper or error text. A 403 may publish Feedback instead of a blank screen. Confirmation Dialog `tone="destructive"` remains the native `authorize()` expression.
+### 2. Authorization on actions (implemented)
+
+`FirstlightUI\Concerns\AuthorizesActions` exposes `allows()`, `denies()`, and
+non-throwing `authorize()`. `GateEvaluator` uses Laravel's Gate facade,
+accepts a callable test resolver, and fails closed when Gate is unbound.
+Denied `authorize()` calls publish danger Feedback and return `false` instead
+of throwing an `AuthorizationException` into NativePHP's generic overlay path.
+
+Ordinary actions use explicit Blade hide-or-disable composition. Destructive
+Button, Icon Button, and List Item actions stay visible and disabled when
+denied. Confirmation Dialog has no invented disabled or loading state, so PHP
+authorizes before opening it and again before mutation. No `can` element prop,
+native authorization engine, or new action element was added. The maintained
+contract is [Action authorization](../reference/action-authorization.md).
 
 ### 3. List pagination
 

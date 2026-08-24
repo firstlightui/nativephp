@@ -7,6 +7,8 @@ sources:
   - Constitution.md
   - spec/architecture/package.md
   - spec/reference/field-validation.md
+  - spec/reference/form-submit.md
+  - spec/reference/action-authorization.md
   - spec/components/transient-feedback.md
   - spec/workflows/adding-components.md
   - docs/concepts/firstlight-and-mobile-ui.md
@@ -27,12 +29,14 @@ Typical catalogue members: fields, choices, actions, status, lists, and presenta
 
 ## PHP SuperNative extensions (no new tag required)
 
-Extensions reuse existing elements, chrome, or facades. Transient Feedback and field validation are the current examples:
+Extensions reuse existing elements, chrome, or facades. Current examples:
 
 - **Transient Feedback** — `Feedback` facade, process-local store, package chrome, native queue. No consumer-authored host tag.
 - **Field validation** — `ValidatesFields` plus `FieldErrorBinder` filling existing `error` slots. Specified in [Field validation](field-validation.md).
+- **Form submission** — `SubmitsForms::submit()` over Button `@press`, validation, and Feedback. Specified in [Form submission](form-submit.md).
+- **Action authorization** — `AuthorizesActions` over Gate/Policy with authored hide, disable, and confirmation. Specified in [Action authorization](action-authorization.md).
 
-Further Laravel-shaped work (form submit helpers, Gate/Policy action helpers, paginator binding, media fields, list destructive actions, notification bridges) must follow the same pattern: PHP owns the Laravel API; existing Firstlight or Mobile UI presentation owns the pixels. A new catalogue component is justified only when no current control can express the contract, as a media field would.
+Further Laravel-shaped work (paginator binding, media fields, list destructive actions, notification bridges) must follow the same pattern: PHP owns the Laravel API; existing Firstlight or Mobile UI presentation owns the pixels. A new catalogue component is justified only when no current control can express the contract, as a media field would.
 
 ## Out of catalogue
 

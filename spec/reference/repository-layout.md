@@ -28,9 +28,10 @@ sources:
 | `Package.swift` | Swift package, scheme, iOS floor, source target, and iOS test target | Authored; Apple build authority |
 | `src/Components/` | Public NativePHP Blade component adapters and Element Tree type selection | Authored |
 | `src/Elements/` | Public value validation, primitive props, callback registration, and Element Tree contracts | Authored |
-| `src/Concerns/` | Screen-level PHP extensions such as Laravel field validation | Authored |
+| `src/Concerns/` | Screen-level PHP extensions such as Laravel field validation, form submission, and action authorization | Authored |
 | `src/Validation/` | MessageBag request-scope binding onto field `error` slots | Authored |
-| `src/NativeComponent.php` | NativePHP screen base that includes `ValidatesFields` | Authored |
+| `src/Authorization/` | Gate evaluation used by action authorization | Authored |
+| `src/NativeComponent.php` | NativePHP screen base that includes `ValidatesFields`, `SubmitsForms`, and `AuthorizesActions` | Authored |
 | `src/Support/` | Shared normalization and callback helpers used by element contracts | Authored |
 | `src/Exceptions/` | Actionable public-contract diagnostics | Authored |
 | `src/FirstlightServiceProvider.php` | Laravel/Blade package boot integration | Authored |

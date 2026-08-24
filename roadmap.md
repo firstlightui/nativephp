@@ -52,13 +52,21 @@ details behind the same coherent Firstlight API.
 ## Laravel SuperNative extensions
 
 These are PHP services over existing controls, not extra catalogue tags.
-Validation is on main: `ValidatesFields` binds Laravel `MessageBag` text to
-field `error` slots. See `docs/how-to/validate-fields.md`.
+Validation, guarded form submission, and action authorization are implemented:
+
+- `ValidatesFields` binds Laravel `MessageBag` text to field `error` slots.
+  See `docs/how-to/validate-fields.md`.
+- `SubmitsForms::submit()` runs validation and a callable, prevents re-entry
+  for the callable's duration, and optionally sends success Feedback. It does
+  not fake a device-visible loading frame inside one NativePHP request. See
+  `docs/how-to/submit-forms.md`.
+- `AuthorizesActions` evaluates Laravel Gate/Policy decisions for authored
+  hide-or-disable states. Its non-throwing `authorize()` sends danger Feedback
+  on denial. Destructive actions stay visible, and Confirmation Dialog is
+  guarded before opening. See `docs/how-to/authorize-actions.md`.
 
 Approved follow-on extensions (not shipped, not alpha-gate items):
 
-- form submit helper (Button `loading` + `validate()`)
-- Gate/Policy helpers on actions
 - List paginator binding
 - media field (the first follow-on that may add a catalogue tag)
 - destructive list actions

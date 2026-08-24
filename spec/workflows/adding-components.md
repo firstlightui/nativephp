@@ -71,4 +71,4 @@ Do not publish, tag, add WebViews or ad hoc bridges, edit generated hosts, inven
 
 ## Out of catalogue
 
-Do not start this workflow for layout primitives, navigation chrome, input masks, Filament-style schema builders, auth kits, or a client-side validator. Those are excluded by [Catalogue boundary](../reference/catalogue-boundary.md). PHP SuperNative extensions such as field validation publish through existing `error`, `loading`, list, confirmation, and Feedback APIs; they do not receive a new `<firstlight:...>` tag unless no current control can express the contract.
+Do not start this workflow for layout primitives, navigation chrome, input masks, Filament-style schema builders, auth kits, or a client-side validator. Those are excluded by [Catalogue boundary](../reference/catalogue-boundary.md). PHP SuperNative extensions such as field validation, form submission, and action authorization publish through existing `error`, `loading`, list, confirmation, and Feedback APIs; they do not receive a new `<firstlight:...>` tag unless no current control can express the contract.
