@@ -209,6 +209,14 @@
             "self_closing": true
         },
         {
+            "type": "firstlight.alert-dialog",
+            "element": "FirstlightUI\\Elements\\AlertDialog",
+            "blade": "FirstlightUI\\Components\\AlertDialog",
+            "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.AlertDialogRenderer",
+            "ios_renderer": "AlertDialogRenderer",
+            "self_closing": true
+        },
+        {
             "type": "firstlight.confirmation-dialog",
             "element": "FirstlightUI\\Elements\\ConfirmationDialog",
             "blade": "FirstlightUI\\Components\\ConfirmationDialog",

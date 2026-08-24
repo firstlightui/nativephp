@@ -25,7 +25,7 @@ Article VIII requires small, proven expansion. New public `<firstlight:...>` tag
 
 The catalogue is the set of types registered in `nativephp.json`. Add a tag only when the work is a control with a public contract, paired or adapted native expression, tests, documentation, and review.
 
-Typical catalogue members: fields, choices, actions, status, lists, and presentation (Modal, Bottom Sheet, Confirmation Dialog).
+Typical catalogue members: fields, choices, actions, status, lists, and presentation (Alert Dialog, Confirmation Dialog, Modal, Bottom Sheet).
 
 ## PHP SuperNative extensions (no new tag required)
 

@@ -17,6 +17,7 @@ sources:
 - [Checkbox component contract](components/checkbox.md) — Defines strict Boolean field semantics, server-authoritative proposals, accessibility, and the paired-renderer boundary.
 - [Badge component contract](components/badge.md) — Defines compact count and marker semantics, strict display sources, tones, accessibility, and the paired-renderer decision.
 - [Choice Group component contract](components/choice-group.md) — Defines visible radio or checkbox choice rows, stable values, state timing, accessibility, and native expression.
+- [Alert Dialog component contract](components/alert-dialog.md) — Defines server-controlled one-action acknowledgement, dismissal, accessibility, and the paired-renderer boundary.
 - [Confirmation Dialog component contract](components/confirmation-dialog.md) — Defines server-controlled presentation, native action roles, dismissal, accessibility, and the paired-renderer boundary.
 - [Modal component contract](components/modal.md) — Defines server-controlled full-screen presentation, dismissal, content ownership, and the Mobile UI adapter boundary.
 - [Bottom Sheet component contract](components/bottom-sheet.md) — Defines server-controlled sheet presentation, dismissal, content ownership, and the Mobile UI adapter boundary.

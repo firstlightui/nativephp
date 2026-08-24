@@ -24,6 +24,7 @@
 - [Badge](https://firstlightui.dev/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
 - [Checkbox](https://firstlightui.dev/components/checkbox): Strict Boolean form and checklist state, field metadata, server-authoritative proposals, accessibility, and native platform behaviour.
 - [Choice Group](https://firstlightui.dev/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
+- [Alert Dialog](https://firstlightui.dev/components/alert-dialog): Present one native acknowledgement with a single action and server-controlled visibility.
 - [Confirmation Dialog](https://firstlightui.dev/components/confirmation-dialog): Ask for one native confirmation with explicit cancellation and destructive action semantics.
 - [Modal](https://firstlightui.dev/components/modal): Full-screen native overlay for authored content with server-controlled visibility and dismissal.
 - [Bottom Sheet](https://firstlightui.dev/components/bottom-sheet): Native bottom sheet for authored content with server-controlled visibility and dismissal.

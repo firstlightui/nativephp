@@ -45,7 +45,7 @@ $feedbackId = Feedback::success('Appointment saved')
 
 This publishes one app-level native message and returns its stable string ID. There is no Blade tag and no host installation step: installing Firstlight registers the package-owned feedback host automatically.
 
-Transient Feedback is for brief outcomes that may cross screen navigation. Use [Callout](callout.md) for persistent content in the authored layout and [Confirmation Dialog](confirmation-dialog.md) when work must pause for a decision.
+Transient Feedback is for brief outcomes that may cross screen navigation. Use [Callout](callout.md) for persistent content in the authored layout, [Alert Dialog](alert-dialog.md) when the user must acknowledge one message, and [Confirmation Dialog](confirmation-dialog.md) when work must pause for a confirm/cancel decision.
 
 ## Factories and builder
 

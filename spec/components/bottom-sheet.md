@@ -21,9 +21,10 @@ screen to present authored content. It is an action/display presentation: PHP
 owns `visible` and the dismiss callback; native code owns sheet chrome, drag
 to dismiss, tap outside, and platform height stops.
 
-Bottom Sheet is not a Modal, a Confirmation Dialog, a modelled field, or a
+Bottom Sheet is not a Modal, an Alert Dialog, a Confirmation Dialog, a modelled field, or a
 shared detent geometry API. Modal remains the full-screen cover/dialog
-contract. Confirmation Dialog remains the confirm/cancel decision contract.
+contract. Alert Dialog remains the one-action acknowledgement contract.
+Confirmation Dialog remains the confirm/cancel decision contract.
 
 ## Public API
 

@@ -22,9 +22,10 @@ consequential action. It is an action/presentation component. PHP owns whether
 the presentation is requested; the native platform owns dialog layout, action
 order, focus containment, dismissal motion, and transient pressed state.
 
-It is not a generic Modal, an alert with arbitrary buttons, a form container,
-or a modelled choice. The dialog always has exactly one confirmation action
-and one cancellation action.
+It is not a generic Modal, an Alert Dialog, a form container, or a modelled
+choice. The dialog always has exactly one confirmation action and one
+cancellation action. Alert Dialog remains the contract for a one-action
+acknowledgement.
 
 ## Public API
 

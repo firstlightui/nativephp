@@ -17,9 +17,10 @@ Modal presents authored content in a full-screen native overlay. PHP owns
 whether the overlay is requested; each platform owns cover or dialog chrome
 and motion.
 
-Use [Confirmation Dialog](confirmation-dialog.md) for a single confirm/cancel
-decision. Use [Bottom Sheet](bottom-sheet.md) for a panel that slides up from
-the bottom.
+Use [Alert Dialog](alert-dialog.md) for a single acknowledgement. Use
+[Confirmation Dialog](confirmation-dialog.md) for a confirm/cancel decision.
+Use [Bottom Sheet](bottom-sheet.md) for a panel that slides up from the
+bottom.
 
 ## Complete example
 
