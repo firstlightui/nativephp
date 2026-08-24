@@ -86,7 +86,7 @@ Each item publishes:
 
 Publishing `on_manual` for automatic records is an internal ownership requirement. Android Material snackbar accessibility exposes a native dismiss semantic for automatic, actionable, and held states; the callback lets that semantic reach the package child registry. It does not create a public prop or a visible dismiss control. Automatic feedback has no visible close button on either platform. Held feedback alone receives Firstlight's explicit visible dismiss button. iOS accepts manual queue completion only for held records.
 
-Callback IDs belong to the package `FeedbackCenter` child registry, never the consumer screen registry. Every publication, including a same-ID update after navigation, produces fresh callback IDs. The semantic ID, not a callback ID or native node ID, owns queue identity.
+Callback IDs belong to the package `FeedbackCenter` child registry, never the consumer screen registry. NativePHP 4.2 derives callback IDs from the expression string, so unchanged semantic keys keep stable IDs across republication; updated copy still publishes through a fresh host registry on each navigation render. The semantic ID, not a callback ID or native node ID, owns queue identity.
 
 ## Application outcomes
 
