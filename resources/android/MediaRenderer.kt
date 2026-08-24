@@ -243,8 +243,9 @@ object MediaRenderer {
         events: MediaRendererEvents = MediaRendererEvents.native,
     ) {
         val state = remember(node.id) { MediaRendererState(node) }
-        LaunchedEffect(node) {
-            state.serverPublished(NativeUITree(node))
+        LaunchedEffect(node.props) { state.serverPublished(node) }
+        NativeUIBridge.currentTree.value?.let { tree ->
+            LaunchedEffect(tree) { state.serverPublished(tree) }
         }
 
         FirstlightMediaControl(
