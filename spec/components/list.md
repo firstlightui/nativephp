@@ -11,6 +11,7 @@ sources:
   - vendor/nativephp/mobile-ui/resources/android/ListRenderer.kt
   - spec/components/list-item.md
   - spec/components/list-section.md
+  - spec/reference/list-pagination.md
 ---
 
 # List Component Contract
@@ -54,7 +55,8 @@ Section elements.
 
 An empty List publishes a native scroller with no rows. Refresh and end-reached
 callbacks require real `@refresh` / `@end-reached` bindings; they are not
-inferred from empty props.
+inferred from empty props. Laravel paginator accumulation is a PHP extension
+over those events; see [List pagination](../reference/list-pagination.md).
 
 Unsupported child types, horizontal layout, virtualized windows, row selection,
 swipe actions, embedded controls, field bindings, and Mobile UI escape

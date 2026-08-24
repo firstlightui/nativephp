@@ -15,6 +15,7 @@ sources:
 - [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()`, `validateOnly()`, and Form Requests.
 - [Submit forms](how-to/submit-forms.md) — Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize actions](how-to/authorize-actions.md) — Hide, disable, or guard Firstlight actions with Laravel Gate and Policy decisions.
+- [Paginate lists](how-to/paginate-lists.md) — Bind Laravel paginators to List pull-to-refresh and end-reached.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.

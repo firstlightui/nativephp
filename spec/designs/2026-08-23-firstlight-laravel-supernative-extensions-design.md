@@ -8,6 +8,7 @@ sources:
   - spec/reference/field-validation.md
   - spec/reference/form-submit.md
   - spec/reference/action-authorization.md
+  - spec/reference/list-pagination.md
   - spec/components/transient-feedback.md
   - spec/components/list.md
   - spec/components/button.md
@@ -15,11 +16,13 @@ sources:
   - src/Concerns/ValidatesFields.php
   - src/Concerns/SubmitsForms.php
   - src/Concerns/AuthorizesActions.php
+  - src/Concerns/PaginatesLists.php
   - src/Authorization/GateEvaluator.php
   - src/Validation/FieldErrorBinder.php
   - docs/how-to/validate-fields.md
   - docs/how-to/submit-forms.md
   - docs/how-to/authorize-actions.md
+  - docs/how-to/paginate-lists.md
 ---
 
 # Firstlight Laravel SuperNative Extensions Design
@@ -28,7 +31,7 @@ Date: 2026-08-23
 
 Status: approved
 
-This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
+This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), [List pagination](../reference/list-pagination.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
 
 ## Objective
 
@@ -99,9 +102,20 @@ authorizes before opening it and again before mutation. No `can` element prop,
 native authorization engine, or new action element was added. The maintained
 contract is [Action authorization](../reference/action-authorization.md).
 
-### 3. List pagination
+### 3. List pagination (implemented)
 
-Bind `LengthAwarePaginator` or cursor pagination to List `@refresh` and `@end-reached`. Empty collections compose Status Label, Callout, and Button rather than a new Empty primitive unless that composition is proven painful. Do not invent a second scroll-event vocabulary.
+`FirstlightUI\Concerns\PaginatesLists` exposes public `$listItems`,
+`$listHasMore`, `$listPage`, `$listCursor`, and `$listPaginating`, plus
+`refreshList(callable $fetch)` and `loadMoreList(callable $fetch)`. Each
+callable receives `ListPage` (`$page`, `$cursor`) and must return a Laravel
+paginator or compatible `items()` / `hasMorePages()` object.
+
+`refreshList()` replaces accumulated rows with the first page. `loadMoreList()`
+appends the next page and no-ops when `$listHasMore` is false. Re-entry while
+a fetch is running returns `false`. Empty collections remain Blade composition
+of Status Label, Callout, and Button. No Empty primitive or second scroll-event
+vocabulary was added. The maintained contract is
+[List pagination](../reference/list-pagination.md).
 
 ### 4. Media field (new component, after the PHP layer is stable)
 

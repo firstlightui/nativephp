@@ -9,6 +9,7 @@ sources:
   - spec/reference/field-validation.md
   - spec/reference/form-submit.md
   - spec/reference/action-authorization.md
+  - spec/reference/list-pagination.md
   - spec/components/transient-feedback.md
   - spec/workflows/adding-components.md
   - docs/concepts/firstlight-and-mobile-ui.md
@@ -35,8 +36,9 @@ Extensions reuse existing elements, chrome, or facades. Current examples:
 - **Field validation** — `ValidatesFields` plus `FieldErrorBinder` filling existing `error` slots. Specified in [Field validation](field-validation.md).
 - **Form submission** — `SubmitsForms::submit()` over Button `@press`, validation, and Feedback. Specified in [Form submission](form-submit.md).
 - **Action authorization** — `AuthorizesActions` over Gate/Policy with authored hide, disable, and confirmation. Specified in [Action authorization](action-authorization.md).
+- **List pagination** — `PaginatesLists` over List `@refresh` and `@end-reached`. Specified in [List pagination](list-pagination.md).
 
-Further Laravel-shaped work (paginator binding, media fields, list destructive actions, notification bridges) must follow the same pattern: PHP owns the Laravel API; existing Firstlight or Mobile UI presentation owns the pixels. A new catalogue component is justified only when no current control can express the contract, as a media field would.
+Further Laravel-shaped work (media fields, list destructive actions, notification bridges) must follow the same pattern: PHP owns the Laravel API; existing Firstlight or Mobile UI presentation owns the pixels. A new catalogue component is justified only when no current control can express the contract, as a media field would.
 
 ## Out of catalogue
 

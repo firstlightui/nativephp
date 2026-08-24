@@ -22,10 +22,12 @@ sources:
   - src/Concerns/ValidatesFields.php
   - src/Concerns/SubmitsForms.php
   - src/Concerns/AuthorizesActions.php
+  - src/Concerns/PaginatesLists.php
   - src/Validation/FieldErrorBinder.php
   - docs/how-to/validate-fields.md
   - docs/how-to/submit-forms.md
   - docs/how-to/authorize-actions.md
+  - docs/how-to/paginate-lists.md
   - spec/components/transient-feedback.md
 ---
 
@@ -101,7 +103,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 ## Laravel-shaped PHP extensions
 
-Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), and [Authorize actions](../how-to/authorize-actions.md).
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), and [Paginate lists](../how-to/paginate-lists.md).
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
