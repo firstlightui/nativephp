@@ -51,7 +51,8 @@ the user pulls to refresh.
 `@end-reached` invokes the named PHP action when the viewport nears the final
 leaf row. It is intended for pagination rather than precise scroll offsets.
 See [Paginate lists](../how-to/paginate-lists.md) to bind Laravel paginators
-to these events.
+to these events. To delete a row through Confirmation Dialog authorization,
+see [Destroy list items](../how-to/destroy-list-items.md).
 
 ## Composition rules
 

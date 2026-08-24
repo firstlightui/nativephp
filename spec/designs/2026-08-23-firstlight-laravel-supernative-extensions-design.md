@@ -9,6 +9,7 @@ sources:
   - spec/reference/form-submit.md
   - spec/reference/action-authorization.md
   - spec/reference/list-pagination.md
+  - spec/reference/destructive-list-actions.md
   - spec/components/transient-feedback.md
   - spec/components/list.md
   - spec/components/button.md
@@ -17,12 +18,14 @@ sources:
   - src/Concerns/SubmitsForms.php
   - src/Concerns/AuthorizesActions.php
   - src/Concerns/PaginatesLists.php
+  - src/Concerns/DestroysListItems.php
   - src/Authorization/GateEvaluator.php
   - src/Validation/FieldErrorBinder.php
   - docs/how-to/validate-fields.md
   - docs/how-to/submit-forms.md
   - docs/how-to/authorize-actions.md
   - docs/how-to/paginate-lists.md
+  - docs/how-to/destroy-list-items.md
 ---
 
 # Firstlight Laravel SuperNative Extensions Design
@@ -31,7 +34,7 @@ Date: 2026-08-23
 
 Status: approved
 
-This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), [List pagination](../reference/list-pagination.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
+This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), [List pagination](../reference/list-pagination.md), [Destructive list actions](../reference/destructive-list-actions.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
 
 ## Objective
 
@@ -121,9 +124,18 @@ vocabulary was added. The maintained contract is
 
 Form-grade image or file field using NativePHP Camera/Photos plugins, Laravel `Storage`, and `image` / `file` rules lighting the same `error` slot as Text Field. v1 is one image or one document, PHP-owned path, native picker or camera sheet. No crop editor and no gallery CMS. This is the first ranked item that may add a catalogue tag, because Mobile UI does not ship a form-grade media field.
 
-### 5. Destructive list actions
+### 5. Destructive list actions (implemented)
 
-Stable action keys on List Item (not renderer indexes), `authorize()`, Confirmation Dialog for destructive tone, then Feedback and list republish. Laravel `destroy` + Policy as SuperNative list behaviour. Depends on List's adapter remaining able to carry the contract without leaking a second Mobile UI API.
+`FirstlightUI\Concerns\DestroysListItems` exposes `$confirmingListDestruction`,
+`$pendingListDestructionKey`, `requestDestructiveListAction()`,
+`cancelDestructiveListAction()`, and `confirmDestructiveListAction()`. Rows are
+addressed by stable keys (`getKey()`, `id`, or an `id` array key), never
+renderer indexes. Request and confirm both call `authorize()`. Confirmation
+Dialog stays the destructive presentation surface. Success Feedback is
+optional. Matching rows are removed from `$listItems` after a successful
+destroy. No swipe-delete or trailing-action catalogue API was added. The
+maintained contract is
+[Destructive list actions](../reference/destructive-list-actions.md).
 
 ### 6. Notification bridge
 

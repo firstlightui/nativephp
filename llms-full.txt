@@ -596,6 +596,9 @@ The denied request does not open the dialog, and `authorize()` supplies danger
 Feedback instead of allowing an uncaught `AuthorizationException` to reach
 NativePHP's error overlay.
 
+For deleting rows from an accumulated `$listItems` collection by stable key,
+use [Destroy list items](destroy-list-items.md).
+
 --- Source: docs/how-to/paginate-lists.md ---
 
 # Paginate Firstlight Lists
@@ -706,6 +709,111 @@ Use the same callable with `loadMoreList()`.
 Unexpected exceptions from the query are not converted to Feedback. Screens
 that extend NativePHP's component directly can opt in with
 `FirstlightUI\Concerns\PaginatesLists`.
+
+To delete a row after Confirmation Dialog authorization, see
+[Destroy list items](destroy-list-items.md).
+
+--- Source: docs/how-to/destroy-list-items.md ---
+
+# Destroy Firstlight List Items
+
+Firstlight deletes list rows in PHP. Pass a stable domain key into the helper,
+confirm with Confirmation Dialog, authorize again, destroy the model, and let
+`$listItems` republish without that row.
+
+There is no swipe-delete API, trailing action slot, or renderer index. See
+[Authorize actions](authorize-actions.md) for hide-versus-disable rules and
+[Paginate lists](paginate-lists.md) for `$listItems`.
+
+## Declare the screen
+
+Extend `FirstlightUI\NativeComponent` (or use `AuthorizesActions`,
+`DestroysListItems`, and a `$listItems` array):
+
+```php
+<?php
+
+namespace App\Native;
+
+use App\Models\Post;
+use FirstlightUI\NativeComponent;
+
+class PostsScreen extends NativeComponent
+{
+    public function requestDeletion(int $id): void
+    {
+        $this->requestDestructiveListAction($id, 'delete');
+    }
+
+    public function cancelDeletion(): void
+    {
+        $this->cancelDestructiveListAction();
+    }
+
+    public function deletePost(): void
+    {
+        $this->confirmDestructiveListAction(
+            destroy: fn (Post $post) => $post->delete(),
+            ability: 'delete',
+            successMessage: 'Post deleted',
+        );
+    }
+}
+```
+
+`requestDestructiveListAction()` resolves the row by key from `$listItems`,
+calls `authorize()`, and sets `$confirmingListDestruction` when allowed.
+`confirmDestructiveListAction()` closes the dialog, authorizes again, runs the
+destroy callable, removes the row from `$listItems`, and optionally sends
+success Feedback.
+
+Keys must be stable identities such as model ids. Do not pass loop indexes.
+
+## Keep denied rows visible
+
+```blade
+<firstlight:list separator>
+    @foreach ($this->listItems as $post)
+        <firstlight:list-item
+            :headline="$post->title"
+            supporting="Delete permanently"
+            :disabled="$this->denies('delete', $post)"
+            @press="requestDeletion({{ $post->id }})"
+        />
+    @endforeach
+</firstlight:list>
+
+<firstlight:confirmation-dialog
+    :visible="$confirmingListDestruction"
+    title="Delete post?"
+    message="This action cannot be undone."
+    confirm-label="Delete"
+    cancel-label="Keep post"
+    tone="destructive"
+    @press="deletePost"
+    @dismiss="cancelDeletion"
+/>
+```
+
+Never omit a destructive List Item when the Policy denies it. Disable the row
+and keep supporting copy that explains the unavailable action when the
+surrounding interface does not already make that clear.
+
+## Custom keys or database resolve
+
+Override `destructiveListItemKey()` when rows do not expose `getKey()`, `id`,
+or an `id` array key. Override `resolveDestructiveListItem()` to reload the
+model from the database instead of trusting the in-memory `$listItems` copy:
+
+```php
+protected function resolveDestructiveListItem(mixed $key): mixed
+{
+    return Post::query()->find($key);
+}
+```
+
+When you resolve from the database, `$listItems` is still updated after a
+successful destroy so the published List matches the mutation.
 
 --- Source: docs/getting-started/theming.md ---
 
@@ -909,7 +1017,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 ## Laravel-shaped PHP extensions
 
-Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), and [Paginate lists](../how-to/paginate-lists.md).
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), and [Destroy list items](../how-to/destroy-list-items.md).
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
@@ -2434,7 +2542,8 @@ the user pulls to refresh.
 `@end-reached` invokes the named PHP action when the viewport nears the final
 leaf row. It is intended for pagination rather than precise scroll offsets.
 See [Paginate lists](../how-to/paginate-lists.md) to bind Laravel paginators
-to these events.
+to these events. To delete a row through Confirmation Dialog authorization,
+see [Destroy list items](../how-to/destroy-list-items.md).
 
 ## Composition rules
 

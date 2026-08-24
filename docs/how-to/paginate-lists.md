@@ -119,3 +119,6 @@ Use the same callable with `loadMoreList()`.
 Unexpected exceptions from the query are not converted to Feedback. Screens
 that extend NativePHP's component directly can opt in with
 `FirstlightUI\Concerns\PaginatesLists`.
+
+To delete a row after Confirmation Dialog authorization, see
+[Destroy list items](destroy-list-items.md).

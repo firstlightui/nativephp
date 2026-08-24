@@ -141,3 +141,6 @@ public function cancelDeletion(): void
 The denied request does not open the dialog, and `authorize()` supplies danger
 Feedback instead of allowing an uncaught `AuthorizationException` to reach
 NativePHP's error overlay.
+
+For deleting rows from an accumulated `$listItems` collection by stable key,
+use [Destroy list items](destroy-list-items.md).

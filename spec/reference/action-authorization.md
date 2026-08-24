@@ -16,6 +16,8 @@ sources:
   - src/Elements/ConfirmationDialog.php
   - tests/Feature/AuthorizesActionsTest.php
   - docs/how-to/authorize-actions.md
+  - docs/how-to/destroy-list-items.md
+  - src/Concerns/DestroysListItems.php
 ---
 
 # Firstlight Action Authorization
@@ -94,5 +96,7 @@ authorization decisions. Misconfigured policies and application failures
 remain visible failures.
 
 No new native state, event, component, layout, navigation, mask, schema,
-submission, or pagination API belongs to this extension. Consumer guidance
+submission, or pagination API belongs to this extension. List-row destruction
+by stable key is specified separately in
+[Destructive list actions](destructive-list-actions.md). Consumer guidance
 lives in [Authorize Firstlight actions](../../docs/how-to/authorize-actions.md).
