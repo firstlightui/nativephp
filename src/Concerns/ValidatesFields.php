@@ -2,6 +2,8 @@
 
 namespace FirstlightUI\Concerns;
 
+use FirstlightUI\Media\MediaValidation;
+use FirstlightUI\Media\MediaValue;
 use FirstlightUI\Validation\FieldErrorBag;
 use Illuminate\Support\MessageBag;
 use Illuminate\Translation\ArrayLoader;
@@ -217,9 +219,13 @@ trait ValidatesFields
                 continue;
             }
 
-            $data[$property->getName()] = $property->isInitialized($this)
+            $value = $property->isInitialized($this)
                 ? $property->getValue($this)
                 : null;
+
+            $data[$property->getName()] = $value instanceof MediaValue
+                ? MediaValidation::toUploadedFile($value)
+                : $value;
         }
 
         return $data;
