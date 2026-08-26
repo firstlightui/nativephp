@@ -17,6 +17,9 @@ final class TextFieldRendererContractTests: XCTestCase {
         XCTAssertEqual(configuration.leadingIcon, "envelope")
         XCTAssertEqual(configuration.trailingIcon, "arrow.right")
         XCTAssertEqual(configuration.trailingAccessibilityLabel, "Send")
+        XCTAssertEqual(configuration.clearA11yLabel, "Clear text")
+        XCTAssertEqual(configuration.showPasswordA11yLabel, "Show password")
+        XCTAssertEqual(configuration.hidePasswordA11yLabel, "Hide password")
         XCTAssertEqual(configuration.onPressCallback, 43)
     }
 

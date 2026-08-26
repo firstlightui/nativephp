@@ -126,10 +126,10 @@ internal fun FirstlightTimePickerControl(
                         TextButton(onClick = {
                             onSelect(LocalTime.of(pickerState.hour, pickerState.minute).toCanonicalTime())
                             onConfirm()
-                        }) { Text("Confirm") }
+                        }) { Text(configuration.confirmLabel) }
                     },
                     dismissButton = {
-                        TextButton(onClick = onCancel) { Text("Cancel") }
+                        TextButton(onClick = onCancel) { Text(configuration.cancelLabel) }
                     },
                 ) {
                     Column(Modifier.padding(24.dp)) {

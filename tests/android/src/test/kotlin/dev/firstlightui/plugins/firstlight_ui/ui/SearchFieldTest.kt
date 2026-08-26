@@ -28,6 +28,7 @@ class SearchFieldTest {
         assertEquals("Search specialties", configuration.accessibilityLabel)
         assertEquals(41, configuration.onChangeCallback)
         assertEquals(42, configuration.onSubmitCallback)
+        assertEquals("Clear search", configuration.clearA11yLabel)
     }
 
     @Test fun `focused acknowledgements preserve selection composition and corrections wait`() {

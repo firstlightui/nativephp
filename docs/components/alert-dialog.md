@@ -12,6 +12,9 @@ sources:
   - resources/android/AlertDialogControl.kt
   - resources/android/AlertDialogRenderer.kt
   - tests/Feature/AlertDialogElementTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
+  - lang/en/chrome.php
 ---
 
 # Alert Dialog
@@ -42,8 +45,9 @@ runs for the action button, back, and outside dismissal.
 - `visible`: server-controlled presentation request; defaults to `false`.
 - `title`: required visible heading and accessible dialog name.
 - `message`: required explanation.
-- `action-label`: acknowledgement action text; defaults to `OK`. The
-  `actionLabel` alias is accepted.
+- `action-label`: acknowledgement action text; defaults to the package chrome
+  string `OK`. The `actionLabel` alias is accepted. See
+  [Localize chrome](../how-to/localize.md).
 - `@dismiss`: required callback for the action, back, or outside dismissal.
 - `class`: external EDGE layout only.
 

@@ -15,6 +15,7 @@
 - [Authorize Firstlight actions](https://firstlightui.dev/how-to/authorize-actions): Apply Laravel Gate and Policy decisions to Firstlight actions with explicit hide, disable, and destructive confirmation patterns.
 - [Paginate Firstlight lists](https://firstlightui.dev/how-to/paginate-lists): Bind Laravel paginators to List pull-to-refresh and end-reached without a new Firstlight tag.
 - [Destroy Firstlight list items](https://firstlightui.dev/how-to/destroy-list-items): Authorize Confirmation Dialog deletion of List rows by stable keys, then Feedback and list republish.
+- [Localize Firstlight chrome](https://firstlightui.dev/how-to/localize): Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
 - [Theme Firstlight components](https://firstlightui.dev/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
 - [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
 - [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.

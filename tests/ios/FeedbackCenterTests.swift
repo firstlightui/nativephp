@@ -44,6 +44,13 @@ final class FeedbackCenterTests: XCTestCase {
         XCTAssertEqual(state.elapsed, 2)
     }
 
+    func testConfigurationDecodesPackageChromeDismissLabels() {
+        let configuration = FeedbackCenterItemConfiguration(node: itemNode(id: "held", hold: true))
+
+        XCTAssertEqual(configuration.dismissLabel, "Dismiss")
+        XCTAssertEqual(configuration.dismissA11yLabel, "Dismiss feedback")
+    }
+
     func testProgrammaticAbsenceAdvancesWithoutEmittingAnEvent() {
         var state = FeedbackCenterQueueState(now: 0)
         state.reconcile([item(id: "one"), item(id: "two")], now: 0)

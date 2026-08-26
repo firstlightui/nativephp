@@ -12,6 +12,8 @@ final class TimePickerSnapshotTests: XCTestCase {
         XCTAssertNil(configuration.acceptedValue)
         XCTAssertEqual(configuration.locale, "en-AU")
         XCTAssertEqual(configuration.timezone, "Australia/Sydney")
+        XCTAssertEqual(configuration.confirmLabel, "Confirm")
+        XCTAssertEqual(configuration.cancelLabel, "Cancel")
         XCTAssertEqual(configuration.accessibilityLabel, "Appointment time")
     }
 

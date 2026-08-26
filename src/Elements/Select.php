@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use FirstlightUI\Support\CallbackExpression;
+use FirstlightUI\Support\Chrome;
 use FirstlightUI\Validation\FieldErrorBinder;
 use FirstlightUI\Support\NormalizedOption;
 use FirstlightUI\Support\NormalizedOptions;
@@ -201,6 +202,7 @@ class Select extends Element
             'option_enabled' => $normalized->enabledFlags(),
             'option_callbacks' => $this->optionCallbacks($registry, $normalized->items, $disabled),
             'search_enabled' => $this->searchable || count($normalized->items) >= self::SEARCH_THRESHOLD,
+            'done_label' => Chrome::string('done'),
         ]);
 
         if ($normalized->items === []) {

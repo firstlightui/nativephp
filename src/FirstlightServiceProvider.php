@@ -24,6 +24,7 @@ class FirstlightServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadFirstlightTranslations();
         $this->loadFirstlightViews();
 
         ChromeContributorRegistry::register(
@@ -35,6 +36,25 @@ class FirstlightServiceProvider extends ServiceProvider
         $this->app->make('blade.compiler')->prepareStringsForCompilationUsing(
             new FirstlightTagPrecompiler
         );
+    }
+
+    private function loadFirstlightTranslations(): void
+    {
+        $path = __DIR__.'/../lang';
+
+        if ($this->app->bound('translator')) {
+            $this->loadTranslationsFrom($path, 'firstlight');
+        } else {
+            $this->app->afterResolving('translator', function (): void {
+                $this->loadTranslationsFrom(__DIR__.'/../lang', 'firstlight');
+            });
+        }
+
+        if (method_exists($this->app, 'langPath')) {
+            $this->publishes([
+                $path => $this->app->langPath('vendor/firstlight'),
+            ], 'firstlight-lang');
+        }
     }
 
     private function loadFirstlightViews(): void

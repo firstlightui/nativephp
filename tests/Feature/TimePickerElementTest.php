@@ -2,6 +2,9 @@
 
 use FirstlightUI\Elements\TimePicker;
 use FirstlightUI\FirstlightTagPrecompiler;
+use Illuminate\Container\Container;
+use Illuminate\Translation\ArrayLoader;
+use Illuminate\Translation\Translator;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -239,4 +242,38 @@ it('keeps the Android text field inert behind an explicit full size button overl
         ->toContain('.clearAndSetSemantics {}')
         ->toContain('.matchParentSize()')
         ->toContain('.clickable(enabled = enabled, role = Role.Button) { onOpen() }');
+});
+
+it('publishes package chrome confirm and cancel labels', function () {
+    expect(collectFirstlightTimePicker([
+        'label' => 'Appointment time',
+    ])['props'])->toMatchArray([
+        'confirm_label' => 'Confirm',
+        'cancel_label' => 'Cancel',
+    ]);
+});
+
+it('inherits application locale and timezone when picker locale props are omitted', function () {
+    $previous = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+    $container->instance('translator', new Translator(new ArrayLoader, 'en_AU'));
+    $container->instance('config', new class
+    {
+        public function get(string $key, mixed $default = null): mixed
+        {
+            return $key === 'app.timezone' ? 'Australia/Sydney' : $default;
+        }
+    });
+
+    try {
+        expect(collectFirstlightTimePicker([
+            'label' => 'Appointment time',
+        ])['props'])->toMatchArray([
+            'locale' => 'en-AU',
+            'timezone' => 'Australia/Sydney',
+        ]);
+    } finally {
+        Container::setInstance($previous);
+    }
 });

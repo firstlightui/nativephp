@@ -49,6 +49,8 @@ struct FeedbackCenterItemConfiguration: Equatable, Identifiable {
     let actionCallback: Int?
     let timeoutCallback: Int?
     let manualCallback: Int?
+    let dismissLabel: String
+    let dismissA11yLabel: String
 
     private let hasValidIdentity: Bool
     private let hasValidMessage: Bool
@@ -95,6 +97,8 @@ struct FeedbackCenterItemConfiguration: Equatable, Identifiable {
 
         timeoutCallback = Self.callback(node.props.getCallbackId("on_timeout"))
         manualCallback = Self.callback(node.props.getCallbackId("on_manual"))
+        dismissLabel = node.props.getString("dismiss_label", default: "Dismiss")
+        dismissA11yLabel = node.props.getString("dismiss_a11y_label", default: "Dismiss feedback")
     }
 
     init(
@@ -106,7 +110,9 @@ struct FeedbackCenterItemConfiguration: Equatable, Identifiable {
         actionLabel: String? = nil,
         actionCallback: Int? = nil,
         timeoutCallback: Int? = 1,
-        manualCallback: Int? = nil
+        manualCallback: Int? = nil,
+        dismissLabel: String = "Dismiss",
+        dismissA11yLabel: String = "Dismiss feedback"
     ) {
         self.nodeID = nodeID
         self.feedbackID = feedbackID
@@ -125,6 +131,8 @@ struct FeedbackCenterItemConfiguration: Equatable, Identifiable {
 
         self.timeoutCallback = Self.callback(timeoutCallback ?? 0)
         self.manualCallback = Self.callback(manualCallback ?? 0)
+        self.dismissLabel = dismissLabel.isEmpty ? "Dismiss" : dismissLabel
+        self.dismissA11yLabel = dismissA11yLabel.isEmpty ? "Dismiss feedback" : dismissA11yLabel
         hasValidIdentity = !feedbackID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         hasValidMessage = !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         hasValidTone = true

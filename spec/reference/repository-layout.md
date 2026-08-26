@@ -9,6 +9,8 @@ sources:
   - Package.swift
   - docs/index.md
   - spec/index.md
+  - spec/reference/package-locale.md
+  - lang/en/chrome.php
   - spec/screenshots.json
   - bin/check-component
   - bin/check-docs
@@ -33,9 +35,10 @@ sources:
 | `src/Authorization/` | Gate evaluation used by action authorization | Authored |
 | `src/Pagination/` | Page request value used by list pagination | Authored |
 | `src/NativeComponent.php` | NativePHP screen base that includes `ValidatesFields`, `SubmitsForms`, `AuthorizesActions`, `PaginatesLists`, and `DestroysListItems` | Authored |
-| `src/Support/` | Shared normalization and callback helpers used by element contracts | Authored |
+| `src/Support/` | Shared normalization, callback, and package chrome helpers used by element contracts | Authored |
+| `lang/` | Packaged English chrome translations loaded as the `firstlight` namespace | Authored |
 | `src/Exceptions/` | Actionable public-contract diagnostics | Authored |
-| `src/FirstlightServiceProvider.php` | Laravel/Blade package boot integration | Authored |
+| `src/FirstlightServiceProvider.php` | Laravel/Blade package boot, chrome translation loading, and `firstlight-lang` publish | Authored |
 | `src/FirstlightTagPrecompiler.php` | Mapping from `<firstlight:...>` authoring to NativePHP native components | Authored |
 | `resources/ios/` | Production Swift controls, renderer adapters, and package-local compile shims | Authored production source except explicitly named test shims |
 | `resources/android/` | Production Kotlin controls and renderer adapters | Authored production source |

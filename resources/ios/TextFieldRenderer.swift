@@ -49,7 +49,10 @@ struct TextFieldRendererConfiguration {
     let trailingIcon: String
     let trailingAccessibilityLabel: String
     let clearable: Bool
+    let clearA11yLabel: String
     let revealable: Bool
+    let showPasswordA11yLabel: String
+    let hidePasswordA11yLabel: String
     let syncMode: String
     let debounceMilliseconds: Int
     let accessibilityLabel: String
@@ -79,7 +82,10 @@ struct TextFieldRendererConfiguration {
         trailingIcon = props.getString("trailing_icon")
         trailingAccessibilityLabel = props.getString("trailing_a11y_label")
         clearable = props.getBool("clearable")
+        clearA11yLabel = props.getString("clear_a11y_label", default: "Clear text")
         revealable = props.getBool("revealable")
+        showPasswordA11yLabel = props.getString("show_password_a11y_label", default: "Show password")
+        hidePasswordA11yLabel = props.getString("hide_password_a11y_label", default: "Hide password")
         syncMode = props.getString("sync_mode", default: "live")
         debounceMilliseconds = max(50, props.getInt("debounce_ms", default: 300))
         let explicitLabel = props.getString("a11y_label")

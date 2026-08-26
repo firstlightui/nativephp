@@ -12,6 +12,9 @@ sources:
   - resources/android/ConfirmationDialogControl.kt
   - resources/android/ConfirmationDialogRenderer.kt
   - tests/Feature/ConfirmationDialogElementTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
+  - lang/en/chrome.php
 ---
 
 # Confirmation Dialog
@@ -41,8 +44,10 @@ request.
 - `visible`: server-controlled presentation request; defaults to `false`.
 - `title`: required visible heading and accessible dialog name.
 - `message`: required explanation of the decision or consequence.
-- `confirm-label`: confirmation action text; defaults to `Confirm`.
-- `cancel-label`: cancellation action text; defaults to `Cancel`.
+- `confirm-label`: confirmation action text; defaults to the package chrome
+  string `Confirm`. See [Localize chrome](../how-to/localize.md).
+- `cancel-label`: cancellation action text; defaults to the package chrome
+  string `Cancel`.
 - `tone`: `default` or `destructive`; defaults to `default`.
 - `@press`: required callback for explicit confirmation.
 - `@dismiss`: required callback for cancellation, back, or outside dismissal.

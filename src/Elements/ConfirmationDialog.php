@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\Chrome;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -32,6 +33,10 @@ final class ConfirmationDialog extends Element
     ];
 
     private ?string $dismissMethod = null;
+
+    private bool $confirmLabelAuthored = false;
+
+    private bool $cancelLabelAuthored = false;
 
     public static function make(string $title = '', string $message = ''): static
     {
@@ -116,6 +121,7 @@ final class ConfirmationDialog extends Element
     public function confirmLabel(string $label): static
     {
         $this->dialogProps['confirm_label'] = $label;
+        $this->confirmLabelAuthored = true;
 
         return $this;
     }
@@ -123,6 +129,7 @@ final class ConfirmationDialog extends Element
     public function cancelLabel(string $label): static
     {
         $this->dialogProps['cancel_label'] = $label;
+        $this->cancelLabelAuthored = true;
 
         return $this;
     }
@@ -150,8 +157,16 @@ final class ConfirmationDialog extends Element
 
     protected function resolveProps(CallbackRegistry $registry): array
     {
+        $props = $this->dialogProps;
+        if (! $this->confirmLabelAuthored) {
+            $props['confirm_label'] = Chrome::string('confirm');
+        }
+        if (! $this->cancelLabelAuthored) {
+            $props['cancel_label'] = Chrome::string('cancel');
+        }
+
         foreach (['title', 'message', 'confirm_label', 'cancel_label'] as $prop) {
-            if (trim($this->dialogProps[$prop]) === '') {
+            if (trim($props[$prop]) === '') {
                 $attribute = str_replace('_', '-', $prop);
 
                 throw new InvalidArgumentException(
@@ -173,7 +188,7 @@ final class ConfirmationDialog extends Element
         }
 
         return [
-            ...$this->dialogProps,
+            ...$props,
             'on_dismiss' => $registry->register($this->dismissMethod),
         ];
     }

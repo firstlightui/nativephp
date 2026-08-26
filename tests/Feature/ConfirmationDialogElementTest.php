@@ -2,6 +2,9 @@
 
 use FirstlightUI\Elements\ConfirmationDialog;
 use FirstlightUI\FirstlightTagPrecompiler;
+use Illuminate\Container\Container;
+use Illuminate\Translation\ArrayLoader;
+use Illuminate\Translation\Translator;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -200,4 +203,30 @@ it('precompiles only the self-closing public tag through the NativePHP Blade sea
         ->and($paired)->toBe(
             '<firstlight:confirmation-dialog title="Delete?">Message</firstlight:confirmation-dialog>'
         );
+});
+
+it('translates default confirmation labels through package chrome', function () {
+    $previous = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+    $loader = new ArrayLoader;
+    $loader->addMessages('fr', 'chrome', [
+        'confirm' => 'Confirmer',
+        'cancel' => 'Annuler',
+    ], 'firstlight');
+    $container->instance('translator', new Translator($loader, 'fr'));
+
+    try {
+        expect(collectConfirmationDialog([
+            'title' => 'Continue?',
+            'message' => 'Review your changes before continuing.',
+            '_press' => 'continue',
+            '_dismiss' => 'cancel',
+        ])['props'])->toMatchArray([
+            'confirm_label' => 'Confirmer',
+            'cancel_label' => 'Annuler',
+        ]);
+    } finally {
+        Container::setInstance($previous);
+    }
 });

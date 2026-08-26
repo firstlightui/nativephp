@@ -250,3 +250,10 @@ it('warns in development when visible and accessibility labels are blank', funct
         'Firstlight Select requires a visible label or a11y-label.',
     ]);
 });
+
+it('publishes the package chrome done label', function () {
+    expect(collectFirstlightSelect([
+        'options' => ['routine' => 'Routine'],
+        'label' => 'Priority',
+    ])['props']['done_label'])->toBe('Done');
+});

@@ -33,17 +33,17 @@ struct MediaRenderer: View {
             }
         )
         .confirmationDialog(
-            "Choose media",
+            state.configuration.chooseMediaLabel,
             isPresented: sourceChooserBinding,
             titleVisibility: .visible
         ) {
             if state.configuration.mode == .image {
-                Button("Photo Library") { photoPickerTrigger = true }
-                Button("Camera") { showCamera = true }
+                Button(state.configuration.photoLibraryLabel) { photoPickerTrigger = true }
+                Button(state.configuration.cameraLabel) { showCamera = true }
             } else {
-                Button("Browse Files") { showDocumentImporter = true }
+                Button(state.configuration.browseFilesLabel) { showDocumentImporter = true }
             }
-            Button("Cancel", role: .cancel) { state.dismissSheet() }
+            Button(state.configuration.cancelLabel, role: .cancel) { state.dismissSheet() }
         }
         .photosPicker(
             isPresented: $photoPickerTrigger,
@@ -63,7 +63,13 @@ struct MediaRenderer: View {
                     onCancel: { state.dismissSheet() },
                     onSkip: { skipCrop(image) },
                     onZoomIn: { state.zoomIn() },
-                    onZoomOut: { state.zoomOut() }
+                    onZoomOut: { state.zoomOut() },
+                    confirmLabel: state.configuration.confirmLabel,
+                    cancelLabel: state.configuration.cancelLabel,
+                    skipLabel: state.configuration.skipLabel,
+                    cropLabel: state.configuration.cropLabel,
+                    zoomInLabel: state.configuration.zoomInLabel,
+                    zoomOutLabel: state.configuration.zoomOutLabel
                 )
             }
         }

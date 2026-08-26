@@ -123,10 +123,10 @@ internal fun FirstlightDatePickerControl(
                         TextButton(onClick = {
                             pickerState.selectedDateMillis?.let(::utcMillisToCanonicalDate)?.let(onSelect)
                             onConfirm()
-                        }) { Text("Confirm") }
+                        }) { Text(configuration.confirmLabel) }
                     },
                     dismissButton = {
-                        TextButton(onClick = onCancel) { Text("Cancel") }
+                        TextButton(onClick = onCancel) { Text(configuration.cancelLabel) }
                     },
                 ) {
                     DatePicker(state = pickerState)

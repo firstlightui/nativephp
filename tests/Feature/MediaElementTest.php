@@ -99,7 +99,9 @@ function compileFirstlightMediaView(string $source, array $data = []): array
         $outputLevel = ob_get_level();
         ob_start();
         try {
-            eval('?>'.$compiled);
+            $compiledFile = $compiledPath.'/'.hash('sha256', $compiled).'.php';
+            $filesystem->put($compiledFile, $compiled);
+            include $compiledFile;
             $output = ob_get_clean();
         } catch (Throwable $exception) {
             while (ob_get_level() > $outputLevel) {
@@ -299,4 +301,23 @@ it('compiles the public Blade tag', function () {
     expect($result['tree']['type'])->toBe('firstlight.media')
         ->and($result['tree']['props']['mode'])->toBe('image')
         ->and($result['tree']['props']['label'])->toBe('Profile photo');
+});
+
+it('publishes package chrome crop and clear labels', function () {
+    expect(collectFirstlightMedia([
+        'mode' => 'image',
+        'label' => 'Profile photo',
+    ])['props'])->toMatchArray([
+        'confirm_label' => 'Confirm',
+        'cancel_label' => 'Cancel',
+        'clear_label' => 'Clear',
+        'skip_label' => 'Skip',
+        'crop_label' => 'Crop',
+        'zoom_in_label' => 'Zoom in',
+        'zoom_out_label' => 'Zoom out',
+        'choose_media_label' => 'Choose media',
+        'photo_library_label' => 'Photo Library',
+        'camera_label' => 'Camera',
+        'browse_files_label' => 'Browse Files',
+    ]);
 });

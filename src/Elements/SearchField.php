@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\Chrome;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -135,6 +136,7 @@ class SearchField extends Element
         }
 
         $props = $this->inputProps;
+        $props['clear_a11y_label'] = Chrome::string('clear_search');
         if ($this->changeCallback !== null) {
             $props['on_change'] = $registry->register($this->changeCallback);
         }

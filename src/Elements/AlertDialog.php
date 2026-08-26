@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\Chrome;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -28,6 +29,8 @@ final class AlertDialog extends Element
     ];
 
     private ?string $dismissMethod = null;
+
+    private bool $actionLabelAuthored = false;
 
     public static function make(string $title = '', string $message = ''): static
     {
@@ -100,6 +103,7 @@ final class AlertDialog extends Element
     public function actionLabel(string $label): static
     {
         $this->dialogProps['action_label'] = $label;
+        $this->actionLabelAuthored = true;
 
         return $this;
     }
@@ -113,8 +117,13 @@ final class AlertDialog extends Element
 
     protected function resolveProps(CallbackRegistry $registry): array
     {
+        $props = $this->dialogProps;
+        if (! $this->actionLabelAuthored) {
+            $props['action_label'] = Chrome::string('ok');
+        }
+
         foreach (['title', 'message', 'action_label'] as $prop) {
-            if (trim($this->dialogProps[$prop]) === '') {
+            if (trim($props[$prop]) === '') {
                 $attribute = str_replace('_', '-', $prop);
 
                 throw new InvalidArgumentException(
@@ -136,7 +145,7 @@ final class AlertDialog extends Element
         }
 
         return [
-            ...$this->dialogProps,
+            ...$props,
             'on_dismiss' => $registry->register($this->dismissMethod),
         ];
     }

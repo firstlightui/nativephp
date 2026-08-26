@@ -76,7 +76,9 @@ function compileFirstlightSearchFieldView(string $source, array $data, bool $nat
         ob_start();
         try {
             Component::flushCache();
-            eval('?>'.$compiled);
+            $compiledFile = $compiledPath.'/'.hash('sha256', $compiled).'.php';
+            $filesystem->put($compiledFile, $compiled);
+            include $compiledFile;
             $output = ob_get_clean();
         } catch (Throwable $exception) {
             ob_end_clean();
@@ -219,4 +221,10 @@ it('leaves authored search tags untouched through web compilation', function () 
     expect($result['compiled'])->toContain($source)
         ->and($result['output'])->toBe($source)
         ->and($result['tree'])->toBeNull();
+});
+
+it('publishes the package chrome clear accessibility label', function () {
+    expect(collectSearchField([
+        'a11y-label' => 'Search',
+    ])['props']['clear_a11y_label'])->toBe('Clear search');
 });

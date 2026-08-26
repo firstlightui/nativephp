@@ -19,6 +19,8 @@ class DatePickerTest {
         assertNull(configuration.acceptedValue)
         assertEquals("en-AU", configuration.locale)
         assertEquals("Australia/Sydney", configuration.timezone)
+        assertEquals("Confirm", configuration.confirmLabel)
+        assertEquals("Cancel", configuration.cancelLabel)
         assertEquals("Appointment date", configuration.accessibilityLabel)
     }
 

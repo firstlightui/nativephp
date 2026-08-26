@@ -30,6 +30,8 @@ sources:
   - docs/how-to/authorize-actions.md
   - docs/how-to/paginate-lists.md
   - docs/how-to/destroy-list-items.md
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
   - spec/components/transient-feedback.md
 ---
 
@@ -105,7 +107,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 ## Laravel-shaped PHP extensions
 
-Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), and [Destroy list items](../how-to/destroy-list-items.md).
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Package locale chrome publishes Firstlight-owned chrome strings from one Laravel language file, and Date/Time pickers inherit omitted locale and timezone from the application. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), [Destroy list items](../how-to/destroy-list-items.md), and [Localize chrome](../how-to/localize.md).
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 

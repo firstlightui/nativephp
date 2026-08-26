@@ -36,6 +36,7 @@ sources:
 - [Action authorization](reference/action-authorization.md) — Defines Laravel Gate and Policy evaluation for hiding, disabling, and guarding Firstlight actions.
 - [List pagination](reference/list-pagination.md) — Defines Laravel paginator binding onto List refresh and end-reached without a new catalogue tag.
 - [Destructive list actions](reference/destructive-list-actions.md) — Defines authorized Confirmation Dialog destruction of List rows by stable keys and `$listItems` republish.
+- [Package locale chrome](reference/package-locale.md) — Defines Firstlight-owned chrome strings and Date/Time picker application locale and timezone inheritance.
 - [Catalogue boundary](reference/catalogue-boundary.md) — Defines what belongs in the Firstlight catalogue, what is a PHP SuperNative extension, and what stays in Mobile UI.
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.

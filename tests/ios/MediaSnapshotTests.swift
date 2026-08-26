@@ -37,6 +37,17 @@ final class MediaSnapshotTests: XCTestCase {
         XCTAssertEqual(configuration.supportingText, "Choose a photo.")
         XCTAssertEqual(configuration.onChangeCallback, 41)
         XCTAssertEqual(configuration.onClearCallback, 42)
+        XCTAssertEqual(configuration.confirmLabel, "Confirm")
+        XCTAssertEqual(configuration.cancelLabel, "Cancel")
+        XCTAssertEqual(configuration.clearLabel, "Clear")
+        XCTAssertEqual(configuration.skipLabel, "Skip")
+        XCTAssertEqual(configuration.cropLabel, "Crop")
+        XCTAssertEqual(configuration.zoomInLabel, "Zoom in")
+        XCTAssertEqual(configuration.zoomOutLabel, "Zoom out")
+        XCTAssertEqual(configuration.chooseMediaLabel, "Choose media")
+        XCTAssertEqual(configuration.photoLibraryLabel, "Photo Library")
+        XCTAssertEqual(configuration.cameraLabel, "Camera")
+        XCTAssertEqual(configuration.browseFilesLabel, "Browse Files")
         XCTAssertEqual(configuration.cropPolicy, .requiredAspect("1:1"))
     }
 

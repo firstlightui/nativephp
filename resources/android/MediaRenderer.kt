@@ -117,6 +117,17 @@ data class MediaRendererConfiguration(
     val previewUrl: String,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val confirmLabel: String,
+    val cancelLabel: String,
+    val clearLabel: String,
+    val skipLabel: String,
+    val cropLabel: String,
+    val zoomInLabel: String,
+    val zoomOutLabel: String,
+    val chooseMediaLabel: String,
+    val photoLibraryLabel: String,
+    val cameraLabel: String,
+    val browseFilesLabel: String,
     val onChangeCallback: Int,
     val onClearCallback: Int,
 ) {
@@ -148,6 +159,17 @@ data class MediaRendererConfiguration(
         previewUrl = node.props.getString("preview_url"),
         accessibilityLabel = node.props.getString("a11y_label").ifEmpty { node.props.getString("label") },
         accessibilityHint = node.props.getString("a11y_hint"),
+        confirmLabel = node.props.getString("confirm_label").ifEmpty { "Confirm" },
+        cancelLabel = node.props.getString("cancel_label").ifEmpty { "Cancel" },
+        clearLabel = node.props.getString("clear_label").ifEmpty { "Clear" },
+        skipLabel = node.props.getString("skip_label").ifEmpty { "Skip" },
+        cropLabel = node.props.getString("crop_label").ifEmpty { "Crop" },
+        zoomInLabel = node.props.getString("zoom_in_label").ifEmpty { "Zoom in" },
+        zoomOutLabel = node.props.getString("zoom_out_label").ifEmpty { "Zoom out" },
+        chooseMediaLabel = node.props.getString("choose_media_label").ifEmpty { "Choose media" },
+        photoLibraryLabel = node.props.getString("photo_library_label").ifEmpty { "Photo Library" },
+        cameraLabel = node.props.getString("camera_label").ifEmpty { "Camera" },
+        browseFilesLabel = node.props.getString("browse_files_label").ifEmpty { "Browse Files" },
         onChangeCallback = node.props.getCallbackId("on_change"),
         onClearCallback = node.props.getCallbackId("on_clear"),
     )
@@ -276,6 +298,12 @@ object MediaRenderer {
             FirstlightMediaCropSheet(
                 policy = state.configuration.cropPolicy,
                 zoom = state.cropZoom,
+                confirmLabel = state.configuration.confirmLabel,
+                cancelLabel = state.configuration.cancelLabel,
+                skipLabel = state.configuration.skipLabel,
+                cropLabel = state.configuration.cropLabel,
+                zoomInLabel = state.configuration.zoomInLabel,
+                zoomOutLabel = state.configuration.zoomOutLabel,
                 onConfirm = {
                     events.dispatch(
                         state.commitChange("/tmp/firstlight-media-cropped.jpg")

@@ -47,6 +47,7 @@ struct FirstlightSelectField: View {
     let tokens: FirstlightSelectTokens
     let accessibilityLabel: String
     let accessibilityHint: String
+    let doneLabel: String
     let onSelection: (Int) -> Void
 
     var body: some View {
@@ -181,7 +182,7 @@ struct FirstlightSelectField: View {
             )
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { searchPresented = false }
+                    Button(doneLabel) { searchPresented = false }
                 }
             }
         }

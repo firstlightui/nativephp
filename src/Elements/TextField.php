@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\Chrome;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -271,6 +272,9 @@ class TextField extends Element
         $this->validateContract();
         $this->warnWhenUnlabelled();
         $props = $this->inputProps;
+        $props['clear_a11y_label'] = Chrome::string('clear_text');
+        $props['show_password_a11y_label'] = Chrome::string('show_password');
+        $props['hide_password_a11y_label'] = Chrome::string('hide_password');
 
         if ($this->changeCallback !== null) {
             $props['on_change'] = $registry->register($this->changeCallback);

@@ -54,6 +54,7 @@ data class SearchFieldRendererConfiguration(
     val debounceMilliseconds: Int,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val clearA11yLabel: String,
     val onChangeCallback: Int,
     val onSubmitCallback: Int,
 ) {
@@ -68,6 +69,7 @@ data class SearchFieldRendererConfiguration(
         debounceMilliseconds = node.props.getInt("debounce_ms", 300).coerceAtLeast(50),
         accessibilityLabel = node.props.getString("a11y_label"),
         accessibilityHint = node.props.getString("a11y_hint"),
+        clearA11yLabel = node.props.getString("clear_a11y_label").ifEmpty { "Clear search" },
         onChangeCallback = node.props.getCallbackId("on_change"),
         onSubmitCallback = node.props.getCallbackId("on_submit"),
     )

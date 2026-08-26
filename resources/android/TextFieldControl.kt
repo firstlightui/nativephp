@@ -111,12 +111,12 @@ private fun trailingSlot(
     onTrailingPress: () -> Unit,
 ): (@Composable () -> Unit)? = when {
     configuration.clearable && hasValue && !configuration.readOnly -> ({
-        textFieldIconButton("close", "Clear text", configuration.disabled, onClear)
+        textFieldIconButton("close", configuration.clearA11yLabel, configuration.disabled, onClear)
     })
     configuration.revealable -> ({
         textFieldIconButton(
             if (revealed) "visibility_off" else "visibility",
-            if (revealed) "Hide password" else "Show password",
+            if (revealed) configuration.hidePasswordA11yLabel else configuration.showPasswordA11yLabel,
             configuration.disabled,
             onReveal,
         )

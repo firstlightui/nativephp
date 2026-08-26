@@ -36,6 +36,7 @@ struct SearchFieldRendererConfiguration {
     let debounceMilliseconds: Int
     let accessibilityLabel: String
     let accessibilityHint: String
+    let clearA11yLabel: String
     let onChangeCallback: Int
     let onSubmitCallback: Int
 
@@ -51,6 +52,7 @@ struct SearchFieldRendererConfiguration {
         debounceMilliseconds = max(50, props.getInt("debounce_ms", default: 300))
         accessibilityLabel = props.getString("a11y_label")
         accessibilityHint = props.getString("a11y_hint")
+        clearA11yLabel = props.getString("clear_a11y_label", default: "Clear search")
         onChangeCallback = props.getCallbackId("on_change")
         onSubmitCallback = props.getCallbackId("on_submit")
     }

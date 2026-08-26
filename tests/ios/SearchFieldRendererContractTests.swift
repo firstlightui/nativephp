@@ -15,6 +15,7 @@ final class SearchFieldRendererContractTests: XCTestCase {
         XCTAssertEqual(configuration.accessibilityLabel, "Search specialties")
         XCTAssertEqual(configuration.onChangeCallback, 41)
         XCTAssertEqual(configuration.onSubmitCallback, 42)
+        XCTAssertEqual(configuration.clearA11yLabel, "Clear search")
     }
 
     func testFocusedAcknowledgementPreservesDraftAndCorrectionWaits() {
@@ -66,6 +67,10 @@ final class SearchFieldRendererContractTests: XCTestCase {
         XCTAssertEqual(field.accessibilityHint, "Enter a specialty name")
         XCTAssertEqual(field.returnKeyType, .search)
         XCTAssertEqual(field.clearButtonMode, .whileEditing)
+        applySearchClearButtonAccessibility(field, label: "Clear search")
+        if let clearButton = searchClearButton(in: field) {
+            XCTAssertEqual(clearButton.accessibilityLabel, "Clear search")
+        }
         XCTAssertEqual(field.autocapitalizationType, .words)
         XCTAssertEqual(field.autocorrectionType, .no)
         XCTAssertGreaterThanOrEqual(field.intrinsicContentSize.height, firstlightSearchFieldMinimumHeight)

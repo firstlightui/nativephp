@@ -11,6 +11,8 @@ sources:
   - resources/android/DatePickerControl.kt
   - resources/android/DatePickerRenderer.kt
   - tests/Feature/DatePickerElementTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
 ---
 
 # Date Picker
@@ -54,8 +56,8 @@ public ?string $appointmentDate = null;
 | `error` | `string` | Validation feedback that replaces helper text. |
 | `required` | `bool` | Communicates required metadata; validation remains in PHP. |
 | `disabled` | `bool` | Prevents opening and confirmation. |
-| `locale` | BCP-47 string | Formats the field and native calendar without changing the wire date. |
-| `timezone` | IANA timezone string | Determines today and Swift date mapping without shifting the wire date. |
+| `locale` | BCP-47 string | Formats the field and native calendar without changing the wire date. Omission inherits the application translator locale. |
+| `timezone` | IANA timezone string | Determines today and Swift date mapping without shifting the wire date. Omission inherits `config('app.timezone')` when it is a valid IANA identifier. |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout for the complete field. |
@@ -89,8 +91,12 @@ necessary, but does not publish until confirmation.
 
 ## Validation and accessibility
 
-Contract exceptions still reject malformed locale or timezone values before
-publication. User validation is separate: screens that `use ValidatesFields`
+Invalid inherited application locale or timezone is omitted so the device
+calendar is used. Authored malformed locale or timezone still fail before
+publication. Sheet Confirm and Cancel labels are package chrome, not Blade
+attributes; see [Localize chrome](../how-to/localize.md).
+
+User validation is separate: screens that `use ValidatesFields`
 auto-bind the first MessageBag message for the field's `native:model` or
 `error-for` name. An authored `error` wins. `required` is display metadata
 and does not run Laravel rules. See

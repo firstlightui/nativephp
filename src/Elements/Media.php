@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use FirstlightUI\Media\MediaValue;
+use FirstlightUI\Support\Chrome;
 use FirstlightUI\Validation\FieldErrorBinder;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -296,6 +297,17 @@ final class Media extends Element
         $this->warnWhenUnlabelled();
 
         $props = $this->fieldProps;
+        $props['confirm_label'] = Chrome::string('confirm');
+        $props['cancel_label'] = Chrome::string('cancel');
+        $props['clear_label'] = Chrome::string('clear');
+        $props['skip_label'] = Chrome::string('skip');
+        $props['crop_label'] = Chrome::string('crop');
+        $props['zoom_in_label'] = Chrome::string('zoom_in');
+        $props['zoom_out_label'] = Chrome::string('zoom_out');
+        $props['choose_media_label'] = Chrome::string('choose_media');
+        $props['photo_library_label'] = Chrome::string('photo_library');
+        $props['camera_label'] = Chrome::string('camera');
+        $props['browse_files_label'] = Chrome::string('browse_files');
 
         if (isset($props['aspect']) && ! isset($props['crop'])) {
             $props['crop'] = 'required';

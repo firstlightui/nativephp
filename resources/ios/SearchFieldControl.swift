@@ -71,10 +71,14 @@ struct FirstlightSearchFieldControl: UIViewRepresentable {
 
         @objc func editingChanged(_ sender: UISearchTextField) {
             parent.text = sender.text ?? ""
+            applySearchClearButtonAccessibility(sender, label: parent.configuration.clearA11yLabel)
         }
 
         func textFieldDidBeginEditing(_ textField: UITextField) {
             parent.onFocusChanged(true)
+            if let field = textField as? UISearchTextField {
+                applySearchClearButtonAccessibility(field, label: parent.configuration.clearA11yLabel)
+            }
         }
 
         func textFieldDidEndEditing(_ textField: UITextField) {
@@ -120,4 +124,24 @@ func configureSearchTextField(
     case "disabled": .no
     default: .default
     }
+    applySearchClearButtonAccessibility(field, label: configuration.clearA11yLabel)
+}
+
+func searchClearButton(in field: UISearchTextField) -> UIButton? {
+    var found: UIButton?
+    func visit(_ view: UIView) {
+        guard found == nil else { return }
+        if let button = view as? UIButton,
+           NSStringFromClass(type(of: button)).localizedCaseInsensitiveContains("clear") {
+            found = button
+            return
+        }
+        view.subviews.forEach(visit)
+    }
+    visit(field)
+    return found
+}
+
+func applySearchClearButtonAccessibility(_ field: UISearchTextField, label: String) {
+    searchClearButton(in: field)?.accessibilityLabel = label
 }

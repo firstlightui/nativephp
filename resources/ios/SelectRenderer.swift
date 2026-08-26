@@ -34,6 +34,7 @@ struct SelectRendererConfiguration: Equatable {
     let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
+    let doneLabel: String
 
     init(node: NativeUINode) {
         let props = node.props
@@ -58,6 +59,7 @@ struct SelectRendererConfiguration: Equatable {
             ? props.getString("label")
             : explicitAccessibilityLabel
         accessibilityHint = props.getString("a11y_hint")
+        doneLabel = props.getString("done_label", default: "Done")
     }
 }
 
@@ -147,6 +149,7 @@ struct SelectRenderer: View {
             tokens: FirstlightSelectTokens.from(theme: theme),
             accessibilityLabel: configuration.accessibilityLabel,
             accessibilityHint: configuration.accessibilityHint,
+            doneLabel: configuration.doneLabel,
             onSelection: { index in
                 guard let event = rendererState.userSelected(index) else { return }
                 events.send(event)

@@ -21,6 +21,9 @@ class TextFieldRendererContractTest {
         assertEquals("send", configuration.submitLabel)
         assertEquals("envelope", configuration.leadingIcon)
         assertEquals("outlined", configuration.leadingIconVariant)
+        assertEquals("Clear text", configuration.clearA11yLabel)
+        assertEquals("Show password", configuration.showPasswordA11yLabel)
+        assertEquals("Hide password", configuration.hidePasswordA11yLabel)
         assertEquals(43, configuration.onPressCallback)
     }
 

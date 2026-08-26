@@ -213,6 +213,8 @@ class FeedbackCenterQueueTest {
         val partial = FeedbackCenterItemConfiguration(itemNode("partial", actionLabel = "Undo"))
         assertNull(partial.actionLabel)
         assertNull(partial.actionCallback)
+        assertEquals("Dismiss", partial.dismissLabel)
+        assertEquals("Dismiss feedback", partial.dismissA11yLabel)
         assertFalse(item(" ").isEligible)
         assertFalse(item("blank-message", message = " ").isEligible)
         assertFalse(item("bad-tone", tone = "critical").isEligible)

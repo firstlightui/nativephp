@@ -815,6 +815,72 @@ protected function resolveDestructiveListItem(mixed $key): mixed
 When you resolve from the database, `$listItems` is still updated after a
 successful destroy so the published List matches the mutation.
 
+--- Source: docs/how-to/localize.md ---
+
+# Localize Firstlight Chrome
+
+Firstlight-owned chrome (Confirm, Cancel, OK, dismiss, clear, skip, Done,
+crop, zoom, media source chooser, and password reveal) comes from one Laravel
+language file. Authored labels on Confirmation Dialog and Alert Dialog still
+win. Date Picker and Time Picker keep rejecting Blade `confirm-label` and
+`cancel-label`; their sheet buttons are package chrome only.
+
+The package ships English. There is no translation UI. Applications add other
+locales through Laravel vendor language publishing.
+
+## Publish the language files
+
+```bash
+php artisan vendor:publish --tag=firstlight-lang
+```
+
+Laravel copies the files to `lang/vendor/firstlight`. Add a locale next to
+English, for example `lang/vendor/firstlight/fr/chrome.php`, and keep the same
+keys:
+
+```php
+<?php
+
+return [
+    'confirm' => 'Confirmer',
+    'cancel' => 'Annuler',
+    'ok' => 'OK',
+    'dismiss' => 'Fermer',
+    'dismiss_feedback' => 'Fermer le message',
+    'clear' => 'Effacer',
+    'clear_search' => 'Effacer la recherche',
+    'clear_text' => 'Effacer le texte',
+    'skip' => 'Ignorer',
+    'done' => 'OK',
+    'crop' => 'Recadrer',
+    'zoom_in' => 'Zoom avant',
+    'zoom_out' => 'Zoom arrière',
+    'choose_media' => 'Choisir un média',
+    'photo_library' => 'Photothèque',
+    'camera' => 'Appareil photo',
+    'browse_files' => 'Parcourir les fichiers',
+    'show_password' => 'Afficher le mot de passe',
+    'hide_password' => 'Masquer le mot de passe',
+];
+```
+
+Missing keys fall back to the packaged English strings.
+
+## Date and Time picker locale and timezone
+
+When `locale` or `timezone` is omitted, Date Picker and Time Picker inherit
+the application:
+
+- locale from the translator (`en_AU` and `en_AU.UTF-8` become `en-AU`)
+- timezone from `config('app.timezone')` when it is a real IANA identifier
+
+Explicit picker props still win. Invalid inherited values are omitted so the
+device calendar and clock are used; they do not throw. Authored malformed
+`locale` or `timezone` attributes still fail before publication.
+
+Authored field labels, helpers, errors, dialog titles, and Feedback messages
+are ordinary Blade strings; translate those with `__()` as you already would.
+
 --- Source: docs/getting-started/theming.md ---
 
 # Theme Firstlight Components
@@ -1017,7 +1083,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 ## Laravel-shaped PHP extensions
 
-Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), and [Destroy list items](../how-to/destroy-list-items.md).
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Package locale chrome publishes Firstlight-owned chrome strings from one Laravel language file, and Date/Time pickers inherit omitted locale and timezone from the application. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), [Destroy list items](../how-to/destroy-list-items.md), and [Localize chrome](../how-to/localize.md).
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
@@ -1442,7 +1508,7 @@ Disabled, loading, model binding, rich content, multiple actions, icons, per-pla
 
 iOS presents a bottom SwiftUI material notice with semantic SF Symbols, native buttons, safe-area spacing, Dynamic Type, and a reduced-motion-aware transition. Android presents a bottom Material 3 `Snackbar` with semantic tone treatment, navigation-bar and IME padding, responsive action layout, and TalkBack live-region behaviour.
 
-Both platforms own one visible item and the same FIFO/event contract. Native expression differs by platform; Firstlight guarantees behavioural parity rather than identical geometry.
+Both platforms own one visible item and the same FIFO/event contract. Native expression differs by platform; Firstlight guarantees behavioural parity rather than identical geometry. Held items expose a dismiss control whose visible and accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md).
 
 ## Compatibility
 
@@ -1929,6 +1995,9 @@ Document mode rejects `crop` and `aspect`. Unsupported attributes such as
 - `crop="optional"` without aspect → freeform crop; Skip is allowed.
 - `crop="required"` without aspect → freeform crop; Confirm is required.
 
+Clear, Skip, Confirm, Cancel, Crop, zoom, and source-chooser copy are package
+chrome; see [Localize chrome](../how-to/localize.md).
+
 ## Events
 
 `@change` receives the temporary absolute file path after the user confirms a
@@ -2016,8 +2085,9 @@ runs for the action button, back, and outside dismissal.
 - `visible`: server-controlled presentation request; defaults to `false`.
 - `title`: required visible heading and accessible dialog name.
 - `message`: required explanation.
-- `action-label`: acknowledgement action text; defaults to `OK`. The
-  `actionLabel` alias is accepted.
+- `action-label`: acknowledgement action text; defaults to the package chrome
+  string `OK`. The `actionLabel` alias is accepted. See
+  [Localize chrome](../how-to/localize.md).
 - `@dismiss`: required callback for the action, back, or outside dismissal.
 - `class`: external EDGE layout only.
 
@@ -2073,8 +2143,10 @@ request.
 - `visible`: server-controlled presentation request; defaults to `false`.
 - `title`: required visible heading and accessible dialog name.
 - `message`: required explanation of the decision or consequence.
-- `confirm-label`: confirmation action text; defaults to `Confirm`.
-- `cancel-label`: cancellation action text; defaults to `Cancel`.
+- `confirm-label`: confirmation action text; defaults to the package chrome
+  string `Confirm`. See [Localize chrome](../how-to/localize.md).
+- `cancel-label`: cancellation action text; defaults to the package chrome
+  string `Cancel`.
 - `tone`: `default` or `destructive`; defaults to `default`.
 - `@press`: required callback for explicit confirmation.
 - `@dismiss`: required callback for cancellation, back, or outside dismissal.
@@ -2267,8 +2339,8 @@ public ?string $appointmentDate = null;
 | `error` | `string` | Validation feedback that replaces helper text. |
 | `required` | `bool` | Communicates required metadata; validation remains in PHP. |
 | `disabled` | `bool` | Prevents opening and confirmation. |
-| `locale` | BCP-47 string | Formats the field and native calendar without changing the wire date. |
-| `timezone` | IANA timezone string | Determines today and Swift date mapping without shifting the wire date. |
+| `locale` | BCP-47 string | Formats the field and native calendar without changing the wire date. Omission inherits the application translator locale. |
+| `timezone` | IANA timezone string | Determines today and Swift date mapping without shifting the wire date. Omission inherits `config('app.timezone')` when it is a valid IANA identifier. |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout for the complete field. |
@@ -2302,8 +2374,12 @@ necessary, but does not publish until confirmation.
 
 ## Validation and accessibility
 
-Contract exceptions still reject malformed locale or timezone values before
-publication. User validation is separate: screens that `use ValidatesFields`
+Invalid inherited application locale or timezone is omitted so the device
+calendar is used. Authored malformed locale or timezone still fail before
+publication. Sheet Confirm and Cancel labels are package chrome, not Blade
+attributes; see [Localize chrome](../how-to/localize.md).
+
+User validation is separate: screens that `use ValidatesFields`
 auto-bind the first MessageBag message for the field's `native:model` or
 `error-for` name. An authored `error` wins. `required` is display metadata
 and does not run Laravel rules. See
@@ -2366,9 +2442,11 @@ until PHP republishes the tree.
 - `value` / `native:model`: exact `HH:mm` or `null`.
 - `label`, `placeholder`, `helper`, and `error`: field copy.
 - `required` and `disabled`: field state.
-- `locale`: BCP-47 tag used only for display.
+- `locale`: BCP-47 tag used only for display. Omission inherits the
+  application translator locale.
 - `timezone`: IANA identifier used only to seed a null draft with the current
-  local minute.
+  local minute. Omission inherits `config('app.timezone')` when it is a valid
+  IANA identifier.
 - `a11y-label` and `a11y-hint`: explicit accessibility copy.
 - `class`: external EDGE layout.
 
@@ -2376,6 +2454,8 @@ Use plain `native:model` or `native:model.live`. Time Picker commits only on
 confirmation, so blur, lazy, and debounce modes are rejected. It deliberately
 does not expose min/max, seconds, steps, ranges, hour-format overrides,
 presentation styles, clear affordances, read-only state, icons, or colours.
+Sheet Confirm and Cancel labels are package chrome, not Blade attributes; see
+[Localize chrome](../how-to/localize.md).
 
 ## Validation and accessibility
 
@@ -3182,8 +3262,11 @@ keyboard, selection, clear, focus, and accessibility behaviour.
 | `class` | `string` | External EDGE layout for the complete field. |
 
 The search icon and clear button are semantic native affordances. They are not
-configurable icon slots. Search Field has no visible label, helper, error,
-required, read-only, secure, keyboard, content-type, size, tone, or variant API.
+configurable icon slots. Both platforms use the package chrome
+`clear_search` accessibility label on the clear control. See
+[Localize chrome](../how-to/localize.md). Search Field has no visible label,
+helper, error, required, read-only, secure, keyboard, content-type, size, tone,
+or variant API.
 
 ## Events and synchronisation
 
@@ -3302,7 +3385,7 @@ Values in one collection must be unique and all strings or all integers. Matchin
 
 Select chooses its platform presentation from the option count. Up to 12 options use a compact menu or dropdown. Thirteen or more options use a searchable presentation automatically. Set `searchable` to force search for a smaller collection.
 
-Search filters labels locally in authored order. Typing, dismissing search, or selecting the accepted value does not publish an event.
+Search filters labels locally in authored order. Typing, dismissing search, or selecting the accepted value does not publish an event. The iOS searchable sheet Done action is package chrome; see [Localize chrome](../how-to/localize.md).
 
 ## Events and state timing
 
@@ -3670,8 +3753,8 @@ autofill, selection, and accessibility behaviour of each platform.
 | `trailing-icon-ios` | `IosSymbol|string` | iOS trailing icon override. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Android trailing icon and variant override. |
 | `trailing-a11y-label` | `string` | Required accessible name when `trailing-icon` has `@press`. |
-| `clearable` | `bool` | Adds a native clear action while editable text is non-empty. |
-| `revealable` | `bool` | Adds native show/hide password state; requires `secure`. |
+| `clearable` | `bool` | Adds a native clear action while editable text is non-empty. The clear accessibility label is package chrome; see [Localize chrome](../how-to/localize.md). |
+| `revealable` | `bool` | Adds native show/hide password state; requires `secure`. Show and hide accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md). |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout for the complete field. |

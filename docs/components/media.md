@@ -16,6 +16,8 @@ sources:
   - resources/android/MediaRenderer.kt
   - tests/Feature/MediaElementTest.php
   - tests/Feature/MediaValidationTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
   - tests/ios/MediaSnapshotTests.swift
   - tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/MediaTest.kt
 ---
@@ -115,6 +117,9 @@ Document mode rejects `crop` and `aspect`. Unsupported attributes such as
 - `aspect` → required crop locked to that aspect.
 - `crop="optional"` without aspect → freeform crop; Skip is allowed.
 - `crop="required"` without aspect → freeform crop; Confirm is required.
+
+Clear, Skip, Confirm, Cancel, Crop, zoom, and source-chooser copy are package
+chrome; see [Localize chrome](../how-to/localize.md).
 
 ## Events
 

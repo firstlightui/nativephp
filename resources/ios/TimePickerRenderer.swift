@@ -29,6 +29,8 @@ struct TimePickerRendererConfiguration: Equatable {
     let disabled: Bool
     let locale: String
     let timezone: String
+    let confirmLabel: String
+    let cancelLabel: String
     let accessibilityLabel: String
     let accessibilityHint: String
     let onChangeCallback: Int
@@ -46,6 +48,8 @@ struct TimePickerRendererConfiguration: Equatable {
         disabled = props.getBool("disabled")
         locale = props.getString("locale")
         timezone = props.getString("timezone")
+        confirmLabel = props.getString("confirm_label", default: "Confirm")
+        cancelLabel = props.getString("cancel_label", default: "Cancel")
         let explicitLabel = props.getString("a11y_label")
         accessibilityLabel = explicitLabel.isEmpty ? label : explicitLabel
         accessibilityHint = props.getString("a11y_hint")

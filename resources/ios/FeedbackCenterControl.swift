@@ -93,8 +93,8 @@ struct FeedbackCenterRenderingPolicy: Equatable {
 
         if configuration.hold, configuration.manualCallback != nil {
             dismiss = FeedbackCenterActionRenderingPolicy(
-                visibleLabel: "Dismiss",
-                accessibilityLabel: "Dismiss feedback",
+                visibleLabel: configuration.dismissLabel,
+                accessibilityLabel: configuration.dismissA11yLabel,
                 minimumTarget: Self.minimumActionTarget,
                 symbol: FeedbackCenterSymbolRenderingPolicy(
                     systemName: "xmark",

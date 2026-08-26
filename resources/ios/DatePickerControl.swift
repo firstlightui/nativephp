@@ -111,9 +111,9 @@ struct FirstlightDatePickerControl: View {
             Divider()
 
             HStack {
-                Button("Cancel") { state.cancel() }
+                Button(configuration.cancelLabel) { state.cancel() }
                 Spacer()
-                Button("Confirm", action: onConfirm)
+                Button(configuration.confirmLabel, action: onConfirm)
                     .buttonStyle(.borderedProminent)
             }
             .padding()

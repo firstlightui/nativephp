@@ -12,6 +12,8 @@ sources:
   - resources/android/TextFieldControl.kt
   - resources/android/TextFieldRenderer.kt
   - tests/Feature/TextFieldElementTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
 ---
 
 # Text Field
@@ -60,8 +62,8 @@ autofill, selection, and accessibility behaviour of each platform.
 | `trailing-icon-ios` | `IosSymbol|string` | iOS trailing icon override. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Android trailing icon and variant override. |
 | `trailing-a11y-label` | `string` | Required accessible name when `trailing-icon` has `@press`. |
-| `clearable` | `bool` | Adds a native clear action while editable text is non-empty. |
-| `revealable` | `bool` | Adds native show/hide password state; requires `secure`. |
+| `clearable` | `bool` | Adds a native clear action while editable text is non-empty. The clear accessibility label is package chrome; see [Localize chrome](../how-to/localize.md). |
+| `revealable` | `bool` | Adds native show/hide password state; requires `secure`. Show and hide accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md). |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout for the complete field. |

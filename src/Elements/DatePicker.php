@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use DateTimeZone;
+use FirstlightUI\Support\Chrome;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -220,7 +221,7 @@ final class DatePicker extends Element
     {
         $this->validateBounds();
         $this->warnWhenUnlabelled();
-        $props = $this->inputProps;
+        $props = Chrome::withPickerChrome($this->inputProps);
 
         if ($this->changeCallback !== null) {
             $props['on_change'] = $registry->register($this->changeCallback);

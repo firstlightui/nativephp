@@ -38,6 +38,7 @@ final class SelectRendererContractTests: XCTestCase {
         XCTAssertTrue(configuration.required)
         XCTAssertEqual(configuration.accessibilityLabel, "Document priority")
         XCTAssertEqual(configuration.accessibilityHint, "Opens priority options")
+        XCTAssertEqual(configuration.doneLabel, "Done")
     }
 
     func testSelectionEmitsPressWithoutOptimisticallyChangingTheAcceptedValue() {

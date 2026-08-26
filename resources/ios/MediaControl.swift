@@ -32,6 +32,17 @@ struct MediaRendererConfiguration: Equatable {
     let previewURL: String
     let accessibilityLabel: String
     let accessibilityHint: String
+    let confirmLabel: String
+    let cancelLabel: String
+    let clearLabel: String
+    let skipLabel: String
+    let cropLabel: String
+    let zoomInLabel: String
+    let zoomOutLabel: String
+    let chooseMediaLabel: String
+    let photoLibraryLabel: String
+    let cameraLabel: String
+    let browseFilesLabel: String
     let onChangeCallback: Int
     let onClearCallback: Int
 
@@ -61,6 +72,17 @@ struct MediaRendererConfiguration: Equatable {
         let explicitLabel = props.getString("a11y_label")
         accessibilityLabel = explicitLabel.isEmpty ? label : explicitLabel
         accessibilityHint = props.getString("a11y_hint")
+        confirmLabel = props.getString("confirm_label", default: "Confirm")
+        cancelLabel = props.getString("cancel_label", default: "Cancel")
+        clearLabel = props.getString("clear_label", default: "Clear")
+        skipLabel = props.getString("skip_label", default: "Skip")
+        cropLabel = props.getString("crop_label", default: "Crop")
+        zoomInLabel = props.getString("zoom_in_label", default: "Zoom in")
+        zoomOutLabel = props.getString("zoom_out_label", default: "Zoom out")
+        chooseMediaLabel = props.getString("choose_media_label", default: "Choose media")
+        photoLibraryLabel = props.getString("photo_library_label", default: "Photo Library")
+        cameraLabel = props.getString("camera_label", default: "Camera")
+        browseFilesLabel = props.getString("browse_files_label", default: "Browse Files")
         onChangeCallback = props.getCallbackId("on_change")
         onClearCallback = props.getCallbackId("on_clear")
     }
@@ -264,7 +286,7 @@ struct FirstlightMediaControl: View {
                     .frame(minHeight: 44)
 
                     if configuration.canClear {
-                        Button("Clear", role: .destructive, action: onClear)
+                        Button(configuration.clearLabel, role: .destructive, action: onClear)
                             .frame(minHeight: 44)
                     }
                 }
@@ -331,6 +353,12 @@ struct FirstlightMediaCropSheet: View {
     let onSkip: () -> Void
     let onZoomIn: () -> Void
     let onZoomOut: () -> Void
+    var confirmLabel: String = "Confirm"
+    var cancelLabel: String = "Cancel"
+    var skipLabel: String = "Skip"
+    var cropLabel: String = "Crop"
+    var zoomInLabel: String = "Zoom in"
+    var zoomOutLabel: String = "Zoom out"
 
     var body: some View {
         NavigationStack {
@@ -359,31 +387,31 @@ struct FirstlightMediaCropSheet: View {
                         Image(systemName: "minus.magnifyingglass")
                             .frame(minWidth: 44, minHeight: 44)
                     }
-                    .accessibilityLabel("Zoom out")
+                    .accessibilityLabel(zoomOutLabel)
 
                     Button(action: onZoomIn) {
                         Image(systemName: "plus.magnifyingglass")
                             .frame(minWidth: 44, minHeight: 44)
                     }
-                    .accessibilityLabel("Zoom in")
+                    .accessibilityLabel(zoomInLabel)
                 }
 
                 HStack {
-                    Button("Cancel", action: onCancel)
+                    Button(cancelLabel, action: onCancel)
                         .frame(minHeight: 44)
                     Spacer()
                     if policy.allowsSkip {
-                        Button("Skip", action: onSkip)
+                        Button(skipLabel, action: onSkip)
                             .frame(minHeight: 44)
                     }
-                    Button("Confirm", action: onConfirm)
+                    Button(confirmLabel, action: onConfirm)
                         .buttonStyle(.borderedProminent)
                         .frame(minHeight: 44)
                 }
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-            .navigationTitle("Crop")
+            .navigationTitle(cropLabel)
             .navigationBarTitleDisplayMode(.inline)
         }
     }

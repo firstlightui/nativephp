@@ -185,7 +185,7 @@ fun FirstlightFeedbackCenterControl(
                                 onFocusChanged(actionFocused || dismissFocused)
                             }
                             .semantics {
-                                contentDescription = "Dismiss feedback"
+                                contentDescription = configuration.dismissA11yLabel
                             },
                     ) {
                         DismissIcon(colors.dismiss)

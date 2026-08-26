@@ -234,6 +234,8 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
             'on_action' => $actionCallback,
             'on_timeout' => $timeoutCallback,
             'on_manual' => $automaticManualCallback,
+            'dismiss_label' => 'Dismiss',
+            'dismiss_a11y_label' => 'Dismiss feedback',
         ])
         ->and($actionCallback)->toBeInt()->not->toBe(0)
         ->and($timeoutCallback)->toBeInt()->not->toBe(0)
@@ -244,6 +246,8 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
             'tone' => 'warning',
             'hold' => true,
             'on_manual' => $heldManualCallback,
+            'dismiss_label' => 'Dismiss',
+            'dismiss_a11y_label' => 'Dismiss feedback',
         ])
         ->and($heldManualCallback)->toBeInt()->not->toBe(0)
         ->and($tree)->not->toHaveKeys(['layout', 'style'])

@@ -10,6 +10,7 @@ sources:
   - spec/reference/action-authorization.md
   - spec/reference/list-pagination.md
   - spec/reference/destructive-list-actions.md
+  - spec/reference/package-locale.md
   - spec/components/transient-feedback.md
   - spec/components/list.md
   - spec/components/button.md
@@ -26,6 +27,7 @@ sources:
   - docs/how-to/authorize-actions.md
   - docs/how-to/paginate-lists.md
   - docs/how-to/destroy-list-items.md
+  - docs/how-to/localize.md
 ---
 
 # Firstlight Laravel SuperNative Extensions Design
@@ -34,7 +36,7 @@ Date: 2026-08-23
 
 Status: approved
 
-This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), [List pagination](../reference/list-pagination.md), [Destructive list actions](../reference/destructive-list-actions.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
+This dated record is historical context, not a current implementation checklist. Current behaviour lives in [Field validation](../reference/field-validation.md), [Form submission](../reference/form-submit.md), [Action authorization](../reference/action-authorization.md), [List pagination](../reference/list-pagination.md), [Destructive list actions](../reference/destructive-list-actions.md), [Package locale chrome](../reference/package-locale.md), and [Catalogue boundary](../reference/catalogue-boundary.md). Items below that are not implemented must not be described as shipped.
 
 ## Objective
 
@@ -146,9 +148,9 @@ maintained contract is
 
 Map `Notification::send()` onto Feedback tones and optionally NativePHP push plugins. Feedback remains the in-session queue. Do not add a second toast API.
 
-### 7. Locale as package chrome
+### 7. Locale as package chrome (implemented)
 
-`__()` already works in Blade. Remaining work is package-owned strings (Confirmation defaults, Feedback dismiss, Search clear) and proving Date/Time pickers follow application locale and timezone. No translation UI.
+Shipped as `Chrome` plus `lang/en/chrome.php`. See [Package locale chrome](../reference/package-locale.md). `__()` already works in Blade. Package-owned strings include Confirmation defaults, Feedback dismiss, Search clear, Media crop/chooser, password reveal, and Date/Time picker application locale/timezone inheritance. No translation UI.
 
 ## Explicitly deferred
 

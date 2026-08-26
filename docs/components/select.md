@@ -13,6 +13,8 @@ sources:
   - resources/android/SelectControl.kt
   - resources/android/SelectRenderer.kt
   - tests/Feature/SelectElementTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
 ---
 
 # Select
@@ -87,7 +89,7 @@ Values in one collection must be unique and all strings or all integers. Matchin
 
 Select chooses its platform presentation from the option count. Up to 12 options use a compact menu or dropdown. Thirteen or more options use a searchable presentation automatically. Set `searchable` to force search for a smaller collection.
 
-Search filters labels locally in authored order. Typing, dismissing search, or selecting the accepted value does not publish an event.
+Search filters labels locally in authored order. Typing, dismissing search, or selecting the accepted value does not publish an event. The iOS searchable sheet Done action is package chrome; see [Localize chrome](../how-to/localize.md).
 
 ## Events and state timing
 

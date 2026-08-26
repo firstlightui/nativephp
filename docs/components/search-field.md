@@ -11,6 +11,8 @@ sources:
   - resources/android/SearchFieldControl.kt
   - resources/android/SearchFieldRenderer.kt
   - tests/Feature/SearchFieldElementTest.php
+  - docs/how-to/localize.md
+  - src/Support/Chrome.php
 ---
 
 # Search Field
@@ -46,8 +48,11 @@ keyboard, selection, clear, focus, and accessibility behaviour.
 | `class` | `string` | External EDGE layout for the complete field. |
 
 The search icon and clear button are semantic native affordances. They are not
-configurable icon slots. Search Field has no visible label, helper, error,
-required, read-only, secure, keyboard, content-type, size, tone, or variant API.
+configurable icon slots. Both platforms use the package chrome
+`clear_search` accessibility label on the clear control. See
+[Localize chrome](../how-to/localize.md). Search Field has no visible label,
+helper, error, required, read-only, secure, keyboard, content-type, size, tone,
+or variant API.
 
 ## Events and synchronisation
 

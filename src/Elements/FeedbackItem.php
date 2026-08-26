@@ -6,6 +6,7 @@ use FirstlightUI\Feedback\FeedbackDismissReason;
 use FirstlightUI\Feedback\FeedbackRecord;
 use FirstlightUI\Feedback\FeedbackTone;
 use FirstlightUI\Support\CallbackExpression;
+use FirstlightUI\Support\Chrome;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
 
@@ -73,6 +74,8 @@ final class FeedbackItem extends Element
             'dismiss',
             FeedbackDismissReason::Manual->value,
         );
+        $props['dismiss_label'] = Chrome::string('dismiss');
+        $props['dismiss_a11y_label'] = Chrome::string('dismiss_feedback');
 
         return $props;
     }

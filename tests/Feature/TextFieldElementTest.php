@@ -106,7 +106,9 @@ function compileFirstlightTextFieldView(string $source, array $data, bool $nativ
         ob_start();
         try {
             Component::flushCache();
-            eval('?>'.$compiled);
+            $compiledFile = $compiledPath.'/'.hash('sha256', $compiled).'.php';
+            $filesystem->put($compiledFile, $compiled);
+            include $compiledFile;
             $output = ob_get_clean();
         } catch (Throwable $exception) {
             ob_end_clean();
@@ -325,4 +327,14 @@ it('leaves the authored Text Field tag untouched through real web compilation', 
     expect($result['compiled'])->toContain($source)
         ->and($result['output'])->toBe($source)
         ->and($result['tree'])->toBeNull();
+});
+
+it('publishes the package chrome clear and password-reveal accessibility labels', function () {
+    expect(collectTextField([
+        'label' => 'Email',
+    ])['props'])->toMatchArray([
+        'clear_a11y_label' => 'Clear text',
+        'show_password_a11y_label' => 'Show password',
+        'hide_password_a11y_label' => 'Hide password',
+    ]);
 });

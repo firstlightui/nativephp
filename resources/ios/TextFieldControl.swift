@@ -80,11 +80,11 @@ struct FirstlightTextFieldControl: View {
 
     @ViewBuilder private var trailing: some View {
         if configuration.clearable && !text.isEmpty && !configuration.readOnly {
-            actionButton(symbol: "xmark.circle.fill", label: "Clear text", action: onClear)
+            actionButton(symbol: "xmark.circle.fill", label: configuration.clearA11yLabel, action: onClear)
         } else if configuration.revealable {
             actionButton(
                 symbol: revealed ? "eye.slash" : "eye",
-                label: revealed ? "Hide password" : "Show password",
+                label: revealed ? configuration.hidePasswordA11yLabel : configuration.showPasswordA11yLabel,
                 action: { revealed.toggle() }
             )
         } else if !configuration.trailingIcon.isEmpty {

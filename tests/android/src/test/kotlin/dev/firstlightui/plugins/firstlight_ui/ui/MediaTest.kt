@@ -47,6 +47,17 @@ class MediaTest {
         assertEquals(MediaCropPolicy.RequiredAspect("1:1"), configuration.cropPolicy)
         assertEquals(41, configuration.onChangeCallback)
         assertEquals(42, configuration.onClearCallback)
+        assertEquals("Confirm", configuration.confirmLabel)
+        assertEquals("Cancel", configuration.cancelLabel)
+        assertEquals("Clear", configuration.clearLabel)
+        assertEquals("Skip", configuration.skipLabel)
+        assertEquals("Crop", configuration.cropLabel)
+        assertEquals("Zoom in", configuration.zoomInLabel)
+        assertEquals("Zoom out", configuration.zoomOutLabel)
+        assertEquals("Choose media", configuration.chooseMediaLabel)
+        assertEquals("Photo Library", configuration.photoLibraryLabel)
+        assertEquals("Camera", configuration.cameraLabel)
+        assertEquals("Browse Files", configuration.browseFilesLabel)
     }
 
     @Test

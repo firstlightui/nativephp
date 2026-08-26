@@ -2,6 +2,9 @@
 
 use FirstlightUI\Elements\DatePicker;
 use FirstlightUI\FirstlightTagPrecompiler;
+use Illuminate\Container\Container;
+use Illuminate\Translation\ArrayLoader;
+use Illuminate\Translation\Translator;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -323,4 +326,87 @@ it('declares exact paired renderer manifest identifiers', function () {
         'ios_renderer' => 'DatePickerRenderer',
         'self_closing' => true,
     ]);
+});
+
+it('publishes package chrome confirm and cancel labels', function () {
+    expect(collectFirstlightDatePicker([
+        'label' => 'Appointment date',
+    ])['props'])->toMatchArray([
+        'confirm_label' => 'Confirm',
+        'cancel_label' => 'Cancel',
+    ]);
+});
+
+it('inherits application locale and timezone when picker locale props are omitted', function () {
+    $previous = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+    $container->instance('translator', new Translator(new ArrayLoader, 'en_AU'));
+    $container->instance('config', new class
+    {
+        public function get(string $key, mixed $default = null): mixed
+        {
+            return $key === 'app.timezone' ? 'Australia/Sydney' : $default;
+        }
+    });
+
+    try {
+        expect(collectFirstlightDatePicker([
+            'label' => 'Appointment date',
+        ])['props'])->toMatchArray([
+            'locale' => 'en-AU',
+            'timezone' => 'Australia/Sydney',
+        ]);
+    } finally {
+        Container::setInstance($previous);
+    }
+});
+
+it('keeps authored locale and timezone ahead of application chrome', function () {
+    $previous = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+    $container->instance('translator', new Translator(new ArrayLoader, 'en_AU'));
+    $container->instance('config', new class
+    {
+        public function get(string $key, mixed $default = null): mixed
+        {
+            return $key === 'app.timezone' ? 'Australia/Sydney' : $default;
+        }
+    });
+
+    try {
+        expect(collectFirstlightDatePicker([
+            'label' => 'Appointment date',
+            'locale' => 'de-DE',
+            'timezone' => 'Europe/Berlin',
+        ])['props'])->toMatchArray([
+            'locale' => 'de-DE',
+            'timezone' => 'Europe/Berlin',
+        ]);
+    } finally {
+        Container::setInstance($previous);
+    }
+});
+
+it('omits invalid inherited application locale and timezone', function () {
+    $previous = Container::getInstance();
+    $container = new Container;
+    Container::setInstance($container);
+    $container->instance('translator', new Translator(new ArrayLoader, 'en--AU'));
+    $container->instance('config', new class
+    {
+        public function get(string $key, mixed $default = null): mixed
+        {
+            return $key === 'app.timezone' ? 'Mars/Olympus_Mons' : $default;
+        }
+    });
+
+    try {
+        expect(collectFirstlightDatePicker([
+            'label' => 'Appointment date',
+        ])['props'])->not->toHaveKeys(['locale', 'timezone']);
+    } finally {
+        Container::setInstance($previous);
+    }
 });

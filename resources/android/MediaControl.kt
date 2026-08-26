@@ -111,7 +111,7 @@ internal fun FirstlightMediaControl(
                         onClick = onClear,
                         modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                     ) {
-                        Text("Clear")
+                        Text(configuration.clearLabel)
                     }
                 }
             }
@@ -136,10 +136,16 @@ internal fun FirstlightMediaCropSheet(
     onSkip: () -> Unit,
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
+    confirmLabel: String = "Confirm",
+    cancelLabel: String = "Cancel",
+    skipLabel: String = "Skip",
+    cropLabel: String = "Crop",
+    zoomInLabel: String = "Zoom in",
+    zoomOutLabel: String = "Zoom out",
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("Crop") },
+        title = { Text(cropLabel) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -174,13 +180,13 @@ internal fun FirstlightMediaCropSheet(
                         onClick = onZoomOut,
                         modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
                     ) {
-                        MaterialIcon(name = "zoom_out", contentDescription = "Zoom out")
+                        MaterialIcon(name = "zoom_out", contentDescription = zoomOutLabel)
                     }
                     IconButton(
                         onClick = onZoomIn,
                         modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
                     ) {
-                        MaterialIcon(name = "zoom_in", contentDescription = "Zoom in")
+                        MaterialIcon(name = "zoom_in", contentDescription = zoomInLabel)
                     }
                 }
             }
@@ -189,17 +195,17 @@ internal fun FirstlightMediaCropSheet(
             Row {
                 if (policy.allowsSkip) {
                     TextButton(onClick = onSkip, modifier = Modifier.defaultMinSize(minHeight = 48.dp)) {
-                        Text("Skip")
+                        Text(skipLabel)
                     }
                 }
                 TextButton(onClick = onConfirm, modifier = Modifier.defaultMinSize(minHeight = 48.dp)) {
-                    Text("Confirm")
+                    Text(confirmLabel)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onCancel, modifier = Modifier.defaultMinSize(minHeight = 48.dp)) {
-                Text("Cancel")
+                Text(cancelLabel)
             }
         },
     )

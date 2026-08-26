@@ -11,6 +11,7 @@ sources:
   - spec/reference/action-authorization.md
   - spec/reference/list-pagination.md
   - spec/reference/destructive-list-actions.md
+  - spec/reference/package-locale.md
   - spec/components/transient-feedback.md
   - spec/workflows/adding-components.md
   - docs/concepts/firstlight-and-mobile-ui.md
@@ -39,8 +40,9 @@ Extensions reuse existing elements, chrome, or facades. Current examples:
 - **Action authorization** — `AuthorizesActions` over Gate/Policy with authored hide, disable, and confirmation. Specified in [Action authorization](action-authorization.md).
 - **List pagination** — `PaginatesLists` over List `@refresh` and `@end-reached`. Specified in [List pagination](list-pagination.md).
 - **Destructive list actions** — `DestroysListItems` over stable List Item keys, Confirmation Dialog, Gate, Feedback, and `$listItems` republish. Specified in [Destructive list actions](destructive-list-actions.md).
+- **Package locale chrome** — `Chrome` plus `lang/en/chrome.php` for Firstlight-owned labels and Date/Time application locale/timezone inheritance. Specified in [Package locale chrome](package-locale.md).
 
-Further Laravel-shaped work (media fields, notification bridges) must follow the same pattern: PHP owns the Laravel API; existing Firstlight or Mobile UI presentation owns the pixels. A new catalogue component is justified only when no current control can express the contract, as a media field would.
+Further Laravel-shaped work (notification bridges) must follow the same pattern: PHP owns the Laravel API; existing Firstlight or Mobile UI presentation owns the pixels. A new catalogue component is justified only when no current control can express the contract.
 
 ## Out of catalogue
 
