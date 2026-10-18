@@ -17,8 +17,8 @@ sources:
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.2` |
-| NativePHP Mobile UI | `^0.4` |
+| NativePHP Mobile | `^4.6` |
+| NativePHP Mobile UI | `^0.8` |
 | iOS application target | iOS 18.0 or later |
 | Android application target | API 29 or later |
 | Firstlight Swift package | iOS 18 or later |
@@ -31,11 +31,15 @@ After changing NativePHP versions, run `composer update` and `php artisan native
 ## Pre-alpha runtime limitation
 
 The Composer constraints express package and source compatibility; they do not
-currently mean that NativePHP Mobile 4.2.0 passes Firstlight's public release
+currently mean that NativePHP Mobile 4.6.0 passes Firstlight's public release
 gate. The bundled PHP Element Runtime can still suppress a byte-identical tree
 publication before either platform renderer receives it. An identical
 publication still matters when PHP rejects an event or deliberately keeps the
 current value.
+
+The October 2026 Android and iOS PHP 8.5.11 bundles still contain the identical-frame
+early-return paths in both normal and streaming publication. Updating Mobile
+or Mobile UI alone does not satisfy the acknowledgement requirement.
 
 Known consequences include a rejected Segmented selection remaining visible,
 or a server-authoritative Switch or Pill Group remaining pending and ignoring

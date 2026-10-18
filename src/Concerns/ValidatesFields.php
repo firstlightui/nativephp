@@ -98,10 +98,10 @@ trait ValidatesFields
         return $this->getErrorBag()->has($field);
     }
 
-    protected function dispatch(array $event): void
+    protected function dispatchUiEvent(array $event): void
     {
         try {
-            parent::dispatch($event);
+            parent::dispatchUiEvent($event);
         } catch (ValidationException $exception) {
             $this->errorBag = $exception->validator->errors();
         }

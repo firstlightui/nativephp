@@ -358,7 +358,7 @@ it('precompiles the exact self closing public tag and immediate native model pol
     );
 
     expect($compiled)->toContain('<x-native-firstlight-stepper')
-        ->toContain(':value="$quantity"')
+        ->toContain(':value="data_get(get_defined_vars(), \'quantity\')"')
         ->toContain('_change="__syncProperty(\'quantity\')"')
         ->toContain('sync-mode="live"')
         ->not->toContain('<firstlight:stepper');

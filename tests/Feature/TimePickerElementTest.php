@@ -215,7 +215,7 @@ it('precompiles only the exact self closing public tag', function () {
     );
 
     expect($compiled)->toContain('<x-native-firstlight-time-picker')
-        ->toContain(':value="$appointmentTime"')
+        ->toContain(':value="data_get(get_defined_vars(), \'appointmentTime\')"')
         ->toContain('_change="__syncProperty(\'appointmentTime\')"')
         ->toContain('sync-mode="live"')
         ->not->toContain('<firstlight:time-picker');

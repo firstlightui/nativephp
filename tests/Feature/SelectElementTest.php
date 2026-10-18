@@ -29,7 +29,7 @@ it('precompiles the public Firstlight tag through the NativePHP Blade seam', fun
     expect($compiled)
         ->toContain('<x-native-firstlight-select')
         ->toContain(':options="$options"')
-        ->toContain(':value="$priority"')
+        ->toContain(':value="data_get(get_defined_vars(), \'priority\')"')
         ->toContain('_change="__syncProperty(\'priority\')"')
         ->toContain('sync-mode="live"')
         ->not->toContain('<firstlight:select');

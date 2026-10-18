@@ -15,7 +15,7 @@ php artisan native:install --force
 ## Pre-alpha NativePHP requirement
 
 Firstlight is not currently release-ready on the latest supported NativePHP
-Mobile constraint (`^4.2`). Its package API works against 4.2.0, but the
+Mobile constraint (`^4.6`, with Mobile UI `^0.8`). The
 bundled PHP Element Runtime can suppress a byte-identical tree publication
 before iOS or Android receives it. Stateful controls may then fail to reconcile
 a rejected or unchanged PHP response.

@@ -71,7 +71,7 @@ class ValidatingScreen extends NativeComponent
 
     public function dispatchEvent(array $event): void
     {
-        $this->dispatch($event);
+        $this->dispatchUiEvent($event);
     }
 }
 

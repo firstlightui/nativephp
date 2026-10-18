@@ -7,6 +7,7 @@ use FirstlightUI\Feedback\FeedbackDismissReason;
 use FirstlightUI\Feedback\FeedbackManager;
 use FirstlightUI\Feedback\FeedbackStore;
 use FirstlightUI\FirstlightServiceProvider;
+use FirstlightUI\NativeComponents\FeedbackCenter;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
 use Illuminate\Events\Dispatcher;
@@ -122,7 +123,7 @@ final class FeedbackCenterTestHost extends NativeComponent
 
     public function dispatchFeedbackCallback(int $callbackId): void
     {
-        $this->dispatch([
+        $this->dispatchUiEvent([
             'callback_id' => $callbackId,
             'type' => 1,
         ]);
@@ -439,7 +440,7 @@ it('registers package chrome that always renders the empty feedback sentinel', f
     );
 
     expect(ComponentRegistry::resolve('firstlight-feedback-center'))
-        ->toBe(FirstlightUI\NativeComponents\FeedbackCenter::class)
+        ->toBe(FeedbackCenter::class)
         ->and($published)->toHaveCount(1)
         ->and($published[0])->toBeInstanceOf(FeedbackCenterElement::class)
         ->and($published[0]->toArray($consumer)['type'])->toBe('firstlight.feedback-center')

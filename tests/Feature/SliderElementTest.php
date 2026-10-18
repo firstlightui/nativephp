@@ -247,7 +247,7 @@ it('precompiles the exact self closing public tag and native model policy', func
     );
 
     expect($compiled)->toContain('<x-native-firstlight-slider')
-        ->toContain(':value="$dose"')
+        ->toContain(':value="data_get(get_defined_vars(), \'dose\')"')
         ->toContain('_change="__syncProperty(\'dose\')"')
         ->toContain('sync-mode="blur"')
         ->not->toContain('<firstlight:slider');

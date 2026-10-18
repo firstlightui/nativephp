@@ -309,7 +309,7 @@ it('precompiles only the exact self closing public tag', function () {
     );
 
     expect($compiled)->toContain('<x-native-firstlight-date-picker')
-        ->toContain(':value="$appointmentDate"')
+        ->toContain(':value="data_get(get_defined_vars(), \'appointmentDate\')"')
         ->toContain('_change="__syncProperty(\'appointmentDate\')"')
         ->toContain('sync-mode="live"')
         ->not->toContain('<firstlight:date-picker');
