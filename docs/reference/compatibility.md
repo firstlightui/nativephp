@@ -7,6 +7,8 @@ sources:
   - composer.json
   - nativephp.json
   - Package.swift
+  - src/NativeComponent.php
+  - tests/Feature/NativeComponentResponseTest.php
   - resources/android/SegmentedRenderer.kt
   - resources/android/SwitchRenderer.kt
   - resources/android/PillGroupRenderer.kt
@@ -30,23 +32,62 @@ After changing NativePHP versions, run `composer update` and `php artisan native
 
 ## Pre-alpha runtime limitation
 
-The Composer constraints express package and source compatibility; they do not
-currently mean that NativePHP Mobile 4.6.0 passes Firstlight's public release
-gate. The bundled PHP Element Runtime can still suppress a byte-identical tree
-publication before either platform renderer receives it. An identical
-publication still matters when PHP rejects an event or deliberately keeps the
-current value.
+### Supported response-revision contract
 
-The October 2026 Android and iOS PHP 8.5.11 bundles still contain the identical-frame
-early-return paths in both normal and streaming publication. Updating Mobile
-or Mobile UI alone does not satisfy the acknowledgement requirement.
+Extend `FirstlightUI\NativeComponent`, not the upstream EDGE base, for screens
+using Firstlight controls. Use official, unpatched NativePHP binaries at the
+floors above. No vendor or runtime binary modification is required.
 
-Known consequences include a rejected Segmented selection remaining visible,
-or a server-authoritative Switch or Pill Group remaining pending and ignoring
-later input.
+The base stamps the **final chrome-wrapped root** with the integer prop
+`firstlight_response_revision`. Its counter is private, process-wide, and
+monotonically increasing across screen instances within the PHP process, not
+component state to bind, persist, or set yourself. An otherwise unchanged full
+response therefore differs from the previous frame and reaches the renderers.
 
-NativePHP Mobile 4.1.0 shipped Android `treePublicationId` ([#280](https://github.com/NativePHP/mobile-air/pull/280)), which lets plugin renderers observe equal-tree republications **after** Kotlin has received and posted a tree. That fixes Compose equal-assignment suppression only. It does not help when the shared C runtime returns early on an identical encoded frame and never calls either platform reader — the cross-platform gap tracked in the [publication acknowledgement issue](https://github.com/NativePHP/mobile-air/issues/365).
+This deliberately bypasses whole-frame equality suppression for each completed
+screen response. It trades that deduplication saving for reliable reconciliation
+of unchanged values; publication cost still needs soak/performance qualification.
 
-Firstlight development may still use unreleased mobile-air branches or guarded binary proofs in the showcase while validating reconciliation behaviour. Those patches must not ship as supported release dependencies.
+- Normal Blade paths are automatic: a global Laravel `View` returned from
+  `render()`, `$this->view()`, and the inferred view all receive the revision.
+- Programmatic Element roots must return `$this->response($element)` from
+  `render()`. This adds normal screen chrome as well as the root revision.
+  Use it only for raw Element content, not an already-completed `view()` or
+  `fromView()` response. Custom `wrapWithChrome()` overrides must call the parent.
+- Nested children are emitted untouched; partials are unstamped. Neither is an
+  independent full response under this contract.
+- `renderStreaming()` is final and returns `false`. Streaming bypasses this
+  contract and cannot be opted into by a subclass.
+- Existing concerns such as `ValidatesFields` remain usable separately, but
+  adding a trait to the upstream base does not provide this publication contract.
 
-The public-alpha runtime gate remains blocked until an official NativePHP release includes a content-independent publication acknowledgement in its bundled PHP runtime (C `nphp_element_publish()` / `nphp_frame_end()` and both platform readers). See also the closed Android-only report ([#279](https://github.com/NativePHP/mobile-air/issues/279)) and the partial Android fix ([#280](https://github.com/NativePHP/mobile-air/pull/280)) for context.
+The revision is **not a per-event acknowledgement**. It does not prevent
+publication coalescing or serialize simultaneous proposals. Applications must
+not infer that every event receives a separately observable response.
+This is a screen-rendering contract, not a replacement for NativePHP's generic
+publisher: framework-owned loading placeholders and error/dump overlays are
+outside it.
+
+### Upstream context and qualification
+
+The October 2026 Android and iOS PHP 8.5.11 bundles still suppress byte-identical
+frames in the shared C runtime. Android `treePublicationId`, shipped in Mobile
+4.1.0 ([#280](https://github.com/NativePHP/mobile-air/pull/280)), only helps after
+a publication reaches Kotlin. The cross-platform bug
+[#365](https://github.com/NativePHP/mobile-air/issues/365) remains upstream;
+Firstlight no longer plans to wait for it or ship the old Android binary patch.
+
+The permanent implementation was checked on October 19, 2026 with Mobile 4.6.0,
+Mobile UI 0.8.0, and official unpatched PHP 8.5.11: 14 nonstreaming phases each
+on an Android emulator and iOS simulator. Each phase delivered three proposals
+through a normal Blade screen using Firstlight's base, without app-authored
+revision props. Repeated Switch/Pill rejection, Segmented rejection, validation,
+accepted Switch changes, 500 ms rejection, and rapid same-control bursts passed.
+Rapid bursts deliberately coalesce a second tap while pending; they do not
+prove one response per physical tap. The earlier spike did not reproduce a
+baseline Segmented failure, so these results do not establish a Segmented fix.
+
+Package regression tests cover Blade, inferred views, hand-built responses,
+remounts, nested children, and unstamped partials. This is not production
+qualification. Firstlight remains pre-alpha pending physical-device,
+soak/performance, and wider app qualification, including simultaneous controls.

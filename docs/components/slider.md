@@ -83,12 +83,12 @@ There is no parallel input, click, press, or submit event. Programmatic PHP
 publications emit nothing. A publication is authoritative and replaces the
 native draft, including when PHP rejects a proposal and keeps the prior value.
 
-NativePHP Mobile 4.2.0 must expose a publication acknowledgement even when the
-accepted value is identical for that rejection path to be observable by the
-renderer. Slider's component-release evidence remains blocked until that
-upstream runtime behaviour is available and verified
-([#365](https://github.com/NativePHP/mobile-air/issues/365)); the renderer
-already reconciles every publication it receives.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+It makes an unchanged full response observable on official unpatched Mobile
+`^4.6` / UI `^0.8` binaries without waiting for upstream #365. Revisions are
+not per-event acknowledgements, do not prevent coalescing, and do not serialize
+simultaneous proposals. Wider release qualification remains pending.
 
 ## Accessibility and platform behavior
 

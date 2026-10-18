@@ -29,7 +29,7 @@ Declare a boolean property on the native component, then bind it with `native:mo
 namespace App\NativeComponents;
 
 use Illuminate\View\View;
-use Native\Mobile\Edge\NativeComponent;
+use FirstlightUI\NativeComponent;
 
 class NotificationSettings extends NativeComponent
 {
@@ -99,6 +99,9 @@ Switch accepts only strict PHP booleans: `true` and `false`. Bind a literal Bool
 `value="false"` is invalid because Blade passes it as a string. `null`, integers, string booleans, arrays, and objects are also rejected.
 
 ## State timing
+
+Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
+receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
 
 Switch is [server-authoritative](../concepts/server-authoritative-state.md). A native interaction immediately emits its proposed Boolean, but the visible on/off state remains the last value published by PHP. A response that accepts the proposal changes the visible state; a response that rejects it leaves the visible state unchanged. Every server publication clears a pending proposal, including one that republishes the same value. Programmatic publications update the accepted state without emitting `@change`.
 

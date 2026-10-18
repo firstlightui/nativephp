@@ -16,11 +16,11 @@ sources:
 
 Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
 
-Firstlight is still pre-alpha: no released NativePHP runtime currently passes
-its state-reconciliation release gate. Review the documented
-[runtime limitation](../reference/compatibility.md#pre-alpha-runtime-limitation)
-before installing. The development fork and patched Android binary are not
-supported production dependencies.
+Use NativePHP Mobile `^4.6` and Mobile UI `^0.8` with official, unpatched
+binaries. Firstlight screens must extend `FirstlightUI\NativeComponent` for
+the [response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+Firstlight remains pre-alpha pending physical-device, soak/performance, and
+wider app qualification; no development fork or binary patch is required.
 
 ## Install and register the plugin
 

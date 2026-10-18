@@ -84,11 +84,12 @@ again. This prevents stale rapid taps from calculating against an old accepted
 value. The control does not change optimistically and performs no arithmetic on
 the device.
 
-NativePHP Mobile 4.2.0 still needs a content-independent publication
-acknowledgement from the bundled PHP runtime when PHP rejects a proposal and
-republishes an identical accepted value. Stepper remains release-blocked on
-that upstream behaviour ([#365](https://github.com/NativePHP/mobile-air/issues/365));
-accepted changes already reconcile normally.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+It makes an unchanged full response observable on official unpatched Mobile
+`^4.6` / UI `^0.8` binaries without waiting for upstream #365. Revisions are
+not per-event acknowledgements, do not prevent coalescing, and do not serialize
+simultaneous proposals. Wider release qualification remains pending.
 
 ## Accessibility and platform behavior
 

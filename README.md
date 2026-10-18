@@ -14,21 +14,18 @@ php artisan native:install --force
 
 ## Pre-alpha NativePHP requirement
 
-Firstlight is not currently release-ready on the latest supported NativePHP
-Mobile constraint (`^4.6`, with Mobile UI `^0.8`). The
-bundled PHP Element Runtime can suppress a byte-identical tree publication
-before iOS or Android receives it. Stateful controls may then fail to reconcile
-a rejected or unchanged PHP response.
+Use `FirstlightUI\NativeComponent` for screens on NativePHP Mobile `^4.6`
+and Mobile UI `^0.8`, with official, unpatched runtime binaries. It stamps each
+complete nonstreaming response with a process-wide increasing revision so an
+otherwise identical response can reach the native renderers. Blade render paths
+are automatic; hand-built Element roots must return `$this->response($element)`.
+Streaming is disabled and cannot be opted into.
 
-NativePHP Mobile 4.1.0 added Android equal-tree publication revisions
-([#280](https://github.com/NativePHP/mobile-air/pull/280)); that is necessary
-but not sufficient. The remaining cross-platform gap is tracked upstream as
-[#365](https://github.com/NativePHP/mobile-air/issues/365).
-
-The public-alpha release gate is waiting for an official NativePHP release with
-a content-independent publication acknowledgement in the bundled PHP runtime.
-See [Compatibility](docs/reference/compatibility.md#pre-alpha-runtime-limitation)
-for the affected behaviour and upstream tracking.
+The upstream identical-frame bug [#365](https://github.com/NativePHP/mobile-air/issues/365)
+remains, but Firstlight no longer waits for it. Firstlight remains pre-alpha,
+pending physical-device, soak/performance, and wider application qualification;
+this is not a production-readiness claim. See the
+[response contract and limitations](docs/reference/compatibility.md#pre-alpha-runtime-limitation).
 
 ## Example
 

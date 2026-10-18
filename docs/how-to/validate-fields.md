@@ -28,18 +28,8 @@ in the [ValidatesFields reference](../reference/validates-fields.md).
 
 ## Opt in
 
-Use the trait on a NativePHP `NativeComponent`, or extend the thin
-`FirstlightUI\NativeComponent` subclass that already includes it:
-
-```php
-use FirstlightUI\Concerns\ValidatesFields;
-use Native\Mobile\Edge\NativeComponent;
-
-class SignupScreen extends NativeComponent
-{
-    use ValidatesFields;
-}
-```
+Extend `FirstlightUI\NativeComponent`, which includes `ValidatesFields` and
+the full nonstreaming response-revision contract:
 
 ```php
 use FirstlightUI\NativeComponent;
@@ -48,6 +38,14 @@ class SignupScreen extends NativeComponent
 {
 }
 ```
+
+The trait remains usable separately, but adding it to the upstream EDGE base
+does not provide the publication contract. Blade render paths are automatic;
+programmatic Element roots must return `$this->response($element)` to add normal
+chrome and the revision. Nested children are untouched, partials are unstamped,
+and streaming cannot be opted into. Repeated validation responses use this
+same contract, not a per-event acknowledgement. See
+[Compatibility](../reference/compatibility.md#pre-alpha-runtime-limitation).
 
 ## Declare rules and bind fields
 

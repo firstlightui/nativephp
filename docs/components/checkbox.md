@@ -34,7 +34,7 @@ Declare a Boolean property on the native component, then bind it with
 namespace App\NativeComponents;
 
 use Illuminate\View\View;
-use Native\Mobile\Edge\NativeComponent;
+use FirstlightUI\NativeComponent;
 
 class Registration extends NativeComponent
 {
@@ -114,6 +114,9 @@ integers, string booleans, arrays, and objects are also rejected. Checkbox has
 no nullable or indeterminate state.
 
 ## State timing
+
+Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
+receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
 
 Checkbox is [server-authoritative](../concepts/server-authoritative-state.md).
 A tap emits the inverse Boolean as one proposal, but the visible checkmark

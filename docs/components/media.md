@@ -31,6 +31,9 @@ Firstlight fields.
 
 ## Complete example
 
+Use `FirstlightUI\NativeComponent` for the full nonstreaming
+[response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+
 ```php
 <?php
 
@@ -39,7 +42,7 @@ namespace App\NativeComponents;
 use FirstlightUI\Media\MediaStorage;
 use FirstlightUI\Media\MediaValue;
 use Illuminate\View\View;
-use Native\Mobile\Edge\NativeComponent;
+use FirstlightUI\NativeComponent;
 
 class Profile extends NativeComponent
 {

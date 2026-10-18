@@ -97,7 +97,11 @@ Search filters labels locally in authored order. Typing, dismissing search, or s
 
 Select is [server-authoritative](../concepts/server-authoritative-state.md). Choosing an enabled option emits immediately, but the trigger continues to show PHP's accepted value until the next publication. Further choices are ignored while that proposal is in flight. Rejected and programmatic publications do not emit.
 
-An identical PHP publication must also release the pending-interaction guard. Select therefore requires a NativePHP build containing identical-publication delivery for custom EDGE renderers.
+An unchanged PHP response must also release the pending-interaction guard.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation)
+on official unpatched binaries. Revisions are not per-event acknowledgements
+and do not prevent coalescing or serialize simultaneous proposals.
 
 Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` modes are rejected.
 
@@ -124,7 +128,7 @@ iOS uses a SwiftUI `Menu` for compact collections and a native searchable sheet 
 
 ## Compatibility
 
-Select supports the versions listed in the current [compatibility reference](../reference/compatibility.md), requires both native renderers in the host application, and currently depends on the unreleased NativePHP identical-publication fix described above.
+Select supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers in the host application plus Firstlight's screen response contract above. It does not require an unreleased runtime fix.
 
 ## Screenshots
 

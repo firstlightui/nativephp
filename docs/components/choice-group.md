@@ -109,7 +109,11 @@ In multiple mode, tapping toggles that stable value while preserving the order o
 
 Choice Group is [server-authoritative](../concepts/server-authoritative-state.md). A tap emits immediately, but selected visuals wait for PHP's next publication. Further taps are ignored while that proposal is in flight so a second proposal cannot be calculated from stale state. Rejected and programmatic publications do not emit.
 
-An identical PHP publication must also release the pending-interaction guard. This component therefore requires a NativePHP build containing identical-publication delivery for custom EDGE renderers.
+An unchanged PHP response must also release the pending-interaction guard.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation)
+on official unpatched binaries. Revisions are not per-event acknowledgements
+and do not prevent coalescing or serialize simultaneous proposals.
 
 Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` modes are rejected.
 
@@ -140,7 +144,7 @@ iOS uses native SwiftUI option rows with trailing checkmarks. Android renders on
 
 ## Compatibility
 
-Choice Group supports the versions listed in the current [compatibility reference](../reference/compatibility.md), requires both native renderers in the host application, and currently depends on the unreleased NativePHP identical-publication fix described above.
+Choice Group supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers in the host application plus Firstlight's screen response contract above. It does not require an unreleased runtime fix.
 
 ## Screenshots
 

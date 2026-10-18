@@ -15,7 +15,25 @@ This tutorial adds a native Segmented control for choosing a queue. The same EDG
 
 ## Define the state
 
-Add the selected value and stable value-to-label options to your EDGE component:
+Extend Firstlight's base for your screen, rather than the upstream EDGE base:
+
+```php
+use FirstlightUI\NativeComponent;
+
+class QueueScreen extends NativeComponent
+{
+    // Add the state below; use your normal Blade view.
+}
+```
+
+Normal Blade renders (a global `View` returned from `render()`, `$this->view()`,
+or an inferred view) automatically receive normal chrome and a root response
+revision. For a hand-built Element root, return `$this->response($element)`
+from `render()` instead of returning the Element directly. Nested children are
+untouched and partials are unstamped. Streaming is disabled and cannot be opted
+into. See the [full contract and limits](../reference/compatibility.md#pre-alpha-runtime-limitation).
+
+Add the selected value and stable value-to-label options to your component:
 
 ```php
 public string $queue = 'mine';

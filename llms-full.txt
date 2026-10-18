@@ -8,11 +8,11 @@
 
 Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
 
-Firstlight is still pre-alpha: no released NativePHP runtime currently passes
-its state-reconciliation release gate. Review the documented
-[runtime limitation](../reference/compatibility.md#pre-alpha-runtime-limitation)
-before installing. The development fork and patched Android binary are not
-supported production dependencies.
+Use NativePHP Mobile `^4.6` and Mobile UI `^0.8` with official, unpatched
+binaries. Firstlight screens must extend `FirstlightUI\NativeComponent` for
+the [response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+Firstlight remains pre-alpha pending physical-device, soak/performance, and
+wider app qualification; no development fork or binary patch is required.
 
 ## Install and register the plugin
 
@@ -52,7 +52,25 @@ This tutorial adds a native Segmented control for choosing a queue. The same EDG
 
 ## Define the state
 
-Add the selected value and stable value-to-label options to your EDGE component:
+Extend Firstlight's base for your screen, rather than the upstream EDGE base:
+
+```php
+use FirstlightUI\NativeComponent;
+
+class QueueScreen extends NativeComponent
+{
+    // Add the state below; use your normal Blade view.
+}
+```
+
+Normal Blade renders (a global `View` returned from `render()`, `$this->view()`,
+or an inferred view) automatically receive normal chrome and a root response
+revision. For a hand-built Element root, return `$this->response($element)`
+from `render()` instead of returning the Element directly. Nested children are
+untouched and partials are unstamped. Streaming is disabled and cannot be opted
+into. See the [full contract and limits](../reference/compatibility.md#pre-alpha-runtime-limitation).
+
+Add the selected value and stable value-to-label options to your component:
 
 ```php
 public string $queue = 'mine';
@@ -114,18 +132,8 @@ in the [ValidatesFields reference](../reference/validates-fields.md).
 
 ## Opt in
 
-Use the trait on a NativePHP `NativeComponent`, or extend the thin
-`FirstlightUI\NativeComponent` subclass that already includes it:
-
-```php
-use FirstlightUI\Concerns\ValidatesFields;
-use Native\Mobile\Edge\NativeComponent;
-
-class SignupScreen extends NativeComponent
-{
-    use ValidatesFields;
-}
-```
+Extend `FirstlightUI\NativeComponent`, which includes `ValidatesFields` and
+the full nonstreaming response-revision contract:
 
 ```php
 use FirstlightUI\NativeComponent;
@@ -134,6 +142,14 @@ class SignupScreen extends NativeComponent
 {
 }
 ```
+
+The trait remains usable separately, but adding it to the upstream EDGE base
+does not provide the publication contract. Blade render paths are automatic;
+programmatic Element roots must return `$this->response($element)` to add normal
+chrome and the revision. Nested children are untouched, partials are unstamped,
+and streaming cannot be opted into. Repeated validation responses use this
+same contract, not a per-event acknowledgement. See
+[Compatibility](../reference/compatibility.md#pre-alpha-runtime-limitation).
 
 ## Declare rules and bind fields
 
@@ -1622,7 +1638,7 @@ Declare a Boolean property on the native component, then bind it with
 namespace App\NativeComponents;
 
 use Illuminate\View\View;
-use Native\Mobile\Edge\NativeComponent;
+use FirstlightUI\NativeComponent;
 
 class Registration extends NativeComponent
 {
@@ -1702,6 +1718,9 @@ integers, string booleans, arrays, and objects are also rejected. Checkbox has
 no nullable or indeterminate state.
 
 ## State timing
+
+Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
+receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
 
 Checkbox is [server-authoritative](../concepts/server-authoritative-state.md).
 A tap emits the inverse Boolean as one proposal, but the visible checkmark
@@ -1857,7 +1876,11 @@ In multiple mode, tapping toggles that stable value while preserving the order o
 
 Choice Group is [server-authoritative](../concepts/server-authoritative-state.md). A tap emits immediately, but selected visuals wait for PHP's next publication. Further taps are ignored while that proposal is in flight so a second proposal cannot be calculated from stale state. Rejected and programmatic publications do not emit.
 
-An identical PHP publication must also release the pending-interaction guard. This component therefore requires a NativePHP build containing identical-publication delivery for custom EDGE renderers.
+An unchanged PHP response must also release the pending-interaction guard.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation)
+on official unpatched binaries. Revisions are not per-event acknowledgements
+and do not prevent coalescing or serialize simultaneous proposals.
 
 Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` modes are rejected.
 
@@ -1888,7 +1911,7 @@ iOS uses native SwiftUI option rows with trailing checkmarks. Android renders on
 
 ## Compatibility
 
-Choice Group supports the versions listed in the current [compatibility reference](../reference/compatibility.md), requires both native renderers in the host application, and currently depends on the unreleased NativePHP identical-publication fix described above.
+Choice Group supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers in the host application plus Firstlight's screen response contract above. It does not require an unreleased runtime fix.
 
 ## Screenshots
 
@@ -1908,6 +1931,9 @@ Firstlight fields.
 
 ## Complete example
 
+Use `FirstlightUI\NativeComponent` for the full nonstreaming
+[response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+
 ```php
 <?php
 
@@ -1916,7 +1942,7 @@ namespace App\NativeComponents;
 use FirstlightUI\Media\MediaStorage;
 use FirstlightUI\Media\MediaValue;
 use Illuminate\View\View;
-use Native\Mobile\Edge\NativeComponent;
+use FirstlightUI\NativeComponent;
 
 class Profile extends NativeComponent
 {
@@ -3393,7 +3419,11 @@ Search filters labels locally in authored order. Typing, dismissing search, or s
 
 Select is [server-authoritative](../concepts/server-authoritative-state.md). Choosing an enabled option emits immediately, but the trigger continues to show PHP's accepted value until the next publication. Further choices are ignored while that proposal is in flight. Rejected and programmatic publications do not emit.
 
-An identical PHP publication must also release the pending-interaction guard. Select therefore requires a NativePHP build containing identical-publication delivery for custom EDGE renderers.
+An unchanged PHP response must also release the pending-interaction guard.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation)
+on official unpatched binaries. Revisions are not per-event acknowledgements
+and do not prevent coalescing or serialize simultaneous proposals.
 
 Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` modes are rejected.
 
@@ -3420,7 +3450,7 @@ iOS uses a SwiftUI `Menu` for compact collections and a native searchable sheet 
 
 ## Compatibility
 
-Select supports the versions listed in the current [compatibility reference](../reference/compatibility.md), requires both native renderers in the host application, and currently depends on the unreleased NativePHP identical-publication fix described above.
+Select supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers in the host application plus Firstlight's screen response contract above. It does not require an unreleased runtime fix.
 
 ## Screenshots
 
@@ -3500,12 +3530,12 @@ There is no parallel input, click, press, or submit event. Programmatic PHP
 publications emit nothing. A publication is authoritative and replaces the
 native draft, including when PHP rejects a proposal and keeps the prior value.
 
-NativePHP Mobile 4.2.0 must expose a publication acknowledgement even when the
-accepted value is identical for that rejection path to be observable by the
-renderer. Slider's component-release evidence remains blocked until that
-upstream runtime behaviour is available and verified
-([#365](https://github.com/NativePHP/mobile-air/issues/365)); the renderer
-already reconciles every publication it receives.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+It makes an unchanged full response observable on official unpatched Mobile
+`^4.6` / UI `^0.8` binaries without waiting for upstream #365. Revisions are
+not per-event acknowledgements, do not prevent coalescing, and do not serialize
+simultaneous proposals. Wider release qualification remains pending.
 
 ## Accessibility and platform behavior
 
@@ -3607,11 +3637,12 @@ again. This prevents stale rapid taps from calculating against an old accepted
 value. The control does not change optimistically and performs no arithmetic on
 the device.
 
-NativePHP Mobile 4.2.0 still needs a content-independent publication
-acknowledgement from the bundled PHP runtime when PHP rejects a proposal and
-republishes an identical accepted value. Stepper remains release-blocked on
-that upstream behaviour ([#365](https://github.com/NativePHP/mobile-air/issues/365));
-accepted changes already reconcile normally.
+Host the control in `FirstlightUI\NativeComponent` for the
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+It makes an unchanged full response observable on official unpatched Mobile
+`^4.6` / UI `^0.8` binaries without waiting for upstream #365. Revisions are
+not per-event acknowledgements, do not prevent coalescing, and do not serialize
+simultaneous proposals. Wider release qualification remains pending.
 
 ## Accessibility and platform behavior
 
@@ -3925,7 +3956,7 @@ Declare a boolean property on the native component, then bind it with `native:mo
 namespace App\NativeComponents;
 
 use Illuminate\View\View;
-use Native\Mobile\Edge\NativeComponent;
+use FirstlightUI\NativeComponent;
 
 class NotificationSettings extends NativeComponent
 {
@@ -3995,6 +4026,9 @@ Switch accepts only strict PHP booleans: `true` and `false`. Bind a literal Bool
 `value="false"` is invalid because Blade passes it as a string. `null`, integers, string booleans, arrays, and objects are also rejected.
 
 ## State timing
+
+Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
+receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
 
 Switch is [server-authoritative](../concepts/server-authoritative-state.md). A native interaction immediately emits its proposed Boolean, but the visible on/off state remains the last value published by PHP. A response that accepts the proposal changes the visible state; a response that rejects it leaves the visible state unchanged. Every server publication clears a pending proposal, including one that republishes the same value. Programmatic publications update the accepted state without emitting `@change`.
 
@@ -4135,23 +4169,62 @@ After changing NativePHP versions, run `composer update` and `php artisan native
 
 ## Pre-alpha runtime limitation
 
-The Composer constraints express package and source compatibility; they do not
-currently mean that NativePHP Mobile 4.6.0 passes Firstlight's public release
-gate. The bundled PHP Element Runtime can still suppress a byte-identical tree
-publication before either platform renderer receives it. An identical
-publication still matters when PHP rejects an event or deliberately keeps the
-current value.
+### Supported response-revision contract
 
-The October 2026 Android and iOS PHP 8.5.11 bundles still contain the identical-frame
-early-return paths in both normal and streaming publication. Updating Mobile
-or Mobile UI alone does not satisfy the acknowledgement requirement.
+Extend `FirstlightUI\NativeComponent`, not the upstream EDGE base, for screens
+using Firstlight controls. Use official, unpatched NativePHP binaries at the
+floors above. No vendor or runtime binary modification is required.
 
-Known consequences include a rejected Segmented selection remaining visible,
-or a server-authoritative Switch or Pill Group remaining pending and ignoring
-later input.
+The base stamps the **final chrome-wrapped root** with the integer prop
+`firstlight_response_revision`. Its counter is private, process-wide, and
+monotonically increasing across screen instances within the PHP process, not
+component state to bind, persist, or set yourself. An otherwise unchanged full
+response therefore differs from the previous frame and reaches the renderers.
 
-NativePHP Mobile 4.1.0 shipped Android `treePublicationId` ([#280](https://github.com/NativePHP/mobile-air/pull/280)), which lets plugin renderers observe equal-tree republications **after** Kotlin has received and posted a tree. That fixes Compose equal-assignment suppression only. It does not help when the shared C runtime returns early on an identical encoded frame and never calls either platform reader — the cross-platform gap tracked in the [publication acknowledgement issue](https://github.com/NativePHP/mobile-air/issues/365).
+This deliberately bypasses whole-frame equality suppression for each completed
+screen response. It trades that deduplication saving for reliable reconciliation
+of unchanged values; publication cost still needs soak/performance qualification.
 
-Firstlight development may still use unreleased mobile-air branches or guarded binary proofs in the showcase while validating reconciliation behaviour. Those patches must not ship as supported release dependencies.
+- Normal Blade paths are automatic: a global Laravel `View` returned from
+  `render()`, `$this->view()`, and the inferred view all receive the revision.
+- Programmatic Element roots must return `$this->response($element)` from
+  `render()`. This adds normal screen chrome as well as the root revision.
+  Use it only for raw Element content, not an already-completed `view()` or
+  `fromView()` response. Custom `wrapWithChrome()` overrides must call the parent.
+- Nested children are emitted untouched; partials are unstamped. Neither is an
+  independent full response under this contract.
+- `renderStreaming()` is final and returns `false`. Streaming bypasses this
+  contract and cannot be opted into by a subclass.
+- Existing concerns such as `ValidatesFields` remain usable separately, but
+  adding a trait to the upstream base does not provide this publication contract.
 
-The public-alpha runtime gate remains blocked until an official NativePHP release includes a content-independent publication acknowledgement in its bundled PHP runtime (C `nphp_element_publish()` / `nphp_frame_end()` and both platform readers). See also the closed Android-only report ([#279](https://github.com/NativePHP/mobile-air/issues/279)) and the partial Android fix ([#280](https://github.com/NativePHP/mobile-air/pull/280)) for context.
+The revision is **not a per-event acknowledgement**. It does not prevent
+publication coalescing or serialize simultaneous proposals. Applications must
+not infer that every event receives a separately observable response.
+This is a screen-rendering contract, not a replacement for NativePHP's generic
+publisher: framework-owned loading placeholders and error/dump overlays are
+outside it.
+
+### Upstream context and qualification
+
+The October 2026 Android and iOS PHP 8.5.11 bundles still suppress byte-identical
+frames in the shared C runtime. Android `treePublicationId`, shipped in Mobile
+4.1.0 ([#280](https://github.com/NativePHP/mobile-air/pull/280)), only helps after
+a publication reaches Kotlin. The cross-platform bug
+[#365](https://github.com/NativePHP/mobile-air/issues/365) remains upstream;
+Firstlight no longer plans to wait for it or ship the old Android binary patch.
+
+The permanent implementation was checked on October 19, 2026 with Mobile 4.6.0,
+Mobile UI 0.8.0, and official unpatched PHP 8.5.11: 14 nonstreaming phases each
+on an Android emulator and iOS simulator. Each phase delivered three proposals
+through a normal Blade screen using Firstlight's base, without app-authored
+revision props. Repeated Switch/Pill rejection, Segmented rejection, validation,
+accepted Switch changes, 500 ms rejection, and rapid same-control bursts passed.
+Rapid bursts deliberately coalesce a second tap while pending; they do not
+prove one response per physical tap. The earlier spike did not reproduce a
+baseline Segmented failure, so these results do not establish a Segmented fix.
+
+Package regression tests cover Blade, inferred views, hand-built responses,
+remounts, nested children, and unstamped partials. This is not production
+qualification. Firstlight remains pre-alpha pending physical-device,
+soak/performance, and wider app qualification, including simultaneous controls.
