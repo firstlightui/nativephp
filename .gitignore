@@ -6,3 +6,4 @@
 *.log
 /roadmap.md
 /mobile-ui-component-gap-scratchpad.md
+/.amp/portals/*

@@ -9,7 +9,7 @@ Capture paired native evidence from a stable consumer fixture. Never substitute 
 
 ## Inputs
 
-Require one or more StudlyCase component names, `../firstlight-showcase`, one explicit iOS Simulator UDID, one explicit Android emulator serial, and development or release mode. Read `Constitution.md`, `spec/documentation-constitution.md`, and every requested component entry in `spec/screenshots.json`.
+Require one or more StudlyCase component names, `../showcase` (`../repos/showcase` in an orb), one explicit iOS Simulator UDID, one explicit Android emulator serial, and development or release mode. Read `Constitution.md`, `spec/documentation-constitution.md`, and every requested component entry in `spec/screenshots.json`.
 
 Target IDs are not permission. Obtain explicit permission before listing, booting, launching, capturing, changing appearance, or stopping a simulator or emulator. If IDs are absent and listing is permitted, list read-only and ask the user to choose. Treat targets as shared resources; never select, switch, reset, or stop them implicitly.
 
@@ -21,7 +21,7 @@ Target IDs are not permission. Obtain explicit permission before listing, bootin
 
 ```bash
 bin/capture-doc-screenshots Component \
-  --showcase=../firstlight-showcase \
+  --showcase=../showcase \
   --ios=<simulator-udid> \
   --android=<emulator-serial>
 ```
@@ -32,7 +32,7 @@ For two or more components, prefer the appearance-batched guard:
 
 ```bash
 bin/capture-doc-screenshot-batch Component ComponentTwo \
-  --showcase=../firstlight-showcase \
+  --showcase=../showcase \
   --ios=<simulator-udid> \
   --android=<emulator-serial>
 ```

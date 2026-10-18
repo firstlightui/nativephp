@@ -70,7 +70,7 @@ Build output and dependency directories such as `.build/` and `vendor/` are loca
 
 ## Sibling showcase checkout
 
-The canonical showcase is `firstlightui/showcase`; in the adjacent local layout it is `../firstlight-showcase`.
+The canonical showcase is `firstlightui/showcase`; in the adjacent local layout it is `../showcase`, next to the `nativephp` package checkout. Amp orbs place the showcase at `../repos/showcase` and link `../repos/nativephp` to the primary package checkout.
 
 | Showcase path | Responsibility |
 | --- | --- |

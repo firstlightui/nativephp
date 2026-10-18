@@ -27,7 +27,9 @@ use Symfony\Component\Process\Process;
 $arguments = array_slice($argv, 1);
 $development = false;
 $root = dirname(__DIR__);
-$showcase = dirname($root).'/firstlight-showcase';
+$showcase = is_dir(dirname($root).'/showcase')
+    ? dirname($root).'/showcase'
+    : dirname($root).'/repos/showcase';
 $showcaseWasSpecified = false;
 
 foreach ($arguments as $argument) {

@@ -18,7 +18,7 @@ sources:
 
 ## Repository boundary
 
-The sibling `firstlightui/showcase` repository is the consumer and dogfooding application. In the standard adjacent checkout layout it is available from the package as `../firstlight-showcase`.
+The sibling `firstlightui/showcase` repository is the consumer and dogfooding application. In the standard adjacent checkout layout it is available from the package as `../showcase`; Amp orbs place it at `../repos/showcase`.
 
 The showcase owns application component classes, routes, authored views, and fixture tests. The package owns the public contract, renderers, screenshot manifest, capture orchestrator, images, and documentation review gates. Generated native host trees are build products and must not contain durable fixes.
 
@@ -52,7 +52,7 @@ Run only the package orchestrator:
 
 ```bash
 bin/capture-doc-screenshots Component \
-  --showcase=../firstlight-showcase \
+  --showcase=../showcase \
   --ios=<simulator-udid> \
   --android=<emulator-serial>
 ```
@@ -63,7 +63,7 @@ For two or more components, use the guarded batch entrypoint:
 
 ```bash
 bin/capture-doc-screenshot-batch Component ComponentTwo \
-  --showcase=../firstlight-showcase \
+  --showcase=../showcase \
   --ios=<simulator-udid> \
   --android=<emulator-serial>
 ```

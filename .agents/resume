@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Snapshot state contains tools and dependencies, not running servers or user authentication.
+for binary in php composer node java sdkmanager; do
+    command -v "$binary" >/dev/null
+done
+for repo in "$repo_root" "$repo_root/../repos/showcase" "$repo_root/../repos/firstlight-public"; do
+    if [[ ! -f "$repo/vendor/autoload.php" ]]; then
+        echo "Missing dependencies in $repo; rerun the primary repository's .agents/setup." >&2
+        exit 1
+    fi
+done
+
+echo 'Firstlight orb ready. Run composer test in each repository; Android tests use tests/android/gradlew.'
+echo 'After package edits, run composer reinstall firstlightui/nativephp in ../repos/showcase to refresh its mirror.'
+echo 'iOS builds and simulator captures require macOS.'

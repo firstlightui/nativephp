@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd -- "$repo_root"
+
+if [[ "$(uname -s)" != Linux ]]; then
+    echo 'This setup is for Debian orbs, not the local macOS development environment.' >&2
+    exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+export COMPOSER_NO_INTERACTION=1
+TIMEFORMAT='Step completed in %3R seconds'
+trap 'echo "Orb setup failed at line $LINENO" >&2' ERR
+
+case "$(uname -m)" in
+    x86_64) node_arch=x64; java_arch=x64 ;;
+    aarch64) node_arch=arm64; java_arch=aarch64 ;;
+    *) echo 'Unsupported toolchain architecture' >&2; exit 1 ;;
+esac
+
+echo 'Installing missing system packages (PHP 8.5, SQLite)'
+time {
+    packages=(ca-certificates curl unzip git jq sqlite3
+        php8.5-cli php8.5-curl php8.5-mbstring php8.5-xml php8.5-sqlite3
+        php8.5-zip php8.5-intl php8.5-gd php8.5-bcmath)
+    missing=()
+    for package in "${packages[@]}"; do
+        if [[ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" != 'install ok installed' ]]; then
+            missing+=("$package")
+        fi
+    done
+    if ((${#missing[@]})); then
+        if [[ ! -f /etc/apt/sources.list.d/firstlight-php.list ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ca-certificates curl
+            keyring="$(mktemp --suffix=.deb)"
+            curl -fsSL --retry 3 https://packages.sury.org/debsuryorg-archive-keyring.deb -o "$keyring"
+            sudo dpkg -i "$keyring"
+            rm -f -- "$keyring"
+            echo 'deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ bookworm main' |
+                sudo tee /etc/apt/sources.list.d/firstlight-php.list >/dev/null
+        fi
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends "${missing[@]}"
+    fi
+    sudo ln -sfn /usr/bin/php8.5 /usr/local/bin/php
+    # Pest uses assertions while loading its configuration; Debian disables them by default.
+    echo 'zend.assertions=1' | sudo tee /etc/php/8.5/cli/conf.d/99-firstlight-dev.ini >/dev/null
+}
+
+echo 'Preparing Composer and Node 22 (matching website CI)'
+time {
+    if ! command -v composer >/dev/null; then
+        installer="$(mktemp)"
+        curl -fsSL --retry 3 https://getcomposer.org/installer -o "$installer"
+        expected="$(curl -fsSL --retry 3 https://composer.github.io/installer.sig)"
+        [[ "$(sha384sum "$installer" | cut -d ' ' -f 1)" == "$expected" ]]
+        sudo php "$installer" --2 --install-dir=/usr/local/bin --filename=composer
+        rm -f -- "$installer"
+    fi
+    if ! command -v node >/dev/null || [[ "$(node -p 'process.versions.node.split(".")[0]')" != 22 ]]; then
+        download="$(mktemp -d)"
+        curl -fsSL --retry 3 https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt -o "$download/SHASUMS256.txt"
+        archive="$(awk -v suffix="-linux-$node_arch.tar.xz" '$2 ~ suffix "$" {print $2}' "$download/SHASUMS256.txt")"
+        [[ -n "$archive" ]]
+        curl -fsSL --retry 3 "https://nodejs.org/dist/latest-v22.x/$archive" -o "$download/$archive"
+        (cd -- "$download"; grep " $archive\$" SHASUMS256.txt | sha256sum --check)
+        sudo mkdir -p /opt/firstlight/node
+        sudo tar -xJf "$download/$archive" --strip-components=1 -C /opt/firstlight/node
+        for binary in node npm npx; do
+            sudo ln -sfn "/opt/firstlight/node/bin/$binary" "/usr/local/bin/$binary"
+        done
+        rm -rf -- "$download"
+    fi
+}
+
+echo 'Preparing Java 21 and the Android 36 test toolchain'
+time {
+    # Paparazzi requires Java 21 even though Android sources target JVM 17.
+    export JAVA_HOME=/opt/firstlight/jdk-21
+    if [[ ! -x "$JAVA_HOME/bin/java" ]]; then
+        download="$(mktemp -d)"
+        curl -fsSL --retry 3 "https://api.adoptium.net/v3/assets/latest/21/hotspot?architecture=$java_arch&image_type=jdk&os=linux" -o "$download/jdk.json"
+        curl -fsSL --retry 3 "$(jq -r '.[0].binary.package.link' "$download/jdk.json")" -o "$download/jdk.tar.gz"
+        (cd -- "$download"; printf '%s  jdk.tar.gz\n' "$(jq -r '.[0].binary.package.checksum' jdk.json)" | sha256sum --check)
+        sudo mkdir -p "$JAVA_HOME"
+        sudo tar -xzf "$download/jdk.tar.gz" --strip-components=1 -C "$JAVA_HOME"
+        rm -rf -- "$download"
+    fi
+    export ANDROID_HOME="$HOME/.local/share/firstlight/android-sdk"
+    export ANDROID_SDK_ROOT="$ANDROID_HOME"
+    export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+    if [[ ! -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]]; then
+        download="$(mktemp -d)"
+        curl -fsSL --retry 3 https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip -o "$download/tools.zip"
+        unzip -q "$download/tools.zip" -d "$download"
+        mkdir -p "$ANDROID_HOME/cmdline-tools"
+        mv -- "$download/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+        rm -rf -- "$download"
+    fi
+    if [[ ! -f "$ANDROID_HOME/platforms/android-36/android.jar" || ! -d "$ANDROID_HOME/build-tools/35.0.0" || ! -x "$ANDROID_HOME/platform-tools/adb" ]]; then
+        # Feed enough answers without a `yes` process whose SIGPIPE would fail pipefail.
+        printf 'y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n' | sdkmanager --licenses >/dev/null
+        sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools'
+    fi
+    # Amp and supervised services start in separate login shells, not this process.
+    # shellcheck disable=SC2016 # PATH must expand in the future login shell.
+    {
+        printf 'export JAVA_HOME=%q\nexport ANDROID_HOME=%q\nexport ANDROID_SDK_ROOT=%q\n' \
+            "$JAVA_HOME" "$ANDROID_HOME" "$ANDROID_HOME"
+        cat <<'EOF'
+case ":$PATH:" in
+    *":$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:"*) ;;
+    *) export PATH="$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" ;;
+esac
+EOF
+    } | sudo tee /etc/profile.d/firstlight.sh >/dev/null
+    # Amp's ~/.env resets PATH after /etc/profile.d; reapply after the user's login profile.
+    if [[ ! -f "$HOME/.bash_profile" ]]; then
+        printf '[[ ! -f %q ]] || source %q\n' "$HOME/.profile" "$HOME/.profile" >> "$HOME/.bash_profile"
+    fi
+    profile_marker='# Firstlight orb toolchain'
+    if ! grep -Fqx "$profile_marker" "$HOME/.bash_profile"; then
+        cat >> "$HOME/.bash_profile" <<EOF
+
+$profile_marker
+if [[ "\$PWD" == "$(dirname -- "$repo_root")/"* ]]; then
+    source /etc/profile.d/firstlight.sh
+fi
+EOF
+    fi
+}
+
+echo 'Installing locked PHP dependencies for the package'
+time composer install --prefer-dist --no-progress
+
+additional_repos="$repo_root/../repos"
+showcase="$additional_repos/showcase"
+website="$additional_repos/firstlight-public"
+for app in "$showcase" "$website"; do
+    if [[ ! -f "$app/composer.json" ]]; then
+        echo "Missing linked repository: $app. Add it to the Amp project before starting an orb." >&2
+        exit 1
+    fi
+done
+
+# Showcase uses ../nativephp; Amp always names the primary checkout repo.
+if [[ ! -e "$additional_repos/nativephp" ]]; then
+    ln -s -- "$repo_root" "$additional_repos/nativephp"
+fi
+
+for app in "$showcase" "$website"; do
+    echo "Preparing $(basename -- "$app") (Composer, SQLite, Vite)"
+    time (
+        cd -- "$app"
+        [[ -f .env ]] || cp -- .env.example .env
+        # Setup may only migrate this orb's disposable SQLite file, never a configured remote DB.
+        export DB_CONNECTION=sqlite DB_DATABASE="$app/database/database.sqlite" DB_URL=
+        composer install --prefer-dist --no-progress
+        if [[ "$app" == "$showcase" ]]; then
+            # Its path repository uses a mirror, so refresh it when a stale snapshot gets new source.
+            composer reinstall firstlightui/nativephp --prefer-dist --no-progress
+        fi
+        if ! grep -Eq '^APP_KEY=.+$' .env; then
+            php artisan key:generate --no-interaction
+        fi
+        touch database/database.sqlite
+        php artisan migrate --force --no-interaction
+        if [[ -f package-lock.json ]] && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            npm ci --no-audit --no-fund
+        else
+            npm install --no-audit --no-fund
+        fi
+        npm run build
+    )
+done
+
+# Robolectric fetches its SDK and native runtime on execution, not during compilation.
+echo 'Warming the Gradle wrapper and Android JVM test runtimes'
+time (cd -- tests/android; ./gradlew --no-daemon --console=plain testDebugUnitTest)
+
+echo 'Orb setup finished. PHP tests, Vite builds, and Android JVM tests are ready.'
+echo 'iOS builds and simulator screenshots still require a Mac; Linux orbs cannot run SwiftUI.'
