@@ -4152,7 +4152,12 @@ A read-only live log that stays at the newest line:
 | `a11y-hint` | `string` | Additional VoiceOver or TalkBack guidance. |
 | `class` | `string` | External EDGE layout for the complete field. |
 
-`max-lines` must be greater than or equal to `min-lines`. Public Blade examples
+`max-lines` must be greater than or equal to `min-lines`.
+
+NativePHP publishes at most 64 KB of props for one element, so the value must
+stay under about 60 KB of UTF-8. Larger content throws a contract exception
+instead of reaching the device as an empty editor. For live logs, keep only
+the newest lines. Public Blade examples
 use kebab-case. The PHP element also accepts `lineNumbers`, `readOnly`,
 `minLines`, and `maxLines` aliases.
 

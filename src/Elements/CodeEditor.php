@@ -15,6 +15,12 @@ final class CodeEditor extends Element
 
     private const LANGUAGES = ['plain', 'json', 'yaml', 'env'];
 
+    /** NativePHP's element bridge stores each node's encoded props, and each string, with a u16 length. */
+    private const MAX_PUBLISHED_PROP_BYTES = 65_535;
+
+    /** Room for props the base element adds after resolution, such as accessibility text. */
+    private const PUBLICATION_HEADROOM_BYTES = 1_024;
+
     /** Key-row labels and accessible names, published as package chrome. */
     private const KEY_ROW_CHROME = [
         'done_label' => 'done',
@@ -280,6 +286,7 @@ final class CodeEditor extends Element
         if ($this->changeCallback !== null) {
             $props['on_change'] = $registry->register($this->changeCallback);
         }
+        $this->assertPublishable($props);
 
         return $props;
     }
@@ -294,6 +301,30 @@ final class CodeEditor extends Element
         $layout = parent::getLayout();
         unset($layout['padding']);
         return $layout;
+    }
+
+    /**
+     * Above the bridge limit both platforms receive empty props: the editor renders blank, and an
+     * editable one would publish whatever the person typed into that blank over the real value.
+     */
+    private function assertPublishable(array $props): void
+    {
+        $bytes = 1 + self::PUBLICATION_HEADROOM_BYTES;
+        foreach ($props as $key => $value) {
+            // Upper bound: assume every key is sent by name rather than as a one-byte table index.
+            $bytes += 3 + strlen((string) $key) + 1 + match (true) {
+                is_string($value) => 2 + strlen($value),
+                is_bool($value) => 1,
+                default => 4,
+            };
+        }
+
+        if ($bytes > self::MAX_PUBLISHED_PROP_BYTES) {
+            throw new InvalidArgumentException(sprintf(
+                'Code Editor content is too large to publish: about %s bytes of props, but NativePHP publishes at most 65,535 bytes per element. Keep the value under about 60 KB of UTF-8; for logs, keep the newest lines.',
+                number_format($bytes),
+            ));
+        }
     }
 
     private function strictString(string $attribute, mixed $value): string

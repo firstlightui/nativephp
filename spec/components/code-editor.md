@@ -39,7 +39,11 @@ key-row chrome labels listed in [Package locale chrome](../reference/package-loc
 Defaults: `plain`, line numbers on, wrap on, indent `2`, follow off, lines
 `6`–`20`, `live` sync.
 
-PHP rejects unknown languages, other indents, `follow` without `read-only`,
+PHP rejects content whose encoded props could exceed NativePHP's 65,535-byte
+per-element bridge limit; above it both platforms receive empty props, and an
+editable editor would publish edits made to that blank over the real value.
+
+PHP also rejects unknown languages, other indents, `follow` without `read-only`,
 unordered line bounds, non-strict types, short debounces, and the excluded
 props (`placeholder`, autocorrect and keyboard hints, icons, secure or
 sensitive modes, highlighting, submit and press events, styling).
@@ -85,8 +89,7 @@ laid out left-to-right in RTL layouts.
 
 ## Evidence still required
 
-Device or emulator verification of the Android key-row popup position above
-the keyboard, iOS `follow` and anchoring (Task 6b), showcase fixtures,
-screenshots, the 2,000-line performance check, physical-device IME rows, and
-constitutional review. See the
+Physical-device IME and performance rows, and constitutional review. Simulator
+and emulator checks of the key row, undo, `follow`, anchoring, and a
+1,500-line live log are recorded in the review. See the
 [Code Editor implementation plan](../plans/2026-10-19-firstlight-code-editor.md).

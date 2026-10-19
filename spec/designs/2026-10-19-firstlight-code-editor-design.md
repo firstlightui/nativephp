@@ -178,7 +178,8 @@ value without emitting `@change`. No `@submit`; Return always inserts a line.
 
 Requested on 2026-10-19 by the first consumer, Forge Control, for a live
 deployment log that PHP republishes as a whole `value` every few seconds on
-a `read-only` editor, capped at 2,000 lines by trimming the head. Approved by
+a `read-only` editor, capped by trimming the head (originally 2,000 lines;
+the cap must keep the value under NativePHP's 64 KB per-element limit). Approved by
 the maintainer on 2026-10-19 as part of the contract.
 
 It also closes a gap in the approved contract: scroll behaviour on
@@ -309,8 +310,11 @@ until both platforms can meet the same guarantee.
   retention, undo clearing on programmatic replacement, key-row presence
   rules, hardware-keyboard handling, semantics, snapshots at default and
   largest text sizes.
-- Performance target: smooth typing at 2,000 lines / 100 KB on reference
-  devices on both platforms, recorded with dated evidence.
+- Performance target: smooth typing at the largest publishable value on
+  reference devices on both platforms, recorded with dated evidence.
+  NativePHP's element bridge limits one element's props to 65,535 bytes
+  (found 2026-10-20), so the original 2,000-line / 100 KB target cannot be
+  published; Code Editor rejects larger values in PHP.
 - Showcase screen and `/captures/code-editor` covering each language, empty,
   error, disabled, read-only, no-wrap, no line numbers, large text, and
   rapid key-row input. Screenshots under

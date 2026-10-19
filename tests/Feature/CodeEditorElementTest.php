@@ -274,3 +274,17 @@ it('declares paired package renderer identifiers', function () {
         'self_closing' => true,
     ]);
 });
+
+it('rejects content larger than one NativePHP element can publish', function () {
+    $line = str_repeat('x', 99)."\n";
+    $fits = str_repeat($line, 600);
+    $tooLarge = str_repeat($line, 660);
+
+    expect(collectCodeEditor(['label' => 'Log', 'value' => $fits])['props']['value'])->toBe($fits);
+
+    collectCodeEditor(['label' => 'Log', 'value' => $tooLarge]);
+})->throws(InvalidArgumentException::class, 'NativePHP publishes at most 65,535 bytes per element');
+
+it('counts UTF-8 bytes rather than characters toward the publication limit', function () {
+    collectCodeEditor(['label' => 'Log', 'value' => str_repeat('é', 33_000)]);
+})->throws(InvalidArgumentException::class, 'NativePHP publishes at most 65,535 bytes per element');
