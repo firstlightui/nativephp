@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
@@ -388,7 +389,8 @@ private fun CodeEditorGutter(
     val lineStarts = remember(text) { codeEditorLineStarts(text) }
 
     // Layout and scroll are read while drawing so the gutter follows them without recomposing.
-    Canvas(Modifier.fillMaxSize().clearAndSetSemantics { }) {
+    // Partly visible first and last lines would otherwise draw over the field border.
+    Canvas(Modifier.fillMaxSize().clipToBounds().clearAndSetSemantics { }) {
         val layout = layout() ?: return@Canvas
         val scroll = scroll()
         if (layout.lineCount == 0 || layout.layoutInput.text.length != text.length) return@Canvas
