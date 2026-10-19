@@ -1,0 +1,577 @@
+{
+  "description": "Shared Code Editor editing cases. Run by Pest (schema), XCTest, and Kotlin tests. ‸ marks a collapsed selection; « and » mark a selection range. Offsets are UTF-16 code units after the markers are removed.",
+  "markers": {
+    "cursor": "‸",
+    "selection_start": "«",
+    "selection_end": "»"
+  },
+  "cases": [
+    {
+      "rule": "return-carry",
+      "name": "plain keeps leading spaces",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "    foo‸",
+      "after": "    foo\n    ‸"
+    },
+    {
+      "rule": "return-carry",
+      "name": "plain keeps leading tab",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "\tfoo‸",
+      "after": "\tfoo\n\t‸"
+    },
+    {
+      "rule": "return-carry",
+      "name": "cursor mid-line carries indentation",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "  ab‸cd",
+      "after": "  ab\n  ‸cd"
+    },
+    {
+      "rule": "return-carry",
+      "name": "cursor inside leading whitespace carries only prefix",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": " ‸   x",
+      "after": " \n ‸   x"
+    },
+    {
+      "rule": "return-carry",
+      "name": "env has no extra indentation",
+      "language": "env",
+      "indent": 2,
+      "operation": "return",
+      "before": "KEY=1‸",
+      "after": "KEY=1\n‸"
+    },
+    {
+      "rule": "return-carry",
+      "name": "return replaces a selection",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "  a«bc»d",
+      "after": "  a\n  ‸d"
+    },
+    {
+      "rule": "return-carry",
+      "name": "return replaces a multi-line selection",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "  a«b\n    c»d",
+      "after": "  a\n  ‸d"
+    },
+    {
+      "rule": "return-carry",
+      "name": "plain ignores brackets",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "{‸",
+      "after": "{\n‸"
+    },
+    {
+      "rule": "return-carry",
+      "name": "plain ignores trailing colon",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "a:‸",
+      "after": "a:\n‸"
+    },
+    {
+      "rule": "return-carry",
+      "name": "env ignores brackets",
+      "language": "env",
+      "indent": 2,
+      "operation": "return",
+      "before": "{‸",
+      "after": "{\n‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json brace adds a level",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "{‸",
+      "after": "{\n  ‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json bracket adds a level to existing indentation",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "  \"a\": [‸",
+      "after": "  \"a\": [\n    ‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json indent four",
+      "language": "json",
+      "indent": 4,
+      "operation": "return",
+      "before": "{‸",
+      "after": "{\n    ‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json trailing spaces after brace still add a level",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "{  ‸",
+      "after": "{  \n  ‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json closed pair on the line adds nothing",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "{}‸",
+      "after": "{}\n‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json brace inside a string adds nothing",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "  \"x\": \"{‸",
+      "after": "  \"x\": \"{\n  ‸"
+    },
+    {
+      "rule": "return-json-open",
+      "name": "json escaped quote does not end the string",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "\"k\\\"{\": {‸",
+      "after": "\"k\\\"{\": {\n  ‸"
+    },
+    {
+      "rule": "return-json-split",
+      "name": "json splits an empty object",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "{‸}",
+      "after": "{\n  ‸\n}"
+    },
+    {
+      "rule": "return-json-split",
+      "name": "json splits an indented empty array",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "  \"a\": [‸]",
+      "after": "  \"a\": [\n    ‸\n  ]"
+    },
+    {
+      "rule": "return-json-split",
+      "name": "json mismatched closer is not split",
+      "language": "json",
+      "indent": 2,
+      "operation": "return",
+      "before": "[‸}",
+      "after": "[\n  ‸}"
+    },
+    {
+      "rule": "return-yaml-colon",
+      "name": "yaml trailing colon adds a level",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "server:‸",
+      "after": "server:\n  ‸"
+    },
+    {
+      "rule": "return-yaml-colon",
+      "name": "yaml key with value adds nothing",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "  port: 80‸",
+      "after": "  port: 80\n  ‸"
+    },
+    {
+      "rule": "return-yaml-colon",
+      "name": "yaml colon inside a comment adds nothing",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "name: x # note:‸",
+      "after": "name: x # note:\n‸"
+    },
+    {
+      "rule": "return-yaml-colon",
+      "name": "yaml colon before a comment adds a level",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "server: # main‸",
+      "after": "server: # main\n  ‸"
+    },
+    {
+      "rule": "return-yaml-colon",
+      "name": "yaml list item key adds a level",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "- name:‸",
+      "after": "- name:\n  ‸"
+    },
+    {
+      "rule": "return-yaml-colon",
+      "name": "yaml hash without preceding space is not a comment",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "return",
+      "before": "a#b:‸",
+      "after": "a#b:\n  ‸"
+    },
+    {
+      "rule": "indent",
+      "name": "indent moves the line and keeps the cursor",
+      "language": "plain",
+      "indent": 2,
+      "operation": "indent",
+      "before": "ab‸c",
+      "after": "  ab‸c"
+    },
+    {
+      "rule": "indent",
+      "name": "indent at column zero moves the cursor",
+      "language": "plain",
+      "indent": 2,
+      "operation": "indent",
+      "before": "‸abc",
+      "after": "  ‸abc"
+    },
+    {
+      "rule": "indent",
+      "name": "indent four",
+      "language": "json",
+      "indent": 4,
+      "operation": "indent",
+      "before": "x‸",
+      "after": "    x‸"
+    },
+    {
+      "rule": "indent",
+      "name": "indent acts on the cursor line only",
+      "language": "plain",
+      "indent": 2,
+      "operation": "indent",
+      "before": "a\nb‸",
+      "after": "a\n  b‸"
+    },
+    {
+      "rule": "indent",
+      "name": "indent every selected line",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "indent",
+      "before": "«a\nb»",
+      "after": "«  a\n  b»"
+    },
+    {
+      "rule": "indent",
+      "name": "selection ending at column zero excludes that line",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "indent",
+      "before": "«a\n»b",
+      "after": "«  a\n»b"
+    },
+    {
+      "rule": "indent",
+      "name": "indent a selection starting mid-line moves its start",
+      "language": "plain",
+      "indent": 2,
+      "operation": "indent",
+      "before": "a«b\nc»",
+      "after": "  a«b\n  c»"
+    },
+    {
+      "rule": "indent",
+      "name": "indent skips empty lines",
+      "language": "env",
+      "indent": 2,
+      "operation": "indent",
+      "before": "«a\n\nb»",
+      "after": "«  a\n\n  b»"
+    },
+    {
+      "rule": "outdent",
+      "name": "outdent removes one level",
+      "language": "plain",
+      "indent": 2,
+      "operation": "outdent",
+      "before": "    a‸",
+      "after": "  a‸"
+    },
+    {
+      "rule": "outdent",
+      "name": "outdent removes partial indentation",
+      "language": "plain",
+      "indent": 2,
+      "operation": "outdent",
+      "before": " a‸",
+      "after": "a‸"
+    },
+    {
+      "rule": "outdent",
+      "name": "outdent without indentation changes nothing",
+      "language": "plain",
+      "indent": 2,
+      "operation": "outdent",
+      "before": "a‸",
+      "after": "a‸"
+    },
+    {
+      "rule": "outdent",
+      "name": "outdent removes one tab",
+      "language": "plain",
+      "indent": 2,
+      "operation": "outdent",
+      "before": "\ta‸",
+      "after": "a‸"
+    },
+    {
+      "rule": "outdent",
+      "name": "cursor inside removed indentation moves to the line start",
+      "language": "plain",
+      "indent": 2,
+      "operation": "outdent",
+      "before": " ‸   a",
+      "after": "‸  a"
+    },
+    {
+      "rule": "outdent",
+      "name": "outdent every selected line",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "outdent",
+      "before": "«  a\n    b\nc»",
+      "after": "«a\n  b\nc»"
+    },
+    {
+      "rule": "outdent",
+      "name": "outdent four with six spaces",
+      "language": "json",
+      "indent": 4,
+      "operation": "outdent",
+      "before": "      x‸",
+      "after": "  x‸"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "yaml comment a line",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "key: 1‸",
+      "after": "# key: 1‸"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "yaml uncomment a line",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "# key: 1‸",
+      "after": "key: 1‸"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "uncomment without a following space",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "#key‸",
+      "after": "key‸"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "uncomment an indented line",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "  # a: 1‸",
+      "after": "  a: 1‸"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "comment at the shallowest indentation",
+      "language": "env",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "«  A=1\n    B=2»",
+      "after": "«  # A=1\n  #   B=2»"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "mixed selection comments every line",
+      "language": "env",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "«# A=1\nB=2»",
+      "after": "«# # A=1\n# B=2»"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "comment skips blank lines",
+      "language": "env",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "«A=1\n\nB=2»",
+      "after": "«# A=1\n\n# B=2»"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "comment at column zero moves the cursor",
+      "language": "env",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "‸A=1",
+      "after": "# ‸A=1"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "json has no comment syntax",
+      "language": "json",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "{‸}",
+      "after": "{‸}"
+    },
+    {
+      "rule": "toggle-comment",
+      "name": "plain has no comment syntax",
+      "language": "plain",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "a‸",
+      "after": "a‸"
+    },
+    {
+      "rule": "insert",
+      "name": "insert at the cursor",
+      "language": "json",
+      "indent": 2,
+      "operation": "insert:{",
+      "before": "‸",
+      "after": "{‸"
+    },
+    {
+      "rule": "insert",
+      "name": "insert replaces a selection",
+      "language": "json",
+      "indent": 2,
+      "operation": "insert:\"",
+      "before": "a«bc»d",
+      "after": "a\"‸d"
+    },
+    {
+      "rule": "insert",
+      "name": "insert pipe",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "insert:|",
+      "before": "key: ‸",
+      "after": "key: |‸"
+    },
+    {
+      "rule": "insert-json-closer",
+      "name": "json closing brace outdents a blank line",
+      "language": "json",
+      "indent": 2,
+      "operation": "insert:}",
+      "before": "{\n    ‸",
+      "after": "{\n  }‸"
+    },
+    {
+      "rule": "insert-json-closer",
+      "name": "json closing bracket mid-line does not outdent",
+      "language": "json",
+      "indent": 2,
+      "operation": "insert:]",
+      "before": "  [1, 2‸",
+      "after": "  [1, 2]‸"
+    },
+    {
+      "rule": "insert-json-closer",
+      "name": "json closer removes partial indentation",
+      "language": "json",
+      "indent": 2,
+      "operation": "insert:}",
+      "before": "{\n ‸",
+      "after": "{\n}‸"
+    },
+    {
+      "rule": "insert-json-closer",
+      "name": "json closer removes one tab",
+      "language": "json",
+      "indent": 2,
+      "operation": "insert:}",
+      "before": "\t‸",
+      "after": "}‸"
+    },
+    {
+      "rule": "insert-json-closer",
+      "name": "yaml closer does not outdent",
+      "language": "yaml",
+      "indent": 2,
+      "operation": "insert:}",
+      "before": "    ‸",
+      "after": "    }‸"
+    },
+    {
+      "rule": "utf16",
+      "name": "insert after an emoji",
+      "language": "plain",
+      "indent": 2,
+      "operation": "insert:=",
+      "before": "😀 ‸",
+      "after": "😀 =‸"
+    },
+    {
+      "rule": "utf16",
+      "name": "return after an emoji",
+      "language": "plain",
+      "indent": 2,
+      "operation": "return",
+      "before": "  😀‸",
+      "after": "  😀\n  ‸"
+    },
+    {
+      "rule": "utf16",
+      "name": "indent a CJK line",
+      "language": "plain",
+      "indent": 2,
+      "operation": "indent",
+      "before": "日本‸",
+      "after": "  日本‸"
+    },
+    {
+      "rule": "utf16",
+      "name": "comment after an emoji line",
+      "language": "env",
+      "indent": 2,
+      "operation": "toggle-comment",
+      "before": "«😀=1\nB=2»",
+      "after": "«# 😀=1\n# B=2»"
+    }
+  ]
+}

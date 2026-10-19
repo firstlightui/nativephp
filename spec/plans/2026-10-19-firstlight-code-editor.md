@@ -88,13 +88,14 @@ project) with Material 3, Paparazzi, swift-snapshot-testing.
 
 **Files:** create `tests/fixtures/code-editor/editing.json`, `tests/Feature/CodeEditorFixturesTest.php`
 
-Each case: `name`, `language`, `indent`, `text`, `selection` (`[start, end]`
-UTF-16 offsets), `operation` (`return`, `indent`, `outdent`,
-`toggle-comment`, `insert:<symbol>`), `expected_text`, `expected_selection`.
+Each case: `rule`, `name`, `language`, `indent`, `operation` (`return`,
+`indent`, `outdent`, `toggle-comment`, `insert:<symbol>`), `before`, and
+`after`. Text uses markers: `‸` for a collapsed cursor, `«` and `»` for a
+range. Platform tests strip the markers and compare UTF-16 offsets.
 
 - [ ] **Step 1:** Write the Pest schema test first: every case has the fields
-  above, known languages and operations, valid offsets, unique names, and
-  every design rule has at least one case. Run it and confirm it fails because
+  above, known languages and operations, exactly one cursor or ordered range per side,
+  unique names, and every design rule and language has at least one case. Run it and confirm it fails because
   the fixture file doesn't exist.
 - [ ] **Step 2:** Author cases covering at least:
   - Return whitespace carry-over (all languages, including tab-indented lines).
@@ -188,6 +189,26 @@ UTF-16 offsets), `operation` (`return`, `indent`, `outdent`,
 - [ ] **Step 3:** Paparazzi states matching Task 4 Step 3.
 - [ ] **Step 4:** `testDebugUnitTest` and `verifyPaparazziDebug` with JDK 21; commit.
 
+### Task 6b: `follow` and scroll anchoring
+
+Approved 2026-10-19. The scroll-anchor rule applies to every Code Editor.
+
+- [ ] **Step 1:** Add `scroll-anchor` cases to the shared fixtures: append,
+  head trim, head trim plus append, growing last line, unrelated replacement
+  (fallback), repeated lines, anchor on the first line. Extend the Pest
+  schema test.
+- [ ] **Step 2:** Pest: `follow` defaults, strict boolean, `follow` without
+  `read-only` diagnostic, no `@change` on programmatic replacement.
+- [ ] **Step 3:** Engines (Swift and Kotlin) implement the anchor mapping
+  against the fixtures.
+- [ ] **Step 4:** iOS and Android renderer tests: initial pinned render;
+  pinned replacement stays at the end with and without head trim; scrolled-up
+  replacement keeps the anchored line in place; scrolling to the end re-pins;
+  replacement deferred while a read-only selection is held; no accessibility
+  announcement; horizontal offset unchanged with `wrap` off.
+- [ ] **Step 5:** Showcase: live-log fixture republishing every 3 s with a
+  2,000-line cap; commit.
+
 ### Task 7: Maintained contract and public docs
 
 **REQUIRED SUB-SKILL:** `firstlight-docs-write`
@@ -252,3 +273,4 @@ UTF-16 offsets), `operation` (`return`, `indent`, `outdent`,
 | Security note for `.env` | 7 |
 | Performance target | 8, 9 |
 | Docs, showcase, screenshots, review | 7–10 |
+| `follow` and scroll anchoring | 6b |

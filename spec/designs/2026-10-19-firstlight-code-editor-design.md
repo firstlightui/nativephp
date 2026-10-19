@@ -81,6 +81,7 @@ couple two different editing behaviours to one renderer.
 | `line-numbers` | Boolean; defaults to `true`. Shows a decorative gutter. |
 | `wrap` | Boolean; defaults to `true`. `false` keeps logical lines on one row with horizontal scrolling. |
 | `indent` | `2` or `4` spaces; defaults to `2`. Spaces only. |
+| `follow` | Boolean; defaults to `false`; requires `read-only`. Keeps the view pinned to the end across programmatic replacements. See [Following content](#following-content-follow). |
 | `min-lines` / `max-lines` | Positive integers; defaults `6` and `20`; `min-lines` ≤ `max-lines`. |
 | `a11y-label`, `a11y-hint` | Explicit accessibility semantics. |
 | `@change` | Current string under the standard `live` / `blur` / `debounce` policy. |
@@ -110,6 +111,26 @@ accepted by the PHP element API; Blade documentation uses kebab-case.
 - Indent and Outdent act on the current line or every line touched by the
   selection, and preserve the selection.
 - No automatic bracket or quote pairing in v1.
+
+Precise rules, as encoded in `tests/fixtures/code-editor/editing.json`:
+
+- Return carries the whitespace between the line start and the cursor
+  (spaces and tabs verbatim) and replaces any selection.
+- A JSON bracket counts only outside a string; strings honour `\"` escapes
+  and never span lines. Return between an opening bracket and its matching
+  closer splits the pair onto three lines with the cursor on the middle one.
+- A YAML `#` starts a comment only at the line start or after whitespace,
+  outside quotes. The trailing-colon rule ignores the comment.
+- A JSON closer typed or inserted on a whitespace-only prefix removes
+  `min(indent, spaces)` leading spaces, or one leading tab.
+- Indent skips empty lines. Outdent removes up to `indent` leading spaces or
+  one leading tab. A selection that ends at column zero excludes that line.
+- Toggle comment ignores blank lines. When every other selected line is
+  commented, it removes `#` and one following space; otherwise it inserts
+  `# ` on each line at the shallowest indentation of the selection.
+- Offsets map through edits by one rule: a collapsed cursor moves right past
+  text inserted at its position; a range selection grows to include text
+  inserted at its edges; positions inside removed text move to its start.
 
 Indentation rules are one shared table with shared golden fixtures executed by
 both XCTest and Kotlin tests, so both platforms produce byte-identical results.
@@ -150,6 +171,48 @@ buffer, move the cursor or selection, clear composition, dismiss the
 keyboard, reset scrolling, or clear undo. Different focused publications are
 retained for reconciliation. Unfocused programmatic publications replace the
 value without emitting `@change`. No `@submit`; Return always inserts a line.
+
+## Following content: `follow`
+
+Requested on 2026-10-19 by the first consumer, Forge Control, for a live
+deployment log that PHP republishes as a whole `value` every few seconds on
+a `read-only` editor, capped at 2,000 lines by trimming the head. Approved by
+the maintainer on 2026-10-19 as part of the contract.
+
+It also closes a gap in the approved contract: scroll behaviour on
+programmatic replacement was undefined. The scroll-anchor rule below applies
+to every Code Editor, with or without `follow`.
+
+| Prop | Contract |
+| --- | --- |
+| `follow` | Boolean; defaults to `false`. Requires `read-only`; `follow` without `read-only` fails with an actionable diagnostic. |
+
+- **Pinned state.** The view is pinned when its bottom edge is within one
+  line height of the end of the content. Initial render with `follow` starts
+  pinned at the end.
+- **Replacement while pinned.** After a programmatic replacement, the view
+  stays pinned to the end, including when the head was trimmed.
+- **Replacement while scrolled up.** The view does not move relative to the
+  content the person is reading (scroll anchor below). Scrolling back to the
+  end re-pins. Firstlight adds no "jump to latest" control; applications can
+  render their own and set `value`.
+- **Scroll anchor (all Code Editors).** The anchor is the first visible
+  line. If the text through the end of the anchor line is unchanged, the
+  offset is kept (append case). Otherwise, if the new text begins at old
+  line `k` and old lines `k` through the anchor line plus up to two lines of
+  context (never the old last line, which may still be growing) are
+  unchanged, the anchor moves to line `anchor − k` (head-trim case). If
+  neither holds, the previous scroll offset is kept, clamped to the new
+  content height. The view never jumps to the top. Anchor mapping is a pure
+  function in each platform's editing engine, proven by shared fixtures.
+- **Selection.** While a read-only editor holds a non-empty selection,
+  programmatic replacements are retained and applied when the selection
+  collapses or focus leaves, so selection and copy are never disturbed.
+- **Horizontal scroll** with `wrap` off is unchanged by replacements.
+- **Accessibility.** Replacements are not announced: no live region, no
+  value-change announcement on either platform, and assistive focus stays
+  where it was.
+- Programmatic replacements never emit `@change`.
 
 ## Platform expression
 
