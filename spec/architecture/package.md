@@ -19,6 +19,7 @@ sources:
   - spec/reference/action-authorization.md
   - spec/reference/catalogue-boundary.md
   - src/Components/Button.php
+  - src/Components/Concerns/DecodesBladeAttributes.php
   - src/Elements/Button.php
   - src/Components/Progress.php
   - src/Elements/Progress.php
@@ -50,7 +51,7 @@ The current renderer-backed path is:
 
 1. An application authors a self-closing Firstlight tag such as `<firstlight:segmented>` in an EDGE view.
 2. `FirstlightServiceProvider` registers `FirstlightTagPrecompiler` with Blade. While native tag compilation is active, the precompiler hands the tag to NativePHP's native precompiler and maps it to the package's native Blade component.
-3. The class under `src/Components/` identifies the public Element Tree type. `Segmented` publishes `firstlight.segmented`.
+3. The class under `src/Components/` identifies the public Element Tree type. `Segmented` publishes `firstlight.segmented`. Every adapter uses `DecodesBladeAttributes`: Blade HTML-escapes bound string attributes on class components, and the trait restores the exact PHP string before collection so text such as JSON never reaches native views as `&quot;`.
 4. `nativephp.json` binds that type to the PHP element class and the iOS and Android renderer identifiers.
 5. The class under `src/Elements/` validates authored values, normalizes them to primitive props, registers semantic callbacks, and publishes the node through the official Element Tree.
 6. The host resolves the renderer declared in the manifest. The Swift or Kotlin renderer decodes primitive node props, applies NativePHP semantic theme tokens, and renders a genuine platform control or idiomatic native composition.

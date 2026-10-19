@@ -71,7 +71,8 @@ selection collapses.
 ## Platform expression
 
 - iOS: TextKit 2 `UITextView` in a `UIViewRepresentable`, TextKit 2 gutter,
-  `inputAccessoryView` key row with Done, `UIKeyCommand` Tab and Shift-Tab, and
+  `inputAccessoryView` key row with Done on system glass (`UIGlassEffect`, or
+  `systemChromeMaterial` before iOS 26), `UIKeyCommand` Tab and Shift-Tab, and
   a text-view-owned `UndoManager`.
 - Android: `BasicTextField` on `TextFieldState` in
   `OutlinedTextFieldDefaults.DecorationBox`, a draw-phase gutter from
@@ -89,7 +90,8 @@ laid out left-to-right in RTL layouts.
 
 ## Evidence still required
 
-Physical-device IME and performance rows, and constitutional review. Simulator
-and emulator checks of the key row, undo, `follow`, anchoring, and a
-1,500-line live log are recorded in the review. See the
-[Code Editor implementation plan](../plans/2026-10-19-firstlight-code-editor.md).
+Physical-device rows: VoiceOver and TalkBack, IME composition (Japanese,
+Chinese, Korean, swipe), hardware keyboards, rapid input, increased contrast,
+RTL, and performance on reference devices. Simulator, emulator, and automated
+evidence passes; see the
+[Code Editor development review](../reviews/code-editor-development.md).

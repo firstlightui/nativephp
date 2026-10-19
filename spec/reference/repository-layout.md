@@ -28,7 +28,7 @@ sources:
 | `composer.json` | Composer identity, PHP dependencies, Laravel provider, and package scripts | Authored |
 | `nativephp.json` | NativePHP plugin identity, component registration, renderer identifiers, platforms, and minimum OS versions | Authored; registration authority |
 | `Package.swift` | Swift package, scheme, iOS floor, source target, and iOS test target | Authored; Apple build authority |
-| `src/Components/` | Public NativePHP Blade component adapters and Element Tree type selection | Authored |
+| `src/Components/` | Public NativePHP Blade component adapters and Element Tree type selection; `Concerns/DecodesBladeAttributes` undoes Blade's attribute escaping | Authored |
 | `src/Elements/` | Public value validation, primitive props, callback registration, and Element Tree contracts | Authored |
 | `src/Concerns/` | Screen-level PHP extensions such as Laravel field validation, form submission, action authorization, list pagination, and destructive list actions | Authored |
 | `src/Validation/` | MessageBag request-scope binding onto field `error` slots | Authored |

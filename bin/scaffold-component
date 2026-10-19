@@ -26,7 +26,8 @@ $files = [
 
         namespace FirstlightUI\Components;
 
-        // {$marker}: define the public Blade adapter contract first.
+        // {$marker}: define the public Blade adapter contract first, then use
+        // Concerns\DecodesBladeAttributes so bound text reaches native views unescaped.
         final class {$name}
         {
         }
