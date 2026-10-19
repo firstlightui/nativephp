@@ -441,12 +441,149 @@ final class CodeEditorRendererTests: XCTestCase {
         XCTAssertEqual(tallHeight - shortHeight, lineHeight * 2, accuracy: 0.5)
     }
 
+    // MARK: Follow and scroll anchoring
+
+    func testFollowStartsPinnedAtTheEnd() {
+        let editor = makeEditor(["read_only": true, "follow": true, "value": lines(1...60)])
+        host(editor)
+        editor.layoutIfNeeded()
+
+        XCTAssertGreaterThan(editor.textView.contentOffset.y, 0)
+        XCTAssertTrue(editor.isPinnedToEnd)
+        XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (60 - visibleLineCount(editor))), 1)
+    }
+
+    func testPinnedReplacementStaysAtTheEndWithAndWithoutHeadTrim() {
+        let editor = makeEditor(["read_only": true, "follow": true, "value": lines(1...60)])
+        host(editor)
+        editor.layoutIfNeeded()
+
+        editor.update(configuration: editor.configuration, text: lines(1...80), replacementRevision: 1)
+        XCTAssertTrue(editor.isPinnedToEnd)
+        XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (80 - visibleLineCount(editor))), 1)
+
+        editor.update(configuration: editor.configuration, text: lines(31...100), replacementRevision: 2)
+        XCTAssertTrue(editor.isPinnedToEnd)
+        XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (70 - visibleLineCount(editor))), 1)
+    }
+
+    func testScrolledUpReplacementKeepsTheAnchoredLineInPlace() {
+        let editor = makeEditor(["read_only": true, "follow": true, "value": lines(1...60)])
+        host(editor)
+        editor.layoutIfNeeded()
+        scroll(editor, toLine: 20, plus: 5)
+        XCTAssertFalse(editor.isPinnedToEnd)
+
+        editor.update(configuration: editor.configuration, text: lines(11...70), replacementRevision: 1)
+
+        XCTAssertFalse(editor.isPinnedToEnd)
+        XCTAssertEqual(editor.firstVisibleLine.line, 10)
+        XCTAssertEqual(editor.textView.contentOffset.y - editor.firstVisibleLine.top, 5, accuracy: 0.5)
+        XCTAssertEqual(lineText(editor, editor.firstVisibleLine.line), "line 21")
+    }
+
+    func testAnchoringAppliesWithoutFollowAndFallsBackToTheClampedOffset() {
+        let editor = makeEditor(["value": lines(1...60)])
+        host(editor)
+        editor.layoutIfNeeded()
+        scroll(editor, toLine: 30, plus: 0)
+        let offset = editor.textView.contentOffset.y
+
+        editor.update(configuration: editor.configuration, text: lines(1...65), replacementRevision: 1)
+        XCTAssertEqual(editor.textView.contentOffset.y, offset, accuracy: 0.5)
+        XCTAssertFalse(editor.isPinnedToEnd)
+
+        editor.update(configuration: editor.configuration, text: "unrelated\ncontent", replacementRevision: 2)
+        let maximum = max(0, editor.textView.contentSize.height - editor.textView.bounds.height)
+        XCTAssertEqual(editor.textView.contentOffset.y, maximum, accuracy: 0.5)
+    }
+
+    func testScrollingBackToTheEndRepins() {
+        let editor = makeEditor(["read_only": true, "follow": true, "value": lines(1...60)])
+        host(editor)
+        editor.layoutIfNeeded()
+        scroll(editor, toLine: 10, plus: 0)
+        editor.update(configuration: editor.configuration, text: lines(1...70), replacementRevision: 1)
+        XCTAssertEqual(editor.firstVisibleLine.line, 10)
+        XCTAssertFalse(editor.isPinnedToEnd)
+
+        let bottom = editor.textView.contentSize.height - editor.textView.bounds.height
+        editor.textView.setContentOffset(CGPoint(x: 0, y: bottom), animated: false)
+        editor.update(configuration: editor.configuration, text: lines(1...90), replacementRevision: 2)
+
+        XCTAssertTrue(editor.isPinnedToEnd)
+        XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (90 - visibleLineCount(editor))), 1)
+    }
+
+    func testReplacementWaitsWhileAReadOnlySelectionIsHeld() {
+        let editor = makeEditor(["read_only": true, "follow": true, "value": "one\ntwo"])
+        host(editor)
+        XCTAssertTrue(editor.textView.becomeFirstResponder())
+        editor.textView.selectedRange = NSRange(location: 0, length: 3)
+
+        editor.update(configuration: editor.configuration, text: "one\ntwo\nthree", replacementRevision: 1)
+        XCTAssertEqual(editor.textView.text, "one\ntwo")
+        XCTAssertEqual(editor.textView.selectedRange, NSRange(location: 0, length: 3))
+
+        editor.textView.selectedRange = NSRange(location: 2, length: 0)
+        editor.textViewDidChangeSelection(editor.textView)
+        XCTAssertEqual(editor.textView.text, "one\ntwo\nthree")
+
+        editor.textView.selectedRange = NSRange(location: 0, length: 3)
+        editor.update(configuration: editor.configuration, text: "four", replacementRevision: 2)
+        XCTAssertEqual(editor.textView.text, "one\ntwo\nthree")
+        _ = editor.textView.resignFirstResponder()
+        XCTAssertEqual(editor.textView.text, "four")
+    }
+
+    func testReplacementIsNotAnnounced() {
+        var published: [String] = []
+        let editor = makeEditor(["read_only": true, "follow": true, "value": lines(1...10)])
+        editor.onTextChange = { published.append($0) }
+        editor.update(configuration: editor.configuration, text: lines(1...12), replacementRevision: 1)
+
+        XCTAssertFalse(editor.textView.accessibilityTraits.contains(.updatesFrequently))
+        XCTAssertEqual(published, [])
+    }
+
+    func testReplacementKeepsTheHorizontalOffsetWithWrapOff() {
+        let long = (1...40).map { "line \($0) " + String(repeating: "x", count: 120) }.joined(separator: "\n")
+        let editor = makeEditor(["wrap": false, "value": long])
+        host(editor)
+        editor.layoutIfNeeded()
+        editor.textView.setContentOffset(CGPoint(x: 60, y: editor.textView.contentOffset.y), animated: false)
+
+        editor.update(configuration: editor.configuration, text: long + "\nmore", replacementRevision: 1)
+
+        XCTAssertEqual(editor.textView.contentOffset.x, 60, accuracy: 0.5)
+    }
+
     func testRendererCompilesAgainstNativePHPContractShims() {
         let renderer = CodeEditorRenderer(node: makeNode(["label": "Payload"]), events: CodeEditorRendererEvents { _ in })
         XCTAssertNotNil(renderer.body)
     }
 
     // MARK: Helpers
+
+    private func lines(_ range: ClosedRange<Int>) -> String {
+        range.map { "line \($0)" }.joined(separator: "\n")
+    }
+
+    private func lineText(_ editor: FirstlightCodeEditorView, _ line: Int) -> String {
+        editor.textView.text.components(separatedBy: "\n")[line]
+    }
+
+    private func visibleLineCount(_ editor: FirstlightCodeEditorView) -> Int {
+        let insets = editor.textView.textContainerInset
+        return Int(((editor.textView.bounds.height - insets.top - insets.bottom) / editor.textView.font!.lineHeight).rounded())
+    }
+
+    /// Scrolls so `line` (zero-based) starts `plus` points above the top edge.
+    private func scroll(_ editor: FirstlightCodeEditorView, toLine line: Int, plus: CGFloat) {
+        editor.textView.setContentOffset(CGPoint(x: 0, y: editor.top(ofLine: line) + plus), animated: false)
+        editor.layoutIfNeeded()
+        XCTAssertEqual(editor.firstVisibleLine.line, line)
+    }
 
     /// NSUndoManager groups registrations per run-loop event; real key presses are separate events.
     private func endEvent() {

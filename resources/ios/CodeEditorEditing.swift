@@ -309,3 +309,32 @@ enum CodeEditorEditing {
         return prefix
     }
 }
+
+/// Maps the first visible line across a programmatic replacement. Shared with Android through
+/// tests/fixtures/code-editor/scroll-anchor.json. `nil` keeps the previous scroll offset, clamped.
+enum CodeEditorScrollAnchor {
+    private static let contextLines = 2
+
+    static func anchorLine(before: String, after: String, anchorLine: Int) -> Int? {
+        let oldLines = lines(before)
+        guard oldLines.indices.contains(anchorLine) else { return nil }
+
+        let anchorEnd = oldLines.prefix(anchorLine + 1).reduce(0) { $0 + $1.count } + anchorLine
+        if Array(after.utf16).starts(with: Array(before.utf16).prefix(anchorEnd)) { return anchorLine }
+
+        let newLines = lines(after)
+        let contextEnd = anchorLine + min(contextLines, max(0, oldLines.count - 2 - anchorLine))
+        guard anchorLine >= 1 else { return nil }
+        for trimmed in 1...anchorLine {
+            let length = contextEnd - trimmed + 1
+            if length > newLines.count { continue }
+            if (0..<length).allSatisfy({ oldLines[trimmed + $0] == newLines[$0] }) { return anchorLine - trimmed }
+        }
+        return nil
+    }
+
+    /// Lines split on `\n` as UTF-16 code units, keeping a trailing empty line.
+    private static func lines(_ text: String) -> [[UInt16]] {
+        Array(text.utf16).split(separator: UInt16(UInt8(ascii: "\n")), omittingEmptySubsequences: false).map(Array.init)
+    }
+}

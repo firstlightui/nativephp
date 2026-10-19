@@ -97,6 +97,15 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
     private var appliedRevision: Int
     private var appliedAttributes: AppliedAttributes?
     private var lineCount = 1
+    private var deferredReplacement: String?
+    private var needsInitialPin: Bool
+
+    private struct ScrollPosition {
+        let pinned: Bool
+        let anchorLine: Int
+        let anchorDelta: CGFloat
+        let offset: CGPoint
+    }
 
     private struct AppliedAttributes: Equatable {
         let pointSize: CGFloat
@@ -107,11 +116,13 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
     init(configuration: CodeEditorRendererConfiguration, text: String, replacementRevision: Int = 0) {
         self.configuration = configuration
         appliedRevision = replacementRevision
+        needsInitialPin = configuration.follow
         textView = FirstlightCodeTextView(language: configuration.language, labels: configuration.keyLabels)
         super.init(frame: .zero)
         backgroundColor = .clear
         textView.delegate = self
         textView.onEdited = { [weak self] in self?.textDidChange() }
+        textView.onResign = { [weak self] in self?.applyDeferredReplacement() }
         addSubview(gutter)
         addSubview(textView)
         apply(configuration)
@@ -134,11 +145,65 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
         replaceProgrammatically(with: text)
     }
 
-    /// Server-owned replacement of the buffer. Never publishes a change; clears undo so the person
-    /// cannot undo into a value the server has superseded. Scroll anchoring (Task 6b) maps here.
+    /// Server-owned replacement of the buffer. Never publishes a change or posts an accessibility
+    /// notification; clears undo so the person cannot undo into a value the server has superseded.
+    /// A read-only selection holds the replacement until it collapses or focus leaves.
     func replaceProgrammatically(with text: String) {
+        if configuration.readOnly, textView.selectedRange.length > 0 {
+            deferredReplacement = text
+            return
+        }
+        deferredReplacement = nil
+        let before = textView.text ?? ""
+        let position = captureScrollPosition()
         setBuffer(text)
         textView.undoManager?.removeAllActions()
+        restore(position, before: before, after: text)
+    }
+
+    /// The view is pinned when its bottom edge is within one line height of the end of the content.
+    var isPinnedToEnd: Bool {
+        textView.layoutIfNeeded()
+        let bottom = textView.contentOffset.y + textView.bounds.height - textView.adjustedContentInset.bottom
+        return bottom >= textView.contentSize.height - lineHeight
+    }
+
+    /// Zero-based first visible logical line and its top in content coordinates.
+    var firstVisibleLine: (line: Int, top: CGFloat) {
+        let inset = textView.textContainerInset.top
+        guard let layoutManager = textView.textLayoutManager,
+              let contentManager = layoutManager.textContentManager,
+              let fragment = layoutManager.textLayoutFragment(
+                  // A line whose bottom edge sits exactly at the top edge is no longer visible.
+                  for: CGPoint(x: 0, y: max(0, textView.contentOffset.y - inset + 0.5))
+              )
+        else { return (0, inset) }
+        let offset = contentManager.offset(from: layoutManager.documentRange.location, to: fragment.rangeInElement.location)
+        let line = textView.text.utf16.prefix(offset).reduce(0) { $1 == 0x0A ? $0 + 1 : $0 }
+        return (line, fragment.layoutFragmentFrame.minY + inset)
+    }
+
+    /// Top of a zero-based logical line in content coordinates.
+    func top(ofLine line: Int) -> CGFloat {
+        let inset = textView.textContainerInset.top
+        let text = textView.text.utf16
+        var offset = 0
+        var remaining = line
+        for unit in text where remaining > 0 {
+            offset += 1
+            if unit == 0x0A { remaining -= 1 }
+        }
+        guard let layoutManager = textView.textLayoutManager,
+              let contentManager = layoutManager.textContentManager,
+              let location = contentManager.location(layoutManager.documentRange.location, offsetBy: offset)
+        else { return inset }
+        if let range = NSTextRange(location: layoutManager.documentRange.location, end: location) {
+            layoutManager.ensureLayout(for: range)
+        }
+        guard let fragment = layoutManager.textLayoutFragment(for: location), offset < text.count else {
+            return max(inset, textView.contentSize.height - textView.textContainerInset.bottom - lineHeight)
+        }
+        return fragment.layoutFragmentFrame.minY + inset
     }
 
     func height(forLines lines: Int) -> CGFloat {
@@ -165,6 +230,10 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
             textView.textContainer.size = CGSize(width: CodeEditorTypography.unwrappedWidth, height: .greatestFiniteMagnitude)
         }
         refreshGutter()
+        if needsInitialPin, bounds.height > 0 {
+            needsInitialPin = false
+            scrollToEnd(keepingX: textView.contentOffset.x)
+        }
     }
 
     // MARK: UITextViewDelegate
@@ -186,6 +255,10 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
 
     func textViewDidChange(_ textView: UITextView) {
         textDidChange()
+    }
+
+    func textViewDidChangeSelection(_ textView: UITextView) {
+        if textView.selectedRange.length == 0 { applyDeferredReplacement() }
     }
 
     func textViewDidBeginEditing(_ textView: UITextView) {
@@ -238,6 +311,59 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
         }
         gutter.font = font
         setNeedsLayout()
+    }
+
+    private func applyDeferredReplacement() {
+        guard let deferredReplacement else { return }
+        textView.selectedRange = NSRange(location: textView.selectedRange.location, length: 0)
+        replaceProgrammatically(with: deferredReplacement)
+    }
+
+    private func captureScrollPosition() -> ScrollPosition {
+        let offset = textView.contentOffset
+        let anchor = firstVisibleLine
+        return ScrollPosition(
+            pinned: configuration.follow && isPinnedToEnd,
+            anchorLine: anchor.line,
+            anchorDelta: offset.y - anchor.top,
+            offset: offset
+        )
+    }
+
+    /// Follow keeps a pinned view at the end; otherwise the first visible line stays put (append and
+    /// head-trim cases) or the previous offset is kept, clamped. Never jumps to the top.
+    private func restore(_ position: ScrollPosition, before: String, after: String) {
+        textView.layoutIfNeeded()
+        if position.pinned {
+            scrollToEnd(keepingX: position.offset.x)
+            return
+        }
+        var y = position.offset.y
+        if let line = CodeEditorScrollAnchor.anchorLine(before: before, after: after, anchorLine: position.anchorLine) {
+            y = top(ofLine: line) + position.anchorDelta
+        }
+        textView.layoutIfNeeded()
+        textView.setContentOffset(clamped(CGPoint(x: position.offset.x, y: y)), animated: false)
+    }
+
+    private func scrollToEnd(keepingX x: CGFloat) {
+        let length = textView.textStorage.length
+        if let layoutManager = textView.textLayoutManager {
+            layoutManager.ensureLayout(for: layoutManager.documentRange)
+        }
+        textView.layoutIfNeeded()
+        textView.setContentOffset(clamped(CGPoint(x: x, y: .greatestFiniteMagnitude)), animated: false)
+        if length > 0, !isPinnedToEnd {
+            textView.scrollRangeToVisible(NSRange(location: length, length: 0))
+            textView.setContentOffset(clamped(CGPoint(x: x, y: .greatestFiniteMagnitude)), animated: false)
+        }
+    }
+
+    private func clamped(_ point: CGPoint) -> CGPoint {
+        let insets = textView.adjustedContentInset
+        let maxX = max(-insets.left, textView.contentSize.width - textView.bounds.width + insets.right)
+        let maxY = max(-insets.top, textView.contentSize.height - textView.bounds.height + insets.bottom)
+        return CGPoint(x: min(max(point.x, -insets.left), maxX), y: min(max(point.y, -insets.top), maxY))
     }
 
     private func setBuffer(_ text: String) {
@@ -317,6 +443,7 @@ final class FirstlightCodeTextView: UITextView {
     let keyRow: CodeEditorKeyRow
     var hardwareKeyboardAttached: () -> Bool = { GCKeyboard.coalesced != nil }
     var onEdited: () -> Void = {}
+    var onResign: () -> Void = {}
     var textAttributes: [NSAttributedString.Key: Any] = [:] {
         didSet { typingAttributes = textAttributes }
     }
@@ -335,6 +462,8 @@ final class FirstlightCodeTextView: UITextView {
         baseAccessibilityTraits = accessibilityTraits
         backgroundColor = .clear
         textContainerInset = CodeEditorTypography.insets
+        // Embedded in a field: the screen's safe area is not this scroll view's concern.
+        contentInsetAdjustmentBehavior = .never
         textContainer.lineFragmentPadding = 0
         adjustsFontForContentSizeCategory = false
         autocorrectionType = .no
@@ -455,7 +584,10 @@ final class FirstlightCodeTextView: UITextView {
 
     override func resignFirstResponder() -> Bool {
         let resigned = super.resignFirstResponder()
-        if resigned { isInEditingSession = false }
+        if resigned {
+            isInEditingSession = false
+            onResign()
+        }
         return resigned
     }
 
