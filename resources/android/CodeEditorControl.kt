@@ -1,6 +1,8 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
 import android.content.res.Configuration
+import android.graphics.Rect
+import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
@@ -51,6 +53,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
@@ -271,8 +274,9 @@ internal fun FirstlightCodeEditorControl(
         if (keyRowVisible != null) {
             CodeEditorKeyRow(configuration, state, onOperation, onUndo, onRedo)
         } else {
+            val view = LocalView.current
             Popup(
-                popupPositionProvider = CodeEditorKeyRowPosition,
+                popupPositionProvider = remember(view) { CodeEditorKeyRowPosition(view) },
                 properties = PopupProperties(focusable = false),
             ) {
                 CodeEditorKeyRow(configuration, state, onOperation, onUndo, onRedo)
@@ -282,14 +286,25 @@ internal fun FirstlightCodeEditorControl(
 }
 
 /** Places the key row at the bottom of the visible window frame, which ends at the keyboard. */
-private object CodeEditorKeyRowPosition : PopupPositionProvider {
+private class CodeEditorKeyRowPosition(private val view: View) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
-    ) = IntOffset(0, windowSize.height - popupContentSize.height)
+    ): IntOffset {
+        val visibleFrame = Rect().also(view::getWindowVisibleDisplayFrame)
+        val windowOrigin = IntArray(2).also(view.rootView::getLocationOnScreen)
+        return codeEditorKeyRowOffset(visibleFrame.bottom, windowOrigin[1], popupContentSize.height)
+    }
 }
+
+/**
+ * Popup offsets are relative to the window origin, while the visible frame is in screen coordinates
+ * and starts below the status bar, so its height alone would leave a status-bar-sized gap.
+ */
+internal fun codeEditorKeyRowOffset(visibleFrameBottom: Int, windowOriginY: Int, popupHeight: Int): IntOffset =
+    IntOffset(0, visibleFrameBottom - windowOriginY - popupHeight)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

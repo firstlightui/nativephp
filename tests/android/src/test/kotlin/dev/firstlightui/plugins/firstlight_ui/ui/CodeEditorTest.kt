@@ -180,6 +180,12 @@ class CodeEditorContractTest {
         assertEquals(CodeEditorScrollRequest.ToLine(line = 1, offsetIntoLine = 0, generation = 1), state.scrollRequest)
     }
 
+    @Test fun `key row bottom meets the keyboard below the status bar`() {
+        // Visible frame [156, 1800) in screen coordinates; the popup window starts at the screen top.
+        assertEquals(1800 - 120, codeEditorKeyRowOffset(visibleFrameBottom = 1800, windowOriginY = 0, popupHeight = 120).y)
+        assertEquals(1800 - 40 - 120, codeEditorKeyRowOffset(visibleFrameBottom = 1800, windowOriginY = 40, popupHeight = 120).y)
+    }
+
     @Test fun `key rows match the design table for every language`() {
         fun symbols(language: CodeEditorLanguage) = codeEditorKeys(language).mapNotNull { it.text }
         fun labels(language: CodeEditorLanguage) = codeEditorKeys(language).map { it.labelProp }
