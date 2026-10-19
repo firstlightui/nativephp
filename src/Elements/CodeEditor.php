@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\Chrome;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -13,6 +14,32 @@ final class CodeEditor extends Element
     protected string $type = 'firstlight.code-editor';
 
     private const LANGUAGES = ['plain', 'json', 'yaml', 'env'];
+
+    /** Key-row labels and accessible names, published as package chrome. */
+    private const KEY_ROW_CHROME = [
+        'done_label' => 'done',
+        'indent_label' => 'indent',
+        'outdent_label' => 'outdent',
+        'undo_label' => 'undo',
+        'redo_label' => 'redo',
+        'toggle_comment_label' => 'toggle_comment',
+        'left_brace_label' => 'insert_left_brace',
+        'right_brace_label' => 'insert_right_brace',
+        'left_bracket_label' => 'insert_left_bracket',
+        'right_bracket_label' => 'insert_right_bracket',
+        'left_parenthesis_label' => 'insert_left_parenthesis',
+        'right_parenthesis_label' => 'insert_right_parenthesis',
+        'double_quote_label' => 'insert_double_quote',
+        'single_quote_label' => 'insert_single_quote',
+        'colon_label' => 'insert_colon',
+        'comma_label' => 'insert_comma',
+        'hyphen_label' => 'insert_hyphen',
+        'hash_label' => 'insert_hash',
+        'vertical_bar_label' => 'insert_vertical_bar',
+        'equals_label' => 'insert_equals',
+        'dollar_sign_label' => 'insert_dollar_sign',
+        'underscore_label' => 'insert_underscore',
+    ];
 
     private const EXCLUDED_ATTRIBUTES = [
         'placeholder', 'autocorrect', 'autocapitalize', 'keyboard', 'content-type',
@@ -247,6 +274,9 @@ final class CodeEditor extends Element
 
         $this->warnWhenUnlabelled();
         $props = $this->inputProps;
+        foreach (self::KEY_ROW_CHROME as $prop => $key) {
+            $props[$prop] = Chrome::string($key);
+        }
         if ($this->changeCallback !== null) {
             $props['on_change'] = $registry->register($this->changeCallback);
         }

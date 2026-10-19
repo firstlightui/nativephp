@@ -149,7 +149,9 @@ software keyboard:
 | `plain` | `(` `)` `[` `]` `{` `}` `"` `'` |
 | `yaml`, `env` | Toggle comment (`# ` prefix on the current or selected lines) |
 
-Symbols insert at the cursor or replace the selection. Every key insertion is
+Key labels and accessible names are package chrome (`lang/en/chrome.php`),
+published by PHP as `*_label` props with English native fallbacks; the symbols
+themselves are not translated. Symbols insert at the cursor or replace the selection. Every key insertion is
 one undoable edit that preserves IME composition rules (composition is committed
 first). Key-row edits publish through the same sync policy as typing.
 

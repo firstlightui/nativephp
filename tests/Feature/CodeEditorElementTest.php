@@ -48,7 +48,47 @@ it('publishes stable defaults', function () {
         'max_lines' => 20,
         'sync_mode' => 'live',
         'debounce_ms' => 300,
+        'done_label' => 'Done',
+        'indent_label' => 'Indent',
+        'outdent_label' => 'Outdent',
+        'undo_label' => 'Undo',
+        'redo_label' => 'Redo',
+        'toggle_comment_label' => 'Toggle comment',
+        'left_brace_label' => 'Insert left brace',
+        'right_brace_label' => 'Insert right brace',
+        'left_bracket_label' => 'Insert left bracket',
+        'right_bracket_label' => 'Insert right bracket',
+        'left_parenthesis_label' => 'Insert left parenthesis',
+        'right_parenthesis_label' => 'Insert right parenthesis',
+        'double_quote_label' => 'Insert double quote',
+        'single_quote_label' => 'Insert single quote',
+        'colon_label' => 'Insert colon',
+        'comma_label' => 'Insert comma',
+        'hyphen_label' => 'Insert hyphen',
+        'hash_label' => 'Insert hash',
+        'vertical_bar_label' => 'Insert vertical bar',
+        'equals_label' => 'Insert equals sign',
+        'dollar_sign_label' => 'Insert dollar sign',
+        'underscore_label' => 'Insert underscore',
     ]);
+});
+
+it('publishes translated key-row chrome', function () {
+    $translator = new Illuminate\Translation\Translator(new Illuminate\Translation\ArrayLoader, 'fr');
+    $translator->addLines(['chrome.indent' => 'Indenter', 'chrome.insert_left_brace' => 'Insérer une accolade ouvrante'], 'fr', 'firstlight');
+    $container = Illuminate\Container\Container::getInstance();
+    $previous = $container->bound('translator') ? $container->make('translator') : null;
+    $container->instance('translator', $translator);
+
+    try {
+        $props = collectCodeEditor(['label' => 'Payload'])['props'];
+    } finally {
+        $previous === null ? $container->forgetInstance('translator') : $container->instance('translator', $previous);
+    }
+
+    expect($props['indent_label'])->toBe('Indenter')
+        ->and($props['left_brace_label'])->toBe('Insérer une accolade ouvrante')
+        ->and($props['outdent_label'])->toBe('Outdent');
 });
 
 it('publishes complete code field metadata verbatim', function () {

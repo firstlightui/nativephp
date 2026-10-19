@@ -12,6 +12,7 @@ sources:
   - src/Elements/TimePicker.php
   - src/Elements/Media.php
   - src/Elements/SearchField.php
+  - src/Elements/CodeEditor.php
   - src/Elements/TextField.php
   - src/Elements/Select.php
   - src/Elements/ConfirmationDialog.php
@@ -49,7 +50,9 @@ publishes it as `firstlight-lang` to `langPath('vendor/firstlight')`.
 The English file is `lang/en/chrome.php`. Keys are `confirm`, `cancel`, `ok`,
 `dismiss`, `dismiss_feedback`, `clear`, `clear_search`, `clear_text`, `skip`,
 `done`, `crop`, `zoom_in`, `zoom_out`, `choose_media`, `photo_library`,
-`camera`, `browse_files`, `show_password`, and `hide_password`.
+`camera`, `browse_files`, `show_password`, `hide_password`, `indent`,
+`outdent`, `undo`, `redo`, `toggle_comment`, and the Code Editor symbol names
+`insert_left_brace` through `insert_underscore` (one per key-row symbol).
 
 Chrome uses the bound `translator` and `config` services. The package does
 not depend on `illuminate/foundation` or the `__()` helper.
@@ -66,6 +69,7 @@ not depend on `illuminate/foundation` or the `__()` helper.
 | Text Field | `clear_a11y_label`, `show_password_a11y_label`, `hide_password_a11y_label` | none |
 | Select | `done_label` | none; iOS searchable Done |
 | Feedback item | `dismiss_label`, `dismiss_a11y_label` | none |
+| Code Editor | `done_label`, `indent_label`, `outdent_label`, `undo_label`, `redo_label`, `toggle_comment_label`, and one `<symbol>_label` accessible name per key-row symbol (for example `left_brace_label`) | none |
 
 ## Inheritance rules
 
