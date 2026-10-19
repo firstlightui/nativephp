@@ -1,6 +1,6 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
-internal enum class CodeEditorLanguage(val wireName: String) {
+enum class CodeEditorLanguage(val wireName: String) {
     Plain("plain"),
     Json("json"),
     Yaml("yaml"),
@@ -14,13 +14,13 @@ internal enum class CodeEditorLanguage(val wireName: String) {
 }
 
 /** UTF-16 selection; [start] is never greater than [end]. */
-internal data class CodeEditorSelection(val start: Int, val end: Int) {
+data class CodeEditorSelection(val start: Int, val end: Int) {
     val collapsed: Boolean get() = start == end
 }
 
-internal data class CodeEditorEdit(val text: String, val selection: CodeEditorSelection)
+data class CodeEditorEdit(val text: String, val selection: CodeEditorSelection)
 
-internal sealed interface CodeEditorOperation {
+sealed interface CodeEditorOperation {
     data object Return : CodeEditorOperation
     data object Indent : CodeEditorOperation
     data object Outdent : CodeEditorOperation
