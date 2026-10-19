@@ -500,6 +500,23 @@ final class CodeEditorRendererTests: XCTestCase {
         XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (70 - visibleLineCount(editor))), 1)
     }
 
+    func testUnwrappedLogStaysPinnedWhenTheGutterWidens() {
+        func log(_ range: ClosedRange<Int>) -> String {
+            range.map { "[\($0)] deploy: step \($0) completed after a long build" }.joined(separator: "\n")
+        }
+        let editor = makeEditor(["read_only": true, "follow": true, "wrap": false, "value": log(1...60)])
+        host(editor)
+        editor.layoutIfNeeded()
+
+        // Four-digit line numbers widen the gutter and narrow the text view, which re-wraps every line.
+        editor.update(configuration: editor.configuration, text: log(1...1200), replacementRevision: 1)
+        editor.layoutIfNeeded()
+
+        XCTAssertTrue(editor.isPinnedToEnd)
+        XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (1200 - visibleLineCount(editor))), 1)
+        XCTAssertNotNil(editor.textView.textLayoutManager?.textViewportLayoutController.viewportRange)
+    }
+
     func testScrolledUpReplacementKeepsTheAnchoredLineInPlace() {
         let editor = makeEditor(["read_only": true, "follow": true, "value": lines(1...60)])
         host(editor)

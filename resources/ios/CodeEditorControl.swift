@@ -227,8 +227,18 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
         let width = gutterWidth
         gutter.frame = CGRect(x: 0, y: 0, width: width, height: bounds.height)
         textView.frame = CGRect(x: width, y: 0, width: max(0, bounds.width - width), height: bounds.height)
-        if !configuration.wrap {
+        if !configuration.wrap, textView.textContainer.size.width != CodeEditorTypography.unwrappedWidth {
+            // Resizing the text view fits its container to the new width and re-wraps every line, even
+            // with widthTracksTextView off. Restore the unwrapped width and re-measure, or the content
+            // keeps the wrapped height and the offset can sit past the real content with nothing drawn.
+            let pinned = configuration.follow && isPinnedToEnd
             textView.textContainer.size = CGSize(width: CodeEditorTypography.unwrappedWidth, height: .greatestFiniteMagnitude)
+            if pinned {
+                scrollToEnd(keepingX: textView.contentOffset.x)
+            } else {
+                measureContent()
+                textView.setContentOffset(clamped(textView.contentOffset), animated: false)
+            }
         }
         refreshGutter()
         if needsInitialPin, bounds.height > 0 {
@@ -351,15 +361,23 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
 
     private func scrollToEnd(keepingX x: CGFloat) {
         let length = textView.textStorage.length
-        if let layoutManager = textView.textLayoutManager {
-            layoutManager.ensureLayout(for: layoutManager.documentRange)
-        }
+        measureContent()
         textView.layoutIfNeeded()
         textView.setContentOffset(clamped(CGPoint(x: x, y: .greatestFiniteMagnitude)), animated: false)
         if length > 0, !isPinnedToEnd {
             textView.scrollRangeToVisible(NSRange(location: length, length: 0))
             textView.setContentOffset(clamped(CGPoint(x: x, y: .greatestFiniteMagnitude)), animated: false)
         }
+    }
+
+    /// Lays out the whole document and sizes the content to it. UITextView refreshes its content size
+    /// only during viewport layout, so a stale height would otherwise put the end offset past the content.
+    private func measureContent() {
+        guard let layoutManager = textView.textLayoutManager else { return }
+        layoutManager.ensureLayout(for: layoutManager.documentRange)
+        let insets = textView.textContainerInset
+        let height = ceil(layoutManager.usageBoundsForTextContainer.height + insets.top + insets.bottom)
+        textView.contentSize = CGSize(width: textView.contentSize.width, height: height)
     }
 
     private func clamped(_ point: CGPoint) -> CGPoint {
