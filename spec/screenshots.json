@@ -170,6 +170,16 @@
                 "android-dark": "docs/screenshots/segmented/android-dark.png"
             }
         },
+        "tabs": {
+            "route": "/captures/tabs",
+            "test": "php artisan test tests/Feature/TabsCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/tabs/ios-light.png",
+                "ios-dark": "docs/screenshots/tabs/ios-dark.png",
+                "android-light": "docs/screenshots/tabs/android-light.png",
+                "android-dark": "docs/screenshots/tabs/android-dark.png"
+            }
+        },
         "search-field": {
             "route": "/captures/search-field",
             "test": "php artisan test tests/Feature/SearchFieldCaptureTest.php",

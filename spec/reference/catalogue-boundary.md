@@ -28,7 +28,7 @@ Article VIII requires small, proven expansion. New public `<firstlight:...>` tag
 
 The catalogue is the set of types registered in `nativephp.json`. Add a tag only when the work is a control with a public contract, paired or adapted native expression, tests, documentation, and review.
 
-Typical catalogue members: fields, choices, actions, status, lists, and presentation (Alert Dialog, Confirmation Dialog, Modal, Bottom Sheet).
+Typical catalogue members: fields, choices, actions, status, lists, presentation (Alert Dialog, Confirmation Dialog, Modal, Bottom Sheet), and in-screen section selection (Tabs).
 
 ## PHP SuperNative extensions (no new tag required)
 
@@ -49,7 +49,7 @@ Further Laravel-shaped work (notification bridges) must follow the same pattern:
 Do not scaffold, adapt, or document these as Firstlight components:
 
 - **Layout primitives** — columns, rows, stacks, spacers, generic text, unconstrained style bags. Mobile UI already owns layout and typography.
-- **Navigation chrome** — bottom tabs, top bars, navigation stacks, FABs, route shells. Mobile UI owns application chrome. Laravel `route()` and middleware stay in the application.
+- **Navigation chrome** — bottom tabs, top bars, navigation stacks, FABs, route shells. Mobile UI owns application chrome. Laravel `route()` and middleware stay in the application. [Tabs](../components/tabs.md) is in the catalogue because it is a selection control for sections of one object: it owns no route, pane, pager, or bar, and pinning it under a top bar remains layout.
 - **Input masks and formatters** — client-side mask engines, currency widgets, or parallel formatted-value props on Text Field. Prefer `keyboard` / `content-type` plus PHP `prepareForValidation()`.
 - **Schema / form builders** — Filament- or JSON-schema-driven field factories, `->visible()` DSLs, or a public `<firstlight:form>` layout container. Blade `@if`, server-authoritative republish, Button `loading`, and `ValidatesFields` already compose screens.
 - **Auth and onboarding kits** — login, register, or settings frameworks. Compose List, Switch, Text Field, and Button in the application.

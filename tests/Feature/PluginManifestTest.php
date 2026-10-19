@@ -57,6 +57,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.tabs',
+            'element' => 'FirstlightUI\\Elements\\Tabs',
+            'blade' => 'FirstlightUI\\Components\\Tabs',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.TabsRenderer',
+            'ios_renderer' => 'TabsRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.status-label',
             'element' => 'FirstlightUI\\Elements\\StatusLabel',
             'blade' => 'FirstlightUI\\Components\\StatusLabel',

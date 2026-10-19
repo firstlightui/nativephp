@@ -41,6 +41,7 @@
 - [Pill Group](https://firstlightui.dev/components/pill-group): Public API, selection modes, state timing, accessibility, validation, and platform behaviour for Firstlight Pill Group.
 - [Progress](https://firstlightui.dev/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
 - [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
+- [Tabs](https://firstlightui.dev/components/tabs): Public API, state, badges, accessibility, validation, and platform behaviour for Firstlight Tabs.
 - [Search Field](https://firstlightui.dev/components/search-field): Public API, focused query synchronisation, native clear and submit behaviour, accessibility, and platform expression for Firstlight Search Field.
 - [Select](https://firstlightui.dev/components/select): Public API, stable values, searchable presentation, state timing, accessibility, and platform behaviour for Firstlight Select.
 - [Slider](https://firstlightui.dev/components/slider): Strict numeric grids, native draft synchronisation, accessibility, and paired platform behavior for Firstlight Slider.

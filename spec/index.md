@@ -38,6 +38,7 @@ sources:
 - [Destructive list actions](reference/destructive-list-actions.md) — Defines authorized Confirmation Dialog destruction of List rows by stable keys and `$listItems` republish.
 - [Package locale chrome](reference/package-locale.md) — Defines Firstlight-owned chrome strings and Date/Time picker application locale and timezone inheritance.
 - [Catalogue boundary](reference/catalogue-boundary.md) — Defines what belongs in the Firstlight catalogue, what is a PHP SuperNative extension, and what stays in Mobile UI.
+- [Tabs component contract](components/tabs.md) — Defines section values, badges, state timing, tab accessibility, the catalogue boundary, and native expression.
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
 - [Text Area component contract](components/text-area.md) — Defines focused multiline editing, line bounds, sync policies, accessibility, and the paired-renderer boundary.

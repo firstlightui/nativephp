@@ -43,6 +43,7 @@ sources:
 - [Pill Group](components/pill-group.md) — Configure compact single- or multiple-selection native options.
 - [Progress](components/progress.md) — Communicate determinate or indeterminate work with strict values and native accessibility.
 - [Segmented](components/segmented.md) — Look up the Segmented control's complete public contract and platform evidence.
+- [Tabs](components/tabs.md) — Switch between sections of one object with stable values, counts, and native tab semantics.
 - [Search Field](components/search-field.md) — Configure native query entry, clear, submission, and synchronisation behaviour.
 - [Select](components/select.md) — Choose one stable string or integer value with automatic searchable presentation for larger option sets.
 - [Slider](components/slider.md) — Choose one strictly validated numeric value from an evenly spaced native range.
