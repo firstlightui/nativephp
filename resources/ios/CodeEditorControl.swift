@@ -160,6 +160,8 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
         setBuffer(text)
         textView.resetUndoHistory()
         restore(position, before: before, after: text)
+        // A pinned replacement often leaves the offset unchanged, so no scroll event redraws the gutter.
+        refreshGutter()
     }
 
     /// The view is pinned when its bottom edge is within one line height of the end of the content.

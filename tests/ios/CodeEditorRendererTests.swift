@@ -498,6 +498,11 @@ final class CodeEditorRendererTests: XCTestCase {
         editor.update(configuration: editor.configuration, text: lines(31...100), replacementRevision: 2)
         XCTAssertTrue(editor.isPinnedToEnd)
         XCTAssertLessThanOrEqual(abs(editor.firstVisibleLine.line - (70 - visibleLineCount(editor))), 1)
+
+        // Same length, so the offset does not move: the gutter must still follow the new layout.
+        editor.update(configuration: editor.configuration, text: lines(56...125), replacementRevision: 3)
+        XCTAssertTrue(editor.isPinnedToEnd)
+        XCTAssertEqual(editor.gutter.entries.first?.number, editor.firstVisibleLine.line + 1)
     }
 
     func testUnwrappedLogStaysPinnedWhenTheGutterWidens() {
