@@ -70,7 +70,7 @@ the Mac mini runner; Android evidence comes from a Pixel 9 Pro emulator
 | I SuperNative first | PASS | An ordinary EDGE element with paired renderers and standard text-change events. No WebView, bridge function, or generated-tree edit. |
 | II Familiar APIs | PASS | `value`, `native:model` with live, blur, and debounce, `label`, `helper`, `error`, `disabled`, `read-only`, `a11y-label`, and `@change`. `placeholder` is deliberately rejected because code fields use helper text, as recorded in the design. No SwiftUI or Compose terms. |
 | III Stable values | PASS | The published string is exact, including after the Blade decoding fix. Programmatic replacement never emits `@change`. Invalid types, languages, indents, bounds, `follow` without `read-only`, and oversized values fail loudly. |
-| IV Equal platforms | PASS | Both renderers pass the same fixtures and contract. The iOS suite runs 272 tests with only the 9 baseline failures in other components. The Android suite runs 274 tests with only the 3 pre-existing AlertDialog Paparazzi failures. |
+| IV Equal platforms | PASS | Both renderers pass the same fixtures and contract. The iOS suite runs 272 tests with only the 9 baseline failures in other components. The Android suite runs 274 tests and passes; its 3 AlertDialog Paparazzi failures came from goldens that were never committed and are fixed in the following commit. |
 | V Native expression | PASS | iOS uses a TextKit 2 `UITextView`, an `inputAccessoryView` key row on `UIGlassEffect`, and `UIKeyCommand`. Android uses `BasicTextField` in Material 3 outlined decoration, a Material key row, and `TextFieldState` undo. |
 | VI Accessibility | PASS (automated), BLOCKED (runtime) | Names, error, hidden gutter, key names, targets, Dynamic Type, font scaling, and dark mode are covered. Screen-reader, increased-contrast, and RTL runtime checks are outstanding. |
 | VII Theming | PASS | NativePHP tokens and system field colours. Read-only now uses the same `secondarySystemBackground` as Text Area. No style bag; `class` is external layout. |
@@ -87,7 +87,7 @@ composer test                                   1,366 passed; 3 pre-existing fai
 bin/check-component CodeEditor --development    Constitution checks passed
 bin/check-docs --component=CodeEditor --development   Documentation checks passed
 composer validate --strict                      valid (package and showcase)
-tests/android/gradlew testDebugUnitTest verifyPaparazziDebug   274 tests, 3 failed (AlertDialog light, dark, fontScaleTwo; also fail on unchanged main)
+tests/android/gradlew testDebugUnitTest verifyPaparazziDebug   274 tests, 0 failed after the missing AlertDialog goldens were committed
 iOS full suite on iPhone 17 Pro simulator       272 tests, 9 baseline failures outside Code Editor
 showcase: vendor/bin/pest                       168 passed
 showcase: php artisan native:plugin:validate    passed; warning: no bridge_functions
