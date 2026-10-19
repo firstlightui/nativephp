@@ -59,3 +59,18 @@ it('covers every editing rule and language', function () {
     expect(array_values(array_unique(array_column($cases, 'rule'))))->toEqualCanonicalizing(CODE_EDITOR_RULES)
         ->and(array_values(array_unique(array_column($cases, 'language'))))->toEqualCanonicalizing(CODE_EDITOR_LANGUAGES);
 });
+
+it('describes every scroll-anchor case with in-range lines', function () {
+    $fixtures = json_decode((string) file_get_contents(__DIR__.'/../fixtures/code-editor/scroll-anchor.json'), true, flags: JSON_THROW_ON_ERROR);
+    $names = [];
+
+    foreach ($fixtures['cases'] as $case) {
+        expect(array_keys($case))->toBe(['name', 'before', 'after', 'anchor_line', 'expected_line'])
+            ->and($case['anchor_line'])->toBeInt()->toBeLessThan(count(explode("\n", $case['before'])))
+            ->and($case['expected_line'] === null || $case['expected_line'] < count(explode("\n", $case['after'])))->toBeTrue($case['name']);
+        $names[] = $case['name'];
+    }
+
+    expect($names)->toBe(array_values(array_unique($names)))
+        ->and(array_filter(array_column($fixtures['cases'], 'expected_line'), 'is_null'))->not->toBeEmpty();
+});

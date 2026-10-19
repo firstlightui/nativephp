@@ -241,3 +241,28 @@ internal object CodeEditorEditing {
         return prefix
     }
 }
+
+/**
+ * Maps the first visible line across a programmatic replacement, shared with iOS through
+ * tests/fixtures/code-editor/scroll-anchor.json. Null means keep the previous scroll offset, clamped.
+ */
+internal object CodeEditorScrollAnchor {
+    private const val CONTEXT_LINES = 2
+
+    fun anchorLine(before: String, after: String, anchorLine: Int): Int? {
+        val oldLines = before.split('\n')
+        if (anchorLine !in oldLines.indices) return null
+
+        val anchorEnd = oldLines.take(anchorLine + 1).sumOf { it.length } + anchorLine
+        if (after.startsWith(before.substring(0, anchorEnd))) return anchorLine
+
+        val newLines = after.split('\n')
+        val contextEnd = anchorLine + minOf(CONTEXT_LINES, maxOf(0, oldLines.lastIndex - 1 - anchorLine))
+        for (trimmed in 1..anchorLine) {
+            val length = contextEnd - trimmed + 1
+            if (length > newLines.size) continue
+            if ((0 until length).all { oldLines[trimmed + it] == newLines[it] }) return anchorLine - trimmed
+        }
+        return null
+    }
+}

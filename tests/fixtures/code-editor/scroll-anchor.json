@@ -1,0 +1,103 @@
+{
+  "description": "Shared Code Editor scroll-anchor cases. Lines split on \\n; anchor_line is the first visible line before a programmatic replacement; expected_line is its line in the new text, or null when the previous scroll offset is kept, clamped.",
+  "cases": [
+    {
+      "name": "append keeps the anchor line",
+      "before": "a\nb\nc\n",
+      "after": "a\nb\nc\nd\n",
+      "anchor_line": 1,
+      "expected_line": 1
+    },
+    {
+      "name": "growing last line keeps the anchor line",
+      "before": "a\nb\nc",
+      "after": "a\nb\ncd\ne",
+      "anchor_line": 2,
+      "expected_line": 2
+    },
+    {
+      "name": "identical text keeps the anchor line",
+      "before": "a\nb\nc\nd\n",
+      "after": "a\nb\nc\nd\n",
+      "anchor_line": 2,
+      "expected_line": 2
+    },
+    {
+      "name": "anchor on the first line with append",
+      "before": "a\nb\n",
+      "after": "a\nb\nc\n",
+      "anchor_line": 0,
+      "expected_line": 0
+    },
+    {
+      "name": "head trim moves the anchor up",
+      "before": "l1\nl2\nl3\nl4\nl5\n",
+      "after": "l3\nl4\nl5\n",
+      "anchor_line": 3,
+      "expected_line": 1
+    },
+    {
+      "name": "head trim plus append",
+      "before": "l1\nl2\nl3\nl4\nl5\n",
+      "after": "l2\nl3\nl4\nl5\nl6\n",
+      "anchor_line": 2,
+      "expected_line": 1
+    },
+    {
+      "name": "growing last line is not used as context",
+      "before": "l1\nl2\nl3\nl4",
+      "after": "l2\nl3\nl4 done\nl5",
+      "anchor_line": 1,
+      "expected_line": 0
+    },
+    {
+      "name": "repeated lines resolve to the true trim",
+      "before": "x\nx\nx\ny\nz\n",
+      "after": "x\ny\nz\n",
+      "anchor_line": 3,
+      "expected_line": 1
+    },
+    {
+      "name": "unchanged prefix wins over an equivalent trim",
+      "before": "a\nb\na\nb\na\nb\n",
+      "after": "a\nb\na\nb\n",
+      "anchor_line": 3,
+      "expected_line": 3
+    },
+    {
+      "name": "trimmed anchor line falls back",
+      "before": "l1\nl2\nl3\n",
+      "after": "l2\nl3\nl4\n",
+      "anchor_line": 0,
+      "expected_line": null
+    },
+    {
+      "name": "unrelated replacement falls back",
+      "before": "a\nb\nc\n",
+      "after": "x\ny\nz\n",
+      "anchor_line": 1,
+      "expected_line": null
+    },
+    {
+      "name": "changed context falls back",
+      "before": "h\na\nb\nc\nd\n",
+      "after": "a\nb\nX\nd\n",
+      "anchor_line": 2,
+      "expected_line": null
+    },
+    {
+      "name": "edit above the anchor falls back",
+      "before": "a\nb\nc\nd\n",
+      "after": "a\nB\nc\nd\n",
+      "anchor_line": 2,
+      "expected_line": null
+    },
+    {
+      "name": "emoji lines compare by content",
+      "before": "😀1\n😀2\n😀3\n",
+      "after": "😀2\n😀3\n😀4\n",
+      "anchor_line": 1,
+      "expected_line": 0
+    }
+  ]
+}

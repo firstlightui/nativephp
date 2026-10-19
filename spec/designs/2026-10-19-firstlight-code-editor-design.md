@@ -199,12 +199,13 @@ to every Code Editor, with or without `follow`.
 - **Scroll anchor (all Code Editors).** The anchor is the first visible
   line. If the text through the end of the anchor line is unchanged, the
   offset is kept (append case). Otherwise, if the new text begins at old
-  line `k` and old lines `k` through the anchor line plus up to two lines of
+  line `k` (the smallest such `k`, at most the anchor line) and old lines `k` through the anchor line plus up to two lines of
   context (never the old last line, which may still be growing) are
   unchanged, the anchor moves to line `anchor − k` (head-trim case). If
   neither holds, the previous scroll offset is kept, clamped to the new
   content height. The view never jumps to the top. Anchor mapping is a pure
-  function in each platform's editing engine, proven by shared fixtures.
+  function in each platform's editing engine, proven by
+  `tests/fixtures/code-editor/scroll-anchor.json`.
 - **Selection.** While a read-only editor holds a non-empty selection,
   programmatic replacements are retained and applied when the selection
   collapses or focus leaves, so selection and copy are never disturbed.
