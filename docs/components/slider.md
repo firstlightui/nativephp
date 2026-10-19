@@ -85,8 +85,7 @@ native draft, including when PHP rejects a proposal and keeps the prior value.
 
 Host the control in `FirstlightUI\NativeComponent` for the
 [nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
-It makes an unchanged full response observable on official unpatched Mobile
-`^4.6` / UI `^0.8` binaries without waiting for upstream #365. Revisions are
+It makes an unchanged full response observable to the renderers. Revisions are
 not per-event acknowledgements, do not prevent coalescing, and do not serialize
 simultaneous proposals. Wider release qualification remains pending.
 

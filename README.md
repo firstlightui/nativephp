@@ -11,7 +11,7 @@ Native controls for NativePHP, shaped for each platform. Firstlight exposes a sh
 | Dependency | Requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.6`, official unpatched binaries |
+| NativePHP Mobile | `^4.6` |
 | NativePHP Mobile UI | `^0.8` |
 | iOS / Android targets | iOS 18+ / API 29+ |
 
@@ -84,9 +84,7 @@ Firstlight-owned labels use Laravel's lang files, and Date and Time pickers inhe
 
 ## Response contract
 
-Firstlight stamps each complete screen response with a process-wide increasing revision, so an otherwise identical response still reaches the native renderers. Blade render paths are automatic. Hand-built Element roots must return `$this->response($element)`. Streaming is disabled.
-
-The upstream identical-frame bug [#365](https://github.com/NativePHP/mobile-air/issues/365) remains open, but Firstlight no longer depends on it. See the [response contract and limitations](docs/reference/compatibility.md#pre-alpha-runtime-limitation).
+Firstlight stamps each complete screen response with a process-wide increasing revision, so an otherwise identical response still reaches the native renderers. Blade render paths are automatic. Hand-built Element roots must return `$this->response($element)`. Streaming is disabled. See the [response contract and limitations](docs/reference/compatibility.md#pre-alpha-runtime-limitation).
 
 ## Documentation
 

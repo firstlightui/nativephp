@@ -111,8 +111,8 @@ Choice Group is [server-authoritative](../concepts/server-authoritative-state.md
 
 An unchanged PHP response must also release the pending-interaction guard.
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation)
-on official unpatched binaries. Revisions are not per-event acknowledgements
+[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+Revisions are not per-event acknowledgements
 and do not prevent coalescing or serialize simultaneous proposals.
 
 Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` modes are rejected.

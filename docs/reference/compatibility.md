@@ -35,8 +35,7 @@ After changing NativePHP versions, run `composer update` and `php artisan native
 ### Supported response-revision contract
 
 Extend `FirstlightUI\NativeComponent`, not the upstream EDGE base, for screens
-using Firstlight controls. Use official, unpatched NativePHP binaries at the
-floors above. No vendor or runtime binary modification is required.
+using Firstlight controls, with NativePHP at the floors above.
 
 The base stamps the **final chrome-wrapped root** with the integer prop
 `firstlight_response_revision`. Its counter is private, process-wide, and
@@ -75,10 +74,10 @@ frames in the shared C runtime. Android `treePublicationId`, shipped in Mobile
 4.1.0 ([#280](https://github.com/NativePHP/mobile-air/pull/280)), only helps after
 a publication reaches Kotlin. The cross-platform bug
 [#365](https://github.com/NativePHP/mobile-air/issues/365) remains upstream;
-Firstlight no longer plans to wait for it or ship the old Android binary patch.
+the response revision makes Firstlight independent of it.
 
 The permanent implementation was checked on October 19, 2026 with Mobile 4.6.0,
-Mobile UI 0.8.0, and official unpatched PHP 8.5.11: 14 nonstreaming phases each
+Mobile UI 0.8.0, and the official PHP 8.5.11 bundles: 14 nonstreaming phases each
 on an Android emulator and iOS simulator. Each phase delivered three proposals
 through a normal Blade screen using Firstlight's base, without app-authored
 revision props. Repeated Switch/Pill rejection, Segmented rejection, validation,
