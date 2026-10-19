@@ -268,6 +268,39 @@ final class CodeEditorRendererTests: XCTestCase {
         XCTAssertTrue(textView.delegate!.textView!(textView, shouldChangeTextIn: NSRange(location: 1, length: 0), replacementText: "a"))
     }
 
+    func testTypedTextAndKeyRowEditsUndoInTheOrderTheyHappened() {
+        let editor = makeEditor(["language": "json", "value": "}"])
+        _ = host(editor)
+        let textView = editor.textView
+        XCTAssertTrue(textView.becomeFirstResponder())
+        textView.selectedRange = NSRange(location: 1, length: 0)
+
+        textView.keyRow.press(.symbol("["))
+        endEvent()
+        textView.insertText("a")
+        endEvent()
+        textView.insertText("b")
+        endEvent()
+        textView.keyRow.press(.symbol("]"))
+        endEvent()
+        textView.insertText("c")
+        endEvent()
+        XCTAssertEqual(textView.text, "}[ab]c")
+
+        var undone: [String] = []
+        for _ in 0..<4 {
+            textView.keyRow.press(.undo)
+            endEvent()
+            undone.append(textView.text)
+        }
+        XCTAssertEqual(undone, ["}[ab]", "}[ab", "}[", "}"])
+        textView.keyRow.press(.redo)
+        endEvent()
+        textView.keyRow.press(.redo)
+        endEvent()
+        XCTAssertEqual(textView.text, "}[ab")
+    }
+
     func testMarkedTextIsCommittedBeforeKeyInsertion() {
         let editor = makeEditor(["value": ""])
         _ = host(editor)

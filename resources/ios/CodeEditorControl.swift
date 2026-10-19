@@ -127,6 +127,7 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
         addSubview(textView)
         apply(configuration)
         setBuffer(text)
+        textView.resetUndoHistory()
         registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (view: FirstlightCodeEditorView, _) in
             view.applyTextAttributes()
             view.setNeedsLayout()
@@ -157,7 +158,7 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
         let before = textView.text ?? ""
         let position = captureScrollPosition()
         setBuffer(text)
-        textView.undoManager?.removeAllActions()
+        textView.resetUndoHistory()
         restore(position, before: before, after: text)
     }
 
@@ -254,10 +255,12 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
     }
 
     func textViewDidChange(_ textView: UITextView) {
+        self.textView.recordUserChange()
         textDidChange()
     }
 
     func textViewDidChangeSelection(_ textView: UITextView) {
+        self.textView.recordSelectionChange()
         if textView.selectedRange.length == 0 { applyDeferredReplacement() }
     }
 
@@ -452,6 +455,9 @@ final class FirstlightCodeTextView: UITextView {
     private var accessibilityError = ""
     private var isInEditingSession = false
     private let ownedUndoManager = UndoManager()
+    /// The buffer and selection that undo history ends at; changes UIKit applies are diffed against it.
+    private var undoBaseline = (text: "", selection: NSRange(location: 0, length: 0))
+    private var typingRun: CodeEditorTypingRun?
     private var baseAccessibilityTraits: UIAccessibilityTraits = []
 
     init(language: CodeEditorLanguage, labels: CodeEditorKeyLabels) {
@@ -659,8 +665,57 @@ final class FirstlightCodeTextView: UITextView {
             textView.replace(inverse, with: removed, selecting: undoSelection, undoSelection: selection)
         }
         ownedUndoManager.endUndoGrouping()
+        typingRun = nil
+        undoBaseline = (textStorage.string, selection)
         scrollRangeToVisible(selection)
         onEdited()
+    }
+
+    /// Starts undo history afresh at the current buffer.
+    func resetUndoHistory() {
+        ownedUndoManager.removeAllActions()
+        typingRun = nil
+        undoBaseline = (text ?? "", selectedRange)
+    }
+
+    /// Records a change UIKit applied (typing, paste, dictation, committed IME text) as one undoable edit.
+    /// UIKit registers typing only with the text view's private undo manager, never with this one.
+    /// Consecutive insertions extend the same edit until the cursor moves or another edit happens.
+    func recordUserChange() {
+        guard markedTextRange == nil else { return }
+        let current = text ?? ""
+        let change = CodeEditorTextChange(from: undoBaseline.text, to: current)
+        defer { undoBaseline = (current, selectedRange) }
+        guard !change.isEmpty else { return }
+        if let run = typingRun, change.range.length == 0, change.range.location == run.end {
+            run.inserted += change.replacement.utf16.count
+            run.selection = selectedRange
+            return
+        }
+        let run = CodeEditorTypingRun(
+            location: change.range.location,
+            removed: (undoBaseline.text as NSString).substring(with: change.range),
+            inserted: change.replacement.utf16.count,
+            undoSelection: undoBaseline.selection,
+            selection: selectedRange
+        )
+        typingRun = change.replacement.isEmpty ? nil : run
+        ownedUndoManager.registerUndo(withTarget: self) { textView in
+            textView.replace(
+                NSRange(location: run.location, length: run.inserted),
+                with: run.removed,
+                selecting: run.undoSelection,
+                undoSelection: run.selection
+            )
+        }
+    }
+
+    /// Moving the cursor ends the current typing run.
+    func recordSelectionChange() {
+        guard isEditable, markedTextRange == nil, selectedRange != undoBaseline.selection,
+              text == undoBaseline.text else { return }
+        typingRun = nil
+        undoBaseline.selection = selectedRange
     }
 
     private func commitMarkedText() {
@@ -681,6 +736,24 @@ final class FirstlightCodeTextView: UITextView {
 
     @objc private func undoStateChanged() {
         keyRow.setUndoState(canUndo: ownedUndoManager.canUndo, canRedo: ownedUndoManager.canRedo)
+    }
+}
+
+/// A typed edit whose inserted length grows while the person keeps typing at its end.
+private final class CodeEditorTypingRun {
+    let location: Int
+    let removed: String
+    var inserted: Int
+    let undoSelection: NSRange
+    var selection: NSRange
+    var end: Int { location + inserted }
+
+    init(location: Int, removed: String, inserted: Int, undoSelection: NSRange, selection: NSRange) {
+        self.location = location
+        self.removed = removed
+        self.inserted = inserted
+        self.undoSelection = undoSelection
+        self.selection = selection
     }
 }
 
