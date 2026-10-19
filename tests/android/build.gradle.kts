@@ -89,6 +89,12 @@ android {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    inputs.dir(layout.projectDirectory.dir("../fixtures"))
+        .withPropertyName("sharedFixtures")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
 tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn("verifyFirstlightAndroidSourceLayout")
 }
