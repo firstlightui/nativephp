@@ -41,6 +41,7 @@ sources:
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
 - [Text Area component contract](components/text-area.md) — Defines focused multiline editing, line bounds, sync policies, accessibility, and the paired-renderer boundary.
+- [Code Editor component contract](components/code-editor.md) — Defines focused code editing, shared indentation and scroll-anchor fixtures, key row, follow mode, and the paired-renderer boundary.
 - [Package architecture](architecture/package.md) — Maps the public PHP API to the iOS and Android renderer lifecycle.
 - [Adding components](workflows/adding-components.md) — Defines the evidence-based workflow for delivering a paired Firstlight component.
 - [Testing](workflows/testing.md) — Defines useful contract, platform, showcase, and tooling verification.

@@ -230,6 +230,16 @@
                 "android-dark": "docs/screenshots/text-field/android-dark.png"
             }
         },
+        "code-editor": {
+            "route": "/captures/code-editor",
+            "test": "php artisan test tests/Feature/CodeEditorCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/code-editor/ios-light.png",
+                "ios-dark": "docs/screenshots/code-editor/ios-dark.png",
+                "android-light": "docs/screenshots/code-editor/android-light.png",
+                "android-dark": "docs/screenshots/code-editor/android-dark.png"
+            }
+        },
         "text-area": {
             "route": "/captures/text-area",
             "test": "php artisan test tests/Feature/TextAreaCaptureTest.php",

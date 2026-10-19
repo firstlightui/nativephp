@@ -262,3 +262,15 @@ it('precompiles the self-closing public model tag', function () {
         ->toContain('debounce-ms="500"')
         ->not->toContain('<firstlight:code-editor');
 });
+
+it('declares paired package renderer identifiers', function () {
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    expect($manifest['components'])->toContain([
+        'type' => 'firstlight.code-editor',
+        'element' => 'FirstlightUI\\Elements\\CodeEditor',
+        'blade' => 'FirstlightUI\\Components\\CodeEditor',
+        'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.CodeEditorRenderer',
+        'ios_renderer' => 'CodeEditorRenderer',
+        'self_closing' => true,
+    ]);
+});

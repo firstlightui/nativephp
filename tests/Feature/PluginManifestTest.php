@@ -177,6 +177,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.code-editor',
+            'element' => 'FirstlightUI\\Elements\\CodeEditor',
+            'blade' => 'FirstlightUI\\Components\\CodeEditor',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.CodeEditorRenderer',
+            'ios_renderer' => 'CodeEditorRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.date-picker',
             'element' => 'FirstlightUI\\Elements\\DatePicker',
             'blade' => 'FirstlightUI\\Components\\DatePicker',

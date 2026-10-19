@@ -50,6 +50,7 @@ sources:
 - [Status Label](components/status-label.md) — Look up display-only status text, semantic tones, accessibility, and platform evidence.
 - [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
 - [Text Area](components/text-area.md) — Configure native multiline editing, line bounds, validation, accessibility, and synchronisation.
+- [Code Editor](components/code-editor.md) — Edit JSON, YAML, env, and plain text with native indentation, a key row, and follow mode for live logs.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.
 - [ValidatesFields](reference/validates-fields.md) — Look up the public `validate()` contract, MessageBag binding, and current limitations.
 - [Compatibility](reference/compatibility.md) — Check the currently supported PHP, NativePHP, iOS, Android, and Swift versions.
