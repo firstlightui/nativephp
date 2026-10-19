@@ -52,6 +52,13 @@ final class CodeEditorSnapshotTests: XCTestCase {
     func testKeyRowSnapshot() {
         let row = CodeEditorKeyRow(language: .json, labels: .english)
         row.setUndoState(canUndo: true, canRedo: false)
+        if #available(iOS 26.0, *) {
+            XCTAssertTrue(row.backgroundView.effect is UIGlassEffect)
+        } else {
+            XCTAssertTrue(row.backgroundView.effect is UIBlurEffect)
+        }
+        // System material renders black off screen, so the snapshot covers the keys only.
+        row.backgroundView.isHidden = true
         let container = UIView(frame: CGRect(x: 0, y: 0, width: 375, height: 60))
         container.backgroundColor = .systemBackground
         row.frame = container.bounds

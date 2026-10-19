@@ -27,7 +27,7 @@ struct FirstlightCodeEditorField: View {
                 onFocusChanged: onFocusChanged
             )
             .background(
-                configuration.readOnly ? Color(uiColor: .systemBackground) : Color(uiColor: .secondarySystemBackground)
+                Color(uiColor: .secondarySystemBackground)
             )
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
@@ -1004,6 +1004,13 @@ final class CodeEditorKeyRow: UIInputView {
     private(set) var language: CodeEditorLanguage
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
+    /// System material behind the keys, so the page never shows through the row.
+    let backgroundView: UIVisualEffectView = {
+        if #available(iOS 26.0, *) {
+            return UIVisualEffectView(effect: UIGlassEffect())
+        }
+        return UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
+    }()
     private var canUndo = false
     private var canRedo = false
 
@@ -1021,11 +1028,17 @@ final class CodeEditorKeyRow: UIInputView {
         stack.translatesAutoresizingMaskIntoConstraints = false
         doneButton.translatesAutoresizingMaskIntoConstraints = false
         doneButton.addAction(UIAction { [weak self] _ in self?.onDone() }, for: .touchUpInside)
+        backgroundView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(backgroundView)
         addSubview(scrollView)
         scrollView.addSubview(stack)
         addSubview(doneButton)
 
         NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor),
             scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
             scrollView.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             scrollView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
