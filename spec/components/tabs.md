@@ -82,8 +82,8 @@ The group exposes its `a11y-label` or `label` and optional hint. Each tab expose
 
 ## Platform expression
 
-- iOS uses a native `UISegmentedControl`, which Apple's Human Interface Guidelines permit for switching between views, placed by the author directly under the navigation bar. A visible count is appended to the segment title, such as `Deployments (2)`. A SwiftUI accessibility representation exposes the group with the tab-bar trait and each segment as a selectable tab, so VoiceOver announces the tab name, badge text, selected state, and "Tab 2 of 4".
-- Android uses Material 3 `PrimaryTabRow` and `Tab` with the moving primary indicator, and a Material 3 `Badge` in a `BadgedBox` for counts. Each tab carries the Material tab role and collection position semantics.
+- iOS uses a native `UISegmentedControl`, which Apple's Human Interface Guidelines permit for switching between views, placed by the author full width directly under the navigation bar; the renderer insets it by the system horizontal margin. A visible count is appended to the segment title, such as `Deployments (2)`. A SwiftUI accessibility representation exposes the group with the tab-bar trait and each segment as a selectable tab, so VoiceOver announces the tab name, badge text, selected state, and "Tab 2 of 4".
+- Android uses Material 3 `PrimaryTabRow` and `Tab` with the moving primary indicator, and a Material 3 `Badge` inline after the label for counts, because `BadgedBox` overlaps its anchor and hides text labels. When a label does not fit the fixed row, the renderer switches to `PrimaryScrollableTabRow`. Each tab carries the Material tab role and collection position semantics.
 
 Both renderers use NativePHP semantic theme tokens and retain server-authoritative selection.
 

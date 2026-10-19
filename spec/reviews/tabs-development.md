@@ -10,6 +10,7 @@ sources:
   - docs/components/tabs.md
   - nativephp.json
   - spec/screenshots.json
+  - docs/screenshots/tabs
   - src/Elements/Tabs.php
   - resources/ios/TabsControl.swift
   - resources/ios/TabsRenderer.swift
@@ -24,11 +25,11 @@ sources:
 
 **Implementation verdict:** PASS
 
-**Development milestone verdict:** BLOCKED
+**Development milestone verdict:** PASS
 
 **Component-release verdict:** BLOCKED
 
-Reviewed on 2026-10-19 against an uncommitted working tree on package commit `09eb460` and the matching uncommitted showcase tree on `918cfa9`. The showcase was reinstalled from the package path repository before its tests ran.
+Reviewed on 2026-10-19. Automated evidence was first gathered on package `09eb460` and showcase `918cfa9`, and the implementation landed as package `19c69bf` and showcase `fb5f544`. The screenshot matrix was captured from package `19c69bf` plus the uncommitted iOS horizontal-margin change, with the showcase on `fb5f544`.
 
 ## Requirement review
 
@@ -43,9 +44,9 @@ Reviewed on 2026-10-19 against an uncommitted working tree on package commit `09
 | Accessibility structure | PASS (automated) | Robolectric proves the Tab role, selected and disabled state, badge text in the description, a 48 dp height, and collection position semantics. On iOS, an accessibility representation exposes a tab-bar container with a selectable button per segment. Showcase `assertAccessible()` passes. |
 | Large text | PASS (with note) | Android switches to the scrollable row at font scale 2.0. iOS caps segment titles at 24 pt like Segmented, so AX5 titles truncate and VoiceOver exposes the full names. |
 | Public documentation | PASS | `bin/check-component Tabs --development` passes. The docs page, indexes, LLM artefacts, and reserved screenshot manifest paths are present. |
-| Exact-package showcase | PASS | `/tabs` and `/captures/tabs` are added. The full showcase suite passes (163 tests). `native:plugin:validate` passes; its only warning is the intentional absence of bridge functions. |
-| iOS snapshot visuals | WARNING | Layer snapshots on iOS 26 do not draw the segmented selection pill, as with the existing Segmented snapshots. The Segmented simulator documentation capture shows the themed pill on device, but a Tabs on-device capture is still required. |
-| Runtime screenshot matrix | BLOCKED | `docs/screenshots/tabs/*` have not been captured from the showcase hosts. |
+| Exact-package showcase | PASS | `/tabs` and `/captures/tabs` are added. The full showcase suite passes (168 tests). `native:plugin:validate` passes; its only warning is the intentional absence of bridge functions. |
+| iOS snapshot visuals | PASS (with note) | Layer snapshots on iOS 26 do not draw the segmented selection pill, as with the existing Segmented snapshots. The simulator capture confirms the themed pill: red with white text in light, orange with dark text in dark. |
+| Runtime screenshot matrix | PASS | `bin/capture-doc-screenshots Tabs` captured `/captures/tabs` on an iPhone 17 Pro simulator (iOS 26.5, `EB44C64E-1579-4C13-A1F9-C44FBD496763`) and the `emulator-5554` Pixel 9 Pro emulator (Android 16). The first capture showed the iOS control edge to edge; the renderer now insets it by the system margin, and the recapture is published. The Android dark selected label uses `onSurface` because the theme accent fails text contrast there, while the indicator keeps the accent. |
 | VoiceOver and TalkBack announcements | BLOCKED | Announcement wording, including "Tab 2 of 4", requires a runtime screen-reader pass on both platforms. |
 | Physical-device interaction | BLOCKED | Motion, Reduced Motion, increased contrast, RTL, rapid input, and reconciliation have not been reviewed on physical devices. |
 
@@ -61,4 +62,4 @@ Reviewed on 2026-10-19 against an uncommitted working tree on package commit `09
 | VI Accessibility | PASS (automated), BLOCKED (runtime) | Roles, state, names, position, and targets are covered by automated checks. Screen-reader runtime checks are outstanding. |
 | VII Theming | PASS | Both renderers use NativePHP tokens with contrast-safe selected and badge colours. |
 | VIII Small expansion | PASS | One control with a concrete consumer (Forge Control hubs). Tabs adds no layout, pager, or pinning. |
-| IX Evidence | BLOCKED | Automated evidence passes. Device screenshots and physical-device rows are missing. |
+| IX Evidence | PASS (development), BLOCKED (release) | Automated evidence and the simulator and emulator screenshot matrix pass. Screen-reader and physical-device rows are missing. |

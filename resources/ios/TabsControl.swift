@@ -37,6 +37,9 @@ struct FirstlightTabsControl: View {
             onSelection: onSelection
         )
         .frame(maxWidth: .infinity, minHeight: 44)
+        // Android tab rows span the width; an iOS segmented control sits
+        // inside the system margin, so full-width Blade works on both.
+        .padding(.horizontal)
         .accessibilityRepresentation {
             // UISegmentedControl reads visible titles only. The representation
             // keeps the native control on screen while VoiceOver receives one

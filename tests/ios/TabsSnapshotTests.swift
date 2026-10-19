@@ -170,13 +170,14 @@ final class TabsControlSnapshotTests: XCTestCase {
     ) -> UIViewController {
         let view = VStack(alignment: .leading, spacing: 16) {
             tabsControl(selectedIndex: 2, disabled: false, style: style)
-            Text("No selection")
+            Text("No selection").padding(.horizontal)
             tabsControl(selectedIndex: nil, disabled: false, style: style)
-            Text("Disabled group")
+            Text("Disabled group").padding(.horizontal)
             tabsControl(selectedIndex: 1, disabled: true, style: style)
             Spacer()
         }
-        .padding(16)
+        // Full width, as documented: the control supplies its own iOS margin.
+        .padding(.vertical, 16)
         .background(Color(uiColor: .systemBackground))
 
         return TabsTraitHostingController(rootView: view, style: style, contentSize: contentSize)

@@ -161,7 +161,7 @@ Tabs fails before publication when `tabs` is not an array, has one or more than 
 
 ## Platform behaviour
 
-iOS uses a native `UISegmentedControl`. Place it directly under the navigation bar. Segments size to their labels, and a visible count follows the label, such as `Deployments (2)`. VoiceOver receives the group as a tab bar with one selectable tab per segment. Like Segmented, segment titles stop growing at accessibility text sizes and may truncate; VoiceOver still reads each full name.
+iOS uses a native `UISegmentedControl`. Place Tabs full width directly under the navigation bar: iOS insets the segmented control by the system margin, while the Android tab row spans the width. Segments size to their labels, and a visible count follows the label, such as `Deployments (2)`. VoiceOver receives the group as a tab bar with one selectable tab per segment. Like Segmented, segment titles stop growing at accessibility text sizes and may truncate; VoiceOver still reads each full name.
 
 Android uses Material 3 `PrimaryTabRow` with its moving indicator and a Material 3 `Badge` after the label. When a label does not fit its equal share of the width on one line, including at large font scales, the row switches to Material's `PrimaryScrollableTabRow`, as `TabLayout` does in its automatic mode.
 
@@ -170,3 +170,10 @@ Tabs does not pin itself under the top bar or animate between sections. Swiping 
 ## Compatibility
 
 Tabs supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers to be compiled into the host application.
+
+## Screenshots
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Tabs on iOS in light mode](../screenshots/tabs/ios-light.png) | ![Tabs on iOS in dark mode](../screenshots/tabs/ios-dark.png) |
+| Android | ![Tabs on Android in light mode](../screenshots/tabs/android-light.png) | ![Tabs on Android in dark mode](../screenshots/tabs/android-dark.png) |
