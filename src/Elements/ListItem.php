@@ -34,10 +34,6 @@ final class ListItem extends Element
         'trailingA11yLabel',
         'trailing-menu',
         'trailingMenu',
-        'leading-actions',
-        'leadingActions',
-        'trailing-actions',
-        'trailingActions',
         'trailing-badges',
         'trailingBadges',
         'on-swipe-delete',
@@ -93,9 +89,12 @@ final class ListItem extends Element
         'disabled' => false,
     ];
 
+    /** @var array<string, list<array<string, mixed>>> */
+    private array $swipeActions = [];
+
     public static function make(string $headline = ''): static
     {
-        $item = new static;
+        $item = new self;
 
         if ($headline !== '') {
             $item->headline($headline);
@@ -141,6 +140,69 @@ final class ListItem extends Element
         $this->applyLeadingAttributes($attrs);
         $this->applyTrailingAttributes($attrs);
         $this->applyAccessibilityAttributes($attrs);
+
+        foreach (['leading', 'trailing'] as $edge) {
+            if ($this->hasAny($attrs, ["{$edge}-actions", "{$edge}Actions"])) {
+                $actions = $this->firstValue($attrs, ["{$edge}-actions", "{$edge}Actions"]);
+                if (! is_array($actions)) {
+                    throw new InvalidArgumentException("Firstlight List Item `{$edge}-actions` must be an array.");
+                }
+
+                $this->{"{$edge}Actions"}($actions);
+            }
+        }
+    }
+
+    /** @param list<array<string, mixed>> $actions */
+    public function leadingActions(array $actions): static
+    {
+        return $this->setSwipeActions('leading', $actions);
+    }
+
+    /** @param list<array<string, mixed>> $actions */
+    public function trailingActions(array $actions): static
+    {
+        return $this->setSwipeActions('trailing', $actions);
+    }
+
+    /** @param array<array-key, mixed> $actions */
+    private function setSwipeActions(string $edge, array $actions): static
+    {
+        foreach ($actions as $action) {
+            if (! is_array($action)
+                || array_diff(array_keys($action), ['method', 'label', 'icon', 'ios', 'android', 'role']) !== []) {
+                throw new InvalidArgumentException("Firstlight List Item `{$edge}-actions` accepts action arrays with method, label, icon, ios, android, and role only.");
+            }
+
+            foreach (['method', 'label'] as $key) {
+                if (! is_string($action[$key] ?? null) || trim($action[$key]) === '') {
+                    throw new InvalidArgumentException("Firstlight List Item swipe actions require a non-empty `{$key}`.");
+                }
+            }
+
+            if (! in_array($action['role'] ?? '', ['', 'destructive'], true)) {
+                throw new InvalidArgumentException('Firstlight List Item swipe action `role` must be empty or destructive.');
+            }
+
+            if (array_key_exists('icon', $action)
+                && (! is_string($action['icon']) || trim($action['icon']) === '')) {
+                throw new InvalidArgumentException('Firstlight List Item swipe action `icon` must be a non-empty string.');
+            }
+
+            foreach (['ios' => IosSymbol::class, 'android' => AndroidSymbol::class] as $key => $symbol) {
+                if (! array_key_exists($key, $action)) {
+                    continue;
+                }
+                if (! isset($action['icon'])
+                    || (! $action[$key] instanceof $symbol && (! is_string($action[$key]) || trim($action[$key]) === ''))) {
+                    throw new InvalidArgumentException("Firstlight List Item swipe action `{$key}` requires a shared icon and a platform symbol or non-empty string.");
+                }
+            }
+        }
+
+        $this->swipeActions[$edge] = array_values($actions);
+
+        return $this;
     }
 
     public function headline(string $value): static
@@ -295,7 +357,30 @@ final class ListItem extends Element
             throw new InvalidArgumentException('Firstlight List Item requires `@press`.');
         }
 
-        return $this->listItemProps;
+        $props = $this->listItemProps;
+        foreach ($this->swipeActions as $edge => $actions) {
+            if ($actions === []) {
+                continue;
+            }
+
+            $resolved = [];
+            foreach ($actions as $action) {
+                $icon = IconResolver::resolve($action['icon'] ?? null, $action['ios'] ?? null, $action['android'] ?? null);
+                $resolved[] = [
+                    'cb' => $registry->register($action['method']),
+                    'label' => $action['label'],
+                    'icon' => $icon['icon'] ?? '',
+                    'icon_variant' => $icon['variant'] ?? '',
+                    'role' => $action['role'] ?? '',
+                ];
+            }
+
+            // Firstlight owns the swipe layer. Upstream action props would add
+            // a second drawer and enable iOS full-swipe/optimistic deletion.
+            $props["firstlight_{$edge}_actions_json"] = json_encode($resolved, JSON_THROW_ON_ERROR);
+        }
+
+        return $props;
     }
 
     public function getStyle(): array

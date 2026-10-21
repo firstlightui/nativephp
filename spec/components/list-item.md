@@ -19,11 +19,12 @@ sources:
 `<firstlight:list-item>` is one tappable application row with a headline,
 optional supporting text, optional leading identity, and optional trailing
 affordance. It is an action/display component: PHP owns the action outcome and
-published metadata while native code owns transient press feedback.
+published metadata while native code owns transient press feedback and swipe
+reveal state.
 
 List Item is not a generic row layout, collection container, selectable row,
 navigation destination, or host for arbitrary controls. List and List Section
-may later arrange List Items without expanding this child contract.
+arrange List Items; swipe-enabled rows require a List host.
 
 ## Public API
 
@@ -56,7 +57,8 @@ may later arrange List Items without expanding this child contract.
 | `trailing-icon-ios` | Optional `IosSymbol|string` override; requires `trailing-icon`. |
 | `trailing-icon-android` | Optional `AndroidSymbol|string` override; requires `trailing-icon`; typed variants are preserved. |
 | `trailing-text` | Optional non-empty short metadata or affordance text. Mutually exclusive with `trailing-icon`. |
-| `disabled` | Prevents presses and exposes native disabled semantics. Defaults to `false`. |
+| `leading-actions`, `trailing-actions` | Optional arrays of labelled callback descriptors; see Swipe actions below. |
+| `disabled` | Prevents row and swipe action presses and exposes native disabled semantics. Defaults to `false`. |
 | `a11y-label` | Optional replacement for the row's combined visible accessible name. |
 | `a11y-hint` | Optional supplementary screen-reader context. |
 | `@press` | Required standard NativePHP action callback. |
@@ -94,9 +96,41 @@ Missing or blank `headline`, a missing press callback, non-string text, a
 non-boolean `disabled`, invalid icon override types, icon overrides without a
 shared fallback, multiple leading sources, multiple trailing affordances, and
 unsupported APIs fail with actionable `InvalidArgumentException` messages.
-Unsupported APIs include overline text, embedded controls, secondary actions,
-swipe actions, menus, long press, navigation directives, selection, field
-state, arbitrary colours, elevation, typography, and child content.
+Unsupported APIs include overline text, embedded controls, secondary embedded
+actions, menus, long press, navigation directives, selection, field state,
+arbitrary colours, elevation, typography, and child content.
+
+## Swipe actions
+
+List Item accepts `leading-actions` / `trailing-actions`, camelCase aliases, and
+fluent `leadingActions(array)` / `trailingActions(array)`. Each action requires
+non-empty string `method` and `label`. Optional keys are `icon`, `ios`, `android`,
+and `role` (empty or `destructive`). Platform icon overrides require a shared
+fallback and use the official IconResolver; Android variant metadata survives
+publication. Unknown keys and malformed descriptors fail before publication.
+
+Firstlight registers callback expressions through the standard EDGE registry
+and emits private `firstlight_leading_actions_json` /
+`firstlight_trailing_actions_json` string props containing `cb`, `label`, `icon`,
+`icon_variant`, and `role`. It never emits upstream `leading_actions_json`,
+`trailing_actions_json`, or `on_swipe_delete`: swipe ownership must not be
+duplicated by the delegated List renderer.
+
+Swipe rows belong inside List, including sections. The first action is nearest
+its logical edge on both platforms, including RTL. Actions are reveal-and-tap;
+neither edge supports full-swipe activation. Primary row press stays independent.
+The published action callback must still belong to the enabled row before
+dispatch. Programmatic changes never emit actions. Disabled rows expose no
+new swipe buttons or screen-reader actions. An already-open iOS system drawer
+may remain visible until dismissed; retained buttons must dispatch nothing after
+disabling. Android resets reveal state on row configuration changes and uses
+a foreground tap to close an open drawer.
+
+PHP owns deletion. Destructive intent selects native semantic theme colours,
+not SwiftUI's optimistic destructive-button role or a native dismissal state.
+The existing destructive-list helper remains responsible for confirmation,
+authorization, persistence, and row removal. Per-action tint/disabled options
+and the legacy swipe-delete shortcut remain excluded.
 
 ## Accessibility
 
@@ -118,6 +152,12 @@ nesting a second target inside the row.
 - Android uses Material 3 `ListItem` inside one enabled-aware clickable surface,
   with native headline/supporting typography, content slots, ripple and disabled
   semantics, and a 48-dp minimum.
+
+Swipe presentation belongs to the paired List Item controls: SwiftUI
+`swipeActions(allowsFullSwipe: false)` on the row root (also exposing VoiceOver
+actions), and an idiomatic Compose draggable reveal with Material surfaces,
+theme foreground/background pairs, and TalkBack custom actions. The upstream
+List adapter continues to own collection chrome, refresh, and pagination.
 
 Shared hierarchy and action meaning are identical while geometry, typography,
 pressed state, and spacing remain native to each platform.

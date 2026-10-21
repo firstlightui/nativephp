@@ -737,9 +737,10 @@ Firstlight deletes list rows in PHP. Pass a stable domain key into the helper,
 confirm with Confirmation Dialog, authorize again, destroy the model, and let
 `$listItems` republish without that row.
 
-There is no swipe-delete API, trailing action slot, or renderer index. See
-[Authorize actions](authorize-actions.md) for hide-versus-disable rules and
-[Paginate lists](paginate-lists.md) for `$listItems`.
+An optional labelled [List Item swipe action](../components/list-item.md#swipe-actions)
+can invoke the same request helper. There is no automatic swipe deletion or
+renderer index. See [Authorize actions](authorize-actions.md) for
+hide-versus-disable rules and [Paginate lists](paginate-lists.md) for `$listItems`.
 
 ## Declare the screen
 
@@ -814,6 +815,19 @@ Keys must be stable identities such as model ids. Do not pass loop indexes.
 Never omit a destructive List Item when the Policy denies it. Disable the row
 and keep supporting copy that explains the unavailable action when the
 surrounding interface does not already make that clear.
+
+To offer deletion from a swipe, add the following binding to the List Item
+above. It opens the same confirmation dialog and does not remove the row:
+
+```blade
+:trailing-actions="[
+    ['method' => 'requestDeletion('.$post->id.')', 'label' => 'Delete', 'role' => 'destructive'],
+]"
+```
+
+Swipe callbacks use stable keys just like `@press`. A disabled row exposes no
+swipe actions; authorization still runs in PHP when the action is requested and
+again when deletion is confirmed.
 
 ## Custom keys or database resolve
 
@@ -2654,7 +2668,9 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `trailing-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `trailing-icon`. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `trailing-icon`; typed variants are preserved on the wire. |
 | `trailing-text` | non-empty `string` | Optional short metadata or affordance text. |
-| `disabled` | `bool` | Prevents presses and exposes native disabled state. Defaults to `false`. |
+| `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
+| `trailing-actions` | `array` of action descriptors | Optional actions revealed from the logical trailing edge inside List. |
+| `disabled` | `bool` | Prevents row and swipe action presses and exposes native disabled state. Defaults to `false`. |
 | `a11y-label` | non-empty `string` | Optional replacement for the combined visible accessible name. |
 | `a11y-hint` | non-empty `string` | Optional supplementary VoiceOver or TalkBack guidance. |
 | `class` | `string` | External EDGE layout utilities. |
@@ -2667,6 +2683,53 @@ Blade examples use kebab-case names. The equivalent `leadingIcon`,
 `leadingIconIos`, `leadingIconAndroid`, `leadingAvatar`, `leadingMonogram`,
 `trailingIcon`, `trailingIconIos`, `trailingIconAndroid`, and `trailingText`
 aliases are also accepted for parity with NativePHP authoring.
+
+## Swipe actions
+
+Put swipe-enabled rows inside `firstlight:list`, directly or in a
+`firstlight:list-section`. The same example works on both platforms:
+
+```blade
+<firstlight:list>
+    <firstlight:list-item
+        headline="Message"
+        @press="openMessage(42)"
+        :leading-actions="[
+            ['method' => 'archive(42)', 'label' => 'Archive', 'icon' => 'archive'],
+        ]"
+        :trailing-actions="[
+            ['method' => 'requestDestroy(42)', 'label' => 'Delete', 'role' => 'destructive'],
+            ['method' => 'flag(42)', 'label' => 'Flag'],
+        ]"
+    />
+</firstlight:list>
+```
+
+Each descriptor requires a non-empty `method` callback expression and visible
+`label`. Optional fields are `icon` (shared fallback), `ios` (`IosSymbol|string`),
+`android` (`AndroidSymbol|string`), and `role` (empty or `destructive`). Icon
+overrides require a shared `icon`. Labels also name the accessibility actions.
+Empty arrays mean no actions on that edge. `leadingActions` / `trailingActions`
+attribute aliases and fluent `->leadingActions([...])` / `->trailingActions([...])`
+are supported.
+
+The first action is nearest its originating edge. Leading and trailing follow
+the reading direction, including RTL. Swipe to reveal, then tap a button:
+**full swipes never execute actions**. The ordinary `@press` remains independent.
+On Android, tapping an exposed foreground row closes its drawer; tap the closed
+row to invoke `@press`.
+
+Swiping never removes a row. Even `role="destructive"` only selects semantic
+destructive styling; PHP decides whether to confirm, authorize, and delete.
+Connect a Delete action to the [destructive-list helper](../how-to/destroy-list-items.md)
+using a stable domain key rather than a list position. Publishing updated
+actions or disabling the row replaces native action availability without
+emitting an event. Android also closes the drawer when row configuration changes.
+
+Action colours come from the native theme's primary/destructive token pairs.
+Per-action tint, enabled flags, full-swipe options, and the legacy
+`on-swipe-delete` shortcut are not supported. Omit unavailable actions or disable
+the entire row, and always authorize sensitive operations in PHP.
 
 ## Events and state timing
 
@@ -2681,15 +2744,19 @@ public function openAccount(): void
 ```
 
 List Item has no `value`, `native:model`, selected state, or `@change`. The
-native row owns only transient press feedback. PHP owns the action outcome and
-publishes any subsequent headline, supporting text, affordance, accessibility,
-or disabled state. Programmatic publications never emit a press.
+native row owns transient press feedback and swipe reveal state. PHP owns the
+action outcome and publishes any subsequent headline, supporting text,
+affordance, accessibility, or disabled state. Programmatic publications never
+emit a press.
 
 ## Disabled behaviour
 
 A disabled row retains its visible content, uses native disabled appearance,
-exposes disabled accessibility semantics, and does not emit `@press`. The
-`disabled` value must be a real boolean; strings and integers are rejected.
+exposes disabled accessibility semantics, and emits neither `@press` nor swipe
+action callbacks. New swipes and screen-reader actions are unavailable. On iOS,
+an already-open system drawer can remain visible until dismissed, but tapping
+its retained buttons emits no callback. Android closes the drawer immediately.
+The `disabled` value must be a real boolean; strings and integers are rejected.
 
 ## Leading identity and icons
 
@@ -2712,8 +2779,8 @@ a second action. It remains silent to assistive technology inside the row's
 single button node.
 
 Independent trailing buttons, switches, checkboxes, radio buttons, menus, and
-swipe actions are excluded. Compose a separate Firstlight control when the
-interface needs a second target.
+other embedded targets are excluded. Swipe actions are separate from these
+decorative trailing affordances.
 
 ## Accessibility
 
@@ -2727,15 +2794,19 @@ not add duplicate VoiceOver or TalkBack stops. Dynamic Type, Android font
 scaling, right-to-left layout, native contrast, focus, and press feedback remain
 platform-owned.
 
+Inside List, swipe actions are available through native VoiceOver actions and
+TalkBack custom actions without performing a swipe gesture. Revealed Android
+buttons also expose their visible labels and button roles.
+
 ## Validation and excluded APIs
 
 Firstlight rejects missing or blank headlines, missing `@press`, blank optional
 text, non-boolean disabled values, invalid icon override types, icon overrides
 without shared fallbacks, ambiguous leading or trailing content, and content
 slots. It also rejects overline text, embedded controls, independent trailing
-actions, swipe and long-press gestures, menus, navigation directives, model or
-selection state, loading and validation props, colours, elevation, typography,
-and per-platform layout escape hatches.
+actions, malformed or unlabelled swipe descriptors, long-press gestures, menus,
+navigation directives, model or selection state, loading and validation props,
+colours, elevation, typography, and per-platform layout escape hatches.
 
 ## Platform behaviour
 
@@ -2809,6 +2880,8 @@ see [Destroy list items](../how-to/destroy-list-items.md).
 ## Composition rules
 
 - Every row is a `firstlight:list-item` with its own required `@press` handler.
+- Rows may define [leading and trailing swipe actions](list-item.md#swipe-actions),
+  including rows inside sections. Swiping reveals actions; it never deletes a row.
 - Group related rows with `firstlight:list-section`. Sections require at least
   one List Item child.
 - Horizontal lists, virtualized windows, selectable collections, and arbitrary

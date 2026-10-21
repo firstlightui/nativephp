@@ -37,6 +37,7 @@ struct FirstlightListItemControl: View {
     let configuration: ListItemRendererConfiguration
     let tokens: NativeUITokens
     let onPress: () -> Void
+    var onAction: (Int) -> Void = { _ in }
 
     let leadingContentIsDecorative = true
     let trailingContentIsDecorative = true
@@ -76,6 +77,34 @@ struct FirstlightListItemControl: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(configuration.resolvedAccessibilityLabel))
         .accessibilityHint(Text(configuration.accessibilityHint))
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            actionButtons(configuration.leadingActions)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            actionButtons(configuration.trailingActions)
+        }
+    }
+
+    @ViewBuilder
+    private func actionButtons(_ actions: [ListItemSwipeAction]) -> some View {
+        if configuration.isEnabled {
+            ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
+                // A SwiftUI destructive-role swipe button can dismiss the row
+                // optimistically. Only PHP may remove it (possibly after confirmation).
+                Button {
+                    guard configuration.actionEvent(callbackID: action.cb) != nil else { return }
+                    onAction(action.cb)
+                } label: {
+                    if action.icon.isEmpty {
+                        Text(action.label)
+                    } else {
+                        Label(action.label, systemImage: getIconForName(action.icon))
+                    }
+                }
+                .tint(action.role == "destructive" ? tokens.destructive : tokens.primary)
+                .accessibilityLabel(Text(action.label))
+            }
+        }
     }
 
     @ViewBuilder

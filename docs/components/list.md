@@ -57,6 +57,8 @@ see [Destroy list items](../how-to/destroy-list-items.md).
 ## Composition rules
 
 - Every row is a `firstlight:list-item` with its own required `@press` handler.
+- Rows may define [leading and trailing swipe actions](list-item.md#swipe-actions),
+  including rows inside sections. Swiping reveals actions; it never deletes a row.
 - Group related rows with `firstlight:list-section`. Sections require at least
   one List Item child.
 - Horizontal lists, virtualized windows, selectable collections, and arbitrary

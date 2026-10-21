@@ -92,6 +92,62 @@ it('publishes stable defaults for a headline-only row', function () {
     ]);
 });
 
+it('publishes independently registered swipe actions without activating upstream dismissal', function () {
+    Platform::set(Platform::ANDROID);
+    $registry = new CallbackRegistry;
+    $tree = collectListItem([
+        'headline' => 'Message',
+        '_press' => 'openMessage(42)',
+        'leading-actions' => [
+            ['method' => 'archive(42)', 'label' => 'Archive', 'icon' => 'archive'],
+        ],
+        'trailingActions' => [
+            ['method' => 'requestDestroy(42)', 'label' => 'Delete', 'role' => 'destructive',
+                'icon' => 'person', 'ios' => ListItemTestIosIcon::Account, 'android' => ListItemTestAndroidIcon::Account],
+            ['method' => 'flag(73)', 'label' => 'Flag'],
+        ],
+    ], $registry);
+
+    $leading = json_decode($tree['props']['firstlight_leading_actions_json'], true, flags: JSON_THROW_ON_ERROR);
+    $trailing = json_decode($tree['props']['firstlight_trailing_actions_json'], true, flags: JSON_THROW_ON_ERROR);
+
+    expect($tree['props'])->not->toHaveKeys(['leading_actions_json', 'trailing_actions_json', 'on_swipe_delete'])
+        ->and(array_column($trailing, 'label'))->toBe(['Delete', 'Flag'])
+        ->and($trailing[0])->toMatchArray(['icon' => 'account_circle', 'icon_variant' => 'outlined', 'role' => 'destructive'])
+        ->and($registry->resolve($leading[0]['cb']))->toBe(['method' => 'archive', 'args' => [42]])
+        ->and($registry->resolve($trailing[0]['cb']))->toBe(['method' => 'requestDestroy', 'args' => [42]])
+        ->and($registry->resolve($trailing[1]['cb']))->toBe(['method' => 'flag', 'args' => [73]])
+        ->and($registry->resolve($tree['on_press']))->toBe(['method' => 'openMessage', 'args' => [42]]);
+});
+
+it('accepts fluent swipe actions and empty edges', function () {
+    $registry = new CallbackRegistry;
+    $tree = ListItem::make('Message')->onPress('openMessage')
+        ->leadingActions([])
+        ->trailingActions([['method' => 'archive(19)', 'label' => 'Archive']])
+        ->toArray($registry);
+
+    expect($tree['props'])->not->toHaveKey('firstlight_leading_actions_json')
+        ->and(json_decode($tree['props']['firstlight_trailing_actions_json'], true)[0])->toMatchArray([
+            'label' => 'Archive', 'icon' => '', 'icon_variant' => '', 'role' => '',
+        ]);
+});
+
+it('rejects malformed or inaccessible swipe actions', function (mixed $actions) {
+    collectListItem(['headline' => 'Message', '_press' => 'openMessage', 'trailing-actions' => $actions]);
+})->with([
+    'not an array' => ['delete'],
+    'not a descriptor' => [['delete']],
+    'missing method' => [[['label' => 'Delete']]],
+    'blank method' => [[['method' => ' ', 'label' => 'Delete']]],
+    'missing label' => [[['method' => 'delete']]],
+    'blank label' => [[['method' => 'delete', 'label' => ' ']]],
+    'unknown role' => [[['method' => 'delete', 'label' => 'Delete', 'role' => 'cancel']]],
+    'invalid icon' => [[['method' => 'delete', 'label' => 'Delete', 'icon' => 42]]],
+    'override without fallback' => [[['method' => 'delete', 'label' => 'Delete', 'ios' => 'trash']]],
+    'unsupported action field' => [[['method' => 'delete', 'label' => 'Delete', 'disabled' => true]]],
+])->throws(InvalidArgumentException::class);
+
 it('accepts each leading identity and exactly one trailing affordance', function (array $attributes, array $expected) {
     expect(collectListItem([
         'headline' => 'Account',
@@ -259,8 +315,6 @@ it('rejects APIs outside the narrow application row contract', function (string 
     ['trailing-icon-button', 'ellipsis'],
     ['trailing-a11y-label', 'More actions'],
     ['trailing-menu', []],
-    ['leading-actions', []],
-    ['trailing-actions', []],
     ['trailing-badges', []],
     ['on-swipe-delete', 'delete'],
     ['on-leading-change', 'changed'],

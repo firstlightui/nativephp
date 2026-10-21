@@ -104,9 +104,11 @@ reload from the database instead of walking `$listItems`.
 
 ## Product boundary
 
-List Item remains a single `@press` row. Confirmation Dialog remains the
-destructive confirmation surface with `tone="destructive"`. This extension does
-not enable swipe-delete, trailing action buttons, menus, or Multi-select.
+List Item keeps its primary `@press` and can separately expose labelled swipe
+actions. A destructive swipe callback may invoke the same PHP request helper.
+Confirmation Dialog remains the destructive confirmation surface with
+`tone="destructive"`; no gesture removes a row. This extension itself adds no
+swipe API, embedded trailing buttons, menus, or Multi-select.
 Presentation policy for denied destructive controls (keep visible, disable)
 stays in [Action authorization](action-authorization.md).
 

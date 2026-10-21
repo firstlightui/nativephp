@@ -59,11 +59,15 @@ inferred from empty props. Laravel paginator accumulation is a PHP extension
 over those events; see [List pagination](../reference/list-pagination.md).
 
 Unsupported child types, horizontal layout, virtualized windows, row selection,
-swipe actions, embedded controls, field bindings, and Mobile UI escape
+embedded controls, field bindings, and Mobile UI escape
 attributes fail with actionable `InvalidArgumentException` messages before
 publication.
 
 Boolean props require real booleans.
+
+List Item owns optional leading/trailing swipe actions, including rows inside
+sections. The List adapter handles only collection presentation; Firstlight's
+private row-action props avoid the upstream list's separate swipe wrapper.
 
 ## Accessibility
 

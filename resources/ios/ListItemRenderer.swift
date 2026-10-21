@@ -5,6 +5,20 @@ enum ListItemRendererEvent: Equatable {
     case press(callbackID: Int, nodeID: Int)
 }
 
+struct ListItemSwipeAction: Decodable, Equatable {
+    let cb: Int
+    let label: String
+    let icon: String
+    let icon_variant: String
+    let role: String
+
+    static func decode(_ json: String) -> [Self] {
+        guard let data = json.data(using: .utf8),
+              let actions = try? JSONDecoder().decode([Self].self, from: data) else { return [] }
+        return actions.filter { $0.cb != 0 && !$0.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+}
+
 struct ListItemRendererConfiguration: Equatable {
     let nodeID: Int
     let headline: String
@@ -19,6 +33,8 @@ struct ListItemRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let accessibilityHint: String
     let callbackID: Int
+    let leadingActions: [ListItemSwipeAction]
+    let trailingActions: [ListItemSwipeAction]
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -38,6 +54,8 @@ struct ListItemRendererConfiguration: Equatable {
         accessibilityLabel = node.props.getString("a11y_label")
         accessibilityHint = node.props.getString("a11y_hint")
         callbackID = node.onPress
+        leadingActions = ListItemSwipeAction.decode(node.props.getString("firstlight_leading_actions_json"))
+        trailingActions = ListItemSwipeAction.decode(node.props.getString("firstlight_trailing_actions_json"))
     }
 
     var isEnabled: Bool {
@@ -55,6 +73,11 @@ struct ListItemRendererConfiguration: Equatable {
     func pressEvent() -> ListItemRendererEvent? {
         guard isEnabled else { return nil }
 
+        return .press(callbackID: callbackID, nodeID: nodeID)
+    }
+
+    func actionEvent(callbackID: Int) -> ListItemRendererEvent? {
+        guard isEnabled, (leadingActions + trailingActions).contains(where: { $0.cb == callbackID }) else { return nil }
         return .press(callbackID: callbackID, nodeID: nodeID)
     }
 }
@@ -103,6 +126,10 @@ struct ListItemRenderer: View {
                     return
                 }
 
+                NativeUIBridge.sendPressEvent(callbackID, nodeId: nodeID)
+            },
+            onAction: { callback in
+                guard case let .press(callbackID, nodeID) = state.configuration.actionEvent(callbackID: callback) else { return }
                 NativeUIBridge.sendPressEvent(callbackID, nodeId: nodeID)
             }
         )

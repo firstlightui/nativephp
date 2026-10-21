@@ -20,9 +20,10 @@ Firstlight deletes list rows in PHP. Pass a stable domain key into the helper,
 confirm with Confirmation Dialog, authorize again, destroy the model, and let
 `$listItems` republish without that row.
 
-There is no swipe-delete API, trailing action slot, or renderer index. See
-[Authorize actions](authorize-actions.md) for hide-versus-disable rules and
-[Paginate lists](paginate-lists.md) for `$listItems`.
+An optional labelled [List Item swipe action](../components/list-item.md#swipe-actions)
+can invoke the same request helper. There is no automatic swipe deletion or
+renderer index. See [Authorize actions](authorize-actions.md) for
+hide-versus-disable rules and [Paginate lists](paginate-lists.md) for `$listItems`.
 
 ## Declare the screen
 
@@ -97,6 +98,19 @@ Keys must be stable identities such as model ids. Do not pass loop indexes.
 Never omit a destructive List Item when the Policy denies it. Disable the row
 and keep supporting copy that explains the unavailable action when the
 surrounding interface does not already make that clear.
+
+To offer deletion from a swipe, add the following binding to the List Item
+above. It opens the same confirmation dialog and does not remove the row:
+
+```blade
+:trailing-actions="[
+    ['method' => 'requestDeletion('.$post->id.')', 'label' => 'Delete', 'role' => 'destructive'],
+]"
+```
+
+Swipe callbacks use stable keys just like `@press`. A disabled row exposes no
+swipe actions; authorization still runs in PHP when the action is requested and
+again when deletion is confirmed.
 
 ## Custom keys or database resolve
 

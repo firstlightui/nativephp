@@ -51,6 +51,20 @@ final class ListItemSnapshotTests: XCTestCase {
         )
     }
 
+    func testSwipeActionsDispatchOnlyPublishedEnabledCallbacks() {
+        let configuration = ListItemRendererConfiguration(node: makeNode(actions: true))
+        XCTAssertEqual(configuration.leadingActions.map(\.label), ["Archive"])
+        XCTAssertEqual(configuration.trailingActions.map(\.label), ["Delete", "Flag"])
+        XCTAssertEqual(configuration.trailingActions.first?.role, "destructive")
+        XCTAssertEqual(configuration.actionEvent(callbackID: 52), .press(callbackID: 52, nodeID: 7))
+        XCTAssertNil(configuration.actionEvent(callbackID: 999))
+        XCTAssertNil(ListItemRendererConfiguration(node: makeNode(disabled: true, actions: true)).actionEvent(callbackID: 52))
+
+        var state = ListItemRendererState(node: makeNode(actions: true))
+        XCTAssertTrue(state.serverPublished(NativeUITree(version: 2, callbackCount: 1, root: makeNode())))
+        XCTAssertNil(state.configuration.actionEvent(callbackID: 52))
+    }
+
     func testServerPublicationUpdatesMetadataWithoutEmitting() {
         var state = ListItemRendererState(node: makeNode())
         let updated = makeNode(
@@ -156,7 +170,8 @@ final class ListItemSnapshotTests: XCTestCase {
         trailingType: String = "icon",
         trailingValue: String = "chevron.right",
         disabled: Bool = false,
-        callbackID: Int = 41
+        callbackID: Int = 41,
+        actions: Bool = false
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
@@ -175,6 +190,13 @@ final class ListItemSnapshotTests: XCTestCase {
                 "disabled": disabled,
                 "a11y_label": "Account settings",
                 "a11y_hint": "Opens account settings",
+                "firstlight_leading_actions_json": actions ? """
+                    [{"cb":51,"label":"Archive","icon":"archivebox","icon_variant":"","role":""}]
+                    """ : "",
+                "firstlight_trailing_actions_json": actions ? """
+                    [{"cb":52,"label":"Delete","icon":"trash","icon_variant":"","role":"destructive"},
+                     {"cb":53,"label":"Flag","icon":"flag","icon_variant":"","role":""}]
+                    """ : "",
             ]),
             onPress: callbackID,
             onLongPress: 0,

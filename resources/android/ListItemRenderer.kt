@@ -12,9 +12,35 @@ import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 import com.nativephp.mobile.ui.nativerender.NativeUITree
 import com.nativephp.plugins.native_ui.NativeUITheme
+import org.json.JSONArray
 
 sealed interface ListItemRendererEvent {
     data class Press(val callbackId: Int, val nodeId: Int) : ListItemRendererEvent
+}
+
+data class ListItemSwipeAction(
+    val callbackId: Int,
+    val label: String,
+    val icon: String,
+    val iconVariant: String,
+    val role: String,
+)
+
+private fun decodeListItemActions(json: String): List<ListItemSwipeAction> {
+    if (json.isEmpty()) return emptyList()
+    return runCatching {
+        val array = JSONArray(json)
+        (0 until array.length()).map { index ->
+            val action = array.getJSONObject(index)
+            ListItemSwipeAction(
+                callbackId = action.getInt("cb"),
+                label = action.getString("label"),
+                icon = action.getString("icon"),
+                iconVariant = action.getString("icon_variant"),
+                role = action.getString("role"),
+            )
+        }.filter { it.callbackId != 0 && it.label.isNotBlank() }
+    }.getOrDefault(emptyList())
 }
 
 data class ListItemRendererConfiguration(
@@ -31,6 +57,8 @@ data class ListItemRendererConfiguration(
     val accessibilityLabel: String,
     val accessibilityHint: String,
     val callbackId: Int,
+    val leadingActions: List<ListItemSwipeAction>,
+    val trailingActions: List<ListItemSwipeAction>,
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -50,6 +78,8 @@ data class ListItemRendererConfiguration(
         accessibilityLabel = node.props.getString("a11y_label"),
         accessibilityHint = node.props.getString("a11y_hint"),
         callbackId = node.onPress,
+        leadingActions = decodeListItemActions(node.props.getString("firstlight_leading_actions_json")),
+        trailingActions = decodeListItemActions(node.props.getString("firstlight_trailing_actions_json")),
     )
 
     val enabled: Boolean
@@ -60,6 +90,13 @@ data class ListItemRendererConfiguration(
     } else {
         null
     }
+
+    fun actionEvent(callbackId: Int): ListItemRendererEvent.Press? =
+        if (enabled && (leadingActions + trailingActions).any { it.callbackId == callbackId }) {
+            ListItemRendererEvent.Press(callbackId, nodeId)
+        } else {
+            null
+        }
 }
 
 class ListItemRendererState(node: NativeUINode) {
@@ -93,6 +130,11 @@ object FirstlightListItemRenderer {
             tokens = tokens,
             onPress = {
                 configuration.pressEvent()?.let { event ->
+                    NativeUIBridge.sendPressEvent(event.callbackId, event.nodeId)
+                }
+            },
+            onAction = { callbackId ->
+                state.configuration.actionEvent(callbackId)?.let { event ->
                     NativeUIBridge.sendPressEvent(event.callbackId, event.nodeId)
                 }
             },
