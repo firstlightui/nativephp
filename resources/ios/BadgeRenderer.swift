@@ -7,12 +7,14 @@ struct BadgeRendererConfiguration: Equatable {
     let tone: StatusLabelTone
     let accessibilityLabel: String
     let accessibilityHint: String
+    let warningColors: FirstlightWarningColors
 
     init(node: NativeUINode) {
         label = node.props.getString("label")
         tone = StatusLabelTone(rawValue: node.props.getString("tone", default: "neutral")) ?? .neutral
         accessibilityLabel = node.props.getString("a11y_label").isEmpty ? label : node.props.getString("a11y_label")
         accessibilityHint = node.props.getString("a11y_hint")
+        warningColors = FirstlightWarningColors(node: node)
     }
 }
 
@@ -51,7 +53,8 @@ struct BadgeRenderer: View {
             label: configuration.label,
             tokens: FirstlightStatusLabelTokens.from(
                 theme: themeStore.resolve(for: colorScheme), tone: configuration.tone,
-                traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light)
+                traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light),
+                warningColors: configuration.warningColors
             ),
             accessibilityLabel: configuration.accessibilityLabel,
             accessibilityHint: configuration.accessibilityHint

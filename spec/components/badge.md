@@ -33,6 +33,8 @@ There is no `value`, `native:model`, event, interaction state, field state, icon
 
 PHP normalizes either input to the primitive `label` consumed by both renderers. Count formatting is therefore identical on both platforms. Count zero publishes an empty label and both renderers produce no view or accessibility node. Server publications replace display metadata without emitting events.
 
+Only warning tone adds `warning_color`, `on_warning_color`, `dark_warning_color`, and `dark_on_warning_color` from `WarningColors::props()`. Both configurations decode `FirstlightWarningColors` and reconcile token-only publications. Native appearance selects the light or dark pair at render time; runtime theme changes require tree republication. Non-warning wire props remain unchanged. Warning uses the same independent, contrast-safe semantic pair as Status Label, not brand accent.
+
 ## Accessibility and platform expression
 
 The badge is static supplementary text. A visible label is its default accessible name; a numeric count requires contextual authored meaning. There is no button or live-region role.

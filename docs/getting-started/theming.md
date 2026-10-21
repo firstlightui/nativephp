@@ -51,14 +51,14 @@ Theme colours accept CSS hex values, Tailwind palette names such as `violet-600`
 
 ## Set warning colours
 
-Status Label, Callout, and Transient Feedback share the `warning` / `on-warning` pair on both platforms, independently of the brand `accent` pair. Add these keys to the same theme blocks:
+Status Label, Badge, Callout, and Transient Feedback share the `warning` / `on-warning` pair on both platforms, independently of the brand `accent` pair. Add these keys to the same theme blocks:
 
 ```php
 'light' => ['warning' => '#B45309', 'on-warning' => '#FFFFFF'],
 'dark' => ['warning' => '#FBBF24', 'on-warning' => '#1C1917'],
 ```
 
-These are also the fallback pairs when the effective theme has no corresponding warning token. NativePHP can derive dark values from configured light values; explicit dark overrides keep the intended amber presentation. All three surfaces share contrast-safe black/white text correction for inaccessible authored pairs. List Item's `leading-icon-tone="warning"` and `trailing-icon-tone="warning"` use the same warning colour in the active appearance.
+These are also the fallback pairs when the effective theme has no corresponding warning token. NativePHP can derive dark values from configured light values; explicit dark overrides keep the intended amber presentation. All four surfaces share contrast-safe black/white text correction for inaccessible authored pairs. List Item's `leading-icon-tone="warning"` and `trailing-icon-tone="warning"` use the same warning colour in the active appearance.
 
 Firstlight resolves these open-ended theme keys in PHP and publishes them with each component tree, because the native theme token structs do not retain custom keys. After a runtime `Theme::merge()`, republish the component tree to update warning colours. The light/dark pair already in that tree switches immediately with the native appearance.
 

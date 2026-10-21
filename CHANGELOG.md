@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Document List pagination with NativePHP's supported `@endReached` event spelling.
-- Share warning/on-warning theme tokens and accessible amber fallbacks across Status Label, Callout, and Feedback.
+- Share warning/on-warning theme tokens and accessible amber fallbacks across Status Label, Badge, Callout, and Feedback, including Android Badge's dark appearance.
 - Apply the resolved field name and hint to iOS Text Field's editable and secure inputs.
 - Treat null or empty List Item supporting/trailing text as absent.
 
