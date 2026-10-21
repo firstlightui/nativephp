@@ -12,7 +12,7 @@ it('declares the Firstlight package identity', function () {
         ->and($composer['require-dev']['pestphp/pest'])->toBe('^5.0')
         ->and($composer['autoload']['psr-4'])->toBe(['FirstlightUI\\' => 'src/'])
         ->and($manifest['name'])->toBe('firstlightui/nativephp')
-        ->and($manifest['version'])->toBe('0.1.0-alpha.1')
+        ->and($manifest['version'])->toBe('1.0.0-RC1')
         ->and($manifest['namespace'])->toBe('Firstlight')
         ->and($manifest['platforms'])->toBe(['android', 'ios'])
         ->and($manifest['android']['min_version'])->toBe(29)
@@ -190,6 +190,14 @@ it('registers the production component catalogue with canonical renderers', func
             'blade' => 'FirstlightUI\\Components\\CodeEditor',
             'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.CodeEditorRenderer',
             'ios_renderer' => 'CodeEditorRenderer',
+            'self_closing' => true,
+        ],
+        [
+            'type' => 'firstlight.media',
+            'element' => 'FirstlightUI\\Elements\\Media',
+            'blade' => 'FirstlightUI\\Components\\Media',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.MediaRenderer',
+            'ios_renderer' => 'MediaRenderer',
             'self_closing' => true,
         ],
         [

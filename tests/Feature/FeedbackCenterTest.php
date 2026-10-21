@@ -394,13 +394,14 @@ it('fails closed for malformed and action dismissal reasons', function (string $
         ->and($observed)->toBe([]);
 })->with(['', 'later', FeedbackDismissReason::Action->value]);
 
-it('keeps content-addressed callback ids stable across navigation while updating semantic records', function () {
+it('keeps callback ids stable on navigation and refreshes them when records are republished', function () {
     $store = app(FeedbackStore::class);
     app(FeedbackManager::class)->success('Saved')->id('saved')
         ->action('Undo', 'undo-save')->send();
     app(FeedbackManager::class)->warning('Offline')->id('offline')->hold()->send();
 
     $first = renderFeedbackCenterFrame($store);
+    $navigation = renderFeedbackCenterFrame($store);
 
     app(FeedbackManager::class)->success('Saved again')->id('saved')
         ->action('Undo', 'undo-save')->send();
@@ -420,10 +421,13 @@ it('keeps content-addressed callback ids stable across navigation while updating
         [1, 'on_manual'],
     ] as [$itemIndex, $callbackProp]) {
         $priorCallback = $first['tree']['children'][$itemIndex]['props'][$callbackProp];
+        $navigationCallback = $navigation['tree']['children'][$itemIndex]['props'][$callbackProp];
         $refreshedCallback = $second['tree']['children'][$itemIndex]['props'][$callbackProp];
 
-        expect($refreshedCallback)->toBeInt()->not->toBe(0)
-            ->and($refreshedCallback)->toBe($priorCallback)
+        expect($navigationCallback)->toBe($priorCallback)
+            ->and($navigation['host']->feedbackCallbacks()->resolve($navigationCallback))->not->toBeNull()
+            ->and($refreshedCallback)->toBeInt()->not->toBe(0)
+            ->and($refreshedCallback)->not->toBe($priorCallback)
             ->and($second['consumer']->resolve($refreshedCallback))->toBeNull()
             ->and($second['host']->feedbackCallbacks()->resolve($refreshedCallback))->not->toBeNull();
     }

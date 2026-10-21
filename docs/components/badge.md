@@ -69,6 +69,8 @@ Badge renders the latest published Element Tree metadata. It keeps no native sel
 
 Both platforms expose static-text semantics without button, selected, disabled, or live-region traits. Hidden zero badges expose no element. Text follows Dynamic Type on iOS and system font scaling on Android.
 
+Warning badges use the shared `warning` / `on-warning` theme pair for the active native appearance, independently of brand accent. After `Theme::merge()`, republish the component tree to refresh custom warning colours; see [theming](../getting-started/theming.md#set-warning-colours).
+
 Semantic theme colours are checked at render time. When a customised foreground and background are below 4.5:1 contrast, Firstlight uses whichever of black or white provides the stronger contrast.
 
 ## Validation and failure behaviour

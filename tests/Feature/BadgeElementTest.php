@@ -47,6 +47,28 @@ it('publishes a short label with neutral defaults', function () {
     expect(collectBadge(['label' => 'New'])['props'])->toBe(['label' => 'New', 'tone' => 'neutral']);
 });
 
+it('publishes custom warning pairs and refreshes them on republication only for warning', function () {
+    try {
+        \Native\Mobile\UI\Theme::load([
+            'light' => ['warning' => '#92400E', 'on-warning' => '#FFFFFF'],
+            'dark' => ['warning' => '#FDE68A', 'on-warning' => '#292524'],
+        ]);
+        $badge = Badge::make();
+        $badge->applyAttributes(['label' => 'Review', 'tone' => 'warning']);
+        expect($badge->toArray(new CallbackRegistry)['props'])->toBe([
+            'label' => 'Review', 'tone' => 'warning',
+            'warning_color' => '#92400E', 'on_warning_color' => '#FFFFFF',
+            'dark_warning_color' => '#FDE68A', 'dark_on_warning_color' => '#292524',
+        ]);
+        \Native\Mobile\UI\Theme::merge(['dark' => ['warning' => '#FBBF24']]);
+        expect($badge->toArray(new CallbackRegistry)['props']['dark_warning_color'])->toBe('#FBBF24');
+        $badge->tone('info');
+        expect($badge->toArray(new CallbackRegistry)['props'])->toBe(['label' => 'Review', 'tone' => 'info']);
+    } finally {
+        \Native\Mobile\UI\Theme::reset();
+    }
+});
+
 it('formats count boundaries once in PHP', function (int $count, string $label) {
     expect(collectBadge(['count' => $count, 'a11y-label' => "{$count} notifications"])['props']['label'])->toBe($label);
 })->with([[0, ''], [1, '1'], [99, '99'], [100, '99+'], [1000, '99+']]);

@@ -18,12 +18,14 @@ data class BadgeRendererConfiguration(
     val tone: StatusLabelTone,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
         label = node.props.getString("label"),
         tone = StatusLabelTone.fromWire(node.props.getString("tone", "neutral")),
         accessibilityLabel = node.props.getString("a11y_label").ifEmpty { node.props.getString("label") },
         accessibilityHint = node.props.getString("a11y_hint"),
+        warningColors = FirstlightWarningColors(node),
     )
 }
 
@@ -50,7 +52,7 @@ object FirstlightBadgeRenderer {
 
         FirstlightBadgeControl(
             label = configuration.label,
-            colors = resolveStatusLabelTokenColors(tokens, configuration.tone),
+            colors = resolveStatusLabelTokenColors(tokens, configuration.tone, configuration.warningColors, isSystemInDarkTheme()),
             accessibilityDescription = firstlightBadgeDescription(
                 configuration.label, configuration.accessibilityLabel, configuration.accessibilityHint
             ),

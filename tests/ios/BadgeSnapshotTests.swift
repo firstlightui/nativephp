@@ -7,6 +7,30 @@ import XCTest
 
 @MainActor
 final class BadgeSnapshotTests: XCTestCase {
+    func testWarningTokenOnlyPublicationRefreshesPalette() {
+        let original = makeNode(label: "New", tone: "warning")
+        let custom = NativeUINode(
+            id: 17, type: "firstlight_badge", layout: nil, style: nil,
+            props: GenericProps([
+                "label": "New", "tone": "warning", "a11y_label": "3 unread messages", "a11y_hint": "Open inbox",
+                "warning_color": "#92400E", "on_warning_color": "#FFFFFF",
+                "dark_warning_color": "#FDE68A", "dark_on_warning_color": "#292524",
+            ]), onPress: 0, onLongPress: 0, children: []
+        )
+        var state = BadgeRendererState(node: original)
+        let tree = NativeUITree(version: 1, callbackCount: 0, root: custom)
+        XCTAssertTrue(state.serverPublished(tree))
+        XCTAssertEqual(state.configuration.warningColors, FirstlightWarningColors(node: custom))
+        XCTAssertEqual(state.configuration.warningColors.light, "#92400E")
+        XCTAssertEqual(state.configuration.warningColors.onLight, "#FFFFFF")
+        XCTAssertEqual(state.configuration.warningColors.dark, "#FDE68A")
+        XCTAssertEqual(state.configuration.warningColors.onDark, "#292524")
+        XCTAssertEqual(state.configuration.accessibilityLabel, "3 unread messages")
+        XCTAssertFalse(state.serverPublished(tree))
+        XCTAssertTrue(state.serverPublished(NativeUITree(version: 2, callbackCount: 0, root: original)))
+        XCTAssertEqual(state.configuration.warningColors, FirstlightWarningColors())
+    }
+
     func testConfigurationAndStablePublication() {
         let node = makeNode(label: "3", tone: "danger")
         var state = BadgeRendererState(node: node)

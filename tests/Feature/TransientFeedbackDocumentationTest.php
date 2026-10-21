@@ -900,6 +900,7 @@ it('release gate cannot be starved past its timeout by continuously refilled out
 #!/usr/bin/env php
 <?php
 $stdoutWriter = proc_open(['/usr/bin/yes', 'stdout-fairness-marker'], [0 => ['pipe', 'r'], 1 => STDOUT, 2 => STDERR], $stdoutPipes);
+usleep(100_000);
 $stderrWriter = proc_open(['/usr/bin/yes', 'stderr-fairness-marker'], [0 => ['pipe', 'r'], 1 => STDERR, 2 => STDERR], $stderrPipes);
 sleep(9);
 PHP,

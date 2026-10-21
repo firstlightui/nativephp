@@ -60,6 +60,8 @@ final class CodeEditorSnapshotTests: XCTestCase {
         // System material renders black off screen, so the snapshot covers the keys only.
         row.backgroundView.isHidden = true
         let container = UIView(frame: CGRect(x: 0, y: 0, width: 375, height: 60))
+        container.overrideUserInterfaceStyle = .light
+        container.traitOverrides.preferredContentSizeCategory = .large
         container.backgroundColor = .systemBackground
         row.frame = container.bounds
         container.addSubview(row)

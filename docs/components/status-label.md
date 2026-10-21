@@ -68,7 +68,7 @@ A missing, `null`, empty, or whitespace-only `label` throws an `InvalidArgumentE
 
 ## Platform behaviour
 
-iOS composes SwiftUI `Text` with a `Capsule` background and native text accessibility. Android composes Material 3 `Text` in a capsule-shaped `Surface` with merged TalkBack semantics. Both use NativePHP semantic theme tokens while retaining platform-native typography, scaling, colour-scheme, and layout behaviour.
+iOS composes SwiftUI `Text` with native text accessibility. A single line keeps its pill shape; for wrapped labels, the corner radius is capped at half the scaled single-line height plus vertical padding so all text remains on the contrasting background. Android composes Material 3 `Text` in a capsule-shaped `Surface` with merged TalkBack semantics. Both use NativePHP semantic theme tokens while retaining platform-native typography, scaling, colour-scheme, and layout behaviour.
 
 ## Compatibility
 

@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\WarningColors;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -95,7 +96,8 @@ final class Badge extends Element
             default => (string) $this->count,
         };
 
-        return ['label' => $label, 'tone' => $this->tone];
+        return array_merge(['label' => $label, 'tone' => $this->tone],
+            $this->tone === 'warning' ? WarningColors::props() : []);
     }
 
     public function getStyle(): array
