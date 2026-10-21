@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\WarningColors;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -31,7 +32,7 @@ final class Callout extends Element
 
     public static function make(string $message = ''): static
     {
-        return (new static)->message($message);
+        return (new self)->message($message);
     }
 
     public function applyAttributes(array $attrs): void
@@ -122,6 +123,7 @@ final class Callout extends Element
             );
         }
 
-        return array_merge($this->calloutProps, $this->extraProps);
+        return array_merge($this->calloutProps, $this->extraProps,
+            $this->calloutProps['tone'] === 'warning' ? WarningColors::props() : []);
     }
 }

@@ -261,7 +261,6 @@ it('requires strict text booleans icon types and non-empty optional content', fu
 })->with([
     'numeric headline' => [['headline' => 42], '`headline` must be a string'],
     'numeric supporting' => [['supporting' => 42], '`supporting` must be a string'],
-    'blank supporting' => [['supporting' => '  '], 'non-empty `supporting`'],
     'string disabled' => [['disabled' => 'false'], '`disabled` must be a boolean'],
     'numeric a11y label' => [['a11y-label' => 42], '`a11y-label` must be a string'],
     'blank a11y label' => [['a11y-label' => '  '], 'non-empty `a11y-label`'],
@@ -270,7 +269,6 @@ it('requires strict text booleans icon types and non-empty optional content', fu
     'blank avatar' => [['leading-avatar' => ''], 'non-empty `leading-avatar`'],
     'long monogram' => [['leading-monogram' => 'ABC'], 'one or two characters'],
     'numeric monogram' => [['leading-monogram' => 42], '`leading-monogram` must be a string'],
-    'blank trailing text' => [['trailing-text' => ''], 'non-empty `trailing-text`'],
     'numeric leading icon' => [['leading-icon' => 42], '`leading-icon` must be a string'],
     'invalid iOS leading icon' => [['leading-icon' => 'person', 'leading-icon-ios' => 42], '`leading-icon-ios` must be an IosSymbol or string'],
     'invalid Android trailing icon' => [['trailing-icon' => 'forward', 'trailing-icon-android' => []], '`trailing-icon-android` must be an AndroidSymbol or string'],
@@ -297,6 +295,43 @@ it('rejects ambiguous leading and trailing content', function (array $attributes
         'trailing-icon' => 'chevron-right',
         'trailing-text' => 'Open',
     ], 'exactly one trailing'],
+])->throws(InvalidArgumentException::class);
+
+it('publishes icon tones and explicit colours with both attribute spellings', function () {
+    $tree = collectListItem([
+        'headline' => 'Issue', '_press' => 'openIssue',
+        'leading-icon' => 'error', 'leading-icon-tone' => 'danger', 'leading-icon-color' => '#123ABC',
+        'trailingIcon' => 'warning', 'trailingIconTone' => 'warning', 'trailingIconColor' => '#456',
+    ]);
+
+    expect($tree['props'])->toMatchArray([
+        'leading_icon_tone' => 'danger', 'leading_icon_color' => '#123ABC',
+        'trailing_icon_tone' => 'warning', 'trailing_icon_color' => '#456',
+        'warning_color' => '#B45309', 'dark_warning_color' => '#FBBF24',
+    ]);
+});
+
+it('clears optional text without clearing a trailing icon', function () {
+    $item = ListItem::make('Issue')->onPress('openIssue')->supporting('Old')->trailingText('Old');
+    $item->supporting(null)->trailingText('');
+    expect($item->toArray(new CallbackRegistry)['props'])->not->toHaveKeys(['supporting', 'trailing_type', 'trailing_value']);
+
+    $item->trailingText('New');
+    $item->applyAttributes(['trailingText' => null]);
+    expect($item->toArray(new CallbackRegistry)['props'])->not->toHaveKeys(['trailing_type', 'trailing_value']);
+
+    $item->trailingIcon('forward')->trailingText(null);
+    $item->applyAttributes(['trailing-text' => '', 'supporting' => null]);
+    expect($item->toArray(new CallbackRegistry)['props'])->toMatchArray(['trailing_type' => 'icon', 'trailing_value' => 'forward']);
+});
+
+it('rejects invalid icon tones and colours', function (array $attributes) {
+    collectListItem(['headline' => 'Issue', '_press' => 'openIssue', ...$attributes]);
+})->with([
+    [['leading-icon-tone' => 'brand']],
+    [['trailingIconTone' => 42]],
+    [['leading-icon-color' => 'red']],
+    [['trailingIconColor' => '#12345']],
 ])->throws(InvalidArgumentException::class);
 
 it('rejects APIs outside the narrow application row contract', function (string $attribute, mixed $value) {

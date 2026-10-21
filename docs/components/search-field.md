@@ -64,6 +64,12 @@ Plain `native:model` and `.live` publish every edit. `.blur` and `.lazy` publish
 on focus loss or submit. `.debounce.300ms` publishes after the quiet period and
 flushes on focus loss or submit; durations below 50 ms fail.
 
+If a separate button submits the query, use `native:model.live="query"`
+(or plain `native:model`). A button press is not the field's `@submit` event;
+blur/debounce changes are not guaranteed to reach PHP before its handler.
+For keyboard submission, accept the current query argument from `@submit`
+rather than relying on a separate button to flush it.
+
 Native typing, selection, cursor position, and marked-text composition stay in
 the focused editing buffer. PHP acknowledgements do not reset focus or selection,
 and programmatic values received while unfocused never emit user events.

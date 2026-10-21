@@ -23,6 +23,30 @@ import org.junit.Test
 
 class StatusLabelContractTest {
     @Test
+    fun `warning pair is decoded independently for all surfaces and both appearances`() {
+        val warningNode = node().copy(props = GenericProps(mapOf(
+            "warning_color" to "#92400E", "on_warning_color" to "#FFFFFF",
+            "dark_warning_color" to "#FDE68A", "dark_on_warning_color" to "#292524",
+        )))
+        val colors = StatusLabelRendererConfiguration(warningNode).warningColors
+        assertEquals(colors, CalloutRendererConfiguration(warningNode).warningColors)
+        assertEquals(colors, FeedbackCenterItemConfiguration(warningNode).warningColors)
+        listOf(false, true).forEach { dark ->
+            val pair = colors.resolve(dark)
+            val status = resolveStatusLabelTokenColors(NativeUITheme.light, StatusLabelTone.Warning, colors, dark)
+            val feedback = feedbackCenterColors(FeedbackCenterTone.Warning, lightColorScheme(), NativeUITheme.light, colors, dark)
+            assertEquals(pair.first, status.background)
+            assertEquals(pair.second, status.foreground)
+            assertEquals(pair.first, feedback.container)
+            assertEquals(pair.second, feedback.content)
+        }
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFB45309), FirstlightWarningColors().resolve(false).first)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFFBBF24), FirstlightWarningColors().resolve(true).first)
+        assertEquals(androidx.compose.ui.graphics.Color.White, FirstlightWarningColors().resolve(false).second)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF1C1917), FirstlightWarningColors().resolve(true).second)
+    }
+
+    @Test
     fun `renderer configuration decodes static text and accessibility`() {
         val configuration = StatusLabelRendererConfiguration(node())
 
@@ -109,7 +133,7 @@ class StatusLabelScreenshotTest {
 
     private fun snapshot(dark: Boolean) {
         paparazzi.snapshot {
-            MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+            FirstlightTestAppearance(dark) {
                 val tokens = if (dark) NativeUITheme.dark else NativeUITheme.light
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Column(
@@ -123,7 +147,7 @@ class StatusLabelScreenshotTest {
                                 } else {
                                     tone.name
                                 },
-                                colors = resolveStatusLabelTokenColors(tokens, tone),
+                                colors = resolveStatusLabelTokenColors(tokens, tone, isDark = dark),
                                 accessibilityDescription = "${tone.name} status",
                             )
                         }
@@ -147,7 +171,7 @@ class StatusLabelLargeTextScreenshotTest {
                     Column(modifier = Modifier.padding(16.dp)) {
                         FirstlightStatusLabelControl(
                             label = "Awaiting review from the referrals team",
-                            colors = resolveStatusLabelTokenColors(tokens, StatusLabelTone.Warning),
+                            colors = resolveStatusLabelTokenColors(tokens, StatusLabelTone.Warning, isDark = true),
                             accessibilityDescription = "Referral status: awaiting review",
                         )
                     }

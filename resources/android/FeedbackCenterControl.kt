@@ -67,7 +67,7 @@ class FeedbackCenterAnnouncementState {
 enum class FeedbackCenterToneColorRole {
     InverseSurface,
     Success,
-    Accent,
+    Warning,
     Destructive,
 }
 
@@ -75,7 +75,7 @@ data class FeedbackCenterRenderingPolicy(val tone: FeedbackCenterTone) {
     val colorRole: FeedbackCenterToneColorRole = when (tone) {
         FeedbackCenterTone.Default -> FeedbackCenterToneColorRole.InverseSurface
         FeedbackCenterTone.Success -> FeedbackCenterToneColorRole.Success
-        FeedbackCenterTone.Warning -> FeedbackCenterToneColorRole.Accent
+        FeedbackCenterTone.Warning -> FeedbackCenterToneColorRole.Warning
         FeedbackCenterTone.Danger -> FeedbackCenterToneColorRole.Destructive
     }
     val iconTestTag: String = "firstlight-feedback-tone-${tone.wireName}"
@@ -98,18 +98,23 @@ internal data class FeedbackCenterColors(
 )
 
 @Composable
-private fun feedbackCenterColors(tone: FeedbackCenterTone): FeedbackCenterColors =
+private fun feedbackCenterColors(tone: FeedbackCenterTone, warningColors: FirstlightWarningColors): FeedbackCenterColors =
     feedbackCenterColors(
         tone,
         MaterialTheme.colorScheme,
         if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
+        warningColors,
+        isSystemInDarkTheme(),
     )
 
 internal fun feedbackCenterColors(
     tone: FeedbackCenterTone,
     scheme: ColorScheme,
     tokens: NativeUITokens,
+    warningColors: FirstlightWarningColors = FirstlightWarningColors(),
+    isDark: Boolean = false,
 ): FeedbackCenterColors {
+    val warning = resolveStatusLabelTokenColors(tokens, StatusLabelTone.Warning, warningColors, isDark)
     return when (FeedbackCenterRenderingPolicy(tone).colorRole) {
         FeedbackCenterToneColorRole.InverseSurface -> FeedbackCenterColors(
             container = scheme.inverseSurface,
@@ -125,12 +130,12 @@ internal fun feedbackCenterColors(
             dismiss = tokens.onSuccess,
             accent = tokens.onSuccess,
         )
-        FeedbackCenterToneColorRole.Accent -> FeedbackCenterColors(
-            container = tokens.accent,
-            content = tokens.onAccent,
-            action = tokens.onAccent,
-            dismiss = tokens.onAccent,
-            accent = tokens.onAccent,
+        FeedbackCenterToneColorRole.Warning -> FeedbackCenterColors(
+            container = warning.background,
+            content = warning.foreground,
+            action = warning.foreground,
+            dismiss = warning.foreground,
+            accent = warning.foreground,
         )
         FeedbackCenterToneColorRole.Destructive -> FeedbackCenterColors(
             container = tokens.destructive,
@@ -152,7 +157,7 @@ fun FirstlightFeedbackCenterControl(
     onFocusChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = feedbackCenterColors(configuration.tone)
+    val colors = feedbackCenterColors(configuration.tone, configuration.warningColors)
     var actionFocused by remember(configuration.feedbackId) { mutableStateOf(false) }
     var dismissFocused by remember(configuration.feedbackId) { mutableStateOf(false) }
 

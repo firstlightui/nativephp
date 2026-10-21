@@ -18,6 +18,7 @@ data class StatusLabelRendererConfiguration(
     val tone: StatusLabelTone,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
         label = node.props.getString("label"),
@@ -26,6 +27,7 @@ data class StatusLabelRendererConfiguration(
             node.props.getString("label")
         },
         accessibilityHint = node.props.getString("a11y_hint"),
+        warningColors = FirstlightWarningColors(node),
     )
 
     val isInteractive = false
@@ -61,7 +63,7 @@ object StatusLabelRenderer {
 
         FirstlightStatusLabelControl(
             label = configuration.label,
-            colors = resolveStatusLabelTokenColors(tokens, configuration.tone),
+            colors = resolveStatusLabelTokenColors(tokens, configuration.tone, configuration.warningColors, isSystemInDarkTheme()),
             accessibilityDescription = firstlightStatusLabelDescription(
                 label = configuration.label,
                 accessibilityLabel = configuration.accessibilityLabel,

@@ -25,6 +25,7 @@ data class CalloutRendererConfiguration(
     val accessibilityLabel: String,
     val accessibilityHint: String,
     val callbackId: Int,
+    val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -34,6 +35,7 @@ data class CalloutRendererConfiguration(
         accessibilityLabel = node.props.getString("a11y_label"),
         accessibilityHint = node.props.getString("a11y_hint"),
         callbackId = node.onPress,
+        warningColors = FirstlightWarningColors(node),
     )
 
     val hasAction: Boolean

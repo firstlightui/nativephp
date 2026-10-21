@@ -77,10 +77,14 @@ Concerns on `NativeComponent` connect Laravel to existing native controls:
 - [`ValidatesFields`](docs/how-to/validate-fields.md): `validate()`, `validateOnly()`, and Form Requests, with messages on native field error slots.
 - [`SubmitsForms`](docs/how-to/submit-forms.md): validate, run an action once, and publish success Feedback.
 - [`AuthorizesActions`](docs/how-to/authorize-actions.md): hide, disable, or guard actions with Gates and Policies.
-- [`PaginatesLists`](docs/how-to/paginate-lists.md): bind Laravel paginators to List pull-to-refresh and end-reached.
+- [`PaginatesLists`](docs/how-to/paginate-lists.md): bind Laravel paginators to List `@refresh` and `@endReached`.
 - [`DestroysListItems`](docs/how-to/destroy-list-items.md): authorized, confirmed deletion of List rows by stable key.
 
 Firstlight-owned labels use Laravel's lang files, and Date and Time pickers inherit the application locale and timezone. See [Localize chrome](docs/how-to/localize.md).
+
+Warnings use the theme's `warning` / `on-warning` pair, with amber defaults independent of brand accent. List Item supports semantic icon tones and nullable optional text. See [Theming](docs/getting-started/theming.md) and [List Item](docs/components/list-item.md).
+
+Use `Feedback::fake()` to assert application feedback without native presentation; see [Feedback testing](docs/components/transient-feedback.md#testing). For forms submitted by a separate button, use live text binding until cross-platform blur-before-press ordering is available; see [Text Field](docs/components/text-field.md).
 
 ## Response contract
 

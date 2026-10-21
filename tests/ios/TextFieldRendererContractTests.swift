@@ -5,6 +5,24 @@ import XCTest
 
 @MainActor
 final class TextFieldRendererContractTests: XCTestCase {
+    func testAccessibilityNameFallsBackToVisibleLabelAndExplicitNameWins() {
+        XCTAssertEqual(TextFieldRendererConfiguration(node: makeTextFieldNode()).accessibilityLabel, "Email")
+        let configuration = TextFieldRendererConfiguration(node: makeTextFieldNode(
+            accessibilityLabel: "Account email", accessibilityHint: "Used to sign in"
+        ))
+        XCTAssertEqual(configuration.accessibilityLabel, "Account email")
+        XCTAssertEqual(configuration.accessibilityHint, "Used to sign in")
+    }
+
+    func testBlurDoesNotPublishUntilFocusLossAndDoesNotDuplicateFlush() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(syncMode: "blur"))
+        _ = state.focusChanged(true)
+        XCTAssertNil(state.userChanged("latest"))
+        XCTAssertEqual(state.lastCommitted, "draft")
+        XCTAssertEqual(state.focusChanged(false), .change(callbackId: 41, nodeId: 7, value: "latest"))
+        XCTAssertNil(state.flush())
+    }
+
     func testConfigurationDecodesNativeInputAndIconProps() {
         let configuration = TextFieldRendererConfiguration(node: makeTextFieldNode())
 
@@ -89,7 +107,9 @@ final class TextFieldRendererContractTests: XCTestCase {
         disabled: Bool = false,
         readOnly: Bool = false,
         clearable: Bool = false,
-        revealable: Bool = false
+        revealable: Bool = false,
+        accessibilityLabel: String = "",
+        accessibilityHint: String = ""
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
@@ -101,6 +121,8 @@ final class TextFieldRendererContractTests: XCTestCase {
                 "label": "Email",
                 "placeholder": "you@example.com",
                 "helper": "Supporting",
+                "a11y_label": accessibilityLabel,
+                "a11y_hint": accessibilityHint,
                 "error": "",
                 "keyboard": "email",
                 "content_type": "email",

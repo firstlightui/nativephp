@@ -7,6 +7,7 @@ use FirstlightUI\Feedback\FeedbackRecord;
 use FirstlightUI\Feedback\FeedbackTone;
 use FirstlightUI\Support\CallbackExpression;
 use FirstlightUI\Support\Chrome;
+use FirstlightUI\Support\WarningColors;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
 
@@ -77,7 +78,8 @@ final class FeedbackItem extends Element
         $props['dismiss_label'] = Chrome::string('dismiss');
         $props['dismiss_a11y_label'] = Chrome::string('dismiss_feedback');
 
-        return $props;
+        return array_merge($props,
+            $this->tone === FeedbackTone::Warning ? WarningColors::props() : []);
     }
 
     private function registerCallback(CallbackRegistry $registry, string $method, string $argument): int

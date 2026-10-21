@@ -38,6 +38,7 @@ struct FirstlightListItemControl: View {
     let tokens: NativeUITokens
     let onPress: () -> Void
     var onAction: (Int) -> Void = { _ in }
+    @Environment(\.colorScheme) private var colorScheme
 
     let leadingContentIsDecorative = true
     let trailingContentIsDecorative = true
@@ -115,7 +116,11 @@ struct FirstlightListItemControl: View {
         case .icon:
             Image(systemName: getIconForName(configuration.leadingValue))
                 .font(.title3.weight(.medium))
-                .foregroundStyle(tokens.primary)
+                .foregroundStyle(firstlightListItemIconColor(
+                    explicit: configuration.leadingIconColor, tone: configuration.leadingIconTone,
+                    tokens: tokens, warningColors: configuration.warningColors,
+                    isDark: colorScheme == .dark, fallback: tokens.primary
+                ))
                 .frame(width: 40, height: 40)
                 .accessibilityHidden(true)
         case .avatar:
@@ -149,7 +154,11 @@ struct FirstlightListItemControl: View {
         case .icon:
             Image(systemName: getIconForName(configuration.trailingValue))
                 .font(.body.weight(.semibold))
-                .foregroundStyle(tokens.onSurfaceVariant)
+                .foregroundStyle(firstlightListItemIconColor(
+                    explicit: configuration.trailingIconColor, tone: configuration.trailingIconTone,
+                    tokens: tokens, warningColors: configuration.warningColors,
+                    isDark: colorScheme == .dark, fallback: tokens.onSurfaceVariant
+                ))
                 .frame(width: 24, height: 24)
                 .accessibilityHidden(true)
         case .text:
@@ -159,5 +168,30 @@ struct FirstlightListItemControl: View {
                 .multilineTextAlignment(.trailing)
                 .accessibilityHidden(true)
         }
+    }
+}
+
+func firstlightListItemIconColor(
+    explicit: String, tone: String, tokens: NativeUITokens,
+    warningColors: FirstlightWarningColors, isDark: Bool, fallback: Color
+) -> Color {
+    if explicit.hasPrefix("#") {
+        var digits = String(explicit.dropFirst())
+        if digits.count == 3 { digits = digits.map { "\($0)\($0)" }.joined() }
+        if [6, 8].contains(digits.count), let value = UInt64(digits, radix: 16) {
+            return Color(.sRGB,
+                red: Double((value >> 16) & 255) / 255,
+                green: Double((value >> 8) & 255) / 255,
+                blue: Double(value & 255) / 255,
+                opacity: digits.count == 8 ? Double((value >> 24) & 255) / 255 : 1)
+        }
+    }
+    return switch tone {
+    case "neutral": tokens.onSurfaceVariant
+    case "info": tokens.primary
+    case "success": tokens.success
+    case "warning": warningColors.resolve(isDark: isDark).background
+    case "danger": tokens.destructive
+    default: fallback
     }
 }

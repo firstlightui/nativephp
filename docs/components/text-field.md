@@ -80,6 +80,13 @@ period and flushes on blur or submit; durations below 50 ms are rejected.
 Native typing, selection, cursor position, and marked-text composition remain
 local while focused so PHP acknowledgements do not cause keyboard jumps.
 
+For forms submitted by a separate button, use `native:model.live="email"`
+(or plain `native:model`). A button press is not the field's `@submit` event:
+blur/debounce changes are not guaranteed to reach PHP before that press, so
+the handler can read the previously published value. Do not rely on keyboard
+dismissal to flush the field first. For keyboard submission, the field's own
+`@submit` handler receives the current string directly.
+
 ## Icons and trailing actions
 
 The shared icon is the fallback; the active platform override wins. Blade uses
@@ -110,6 +117,10 @@ or value. Decorative icons stay hidden from assistive technology. Icon actions
 are separate native accessibility nodes with a minimum 44-point target on iOS
 and 48-dp target on Android. A visible `label` or explicit `a11y-label` is
 required during development.
+
+The editable input uses `a11y-label` when supplied, otherwise `label`, in both
+plain and secure presentation; `a11y-hint` remains additional guidance rather
+than replacing the name.
 
 ## Platform behaviour
 

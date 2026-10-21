@@ -7,6 +7,7 @@ struct StatusLabelRendererConfiguration: Equatable {
     let tone: StatusLabelTone
     let accessibilityLabel: String
     let accessibilityHint: String
+    let warningColors: FirstlightWarningColors
 
     init(node: NativeUINode) {
         let label = node.props.getString("label")
@@ -19,6 +20,7 @@ struct StatusLabelRendererConfiguration: Equatable {
             ? label
             : node.props.getString("a11y_label")
         self.accessibilityHint = node.props.getString("a11y_hint")
+        warningColors = FirstlightWarningColors(node: node)
     }
 }
 
@@ -68,7 +70,8 @@ struct StatusLabelRenderer: View {
             tokens: FirstlightStatusLabelTokens.from(
                 theme: themeStore.resolve(for: colorScheme),
                 tone: configuration.tone,
-                traits: traits
+                traits: traits,
+                warningColors: configuration.warningColors
             ),
             accessibilityLabel: configuration.accessibilityLabel,
             accessibilityHint: configuration.accessibilityHint

@@ -57,6 +57,8 @@ Text wraps and the surface grows for Dynamic Type or font scale. Neither rendere
 
 Both renderers inherit NativePHP semantic theme tokens, preserve dark mode and increased contrast, reconcile message/tone/action metadata by stable node identity, and emit no event for programmatic changes.
 
+Warning uses the same `warning` / `on-warning` pair as Status Label and Feedback, not `accent`. `WarningColors::props()` resolves the effective PHP theme into `warning_color`, `on_warning_color`, `dark_warning_color`, and `dark_on_warning_color`. Missing effective tokens fall back to `#B45309` / `#FFFFFF` (light) and `#FBBF24` / `#1C1917` (dark). Each native configuration owns its decoded pair; no global warning-tone state is used.
+
 ## Official primitive decision
 
 This is a paired-renderer component. Installed `nativephp/mobile-ui` 0.3.0 has no callout, banner, alert, or snackbar element. Its primitives can compose a surface visually but cannot expose a single semantic component, one action callback, tone-owned iconography, or the required accessibility contract through an unchanged official element.

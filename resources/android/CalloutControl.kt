@@ -61,7 +61,7 @@ fun FirstlightCalloutControl(
     onPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = resolveStatusLabelTokenColors(tokens, configuration.tone.statusLabelTone)
+    val colors = resolveStatusLabelTokenColors(tokens, configuration.tone.statusLabelTone, configuration.warningColors, androidx.compose.foundation.isSystemInDarkTheme())
 
     Surface(
         modifier = modifier.fillMaxWidth(),

@@ -88,7 +88,7 @@ class CalloutScreenshotTest {
 
     private fun snapshot(dark: Boolean) {
         paparazzi.snapshot {
-            MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+            FirstlightTestAppearance(dark) {
                 val tokens = if (dark) NativeUITheme.dark else NativeUITheme.light
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Column(

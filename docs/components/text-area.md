@@ -65,6 +65,11 @@ Plain `native:model` and `.live` publish while editing. `.blur` and `.lazy`
 publish on focus loss. `.debounce.500ms` publishes after the quiet period and
 flushes on blur. Durations below 50 milliseconds are rejected.
 
+For forms submitted by a separate button, use `native:model.live="notes"`
+(or plain `native:model`). A button press does not submit the editor's buffer;
+blur/debounce changes are not guaranteed to reach PHP before the press handler.
+Keyboard dismissal alone is not an ordering guarantee.
+
 Typing, selection, cursor position, marked text or IME composition, focus,
 keyboard, and scroll position remain native while focused. PHP acknowledgements
 therefore do not replace the active buffer. Different server publications wait

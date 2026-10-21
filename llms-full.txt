@@ -620,7 +620,7 @@ use [Destroy list items](destroy-list-items.md).
 # Paginate Firstlight Lists
 
 Firstlight paginates lists in PHP. List already exposes `@refresh` and
-`@end-reached`. The helper accumulates Laravel paginator pages into
+`@endReached`. The helper accumulates Laravel paginator pages into
 `$this->listItems` so Blade can render ordinary List Item rows.
 
 There is no `<firstlight:empty>` tag and no second scroll-event API.
@@ -689,7 +689,7 @@ query string for these events.
     />
 @endif
 
-<firstlight:list separator @refresh="reload" @end-reached="loadMore">
+<firstlight:list separator @refresh="reload" @endReached="loadMore">
     @foreach ($this->listItems as $conversation)
         <firstlight:list-item
             :headline="$conversation->title"
@@ -699,7 +699,7 @@ query string for these events.
 </firstlight:list>
 ```
 
-Keep `@end-reached` bound even on the last page. Extra events are ignored.
+Keep `@endReached` bound even on the last page. Extra events are ignored.
 
 Empty copy is ordinary Blade around List. Compose Status Label, Callout, and
 Button when you need a retry action.
@@ -950,6 +950,19 @@ Dark values are optional because NativePHP can derive them from the light theme.
 
 Theme colours accept CSS hex values, Tailwind palette names such as `violet-600`, and opacity modifiers such as `violet-600/15`.
 
+## Set warning colours
+
+Status Label, Callout, and Transient Feedback share the `warning` / `on-warning` pair on both platforms, independently of the brand `accent` pair. Add these keys to the same theme blocks:
+
+```php
+'light' => ['warning' => '#B45309', 'on-warning' => '#FFFFFF'],
+'dark' => ['warning' => '#FBBF24', 'on-warning' => '#1C1917'],
+```
+
+These are also the fallback pairs when the effective theme has no corresponding warning token. NativePHP can derive dark values from configured light values; explicit dark overrides keep the intended amber presentation. All three surfaces share contrast-safe black/white text correction for inaccessible authored pairs. List Item's `leading-icon-tone="warning"` and `trailing-icon-tone="warning"` use the same warning colour in the active appearance.
+
+Firstlight resolves these open-ended theme keys in PHP and publishes them with each component tree, because the native theme token structs do not retain custom keys. After a runtime `Theme::merge()`, republish the component tree to update warning colours. The light/dark pair already in that tree switches immediately with the native appearance.
+
 ## Use theme tokens in surrounding native UI
 
 Firstlight controls consume the tokens automatically. Use the same tokens for surrounding `nativephp/mobile-ui` elements with theme-aware utility classes:
@@ -1113,7 +1126,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 ## Laravel-shaped PHP extensions
 
-Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@end-reached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Package locale chrome publishes Firstlight-owned chrome strings from one Laravel language file, and Date/Time pickers inherit omitted locale and timezone from the application. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), [Destroy list items](../how-to/destroy-list-items.md), and [Localize chrome](../how-to/localize.md).
+Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@endReached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Package locale chrome publishes Firstlight-owned chrome strings from one Laravel language file, and Date/Time pickers inherit omitted locale and timezone from the application. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), [Destroy list items](../how-to/destroy-list-items.md), and [Localize chrome](../how-to/localize.md).
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
@@ -1450,6 +1463,29 @@ The public identity is `FirstlightUI\Facades\Feedback`.
 | `Feedback::dismiss(string $id)` | `bool` | Removes a pending or visible item; returns whether it existed. |
 
 The builder is immutable. Calling a modifier returns a new builder and does not change the instance it was called on. When `id()` is omitted, `send()` generates a UUID string.
+
+## Testing
+
+Use `Feedback::fake()` before running application code to capture sends without publishing to the native host:
+
+```php
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Feedback\FeedbackRecord;
+use FirstlightUI\Feedback\FeedbackTone;
+
+Feedback::fake();
+
+Feedback::success('Appointment saved')->action('Undo', 'undo-save')->send();
+
+Feedback::assertSent(fn (FeedbackRecord $record) =>
+    $record->tone === FeedbackTone::Success && $record->actionKey === 'undo-save'
+);
+Feedback::assertNotSent(fn (FeedbackRecord $record) => $record->tone === FeedbackTone::Danger);
+```
+
+`Feedback::assertNothingSent()` asserts an empty history. `Feedback::sent()` returns a collection of readonly `FeedbackRecord` values in send order; `sent($callback)` filters it. Records expose `id`, `message`, `tone`, `hold`, `actionLabel`, and `actionKey`. Assertions use PHPUnit and fail when their expectation is unmet.
+
+Only `send()` records feedback, not builder creation. Same-ID updates are separate history entries; `dismiss()` affects the fake queue but never erases send history. Each `fake()` call starts fresh. The fake retains the real immutable builder and validation rules and uses an isolated store; it does not simulate native presentation, timers, or user events.
 
 ## Tones
 
@@ -2658,16 +2694,18 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | API | Accepted type | Purpose |
 | --- | --- | --- |
 | `headline` | non-empty `string` | Required primary text and default accessible name. |
-| `supporting` | non-empty `string` | Optional secondary text below the headline. |
+| `supporting` | nullable `string` | Optional secondary text; null, empty, and whitespace-only strings omit it. |
 | `leading-icon` | non-empty `string` | Optional shared leading icon and cross-platform fallback. |
 | `leading-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `leading-icon`. |
 | `leading-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `leading-icon`; typed variants are preserved on the wire. |
+| `leading-icon-tone`, `trailing-icon-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Semantic icon colour from the active theme. |
+| `leading-icon-color`, `trailing-icon-color` | hex `string` | Explicit icon colour overrides tone on both platforms; accepts `#RGB`, `#RRGGBB`, `#AARRGGBB`. |
 | `leading-avatar` | non-empty `string` | Optional image source representing the row subject. |
 | `leading-monogram` | one or two characters | Optional short identity marker such as `WJ`. |
 | `trailing-icon` | non-empty `string` | Optional shared decorative affordance icon. |
 | `trailing-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `trailing-icon`. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `trailing-icon`; typed variants are preserved on the wire. |
-| `trailing-text` | non-empty `string` | Optional short metadata or affordance text. |
+| `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
 | `trailing-actions` | `array` of action descriptors | Optional actions revealed from the logical trailing edge inside List. |
 | `disabled` | `bool` | Prevents row and swipe action presses and exposes native disabled state. Defaults to `false`. |
@@ -2771,6 +2809,17 @@ the iOS or Android override wins on its platform. A typed Android symbol keeps
 its filled or outlined variant in the native wire metadata. Overrides without
 their shared fallback are invalid.
 
+Set `leading-icon-tone="danger"` for an error category, or the corresponding
+`trailing-icon-tone` for a status glyph. Both accept the Status Label vocabulary:
+`neutral` uses `on-surface-variant`, `info` uses `primary`, `success` uses `success`,
+`warning` uses `warning`, and `danger` uses `destructive`. Warning defaults to
+accessible amber, not brand accent; see [Theming](../getting-started/theming.md).
+Without a tone, leading icons retain `primary` and trailing icons retain
+`on-surface-variant`. An explicit `*-icon-color` wins over tone on iOS and Android.
+CamelCase aliases and fluent `leadingIconTone()`, `trailingIconTone()`,
+`leadingIconColor()`, and `trailingIconColor()` are supported. These props only
+colour icons, not avatars, monograms, text, or swipe actions.
+
 ## Trailing affordances
 
 Use `trailing-icon` for a decorative directional or state affordance, or
@@ -2800,13 +2849,18 @@ buttons also expose their visible labels and button roles.
 
 ## Validation and excluded APIs
 
-Firstlight rejects missing or blank headlines, missing `@press`, blank optional
-text, non-boolean disabled values, invalid icon override types, icon overrides
+Firstlight rejects missing or blank headlines, missing `@press`, blank accessible
+labels/hints, non-boolean disabled values, invalid icon override types, icon overrides
 without shared fallbacks, ambiguous leading or trailing content, and content
 slots. It also rejects overline text, embedded controls, independent trailing
 actions, malformed or unlabelled swipe descriptors, long-press gestures, menus,
 navigation directives, model or selection state, loading and validation props,
-colours, elevation, typography, and per-platform layout escape hatches.
+non-icon colours, elevation, typography, and per-platform layout escape hatches.
+
+Optional `supporting` and `trailing-text` values may be null or empty, including
+literal empty strings. They render no slot and an empty `trailing-text` does not
+conflict with a trailing icon. Other non-string values remain invalid. Overline
+is not part of Firstlight's row contract.
 
 ## Platform behaviour
 
@@ -2844,7 +2898,7 @@ with [List Item](list-item.md) and optional grouped sections with
 ## Complete example
 
 ```blade
-<firstlight:list separator @refresh="reloadItems" @end-reached="loadMore">
+<firstlight:list separator @refresh="reloadItems" @endReached="loadMore">
     <firstlight:list-item headline="Account" @press="openAccount" />
 
     <firstlight:list-section header="Preferences" footer="Changes sync automatically">
@@ -2871,7 +2925,7 @@ accepted.
 `@refresh` enables native pull-to-refresh and invokes the named PHP action when
 the user pulls to refresh.
 
-`@end-reached` invokes the named PHP action when the viewport nears the final
+`@endReached` invokes the named PHP action when the viewport nears the final
 leaf row. It is intended for pagination rather than precise scroll offsets.
 See [Paginate lists](../how-to/paginate-lists.md) to bind Laravel paginators
 to these events. To delete a row through Confirmation Dialog authorization,
@@ -3541,6 +3595,12 @@ Plain `native:model` and `.live` publish every edit. `.blur` and `.lazy` publish
 on focus loss or submit. `.debounce.300ms` publishes after the quiet period and
 flushes on focus loss or submit; durations below 50 ms fail.
 
+If a separate button submits the query, use `native:model.live="query"`
+(or plain `native:model`). A button press is not the field's `@submit` event;
+blur/debounce changes are not guaranteed to reach PHP before its handler.
+For keyboard submission, accept the current query argument from `@submit`
+rather than relying on a separate button to flush it.
+
 Native typing, selection, cursor position, and marked-text composition stay in
 the focused editing buffer. PHP acknowledgements do not reset focus or selection,
 and programmatic values received while unfocused never emit user events.
@@ -4037,6 +4097,13 @@ period and flushes on blur or submit; durations below 50 ms are rejected.
 Native typing, selection, cursor position, and marked-text composition remain
 local while focused so PHP acknowledgements do not cause keyboard jumps.
 
+For forms submitted by a separate button, use `native:model.live="email"`
+(or plain `native:model`). A button press is not the field's `@submit` event:
+blur/debounce changes are not guaranteed to reach PHP before that press, so
+the handler can read the previously published value. Do not rely on keyboard
+dismissal to flush the field first. For keyboard submission, the field's own
+`@submit` handler receives the current string directly.
+
 ## Icons and trailing actions
 
 The shared icon is the fallback; the active platform override wins. Blade uses
@@ -4067,6 +4134,10 @@ or value. Decorative icons stay hidden from assistive technology. Icon actions
 are separate native accessibility nodes with a minimum 44-point target on iOS
 and 48-dp target on Android. A visible `label` or explicit `a11y-label` is
 required during development.
+
+The editable input uses `a11y-label` when supplied, otherwise `label`, in both
+plain and secure presentation; `a11y-hint` remains additional guidance rather
+than replacing the name.
 
 ## Platform behaviour
 
@@ -4136,6 +4207,11 @@ use kebab-case. The PHP element also accepts `minLines`, `maxLines`, and
 Plain `native:model` and `.live` publish while editing. `.blur` and `.lazy`
 publish on focus loss. `.debounce.500ms` publishes after the quiet period and
 flushes on blur. Durations below 50 milliseconds are rejected.
+
+For forms submitted by a separate button, use `native:model.live="notes"`
+(or plain `native:model`). A button press does not submit the editor's buffer;
+blur/debounce changes are not guaranteed to reach PHP before the press handler.
+Keyboard dismissal alone is not an ordering guarantee.
 
 Typing, selection, cursor position, marked text or IME composition, focus,
 keyboard, and scroll position remain native while focused. PHP acknowledgements

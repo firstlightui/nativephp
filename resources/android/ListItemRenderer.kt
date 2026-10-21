@@ -59,6 +59,11 @@ data class ListItemRendererConfiguration(
     val callbackId: Int,
     val leadingActions: List<ListItemSwipeAction>,
     val trailingActions: List<ListItemSwipeAction>,
+    val leadingIconTone: String,
+    val trailingIconTone: String,
+    val leadingIconColor: String,
+    val trailingIconColor: String,
+    val warningColors: FirstlightWarningColors,
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -80,6 +85,11 @@ data class ListItemRendererConfiguration(
         callbackId = node.onPress,
         leadingActions = decodeListItemActions(node.props.getString("firstlight_leading_actions_json")),
         trailingActions = decodeListItemActions(node.props.getString("firstlight_trailing_actions_json")),
+        leadingIconTone = node.props.getString("leading_icon_tone"),
+        trailingIconTone = node.props.getString("trailing_icon_tone"),
+        leadingIconColor = node.props.getString("leading_icon_color"),
+        trailingIconColor = node.props.getString("trailing_icon_color"),
+        warningColors = FirstlightWarningColors(node),
     )
 
     val enabled: Boolean

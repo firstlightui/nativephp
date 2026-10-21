@@ -30,7 +30,7 @@ children; grouped content uses [`firstlight:list-section`](list-section.md).
 ## Public API
 
 ```blade
-<firstlight:list separator @refresh="reloadItems" @end-reached="loadMore">
+<firstlight:list separator @refresh="reloadItems" @endReached="loadMore">
     <firstlight:list-item headline="Account" @press="openAccount" />
     <firstlight:list-section header="Preferences" footer="Changes sync automatically">
         <firstlight:list-item headline="Notifications" @press="openNotifications" />
@@ -45,7 +45,7 @@ children; grouped content uses [`firstlight:list-section`](list-section.md).
 | `plain` | Optional boolean. When any direct child is a List Section, grouped inset cards are the default; `plain` keeps flat rows with sticky section headers. Defaults to false. |
 | `shows-indicators` | Optional boolean. Controls scroll indicator visibility on the native scroller. Defaults to true. |
 | `@refresh` | Optional standard press callback. When authored, native pull-to-refresh is enabled. |
-| `@end-reached` | Optional standard press callback. Fires once when the viewport nears the final leaf row. |
+| `@endReached` | Optional standard press callback. Fires once when the viewport nears the final leaf row. |
 | `class` | External EDGE layout only. |
 
 List is a paired container. Its child slot accepts only List Item and List
@@ -54,7 +54,7 @@ Section elements.
 ## Empty, action, and failure behaviour
 
 An empty List publishes a native scroller with no rows. Refresh and end-reached
-callbacks require real `@refresh` / `@end-reached` bindings; they are not
+callbacks require real `@refresh` / `@endReached` bindings; they are not
 inferred from empty props. Laravel paginator accumulation is a PHP extension
 over those events; see [List pagination](../reference/list-pagination.md).
 

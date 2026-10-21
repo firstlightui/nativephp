@@ -14,7 +14,7 @@ sources:
 # Paginate Firstlight Lists
 
 Firstlight paginates lists in PHP. List already exposes `@refresh` and
-`@end-reached`. The helper accumulates Laravel paginator pages into
+`@endReached`. The helper accumulates Laravel paginator pages into
 `$this->listItems` so Blade can render ordinary List Item rows.
 
 There is no `<firstlight:empty>` tag and no second scroll-event API.
@@ -83,7 +83,7 @@ query string for these events.
     />
 @endif
 
-<firstlight:list separator @refresh="reload" @end-reached="loadMore">
+<firstlight:list separator @refresh="reload" @endReached="loadMore">
     @foreach ($this->listItems as $conversation)
         <firstlight:list-item
             :headline="$conversation->title"
@@ -93,7 +93,7 @@ query string for these events.
 </firstlight:list>
 ```
 
-Keep `@end-reached` bound even on the last page. Extra events are ignored.
+Keep `@endReached` bound even on the last page. Extra events are ignored.
 
 Empty copy is ordinary Blade around List. Compose Status Label, Callout, and
 Button when you need a retry action.

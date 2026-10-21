@@ -7,6 +7,33 @@ import XCTest
 
 @MainActor
 final class StatusLabelSnapshotTests: XCTestCase {
+    func testWarningPairUsesPublishedCustomTokensAndIndependentFallbacks() {
+        let node = NativeUINode(
+            id: 1, type: "firstlight.status-label", layout: nil, style: nil,
+            props: GenericProps([
+                "warning_color": "#92400E", "on_warning_color": "#FFFFFF",
+                "dark_warning_color": "#FDE68A", "dark_on_warning_color": "#292524",
+            ]), onPress: 0, onLongPress: 0, children: []
+        )
+        let palette = StatusLabelRendererConfiguration(node: node).warningColors
+        XCTAssertEqual(palette, CalloutRendererConfiguration(node: node).warningColors)
+        XCTAssertEqual(palette, FeedbackCenterItemConfiguration(node: node).warningColors)
+        for dark in [false, true] {
+            let pair = palette.resolve(isDark: dark)
+            let colours = FirstlightStatusLabelTokens.from(
+                theme: .statusLabelTest, tone: .warning,
+                traits: UITraitCollection(userInterfaceStyle: dark ? .dark : .light),
+                warningColors: palette
+            )
+            XCTAssertEqual(statusLabelContrastRatio(colours.background, UIColor(pair.background)), 1, accuracy: 0.0001)
+            XCTAssertEqual(statusLabelContrastRatio(colours.foreground, UIColor(pair.foreground)), 1, accuracy: 0.0001)
+        }
+        XCTAssertEqual(FirstlightWarningColors().light, "#B45309")
+        XCTAssertEqual(FirstlightWarningColors().dark, "#FBBF24")
+        XCTAssertEqual(FirstlightWarningColors().onLight, "#FFFFFF")
+        XCTAssertEqual(FirstlightWarningColors().onDark, "#1C1917")
+    }
+
     func testRendererConfigurationDecodesStaticTextAndAccessibility() {
         let configuration = StatusLabelRendererConfiguration(node: makeNode())
 

@@ -57,7 +57,8 @@ struct FirstlightCalloutControl: View {
         let colours = FirstlightStatusLabelTokens.from(
             theme: tokens,
             tone: configuration.tone.statusLabelTone,
-            traits: traits
+            traits: traits,
+            warningColors: configuration.warningColors
         )
         let foreground = Color(uiColor: colours.foreground)
 

@@ -29,6 +29,8 @@ struct FirstlightTextFieldControl: View {
                 input
                     .focused(isFocused)
                     .disabled(configuration.disabled)
+                    .accessibilityLabel(Text(configuration.accessibilityLabel))
+                    .accessibilityHint(Text(configuration.accessibilityHint))
 
                 trailing
             }

@@ -35,6 +35,11 @@ struct ListItemRendererConfiguration: Equatable {
     let callbackID: Int
     let leadingActions: [ListItemSwipeAction]
     let trailingActions: [ListItemSwipeAction]
+    let leadingIconTone: String
+    let trailingIconTone: String
+    let leadingIconColor: String
+    let trailingIconColor: String
+    let warningColors: FirstlightWarningColors
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -56,6 +61,11 @@ struct ListItemRendererConfiguration: Equatable {
         callbackID = node.onPress
         leadingActions = ListItemSwipeAction.decode(node.props.getString("firstlight_leading_actions_json"))
         trailingActions = ListItemSwipeAction.decode(node.props.getString("firstlight_trailing_actions_json"))
+        leadingIconTone = node.props.getString("leading_icon_tone")
+        trailingIconTone = node.props.getString("trailing_icon_tone")
+        leadingIconColor = node.props.getString("leading_icon_color")
+        trailingIconColor = node.props.getString("trailing_icon_color")
+        warningColors = FirstlightWarningColors(node: node)
     }
 
     var isEnabled: Bool {

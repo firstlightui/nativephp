@@ -16,7 +16,7 @@ sources:
 # Firstlight List Pagination
 
 List pagination is a PHP extension over existing List `@refresh` and
-`@end-reached` callbacks. It adds no Element Tree type, Blade container, native
+`@endReached` callbacks. It adds no Element Tree type, Blade container, native
 renderer, Empty primitive, or second scroll-event vocabulary.
 
 ## Public PHP surface
@@ -87,7 +87,7 @@ Feedback.
 The guard prevents re-entry only while the synchronous fetch runs on the same
 PHP component. NativePHP compiles one tree after dispatch, so
 `$listPaginating` cannot flash Activity Indicator during the default
-one-request path. Bind List `@end-reached` unconditionally; extra events after
+one-request path. Bind List `@endReached` unconditionally; extra events after
 the last page are no-ops.
 
 ## Product boundary

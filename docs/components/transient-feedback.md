@@ -10,6 +10,7 @@ sources:
   - src/Facades/Feedback.php
   - src/Feedback/PendingFeedback.php
   - src/Feedback/FeedbackManager.php
+  - src/Feedback/FeedbackFake.php
   - src/Feedback/FeedbackStore.php
   - src/Feedback/FeedbackRecord.php
   - src/Feedback/FeedbackTone.php
@@ -28,6 +29,7 @@ sources:
   - resources/android/FeedbackCenterHost.kt
   - resources/android/FirstlightUIInit.kt
   - tests/Feature/TransientFeedbackApiTest.php
+  - tests/Feature/FeedbackFakeTest.php
   - tests/Feature/FeedbackCenterTest.php
   - tests/ios/FeedbackCenterTests.swift
   - tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/FeedbackCenterTest.kt
@@ -67,6 +69,29 @@ The public identity is `FirstlightUI\Facades\Feedback`.
 | `Feedback::dismiss(string $id)` | `bool` | Removes a pending or visible item; returns whether it existed. |
 
 The builder is immutable. Calling a modifier returns a new builder and does not change the instance it was called on. When `id()` is omitted, `send()` generates a UUID string.
+
+## Testing
+
+Use `Feedback::fake()` before running application code to capture sends without publishing to the native host:
+
+```php
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Feedback\FeedbackRecord;
+use FirstlightUI\Feedback\FeedbackTone;
+
+Feedback::fake();
+
+Feedback::success('Appointment saved')->action('Undo', 'undo-save')->send();
+
+Feedback::assertSent(fn (FeedbackRecord $record) =>
+    $record->tone === FeedbackTone::Success && $record->actionKey === 'undo-save'
+);
+Feedback::assertNotSent(fn (FeedbackRecord $record) => $record->tone === FeedbackTone::Danger);
+```
+
+`Feedback::assertNothingSent()` asserts an empty history. `Feedback::sent()` returns a collection of readonly `FeedbackRecord` values in send order; `sent($callback)` filters it. Records expose `id`, `message`, `tone`, `hold`, `actionLabel`, and `actionKey`. Assertions use PHPUnit and fail when their expectation is unmet.
+
+Only `send()` records feedback, not builder creation. Same-ID updates are separate history entries; `dismiss()` affects the fake queue but never erases send history. Each `fake()` call starts fresh. The fake retains the real immutable builder and validation rules and uses an isolated store; it does not simulate native presentation, timers, or user events.
 
 ## Tones
 

@@ -51,6 +51,7 @@ struct FeedbackCenterItemConfiguration: Equatable, Identifiable {
     let manualCallback: Int?
     let dismissLabel: String
     let dismissA11yLabel: String
+    var warningColors = FirstlightWarningColors()
 
     private let hasValidIdentity: Bool
     private let hasValidMessage: Bool
@@ -67,6 +68,7 @@ struct FeedbackCenterItemConfiguration: Equatable, Identifiable {
 
     init(node: NativeUINode) {
         nodeID = node.id
+        warningColors = FirstlightWarningColors(node: node)
 
         let decodedID = node.props.getString("feedback_id")
         feedbackID = decodedID
