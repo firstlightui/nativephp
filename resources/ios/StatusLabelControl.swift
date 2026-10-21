@@ -87,6 +87,11 @@ struct FirstlightStatusLabelTokens {
 }
 
 struct FirstlightStatusLabelControl: View {
+    @ScaledMetric(relativeTo: .footnote) private var lineHeight = UIFont.preferredFont(
+        forTextStyle: .footnote,
+        compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
+    ).lineHeight
+
     let label: String
     let tokens: FirstlightStatusLabelTokens
     let accessibilityLabel: String
@@ -103,7 +108,8 @@ struct FirstlightStatusLabelControl: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                Capsule().fill(Color(uiColor: tokens.background))
+                RoundedRectangle(cornerRadius: lineHeight / 2 + 5)
+                    .fill(Color(uiColor: tokens.background))
             )
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(accessibilityLabel))

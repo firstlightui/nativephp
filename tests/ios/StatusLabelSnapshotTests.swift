@@ -99,6 +99,45 @@ final class StatusLabelSnapshotTests: XCTestCase {
         XCTAssertEqual(renderer.node.id, 7)
     }
 
+    func testWrappedTextRemainsOnItsBackgroundAtLargestAccessibilitySize() throws {
+        // Render the same label with and without ink: every opaque white text pixel
+        // must have an opaque coloured background beneath it, including line ends.
+        func pixels(foreground: UIColor) throws -> [UInt8] {
+            let renderer = ImageRenderer(content: FirstlightStatusLabelControl(
+                label: "Awaiting review from the referrals team",
+                tokens: .init(background: .blue, foreground: foreground),
+                accessibilityLabel: "Awaiting review from the referrals team",
+                accessibilityHint: ""
+            ).frame(width: 280).environment(\.dynamicTypeSize, .accessibility5))
+            renderer.scale = 1
+            let image = try XCTUnwrap(renderer.uiImage?.cgImage)
+            var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            try pixels.withUnsafeMutableBytes { buffer in
+                let context = try XCTUnwrap(CGContext(
+                    data: buffer.baseAddress, width: image.width, height: image.height,
+                    bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                    space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                ))
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return pixels
+        }
+        let text = try pixels(foreground: .white)
+        let background = try pixels(foreground: .clear)
+        XCTAssertEqual(text.count, background.count)
+        var textPixels = 0
+        var escapedPixels = 0
+        for index in stride(from: 0, to: min(text.count, background.count), by: 4) {
+            if text[index] > 250 && text[index + 1] > 250 && text[index + 2] > 250 && text[index + 3] > 250 {
+                textPixels += 1
+                if background[index + 3] < 250 { escapedPixels += 1 }
+            }
+        }
+        XCTAssertGreaterThan(textPixels, 100, "The control must actually render the long label")
+        XCTAssertEqual(escapedPixels, 0, "Wrapped text must not escape the contrast-safe background")
+    }
+
     func testLightDarkAndAccessibilitySnapshots() {
         let recordMode: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
             "FIRSTLIGHT_RECORD_SNAPSHOTS"
