@@ -158,7 +158,7 @@ final class StatusLabelSnapshotTests: XCTestCase {
                     label: tone == .warning
                         ? "Awaiting review from the referrals team"
                         : tone.rawValue.capitalized,
-                    tokens: FirstlightStatusLabelTokens.snapshot(tone: tone),
+                    tokens: FirstlightStatusLabelTokens.snapshot(tone: tone, style: style),
                     accessibilityLabel: "\(tone.rawValue.capitalized) status",
                     accessibilityHint: ""
                 )
@@ -201,11 +201,11 @@ private extension FirstlightStatusLabelTokens {
         foreground: .black
     )
 
-    static func snapshot(tone: StatusLabelTone) -> FirstlightStatusLabelTokens {
+    static func snapshot(tone: StatusLabelTone, style: UIUserInterfaceStyle) -> FirstlightStatusLabelTokens {
         from(
             theme: .statusLabelTest,
             tone: tone,
-            traits: UITraitCollection(userInterfaceStyle: .light)
+            traits: UITraitCollection(userInterfaceStyle: style)
         )
     }
 }
