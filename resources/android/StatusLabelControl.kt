@@ -35,15 +35,41 @@ data class StatusLabelTokenColors(
     val foreground: Color,
 )
 
+data class FirstlightWarningColors(
+    val light: String = "#B45309",
+    val onLight: String = "#FFFFFF",
+    val dark: String = "#FBBF24",
+    val onDark: String = "#1C1917",
+) {
+    constructor(node: com.nativephp.mobile.ui.nativerender.NativeUINode) : this(
+        node.props.getString("warning_color", "#B45309"),
+        node.props.getString("on_warning_color", "#FFFFFF"),
+        node.props.getString("dark_warning_color", "#FBBF24"),
+        node.props.getString("dark_on_warning_color", "#1C1917"),
+    )
+
+    fun resolve(isDark: Boolean): Pair<Color, Color> {
+        fun color(value: String, fallback: Long): Color {
+            val digits = value.removePrefix("#")
+            val parsed = if (value.startsWith("#") && digits.length in listOf(6, 8)) digits.toLongOrNull(16) else null
+            return Color(if (parsed == null) fallback else if (digits.length == 6) parsed or 0xFF000000 else parsed)
+        }
+        return if (isDark) color(dark, 0xFFFBBF24) to color(onDark, 0xFF1C1917)
+        else color(light, 0xFFB45309) to color(onLight, 0xFFFFFFFF)
+    }
+}
+
 internal fun resolveStatusLabelTokenColors(
     tokens: NativeUITokens,
     tone: StatusLabelTone,
+    warningColors: FirstlightWarningColors = FirstlightWarningColors(),
+    isDark: Boolean = false,
 ): StatusLabelTokenColors {
     val (candidateBackground, candidateForeground) = when (tone) {
         StatusLabelTone.Neutral -> tokens.surfaceVariant to tokens.onSurfaceVariant
         StatusLabelTone.Info -> tokens.primary to tokens.onPrimary
         StatusLabelTone.Success -> tokens.success to tokens.onSuccess
-        StatusLabelTone.Warning -> tokens.accent to tokens.onAccent
+        StatusLabelTone.Warning -> warningColors.resolve(isDark)
         StatusLabelTone.Danger -> tokens.destructive to tokens.onDestructive
     }
     val background = candidateBackground.compositeOver(tokens.surface).copy(alpha = 1f)

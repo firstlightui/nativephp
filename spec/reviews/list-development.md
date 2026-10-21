@@ -44,9 +44,9 @@ not been recorded.
 | Article | Verdict | Evidence |
 | --- | --- | --- |
 | I. SuperNative first | PASS | The EDGE element and delegated upstream `list` renderers use the official plugin manifest, Element Tree, callbacks, and renderer lifecycle. No WebView, alternate bridge, generated-host edit, or parallel transport was introduced. |
-| II. Familiar and coherent APIs | PASS | The API exposes `separator`, `plain`, `shows-indicators`, optional `@refresh` and `@end-reached`, and external-layout-only `class`. Children are limited to List Item and List Section. Horizontal layout, selection, reorder, embedded controls, and field bindings fail before publication. |
+| II. Familiar and coherent APIs | PASS | The API exposes `separator`, `plain`, `shows-indicators`, optional `@refresh` and `@endReached`, and external-layout-only `class`. Children are limited to List Item and List Section. Horizontal layout, selection, reorder, embedded controls, and field bindings fail before publication. |
 | III. Stable values and predictable state | PASS | List is an action/display container. PHP owns refresh and end-reached callbacks while native code owns scrolling, separators, grouped section chrome, and pull-to-refresh presentation. |
-| IV. Equal platform quality | BLOCKED | The adapter delegates to paired upstream iOS and Android list renderers with the same public contract. Automated PHP evidence, generated showcase host builds during capture, native launches, and the approved light/dark matrix pass. Manual `@refresh`, `@end-reached`, grouped/plain section observation, and iOS direct-runtime rows remain open. |
+| IV. Equal platform quality | BLOCKED | The adapter delegates to paired upstream iOS and Android list renderers with the same public contract. Automated PHP evidence, generated showcase host builds during capture, native launches, and the approved light/dark matrix pass. Manual `@refresh`, `@endReached`, grouped/plain section observation, and iOS direct-runtime rows remain open. |
 | V. Native expression over pixel parity | PASS | The approved matrix shows native SwiftUI and Material list presentation, grouped section headers and footers, separators, and platform system chrome without forced pixel parity. |
 | VI. Accessibility is correctness | BLOCKED | List Item rows retain their own accessibility contract inside the collection. Manual VoiceOver, TalkBack, focus order, Dynamic Type, RTL, and refresh/end-reached announcement behaviour on the collection surface remain open. |
 | VII. System-first theming | PASS | The delegated renderers use platform-native list chrome and NativePHP theme tokens. The public API exposes no arbitrary colour, elevation, typography, or per-platform geometry controls. |
@@ -126,7 +126,7 @@ data. The maintainer approved the complete matrix on 2026-08-23.
 
 ## Remaining evidence
 
-- Manually verify `@refresh` pull-to-refresh and `@end-reached` pagination on
+- Manually verify `@refresh` pull-to-refresh and `@endReached` pagination on
   both platforms.
 - Observe grouped versus `plain` section chrome with nested List Section rows.
 - Manually verify VoiceOver and TalkBack for section headers, footers, and row

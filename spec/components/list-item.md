@@ -47,16 +47,18 @@ arrange List Items; swipe-enabled rows require a List host.
 | Prop or event | Contract |
 | --- | --- |
 | `headline` | Required non-empty primary text and default accessible name. |
-| `supporting` | Optional non-empty secondary text. |
+| `supporting` | Optional nullable secondary text; null/empty/whitespace omit it. |
 | `leading-icon` | Optional non-empty shared icon name. Mutually exclusive with other leading content. |
 | `leading-icon-ios` | Optional `IosSymbol|string` override; requires `leading-icon`. |
 | `leading-icon-android` | Optional `AndroidSymbol|string` override; requires `leading-icon`; typed variants are preserved. |
+| `leading-icon-tone`, `trailing-icon-tone` | Optional `neutral`, `info`, `success`, `warning`, or `danger`; uses active theme semantic colours. |
+| `leading-icon-color`, `trailing-icon-color` | Optional `#RGB`, `#RRGGBB`, or `#AARRGGBB`; explicit colour wins over tone on both platforms. |
 | `leading-avatar` | Optional non-empty image source representing the row subject. Mutually exclusive with other leading content. |
 | `leading-monogram` | Optional one- or two-grapheme identity marker. Mutually exclusive with other leading content. |
 | `trailing-icon` | Optional non-empty shared decorative affordance icon. Mutually exclusive with `trailing-text`. |
 | `trailing-icon-ios` | Optional `IosSymbol|string` override; requires `trailing-icon`. |
 | `trailing-icon-android` | Optional `AndroidSymbol|string` override; requires `trailing-icon`; typed variants are preserved. |
-| `trailing-text` | Optional non-empty short metadata or affordance text. Mutually exclusive with `trailing-icon`. |
+| `trailing-text` | Optional nullable metadata. Non-empty text is mutually exclusive with `trailing-icon`; null/empty/whitespace omit it. |
 | `leading-actions`, `trailing-actions` | Optional arrays of labelled callback descriptors; see Swipe actions below. |
 | `disabled` | Prevents row and swipe action presses and exposes native disabled semantics. Defaults to `false`. |
 | `a11y-label` | Optional replacement for the row's combined visible accessible name. |
@@ -84,8 +86,18 @@ argument order and types:
 ## Empty, action, and failure behaviour
 
 Supporting text and both content edges may be absent. The component then
-publishes one ordinary headline-only row. Optional values that are authored
-must be non-empty; Firstlight does not render ambiguous empty slots.
+publishes one ordinary headline-only row. `supporting` and `trailing-text` accept
+null and empty strings (literal or bound), omitting the slot. Fluent setters can
+clear prior text; clearing text does not erase an existing trailing icon.
+Other optional content retains its existing non-empty validation.
+
+Icon tones map neutral to `on-surface-variant`, info to `primary`, success to
+`success`, warning to `warning`, and danger to `destructive`. Warning colour
+props are resolved through the shared WarningColors helper before publication,
+including both palettes and amber fallbacks. Without a tone, leading icons
+retain primary and trailing icons on-surface-variant. Explicit icon colour
+overrides tone. These props have camelCase aliases and fluent setters and do
+not tint avatars, monograms, trailing text, or swipe actions.
 
 A user press emits once. Programmatic publication never emits. A disabled row
 does not emit and remains visibly and accessibly disabled. The row has no
@@ -98,7 +110,7 @@ shared fallback, multiple leading sources, multiple trailing affordances, and
 unsupported APIs fail with actionable `InvalidArgumentException` messages.
 Unsupported APIs include overline text, embedded controls, secondary embedded
 actions, menus, long press, navigation directives, selection, field state,
-arbitrary colours, elevation, typography, and child content.
+non-icon arbitrary colours, elevation, typography, and child content.
 
 ## Swipe actions
 

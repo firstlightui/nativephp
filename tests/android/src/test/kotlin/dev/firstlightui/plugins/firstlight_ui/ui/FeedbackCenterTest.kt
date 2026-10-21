@@ -812,7 +812,7 @@ class FeedbackCenterSemanticsTest {
     fun `rendering policy uses semantic tone and reflows constrained or scaled layouts`() {
         assertEquals(FeedbackCenterToneColorRole.InverseSurface, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Default).colorRole)
         assertEquals(FeedbackCenterToneColorRole.Success, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Success).colorRole)
-        assertEquals(FeedbackCenterToneColorRole.Accent, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Warning).colorRole)
+        assertEquals(FeedbackCenterToneColorRole.Warning, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Warning).colorRole)
         assertEquals(FeedbackCenterToneColorRole.Destructive, FeedbackCenterRenderingPolicy(FeedbackCenterTone.Danger).colorRole)
         assertTrue(FeedbackCenterRenderingPolicy.actionOnNewLine(maxWidthDp = 360, fontScale = 1f))
         assertTrue(FeedbackCenterRenderingPolicy.actionOnNewLine(maxWidthDp = 600, fontScale = 2f))
@@ -843,11 +843,11 @@ class FeedbackCenterSemanticsTest {
         )
         assertEquals(
             FeedbackCenterColors(
-                container = tokens.accent,
-                content = tokens.onAccent,
-                action = tokens.onAccent,
-                dismiss = tokens.onAccent,
-                accent = tokens.onAccent,
+                container = Color(0xFFB45309),
+                content = Color.White,
+                action = Color.White,
+                dismiss = Color.White,
+                accent = Color.White,
             ),
             feedbackCenterColors(FeedbackCenterTone.Warning, scheme, tokens),
         )
@@ -972,6 +972,7 @@ class FeedbackCenterPaparazziCases {
     @Test fun darkDefault() = snapshot(FeedbackCenterTone.Default, dark = true)
     @Test fun success() = snapshot(FeedbackCenterTone.Success)
     @Test fun warning() = snapshot(FeedbackCenterTone.Warning)
+    @Test fun darkWarning() = snapshot(FeedbackCenterTone.Warning, dark = true)
     @Test fun danger() = snapshot(FeedbackCenterTone.Danger)
     @Test fun action() = snapshot(FeedbackCenterTone.Success, action = 51)
     @Test fun hold() = snapshot(FeedbackCenterTone.Warning, hold = true)
@@ -985,7 +986,7 @@ class FeedbackCenterPaparazziCases {
         message: String = "Appointment saved",
     ) {
         paparazzi.snapshot {
-            MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+            FirstlightTestAppearance(dark) {
                 Surface(Modifier.fillMaxSize()) {
                     Box {
                         FirstlightFeedbackCenterControl(

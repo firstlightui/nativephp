@@ -2,6 +2,8 @@
 
 use FirstlightUI\Components\Concerns\DecodesBladeAttributes;
 use FirstlightUI\Elements\CodeEditor;
+use FirstlightUI\Elements\ListContainer;
+use FirstlightUI\Elements\ListItem;
 use FirstlightUI\Elements\TextArea;
 use FirstlightUI\Elements\TextField;
 use FirstlightUI\FirstlightServiceProvider;
@@ -15,10 +17,20 @@ use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory;
 use Illuminate\View\FileViewFinder;
+use Illuminate\View\View;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\NativeTagPrecompiler;
+
+if (! function_exists('view')) {
+    function view(?string $view = null, array $data = []): Factory|View
+    {
+        $factory = Container::getInstance()->make('view');
+
+        return $view === null ? $factory : $factory->make($view, $data);
+    }
+}
 
 beforeEach(function () {
     NativeElementCollector::reset();
@@ -26,6 +38,8 @@ beforeEach(function () {
     ElementRegistry::register('firstlight.code-editor', CodeEditor::class);
     ElementRegistry::register('firstlight.text-area', TextArea::class);
     ElementRegistry::register('firstlight.text-field', TextField::class);
+    ElementRegistry::register('firstlight.list', ListContainer::class);
+    ElementRegistry::register('firstlight.list-item', ListItem::class);
 });
 
 afterEach(function () {
@@ -60,14 +74,17 @@ function renderFirstlightBladeTree(string $source, array $data): array
     $factory = new Factory($resolver, new FileViewFinder($filesystem, [$temporaryPath]), new Dispatcher($container));
     $factory->setContainer($container);
     $factory->addNamespace('__components', $compiledPath);
+    $factory->addNamespace('nativephp-mobile', dirname(__DIR__, 2).'/vendor/nativephp/mobile/src/resources/views');
     $container->instance(ViewFactoryContract::class, $factory);
     $container->instance('view', $factory);
     $container->instance('blade.compiler', $compiler);
 
     Component::flushCache();
-    $compiler->component('native-firstlight-code-editor', \FirstlightUI\Components\CodeEditor::class);
-    $compiler->component('native-firstlight-text-area', \FirstlightUI\Components\TextArea::class);
-    $compiler->component('native-firstlight-text-field', \FirstlightUI\Components\TextField::class);
+    $compiler->component('native-firstlight-code-editor', FirstlightUI\Components\CodeEditor::class);
+    $compiler->component('native-firstlight-text-area', FirstlightUI\Components\TextArea::class);
+    $compiler->component('native-firstlight-text-field', FirstlightUI\Components\TextField::class);
+    $compiler->component('native-firstlight-list', FirstlightUI\Components\ListContainer::class);
+    $compiler->component('native-firstlight-list-item', FirstlightUI\Components\ListItem::class);
     $compiler->precompiler(new NativeTagPrecompiler);
     (new FirstlightServiceProvider($container))->boot();
     NativeElementCollector::reset();
@@ -79,11 +96,13 @@ function renderFirstlightBladeTree(string $source, array $data): array
         $__env = $factory;
         $compiledFile = $compiledPath.'/'.hash('sha256', $compiled).'.php';
         $filesystem->put($compiledFile, $compiled);
+        $factory->incrementRender();
         ob_start();
         try {
             include $compiledFile;
         } finally {
             ob_end_clean();
+            $factory->decrementRender();
         }
 
         return NativeElementCollector::collect()->toArray(new CallbackRegistry);
@@ -97,6 +116,24 @@ function renderFirstlightBladeTree(string $source, array $data): array
 }
 
 const FIRSTLIGHT_ESCAPABLE_TEXT = "{\"say\": \"hi\" & <b>it's</b>}\nliteral &amp; stays";
+
+it('publishes the documented list pagination callback through Blade', function () {
+    $tree = renderFirstlightBladeTree(
+        '<firstlight:list @endReached="loadMore"><firstlight:list-item headline="Issue" @press="openIssue" /></firstlight:list>',
+        [],
+    );
+
+    expect($tree['props']['on_end_reached'])->toBeInt()->toBeGreaterThan(0);
+});
+
+it('omits nullable and empty optional list row text through Blade', function (mixed $value) {
+    $tree = renderFirstlightBladeTree(
+        '<firstlight:list-item headline="Issue" :supporting="$value" :trailing-text="$value" @press="openIssue" />',
+        ['value' => $value],
+    );
+
+    expect($tree['props'])->not->toHaveKeys(['supporting', 'trailing_type', 'trailing_value']);
+})->with([null, '', '  ']);
 
 it('publishes dynamic string attributes exactly as PHP holds them', function (string $tag) {
     $tree = renderFirstlightBladeTree(

@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\WarningColors;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -64,10 +65,6 @@ final class ListItem extends Element
         'supportingColor',
         'container-color',
         'containerColor',
-        'leading-icon-color',
-        'leadingIconColor',
-        'trailing-icon-color',
-        'trailingIconColor',
         'trailing-text-color',
         'trailingTextColor',
         'tonal-elevation',
@@ -122,7 +119,7 @@ final class ListItem extends Element
         }
 
         if (array_key_exists('supporting', $attrs)) {
-            if (! is_string($attrs['supporting'])) {
+            if ($attrs['supporting'] !== null && ! is_string($attrs['supporting'])) {
                 throw new InvalidArgumentException('Firstlight List Item `supporting` must be a string.');
             }
 
@@ -140,6 +137,19 @@ final class ListItem extends Element
         $this->applyLeadingAttributes($attrs);
         $this->applyTrailingAttributes($attrs);
         $this->applyAccessibilityAttributes($attrs);
+
+        foreach (['leading', 'trailing'] as $edge) {
+            foreach (['tone', 'color'] as $kind) {
+                $names = ["{$edge}-icon-{$kind}", $edge.'Icon'.ucfirst($kind)];
+                if ($this->hasAny($attrs, $names)) {
+                    $value = $this->firstValue($attrs, $names);
+                    if (! is_string($value)) {
+                        throw new InvalidArgumentException("Firstlight List Item `{$names[0]}` must be a string.");
+                    }
+                    $this->{$edge.'Icon'.ucfirst($kind)}($value);
+                }
+            }
+        }
 
         foreach (['leading', 'trailing'] as $edge) {
             if ($this->hasAny($attrs, ["{$edge}-actions", "{$edge}Actions"])) {
@@ -216,10 +226,12 @@ final class ListItem extends Element
         return $this;
     }
 
-    public function supporting(string $value): static
+    public function supporting(?string $value): static
     {
-        if (trim($value) === '') {
-            throw new InvalidArgumentException('Firstlight List Item requires a non-empty `supporting` when authored.');
+        if ($value === null || trim($value) === '') {
+            unset($this->listItemProps['supporting']);
+
+            return $this;
         }
 
         $this->listItemProps['supporting'] = $value;
@@ -303,16 +315,60 @@ final class ListItem extends Element
         return $this;
     }
 
-    public function trailingText(string $value): static
+    public function trailingText(?string $value): static
     {
-        if (trim($value) === '') {
-            throw new InvalidArgumentException(
-                'Firstlight List Item requires a non-empty `trailing-text` when authored.'
-            );
+        if ($value === null || trim($value) === '') {
+            if (($this->listItemProps['trailing_type'] ?? null) === 'text') {
+                unset($this->listItemProps['trailing_type'], $this->listItemProps['trailing_value']);
+            }
+
+            return $this;
         }
 
         $this->listItemProps['trailing_type'] = 'text';
         $this->listItemProps['trailing_value'] = $value;
+
+        return $this;
+    }
+
+    public function leadingIconTone(string $tone): static
+    {
+        return $this->iconTone('leading', $tone);
+    }
+
+    public function trailingIconTone(string $tone): static
+    {
+        return $this->iconTone('trailing', $tone);
+    }
+
+    private function iconTone(string $edge, string $tone): static
+    {
+        if (! in_array($tone, ['neutral', 'info', 'success', 'warning', 'danger'], true)) {
+            throw new InvalidArgumentException("Firstlight List Item `{$edge}-icon-tone` must be neutral, info, success, warning, or danger.");
+        }
+
+        $this->listItemProps["{$edge}_icon_tone"] = $tone;
+
+        return $this;
+    }
+
+    public function leadingIconColor(string $color): static
+    {
+        return $this->iconColor('leading', $color);
+    }
+
+    public function trailingIconColor(string $color): static
+    {
+        return $this->iconColor('trailing', $color);
+    }
+
+    private function iconColor(string $edge, string $color): static
+    {
+        if (! preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/D', $color)) {
+            throw new InvalidArgumentException("Firstlight List Item `{$edge}-icon-color` must be a hex colour (#RGB, #RRGGBB, or #AARRGGBB).");
+        }
+
+        $this->listItemProps["{$edge}_icon_color"] = $color;
 
         return $this;
     }
@@ -358,6 +414,9 @@ final class ListItem extends Element
         }
 
         $props = $this->listItemProps;
+        if (in_array('warning', [$props['leading_icon_tone'] ?? null, $props['trailing_icon_tone'] ?? null], true)) {
+            $props = array_merge($props, WarningColors::props());
+        }
         foreach ($this->swipeActions as $edge => $actions) {
             if ($actions === []) {
                 continue;
@@ -454,7 +513,8 @@ final class ListItem extends Element
             'trailing-icon-ios', 'trailingIconIos',
             'trailing-icon-android', 'trailingIconAndroid',
         ]);
-        $textAuthored = $this->hasAny($attrs, ['trailing-text', 'trailingText']);
+        $text = $this->firstValue($attrs, ['trailing-text', 'trailingText']);
+        $textAuthored = $text !== null && (! is_string($text) || trim($text) !== '');
 
         if ($iconAuthored && $textAuthored) {
             throw new InvalidArgumentException(
@@ -484,9 +544,8 @@ final class ListItem extends Element
             $this->trailingIcon($name, $ios, $android);
         }
 
-        if ($textAuthored) {
-            $text = $this->firstValue($attrs, ['trailing-text', 'trailingText']);
-            if (! is_string($text)) {
+        if ($this->hasAny($attrs, ['trailing-text', 'trailingText'])) {
+            if ($text !== null && ! is_string($text)) {
                 throw new InvalidArgumentException('Firstlight List Item `trailing-text` must be a string.');
             }
 

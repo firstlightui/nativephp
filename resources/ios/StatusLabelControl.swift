@@ -9,6 +9,39 @@ enum StatusLabelTone: String, CaseIterable {
     case danger
 }
 
+struct FirstlightWarningColors: Equatable {
+    var light = "#B45309"
+    var onLight = "#FFFFFF"
+    var dark = "#FBBF24"
+    var onDark = "#1C1917"
+
+    init() {}
+
+    init(node: NativeUINode) {
+        light = node.props.getString("warning_color", default: light)
+        onLight = node.props.getString("on_warning_color", default: onLight)
+        dark = node.props.getString("dark_warning_color", default: dark)
+        onDark = node.props.getString("dark_on_warning_color", default: onDark)
+    }
+
+    func resolve(isDark: Bool) -> (background: Color, foreground: Color) {
+        func color(_ hex: String, fallback: UInt64) -> Color {
+            let digits = String(hex.dropFirst())
+            let parsed = hex.hasPrefix("#") && [6, 8].contains(digits.count)
+                ? UInt64(digits, radix: 16) : nil
+            let value = parsed ?? fallback
+            return Color(.sRGB,
+                red: Double((value >> 16) & 255) / 255,
+                green: Double((value >> 8) & 255) / 255,
+                blue: Double(value & 255) / 255,
+                opacity: parsed != nil && digits.count == 8 ? Double((value >> 24) & 255) / 255 : 1)
+        }
+        return isDark
+            ? (color(dark, fallback: 0xFBBF24), color(onDark, fallback: 0x1C1917))
+            : (color(light, fallback: 0xB45309), color(onLight, fallback: 0xFFFFFF))
+    }
+}
+
 struct FirstlightStatusLabelTokens {
     let background: UIColor
     let foreground: UIColor
@@ -16,13 +49,14 @@ struct FirstlightStatusLabelTokens {
     static func from(
         theme: NativeUITokens,
         tone: StatusLabelTone,
-        traits: UITraitCollection
+        traits: UITraitCollection,
+        warningColors: FirstlightWarningColors = FirstlightWarningColors()
     ) -> Self {
         let pair: (background: Color, foreground: Color) = switch tone {
         case .neutral: (theme.surfaceVariant, theme.onSurfaceVariant)
         case .info: (theme.primary, theme.onPrimary)
         case .success: (theme.success, theme.onSuccess)
-        case .warning: (theme.accent, theme.onAccent)
+        case .warning: warningColors.resolve(isDark: traits.userInterfaceStyle == .dark)
         case .danger: (theme.destructive, theme.onDestructive)
         }
 

@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Support\WarningColors;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -82,7 +83,8 @@ class StatusLabel extends Element
             );
         }
 
-        return array_merge($this->statusProps, $this->extraProps);
+        return array_merge($this->statusProps, $this->extraProps,
+            $this->statusProps['tone'] === 'warning' ? WarningColors::props() : []);
     }
 
     private function assertDisplayOnlyAttributes(array $attrs): void

@@ -21,7 +21,7 @@ with [List Item](list-item.md) and optional grouped sections with
 ## Complete example
 
 ```blade
-<firstlight:list separator @refresh="reloadItems" @end-reached="loadMore">
+<firstlight:list separator @refresh="reloadItems" @endReached="loadMore">
     <firstlight:list-item headline="Account" @press="openAccount" />
 
     <firstlight:list-section header="Preferences" footer="Changes sync automatically">
@@ -48,7 +48,7 @@ accepted.
 `@refresh` enables native pull-to-refresh and invokes the named PHP action when
 the user pulls to refresh.
 
-`@end-reached` invokes the named PHP action when the viewport nears the final
+`@endReached` invokes the named PHP action when the viewport nears the final
 leaf row. It is intended for pagination rather than precise scroll offsets.
 See [Paginate lists](../how-to/paginate-lists.md) to bind Laravel paginators
 to these events. To delete a row through Confirmation Dialog authorization,

@@ -120,6 +120,8 @@ Both hosts announce each newly visible semantic ID once and do not repeat the an
 
 iOS composes a bottom SwiftUI material surface using SF Symbols and `Button`, with at least 44-point actions, `ViewThatFits` reflow, safe-area padding, dark mode, Dynamic Type, VoiceOver/Switch Control policy, and opacity-only Reduced Motion transitions.
 
+Warning feedback uses the shared `warning` / `on-warning` surface and content pair on both platforms (an opaque warning surface replaces the iOS material for that tone). PHP publishes `warning_color`, `on_warning_color`, `dark_warning_color`, and `dark_on_warning_color` on each feedback item through `FirstlightUI\Support\WarningColors::props()`. Defaults are `#B45309` / `#FFFFFF` in light appearance and `#FBBF24` / `#1C1917` in dark appearance; effective NativePHP theme overrides take precedence. This is independent of `accent` and shared with Status Label and Callout.
+
 Android composes a bottom Material 3 `Snackbar`/`SnackbarHost` with at least 48-dp actions, semantic tone colour roles and decorative vector drawing, constrained-width or font-scale reflow, navigation-bar and IME padding, a polite TalkBack live region, and the API 29 recommended-timeout adapter.
 
 Native visuals need not have pixel parity. Both hosts must preserve FIFO identity, one visible item, outcome ordering, pause/resume, stale-event isolation, and the same authored PHP example.
@@ -129,6 +131,12 @@ Native visuals need not have pixel parity. Both hosts must preserve FIFO identit
 PHP validation throws `InvalidArgumentException` before publication for blank authored data or incomplete direct records. Native decoders omit records with invalid identity, message, tone, or required lifetime callbacks without crashing, while incomplete action metadata normalizes to no action. Unsupported dismiss reasons, wrong action keys, duplicates, zero lifetime callbacks, and stale results fail closed. No code path silently substitutes a different tone for an eligible malformed record.
 
 Excluded public capabilities are Blade authoring, host installation, arbitrary duration or position, multiple actions, disabled/loading/model state, rich content, custom icons, swipe configuration, per-platform copy, untyped styling, durable persistence, and external queue mutation. Any such addition requires a new shared contract and paired-platform evidence.
+
+## PHP testing fake
+
+`Feedback::fake()` swaps the facade binding for a fresh `FeedbackFake`, leaving the native host's real store untouched. The final production manager and immutable pending builder remain in use against an isolated store. Only successful `send()` calls append readonly `FeedbackRecord` values to chronological history, including same-ID updates. Programmatic dismissal does not erase that history.
+
+`assertSent(callable)` requires at least one matching record; `assertNotSent(callable)` requires no match; `assertNothingSent()` requires an empty history. Failures are PHPUnit assertion failures. `sent(?callable)` returns a snapshot collection, optionally filtered, with full semantic fields including application `actionKey`. Builder validation and authored/generated IDs retain production semantics. This fake supplies PHP application-test evidence only, not native lifecycle, accessibility, or renderer evidence.
 
 ## Compatibility and evidence boundary
 

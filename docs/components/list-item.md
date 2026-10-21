@@ -50,16 +50,18 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | API | Accepted type | Purpose |
 | --- | --- | --- |
 | `headline` | non-empty `string` | Required primary text and default accessible name. |
-| `supporting` | non-empty `string` | Optional secondary text below the headline. |
+| `supporting` | nullable `string` | Optional secondary text; null, empty, and whitespace-only strings omit it. |
 | `leading-icon` | non-empty `string` | Optional shared leading icon and cross-platform fallback. |
 | `leading-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `leading-icon`. |
 | `leading-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `leading-icon`; typed variants are preserved on the wire. |
+| `leading-icon-tone`, `trailing-icon-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Semantic icon colour from the active theme. |
+| `leading-icon-color`, `trailing-icon-color` | hex `string` | Explicit icon colour overrides tone on both platforms; accepts `#RGB`, `#RRGGBB`, `#AARRGGBB`. |
 | `leading-avatar` | non-empty `string` | Optional image source representing the row subject. |
 | `leading-monogram` | one or two characters | Optional short identity marker such as `WJ`. |
 | `trailing-icon` | non-empty `string` | Optional shared decorative affordance icon. |
 | `trailing-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `trailing-icon`. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `trailing-icon`; typed variants are preserved on the wire. |
-| `trailing-text` | non-empty `string` | Optional short metadata or affordance text. |
+| `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
 | `trailing-actions` | `array` of action descriptors | Optional actions revealed from the logical trailing edge inside List. |
 | `disabled` | `bool` | Prevents row and swipe action presses and exposes native disabled state. Defaults to `false`. |
@@ -163,6 +165,17 @@ the iOS or Android override wins on its platform. A typed Android symbol keeps
 its filled or outlined variant in the native wire metadata. Overrides without
 their shared fallback are invalid.
 
+Set `leading-icon-tone="danger"` for an error category, or the corresponding
+`trailing-icon-tone` for a status glyph. Both accept the Status Label vocabulary:
+`neutral` uses `on-surface-variant`, `info` uses `primary`, `success` uses `success`,
+`warning` uses `warning`, and `danger` uses `destructive`. Warning defaults to
+accessible amber, not brand accent; see [Theming](../getting-started/theming.md).
+Without a tone, leading icons retain `primary` and trailing icons retain
+`on-surface-variant`. An explicit `*-icon-color` wins over tone on iOS and Android.
+CamelCase aliases and fluent `leadingIconTone()`, `trailingIconTone()`,
+`leadingIconColor()`, and `trailingIconColor()` are supported. These props only
+colour icons, not avatars, monograms, text, or swipe actions.
+
 ## Trailing affordances
 
 Use `trailing-icon` for a decorative directional or state affordance, or
@@ -192,13 +205,18 @@ buttons also expose their visible labels and button roles.
 
 ## Validation and excluded APIs
 
-Firstlight rejects missing or blank headlines, missing `@press`, blank optional
-text, non-boolean disabled values, invalid icon override types, icon overrides
+Firstlight rejects missing or blank headlines, missing `@press`, blank accessible
+labels/hints, non-boolean disabled values, invalid icon override types, icon overrides
 without shared fallbacks, ambiguous leading or trailing content, and content
 slots. It also rejects overline text, embedded controls, independent trailing
 actions, malformed or unlabelled swipe descriptors, long-press gestures, menus,
 navigation directives, model or selection state, loading and validation props,
-colours, elevation, typography, and per-platform layout escape hatches.
+non-icon colours, elevation, typography, and per-platform layout escape hatches.
+
+Optional `supporting` and `trailing-text` values may be null or empty, including
+literal empty strings. They render no slot and an empty `trailing-text` does not
+conflict with a trailing icon. Other non-string values remain invalid. Overline
+is not part of Firstlight's row contract.
 
 ## Platform behaviour
 

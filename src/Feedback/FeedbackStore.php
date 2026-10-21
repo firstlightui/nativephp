@@ -2,8 +2,12 @@
 
 namespace FirstlightUI\Feedback;
 
+use Closure;
+
 final class FeedbackStore
 {
+    public function __construct(private readonly ?Closure $onPublish = null) {}
+
     /** @var array<string, FeedbackRecord> */
     private array $records = [];
 
@@ -12,6 +16,10 @@ final class FeedbackStore
 
     public function put(FeedbackRecord $record): string
     {
+        if ($this->onPublish !== null) {
+            ($this->onPublish)($record);
+        }
+
         $this->records[$record->id] = $record;
         $this->publicationGenerations[$record->id] = ($this->publicationGenerations[$record->id] ?? 0) + 1;
 

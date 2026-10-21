@@ -46,6 +46,7 @@ data class FeedbackCenterItemConfiguration(
     private val hasValidIdentity: Boolean,
     private val hasValidMessage: Boolean,
     private val hasValidTone: Boolean,
+    val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -62,6 +63,7 @@ data class FeedbackCenterItemConfiguration(
         hasValidIdentity = node.props.getString("feedback_id").isNotBlank(),
         hasValidMessage = node.props.getString("message").isNotBlank(),
         hasValidTone = FeedbackCenterTone.fromWire(node.props.getString("tone", "default")) != null,
+        warningColors = FirstlightWarningColors(node),
     )
 
     val hasAction: Boolean get() = actionLabel != null && actionCallback != null

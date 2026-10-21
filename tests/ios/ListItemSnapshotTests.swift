@@ -7,6 +7,42 @@ import XCTest
 
 @MainActor
 final class ListItemSnapshotTests: XCTestCase {
+    func testIconTonesAndExplicitColourPrecedence() {
+        let tokens = NativeUITokens.listItemTest
+        let warning = FirstlightWarningColors()
+        for (tone, expected) in [
+            ("neutral", tokens.onSurfaceVariant), ("info", tokens.primary),
+            ("success", tokens.success), ("danger", tokens.destructive),
+            ("warning", warning.resolve(isDark: false).background), ("", Color.blue)
+        ] {
+            XCTAssertEqual(firstlightListItemIconColor(
+                explicit: "", tone: tone, tokens: tokens, warningColors: warning,
+                isDark: false, fallback: .blue
+            ), expected)
+            XCTAssertEqual(firstlightListItemIconColor(
+                explicit: "#123ABC", tone: tone, tokens: tokens, warningColors: warning,
+                isDark: false, fallback: .blue
+            ), Color(.sRGB, red: 18.0 / 255, green: 58.0 / 255, blue: 188.0 / 255, opacity: 1))
+        }
+        XCTAssertEqual(firstlightListItemIconColor(
+            explicit: "", tone: "warning", tokens: tokens, warningColors: warning,
+            isDark: true, fallback: .blue
+        ), warning.resolve(isDark: true).background)
+        XCTAssertEqual(firstlightListItemIconColor(
+            explicit: "#456", tone: "danger", tokens: tokens, warningColors: warning,
+            isDark: true, fallback: .blue
+        ), Color(.sRGB, red: 68.0 / 255, green: 85.0 / 255, blue: 102.0 / 255, opacity: 1))
+
+        let configuration = ListItemRendererConfiguration(node: makeNode(iconProps: [
+            "leading_icon_tone": "danger", "trailing_icon_tone": "warning",
+            "leading_icon_color": "#123ABC", "trailing_icon_color": "#456"
+        ]))
+        XCTAssertEqual(configuration.leadingIconTone, "danger")
+        XCTAssertEqual(configuration.trailingIconTone, "warning")
+        XCTAssertEqual(configuration.leadingIconColor, "#123ABC")
+        XCTAssertEqual(configuration.trailingIconColor, "#456")
+    }
+
     #if SWIFT_PACKAGE
     func testPackageShimPreservesResolvedIOSSymbolNames() {
         XCTAssertEqual(getIconForName("person.crop.circle"), "person.crop.circle")
@@ -171,7 +207,8 @@ final class ListItemSnapshotTests: XCTestCase {
         trailingValue: String = "chevron.right",
         disabled: Bool = false,
         callbackID: Int = 41,
-        actions: Bool = false
+        actions: Bool = false,
+        iconProps: [String: Any] = [:]
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
@@ -197,7 +234,7 @@ final class ListItemSnapshotTests: XCTestCase {
                     [{"cb":52,"label":"Delete","icon":"trash","icon_variant":"","role":"destructive"},
                      {"cb":53,"label":"Flag","icon":"flag","icon_variant":"","role":""}]
                     """ : "",
-            ]),
+            ].merging(iconProps) { _, value in value }),
             onPress: callbackID,
             onLongPress: 0,
             children: []

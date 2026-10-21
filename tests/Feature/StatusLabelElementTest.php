@@ -2,6 +2,7 @@
 
 use FirstlightUI\Elements\StatusLabel;
 use FirstlightUI\FirstlightTagPrecompiler;
+use FirstlightUI\Support\WarningColors;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -40,6 +41,7 @@ it('publishes display-only semantic status metadata as primitive props', functio
             'a11y_hint' => 'Updated by the referrals team',
             'label' => 'Awaiting review',
             'tone' => 'warning',
+            ...WarningColors::props(),
         ])
         ->and(json_decode(json_encode($tree, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR))->toBe($tree);
 });

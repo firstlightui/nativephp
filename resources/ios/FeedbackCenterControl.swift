@@ -129,6 +129,7 @@ struct FeedbackCenterButtonLabel: View {
 }
 
 struct FirstlightFeedbackCenterControl: View {
+    @Environment(\.colorScheme) private var colorScheme
     let configuration: FeedbackCenterItemConfiguration
     let tokens: NativeUITokens
     let onAction: () -> Void
@@ -160,13 +161,13 @@ struct FirstlightFeedbackCenterControl: View {
                 horizontalLayout
                 verticalLayout
             }
-            .feedbackCenterNoticeChrome(tokens: tokens)
+            .feedbackCenterNoticeChrome(tokens: tokens, warning: warningPair)
             .onChange(of: focusedControl) { _, focusedControl in
                 onAccessibilityFocusChanged(focusedControl != nil)
             }
         } else {
             horizontalLayout
-                .feedbackCenterNoticeChrome(tokens: tokens)
+                .feedbackCenterNoticeChrome(tokens: tokens, warning: warningPair)
                 .onChange(of: focusedControl) { _, focusedControl in
                     onAccessibilityFocusChanged(focusedControl != nil)
                 }
@@ -235,6 +236,7 @@ struct FirstlightFeedbackCenterControl: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.regular)
+                .tint(warningPair?.foreground)
                 .accessibilityLabel(Text(dismiss.accessibilityLabel))
                 .accessibilityFocused($focusedControl, equals: .dismiss)
             }
@@ -245,20 +247,30 @@ struct FirstlightFeedbackCenterControl: View {
         switch configuration.tone {
         case .default: tokens.primary
         case .success: Color(uiColor: .systemGreen)
-        case .warning: Color(uiColor: .systemOrange)
+        case .warning: warningPair?.foreground ?? tokens.onSurface
         case .danger: tokens.destructive
         }
+    }
+
+    private var warningPair: (background: Color, foreground: Color)? {
+        guard configuration.tone == .warning else { return nil }
+        let pair = FirstlightStatusLabelTokens.from(
+            theme: tokens, tone: .warning,
+            traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light),
+            warningColors: configuration.warningColors
+        )
+        return (Color(uiColor: pair.background), Color(uiColor: pair.foreground))
     }
 }
 
 private extension View {
-    func feedbackCenterNoticeChrome(tokens: NativeUITokens) -> some View {
+    func feedbackCenterNoticeChrome(tokens: NativeUITokens, warning: (background: Color, foreground: Color)?) -> some View {
         padding(.leading, 16)
             .padding(.trailing, 10)
             .padding(.vertical, 10)
-            .foregroundStyle(tokens.onSurface)
+            .foregroundStyle(warning?.foreground ?? tokens.onSurface)
             .background(
-                .regularMaterial,
+                warning.map { AnyShapeStyle($0.background) } ?? AnyShapeStyle(Material.regular),
                 in: RoundedRectangle(cornerRadius: 18, style: .continuous)
             )
             .overlay {

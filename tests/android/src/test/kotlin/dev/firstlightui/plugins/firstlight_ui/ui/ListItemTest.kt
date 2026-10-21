@@ -11,6 +11,8 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
@@ -45,6 +47,32 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class ListItemContractTest {
+    @Test
+    fun `icon colours follow semantic tones and explicit colours win`() {
+        val tokens = NativeUITheme.light.copy(primary = Color.Magenta, success = Color.Green, destructive = Color.Red)
+        val warning = FirstlightWarningColors(light = "#92400E", dark = "#FDE68A")
+        for ((tone, expected) in mapOf(
+            "neutral" to tokens.onSurfaceVariant, "info" to Color.Magenta,
+            "success" to Color.Green, "danger" to Color.Red,
+            "warning" to Color(0xFF92400E), "" to Color.Blue,
+        )) {
+            assertEquals(expected, firstlightListItemIconColor("", tone, tokens, warning, false, Color.Blue))
+            assertEquals(Color(0xFF123ABC), firstlightListItemIconColor("#123ABC", tone, tokens, warning, false, Color.Blue))
+        }
+        assertEquals(Color(0xFFFDE68A), firstlightListItemIconColor("", "warning", tokens, warning, true, Color.Blue))
+        assertEquals(Color(0xFF445566), firstlightListItemIconColor("#456", "danger", tokens, warning, true, Color.Blue))
+        assertEquals(Color(0x80123456), firstlightListItemIconColor("#80123456", "success", tokens, warning, false, Color.Blue))
+
+        val decoded = ListItemRendererConfiguration(NativeUINode(id = 9, props = GenericProps(mapOf(
+            "leading_icon_tone" to "danger", "trailing_icon_tone" to "warning",
+            "leading_icon_color" to "#123ABC", "trailing_icon_color" to "#456",
+        ))))
+        assertEquals("danger", decoded.leadingIconTone)
+        assertEquals("warning", decoded.trailingIconTone)
+        assertEquals("#123ABC", decoded.leadingIconColor)
+        assertEquals("#456", decoded.trailingIconColor)
+    }
+
     @Test
     fun `configuration decodes the complete row contract`() {
         val configuration = ListItemRendererConfiguration(node())
@@ -298,6 +326,45 @@ class ListItemLargeTextScreenshotTest {
             MaterialTheme(colorScheme = darkColorScheme()) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     listItemGallery(dark = true)
+                }
+            }
+        }
+    }
+}
+
+class ListItemToneScreenshotTest {
+    @get:Rule
+    val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5)
+
+    @Test fun light() = snapshot(false)
+    @Test fun dark() = snapshot(true)
+
+    private fun snapshot(dark: Boolean) {
+        paparazzi.snapshot {
+            val configuration = android.content.res.Configuration(LocalConfiguration.current).apply {
+                uiMode = (uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                    if (dark) android.content.res.Configuration.UI_MODE_NIGHT_YES else android.content.res.Configuration.UI_MODE_NIGHT_NO
+            }
+            CompositionLocalProvider(LocalConfiguration provides configuration) {
+                MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+                    val tokens = (if (dark) NativeUITheme.dark else NativeUITheme.light).copy(primary = Color.Magenta)
+                    Surface {
+                        Column {
+                            for (tone in listOf("", "neutral", "info", "success", "warning", "danger")) {
+                                FirstlightListItemControl(
+                                    configuration = ListItemRendererConfiguration(screenshotNode(headline = tone.ifEmpty { "Default (brand)" }))
+                                        .copy(leadingIconTone = tone, trailingIconTone = tone),
+                                    tokens = tokens, onPress = {},
+                                )
+                            }
+                            FirstlightListItemControl(
+                                configuration = ListItemRendererConfiguration(screenshotNode(headline = "Explicit blue overrides danger"))
+                                    .copy(leadingIconTone = "danger", trailingIconTone = "danger",
+                                        leadingIconColor = "#2563EB", trailingIconColor = "#2563EB"),
+                                tokens = tokens, onPress = {},
+                            )
+                        }
+                    }
                 }
             }
         }

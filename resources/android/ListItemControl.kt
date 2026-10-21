@@ -5,6 +5,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -227,6 +229,7 @@ private fun FirstlightListItemContent(
         accessibilityHint = configuration.accessibilityHint,
     )
     val enabled = configuration.enabled
+    val isDark = isSystemInDarkTheme()
     val rowModifier = modifier
         .minimumInteractiveComponentSize()
         .clickable(enabled = enabled, role = Role.Button, onClick = onPress)
@@ -280,8 +283,14 @@ private fun FirstlightListItemContent(
             containerColor = tokens.surface,
             headlineColor = tokens.onSurface,
             supportingColor = tokens.onSurfaceVariant,
-            leadingIconColor = tokens.primary,
-            trailingIconColor = tokens.onSurfaceVariant,
+            leadingIconColor = firstlightListItemIconColor(
+                configuration.leadingIconColor, configuration.leadingIconTone,
+                tokens, configuration.warningColors, isDark, tokens.primary,
+            ),
+            trailingIconColor = firstlightListItemIconColor(
+                configuration.trailingIconColor, configuration.trailingIconTone,
+                tokens, configuration.warningColors, isDark, tokens.onSurfaceVariant,
+            ),
         ),
     )
 }
@@ -344,4 +353,23 @@ private fun firstlightListItemTrailingContent(
             style = MaterialTheme.typography.labelLarge,
         )
     })
+}
+
+internal fun firstlightListItemIconColor(
+    explicit: String, tone: String, tokens: NativeUITokens,
+    warningColors: FirstlightWarningColors, isDark: Boolean, fallback: Color,
+): Color {
+    if (explicit.startsWith("#")) {
+        val hex = if (explicit.length == 4) "#" + explicit.drop(1).map { "$it$it" }.joinToString("") else explicit
+        try { return Color(android.graphics.Color.parseColor(hex)) }
+        catch (_: IllegalArgumentException) { /* Malformed native frames fall back to tone. */ }
+    }
+    return when (tone) {
+        "neutral" -> tokens.onSurfaceVariant
+        "info" -> tokens.primary
+        "success" -> tokens.success
+        "warning" -> warningColors.resolve(isDark).first
+        "danger" -> tokens.destructive
+        else -> fallback
+    }
 }

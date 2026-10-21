@@ -116,6 +116,24 @@ the official SuperNative element and wire-event seams.
 
 ## Evidence plan
 
+Separate button presses do not carry the editor buffer. Recommend
+`native:model.live` for button-submitted forms: blur/debounce publication has
+no cross-platform change-before-press guarantee. Any future fix must prove
+ordering through the official focus and event seams, not just renderer state
+tests or an arbitrary press delay.
+
+In locked Mobile 4.6.0 / Mobile UI 0.8.0, the official iOS Button calls
+`KeyboardFocusPolicy.dispatchPress` in `NativeUIButtonRenderer.swift`. Official
+`NativeUITextInputCore.swift` registers a focused-editor flush closure with
+`KeyboardFocusPolicy.fieldFocused`. Firstlight Text Field, Text Area, and Search
+Field do not register there: their buffers flush on their own blur/submit paths.
+This is a Firstlight iOS integration gap, not exclusively an upstream defect.
+On Android, `ButtonRenderer.kt` calls `dismissForInteractiveTap`, but Mobile's
+`ui/nativerender/KeyboardFocusPolicy.kt` exposes no synchronous buffer-flush hook;
+focus loss alone is not an ordering barrier. A paired fix needs an official
+Android flush seam and end-to-end change-before-press coverage on both platforms.
+No arbitrary delay, vendor patch, or separate event transport is introduced.
+
 - Pest 5 proves strict strings and booleans, line validation, sync modifiers,
   callback registration, accessibility diagnostics, exclusions, layout-only
   classes, real Blade compilation, and exact manifest identifiers.

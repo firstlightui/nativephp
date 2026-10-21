@@ -29,7 +29,7 @@ trait PaginatesLists
     }
 
     /**
-     * Append the next page. Bind to List `@end-reached`.
+     * Append the next page. Bind to List `@endReached`.
      *
      * @param  callable(ListPage): object  $fetch
      */

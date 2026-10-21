@@ -13,6 +13,7 @@ struct CalloutRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let accessibilityHint: String
     let callbackID: Int
+    let warningColors: FirstlightWarningColors
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -24,6 +25,7 @@ struct CalloutRendererConfiguration: Equatable {
         accessibilityLabel = node.props.getString("a11y_label")
         accessibilityHint = node.props.getString("a11y_hint")
         callbackID = node.onPress
+        warningColors = FirstlightWarningColors(node: node)
     }
 
     var hasAction: Bool {

@@ -51,7 +51,7 @@ The visible label is the default accessible name. `a11y-label` replaces that nam
 - iOS composes SwiftUI `Text` with native font scaling, a `Capsule` background, and VoiceOver text semantics.
 - Android composes Material 3 `Text` in a capsule-shaped `Surface` with merged TalkBack semantics and no click action.
 
-Both renderers inherit NativePHP semantic theme tokens. Tone maps to neutral surface, primary informational, success, accent warning, or destructive colour pairs. If a themed foreground/background pair is below 4.5:1 contrast, the renderer selects black or white text with the stronger ratio. Light, dark, increased-contrast, Dynamic Type/font-scale, RTL, and long-label behaviour remain native.
+Both renderers inherit NativePHP semantic theme tokens. Tone maps to neutral surface, primary informational, success, warning/on-warning, or destructive colour pairs. PHP resolves warning tokens through `FirstlightUI\Support\WarningColors::props()` into `warning_color`, `on_warning_color`, `dark_warning_color`, and `dark_on_warning_color`; native fixed token structs do not retain custom keys. Missing effective warning tokens fall back to `#B45309` / `#FFFFFF` in light appearance and `#FBBF24` / `#1C1917` in dark appearance, shared with Callout and Feedback. If a themed foreground/background pair is below 4.5:1 contrast, the renderer selects black or white text with the stronger ratio. Light, dark, increased-contrast, Dynamic Type/font-scale, RTL, and long-label behaviour remain native.
 
 ## Official primitive decision
 

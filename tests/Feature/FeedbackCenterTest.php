@@ -8,6 +8,7 @@ use FirstlightUI\Feedback\FeedbackManager;
 use FirstlightUI\Feedback\FeedbackStore;
 use FirstlightUI\FirstlightServiceProvider;
 use FirstlightUI\NativeComponents\FeedbackCenter;
+use FirstlightUI\Support\WarningColors;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
 use Illuminate\Events\Dispatcher;
@@ -249,6 +250,7 @@ it('publishes the full fifo queue with package-owned callbacks', function () {
             'on_manual' => $heldManualCallback,
             'dismiss_label' => 'Dismiss',
             'dismiss_a11y_label' => 'Dismiss feedback',
+            ...WarningColors::props(),
         ])
         ->and($heldManualCallback)->toBeInt()->not->toBe(0)
         ->and($tree)->not->toHaveKeys(['layout', 'style'])

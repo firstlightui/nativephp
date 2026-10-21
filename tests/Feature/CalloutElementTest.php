@@ -2,6 +2,7 @@
 
 use FirstlightUI\Elements\Callout;
 use FirstlightUI\FirstlightTagPrecompiler;
+use FirstlightUI\Support\WarningColors;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -45,6 +46,7 @@ it('publishes a persistent semantic message and optional standard action', funct
             'message' => 'Your changes have not been submitted.',
             'tone' => 'warning',
             'action_label' => 'Review changes',
+            ...WarningColors::props(),
         ])
         ->and($tree['layout']['margin'])->toBe(8.0)
         ->and($registry->resolve($tree['on_press']))->toBe([
