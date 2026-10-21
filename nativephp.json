@@ -1,6 +1,6 @@
 {
     "name": "firstlightui/nativephp",
-    "version": "0.1.0-alpha.1",
+    "version": "1.0.0-RC1",
     "description": "Native controls for NativePHP, shaped for each platform.",
     "namespace": "Firstlight",
     "platforms": [
