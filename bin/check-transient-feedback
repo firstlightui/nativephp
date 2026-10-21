@@ -689,6 +689,8 @@ PHP;
     stream_set_blocking($pipes[1], false);
     stream_set_blocking($pipes[2], false);
     $output = '';
+    $streamOutput = [(int) $pipes[1] => '', (int) $pipes[2] => ''];
+    $streamOutputLimit = intdiv($outputLimit, 2);
     $startedAt = hrtime(true);
     $deadline = $startedAt + (int) ($timeout * 1_000_000_000);
     $timedOut = false;
@@ -715,7 +717,7 @@ PHP;
         return true;
     };
     $nextStream = 0;
-    $drain = static function (array $streams, int $drainDeadline) use (&$nextStream, &$output, $outputLimit): void {
+    $drain = static function (array $streams, int $drainDeadline) use (&$nextStream, &$output, &$streamOutput, $streamOutputLimit): void {
         $streams = array_values(array_filter($streams, static fn ($stream): bool => is_resource($stream) && ! feof($stream)));
         $count = count($streams);
         if ($count === 0) {
@@ -736,9 +738,12 @@ PHP;
                     $madeProgress = true;
                     $chunks[$index]++;
                     $bytes[$index] += strlen($chunk);
-                    $remaining = $outputLimit - strlen($output);
+                    // Reserve room for stderr even when stdout starts flooding first.
+                    $streamId = (int) $streams[$index];
+                    $remaining = $streamOutputLimit - strlen($streamOutput[$streamId]);
                     if ($remaining > 0) {
-                        $output .= substr($chunk, 0, $remaining);
+                        $streamOutput[$streamId] .= substr($chunk, 0, $remaining);
+                        $output = implode('', $streamOutput);
                     }
                 }
                 if (hrtime(true) >= $drainDeadline) {
