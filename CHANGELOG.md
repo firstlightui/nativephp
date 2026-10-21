@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 - Share warning/on-warning theme tokens and accessible amber fallbacks across Status Label, Badge, Callout, and Feedback, including Android Badge's dark appearance.
 - Apply the resolved field name and hint to iOS Text Field's editable and secure inputs.
 - Treat null or empty List Item supporting/trailing text as absent.
+- Keep wrapped iOS Status Label text inside its contrasting fill at maximum Dynamic Type while preserving compact single-line pills.
+- Pin iOS snapshot appearance and fit Media, Pill Group, and Callout fixtures to their test canvases without relaxing snapshot equality.
 - Preserve stderr diagnostics when a focused release-gate test floods stdout, without increasing the output or timeout limits.
 - Align release-gate expectations with the existing Media catalogue and Feedback publication-generation contract; shorten component guidance without weakening its checks.
 
