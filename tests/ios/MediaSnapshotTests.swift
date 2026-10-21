@@ -7,6 +7,10 @@ import XCTest
 
 @MainActor
 final class MediaSnapshotTests: XCTestCase {
+    private let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
+        "FIRSTLIGHT_RECORD_SNAPSHOTS"
+    ] == "1" ? .all : .never
+
     func testConfigurationDecodesImageFieldContract() {
         let configuration = MediaRendererConfiguration(node: makeNode(
             mode: "image",
@@ -124,8 +128,7 @@ final class MediaSnapshotTests: XCTestCase {
             onZoomOut: {}
         )
 
-        let controller = UIHostingController(rootView: view.frame(width: 390, height: 720))
-        assertSnapshot(of: controller, as: .image(on: .iPhoneSe))
+        assertSnapshot(of: controller(view), as: .image(on: .iPhoneSe), record: record)
     }
 
     func testEmptyFieldSnapshot() {
@@ -135,11 +138,10 @@ final class MediaSnapshotTests: XCTestCase {
             onPick: {},
             onClear: {}
         )
-        .frame(width: 360)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
 
-        let controller = UIHostingController(rootView: view)
-        assertSnapshot(of: controller, as: .image(on: .iPhoneSe))
+        assertSnapshot(of: controller(view), as: .image(on: .iPhoneSe), record: record)
     }
 
     func testValueErrorDisabledSnapshots() {
@@ -153,7 +155,7 @@ final class MediaSnapshotTests: XCTestCase {
             onPick: {},
             onClear: {}
         )
-        .frame(width: 360)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
 
         let disabled = FirstlightMediaControl(
@@ -162,11 +164,20 @@ final class MediaSnapshotTests: XCTestCase {
             onPick: {},
             onClear: {}
         )
-        .frame(width: 360)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
 
-        assertSnapshot(of: UIHostingController(rootView: valued), as: .image(on: .iPhoneSe), named: "value-error")
-        assertSnapshot(of: UIHostingController(rootView: disabled), as: .image(on: .iPhoneSe), named: "disabled")
+        assertSnapshot(of: controller(valued), as: .image(on: .iPhoneSe), named: "value-error", record: record)
+        assertSnapshot(of: controller(disabled), as: .image(on: .iPhoneSe), named: "disabled", record: record)
+    }
+
+    private func controller<Content: View>(_ view: Content) -> UIViewController {
+        let controller = UIHostingController(rootView: view
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(uiColor: .systemBackground)))
+        controller.overrideUserInterfaceStyle = .light
+        controller.traitOverrides.preferredContentSizeCategory = .large
+        return controller
     }
 
     private func makeNode(

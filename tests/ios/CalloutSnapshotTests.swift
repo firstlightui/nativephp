@@ -88,7 +88,8 @@ final class CalloutSnapshotTests: XCTestCase {
         )
         assertSnapshot(
             of: makeViewController(style: .light, contentSize: .accessibilityExtraExtraExtraLarge),
-            as: .image(on: .iPhoneSe),
+            // Preserve the narrow viewport while showing every message and action.
+            as: .image(on: .iPhoneSe, size: CGSize(width: 320, height: 2400)),
             named: "accessibility-extra-extra-extra-large",
             record: recordMode
         )

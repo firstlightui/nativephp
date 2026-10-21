@@ -33,7 +33,7 @@ final class PillGroupControlSnapshotTests: XCTestCase {
                 style: .light,
                 contentSize: .accessibilityExtraExtraExtraLarge
             ),
-            as: .image(on: .iPhoneSe),
+            as: .image(on: .iPhoneSe, size: CGSize(width: 320, height: 900)),
             named: "accessibility-extra-extra-extra-large",
             record: recordMode
         )
