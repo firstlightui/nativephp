@@ -25,6 +25,9 @@ Status Label presents short display-only metadata or status text as a native cap
 <firstlight:status-label
     label="Awaiting review"
     tone="warning"
+    icon="warning"
+    icon-ios="exclamationmark.triangle"
+    icon-android="warning"
     a11y-label="Referral status: awaiting review"
     a11y-hint="Updated by the referrals team"
 />
@@ -38,9 +41,16 @@ The same authored tag renders on iOS and Android.
 | --- | --- | --- |
 | `label` | non-empty `string` | Visible status text. Required. |
 | `tone` | `neutral`, `info`, `success`, `warning`, or `danger` | Semantic colour intent. Defaults to `neutral`. |
+| `icon` | `string` or `null` | Optional decorative leading icon; shared fallback. |
+| `icon-ios` | `IosSymbol`, `string`, or `null` | iOS override of `icon`. |
+| `icon-android` | `AndroidSymbol`, `string`, or `null` | Android override of `icon`. |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
 | `class` | `string` | External EDGE layout utilities. |
+
+## Icons
+
+Icons use NativePHP's `Native\Mobile\Icon\IconResolver`. PHP also accepts `iconIos` and `iconAndroid` aliases. The fluent API is `StatusLabel::make('Warning')->icon('warning', ios: 'exclamationmark.triangle', android: 'warning')`; typed symbols implement `Native\Mobile\Icon\IosSymbol` or `AndroidSymbol`. Each platform uses its override when supplied, otherwise the shared name; tooling with no platform uses the shared name. Omitting icons keeps the text-only presentation. Android typed variants are retained in the published props; NativePHP's current Material icon-font helper renders the resolved name, not a separate variant font.
 
 ## Events and values
 
@@ -60,11 +70,15 @@ Disabled, loading, and validation states do not apply to display-only status tex
 
 The visible `label` is the accessible name by default. `a11y-label` replaces that name, and `a11y-hint` adds context. Both renderers expose static text semantics without a button, selected, disabled, or live-region role.
 
+The optional icon is decorative and silent to VoiceOver and TalkBack. It uses the same contrast-checked tone foreground as the text in light and dark appearances; it never replaces the required label. Leading placement follows the native layout direction.
+
 Text follows Dynamic Type on iOS and system font scaling on Android. Long labels and accessibility sizes expand or wrap rather than truncating their meaning. Semantic theme colours are checked at render time; when a customised foreground and background are below 4.5:1 contrast, Firstlight uses whichever of black or white has the stronger ratio.
 
 ## Validation and failure behaviour
 
 A missing, `null`, empty, or whitespace-only `label` throws an `InvalidArgumentException`. An unsupported tone also throws and lists the accepted values. Malformed tone data that reaches a native renderer unexpectedly falls back defensively to `neutral` instead of crashing the host.
+
+Non-string shared icons and platform overrides other than strings, matching platform symbol types, or `null` throw with the public prop name.
 
 ## Platform behaviour
 
@@ -75,6 +89,8 @@ iOS composes SwiftUI `Text` with native text accessibility. A single line keeps 
 Status Label supports the versions listed in the current [compatibility reference](../reference/compatibility.md) and requires both native renderers to be compiled into the host application.
 
 ## Screenshots
+
+The existing captures below show the text-only presentation. Updated icon-bearing light, dark, and accessibility-size native captures are pending runner permission; they are not evidence for the new icon treatment.
 
 | Platform | Light | Dark |
 | --- | --- | --- |

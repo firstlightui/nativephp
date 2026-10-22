@@ -131,6 +131,75 @@ Pressing an action removes the item, dispatches `FeedbackActionPressed`, then di
 
 `Feedback::dismiss($id)` is programmatic reconciliation. It dispatches neither event, including when it removes the visible item.
 
+### Undo on the active screen
+
+The package-owned feedback child also delivers both outcomes through NativePHP's synchronous `emit()` lifecycle to the active screen's `#[On]` handlers. Use named payload parameters, not an event-object parameter: `string $id, string $actionKey` for actions and `string $id, FeedbackDismissReason $reason` for dismissals. The normal interaction then re-renders the screen; do not call `render()` yourself.
+
+This complete in-memory example archives one item and restores it when Undo is pressed:
+
+```php
+namespace App\Native;
+
+use FirstlightUI\Elements\Button;
+use FirstlightUI\Events\FeedbackActionPressed;
+use FirstlightUI\Events\FeedbackDismissed;
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Feedback\FeedbackDismissReason;
+use FirstlightUI\NativeComponent;
+use Native\Mobile\Attributes\On;
+use Native\Mobile\Edge\Element;
+use Native\Mobile\Edge\Elements\Column;
+use Native\Mobile\Edge\Elements\Text;
+
+final class Inbox extends NativeComponent
+{
+    public bool $archived = false;
+    public ?string $undoFeedbackId = null;
+
+    public function archive(): void
+    {
+        if ($this->archived) {
+            return;
+        }
+
+        $this->archived = true;
+        $this->undoFeedbackId = Feedback::success('Item archived')
+            ->action('Undo', 'undo-archive')->send();
+    }
+
+    #[On(FeedbackActionPressed::class)]
+    public function undo(string $id, string $actionKey): void
+    {
+        if ($id === $this->undoFeedbackId && $actionKey === 'undo-archive') {
+            $this->archived = false;
+        }
+    }
+
+    #[On(FeedbackDismissed::class)]
+    public function feedbackDismissed(string $id, FeedbackDismissReason $reason): void
+    {
+        if ($id === $this->undoFeedbackId) {
+            // Action has already run; Timeout and Manual simply end Undo.
+            $this->undoFeedbackId = null;
+        }
+    }
+
+    public function render(): Element
+    {
+        return $this->response(Column::make(
+            Text::make($this->archived ? 'Item archived' : 'Active item'),
+            Button::make('Archive')->onPress('archive'),
+        ));
+    }
+}
+```
+
+Laravel listeners run first for each outcome, then screen handlers, in this order: Laravel action → screen action → Laravel dismissal → screen dismissal. Avoid performing the same Undo in both places. If a Laravel listener throws, that outcome's screen delivery is skipped; action dismissal still runs in `finally`. A throwing screen action also runs dismissal before propagating. A dismissal-listener exception can supersede an action exception, following normal PHP `finally` semantics.
+
+Screen delivery targets the **currently mounted** screen, not a retained reference to the screen that sent the message. The example's state is intentionally screen-local: for Undo that must work after navigation, store an authorized, durable undo token in your application and handle it in a Laravel listener instead (then reload screen state as needed). `event(new FeedbackActionPressed(...))` on its own is still only a Laravel event, not a screen notification.
+
+No `BroadcastsGlobally` marker is needed: that Mobile interface forwards incoming device events to Laravel, not Laravel events to screens. Feedback outcomes already arrive through the package child's EDGE callbacks; Firstlight uses Mobile's existing child-to-screen event support rather than a parallel dispatcher.
+
 ## Queue and stable-ID updates
 
 Feedback is displayed one item at a time in first-in, first-out order. Sending a new ID appends it. Sending an existing ID replaces that semantic record in place, so it keeps its current queue position:

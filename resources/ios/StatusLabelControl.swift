@@ -96,11 +96,20 @@ struct FirstlightStatusLabelControl: View {
     let tokens: FirstlightStatusLabelTokens
     let accessibilityLabel: String
     let accessibilityHint: String
+    var icon: String = ""
 
     let isInteractive = false
 
     var body: some View {
-        Text(label)
+        HStack(spacing: 6) {
+            if !icon.isEmpty {
+                Image(systemName: icon)
+                    .accessibilityHidden(true)
+            }
+            Text(label)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+        }
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Color(uiColor: tokens.foreground))
             .lineLimit(nil)
@@ -112,6 +121,7 @@ struct FirstlightStatusLabelControl: View {
                     .fill(Color(uiColor: tokens.background))
             )
             .accessibilityElement(children: .ignore)
+            .accessibilityAddTraits(.isStaticText)
             .accessibilityLabel(Text(accessibilityLabel))
             .accessibilityHint(Text(accessibilityHint))
     }

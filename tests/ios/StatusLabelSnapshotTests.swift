@@ -7,6 +7,19 @@ import XCTest
 
 @MainActor
 final class StatusLabelSnapshotTests: XCTestCase {
+    func testResolvedIconDecodingAndRemovalOnPublication() {
+        let node = NativeUINode(
+            id: 7, type: "firstlight.status-label", layout: nil, style: nil,
+            props: GenericProps(["label": "Warning", "icon": "exclamationmark.triangle"]),
+            onPress: 0, onLongPress: 0, children: []
+        )
+        var state = StatusLabelRendererState(node: node)
+        XCTAssertEqual(state.configuration.icon, "exclamationmark.triangle")
+        XCTAssertEqual(state.configuration.accessibilityLabel, "Warning")
+        XCTAssertTrue(state.serverPublished(NativeUITree(version: 1, callbackCount: 0, root: makeNode())))
+        XCTAssertEqual(state.configuration.icon, "")
+    }
+
     func testWarningPairUsesPublishedCustomTokensAndIndependentFallbacks() {
         let node = NativeUINode(
             id: 1, type: "firstlight.status-label", layout: nil, style: nil,

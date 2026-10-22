@@ -47,6 +47,7 @@
 - [Slider](https://firstlightui.dev/components/slider): Strict numeric grids, native draft synchronisation, accessibility, and paired platform behavior for Firstlight Slider.
 - [Stepper](https://firstlightui.dev/components/stepper): Move an exact integer or decimal value through a bounded native stepper.
 - [Status Label](https://firstlightui.dev/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
+- [Metric](https://firstlightui.dev/components/metric): Display one labelled value and optional detail as a single accessible native element.
 - [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
 - [Text Area](https://firstlightui.dev/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.
 - [Code Editor](https://firstlightui.dev/components/code-editor): Public API, language-aware indentation, key row, follow mode, synchronisation, accessibility, and native platform behaviour for Firstlight Code Editor.

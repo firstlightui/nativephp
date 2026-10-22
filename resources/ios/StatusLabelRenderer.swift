@@ -8,6 +8,7 @@ struct StatusLabelRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let accessibilityHint: String
     let warningColors: FirstlightWarningColors
+    let icon: String
 
     init(node: NativeUINode) {
         let label = node.props.getString("label")
@@ -21,6 +22,7 @@ struct StatusLabelRendererConfiguration: Equatable {
             : node.props.getString("a11y_label")
         self.accessibilityHint = node.props.getString("a11y_hint")
         warningColors = FirstlightWarningColors(node: node)
+        icon = node.props.getString("icon")
     }
 }
 
@@ -74,7 +76,8 @@ struct StatusLabelRenderer: View {
                 warningColors: configuration.warningColors
             ),
             accessibilityLabel: configuration.accessibilityLabel,
-            accessibilityHint: configuration.accessibilityHint
+            accessibilityHint: configuration.accessibilityHint,
+            icon: configuration.icon
         )
         .onReceive(NativeUIBridge.shared.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)

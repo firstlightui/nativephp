@@ -40,8 +40,9 @@ final class FeedbackCenter extends NativeComponent
 
         try {
             event(new FeedbackActionPressed($id, $key));
+            $this->emit(FeedbackActionPressed::class, id: $id, actionKey: $key);
         } finally {
-            event(new FeedbackDismissed($id, FeedbackDismissReason::Action));
+            $this->publishDismissal($id, FeedbackDismissReason::Action);
         }
     }
 
@@ -55,7 +56,15 @@ final class FeedbackCenter extends NativeComponent
         }
 
         if (app(FeedbackStore::class)->remove($id) !== null) {
-            event(new FeedbackDismissed($id, $dismissReason));
+            $this->publishDismissal($id, $dismissReason);
         }
+    }
+
+    private function publishDismissal(string $id, FeedbackDismissReason $reason): void
+    {
+        event(new FeedbackDismissed($id, $reason));
+        // EDGE's synchronous child-to-screen lifecycle preserves action-before-
+        // dismissal ordering and lets the normal interaction repaint the screen.
+        $this->emit(FeedbackDismissed::class, id: $id, reason: $reason);
     }
 }

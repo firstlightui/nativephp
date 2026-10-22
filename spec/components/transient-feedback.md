@@ -96,6 +96,18 @@ Callback IDs belong to the package `FeedbackCenter` child registry, never the co
 
 The events are final readonly payloads: `FeedbackActionPressed::$id/$actionKey` are strings; `FeedbackDismissed::$id` is a string and `$reason` is `FeedbackDismissReason`.
 
+### Active-screen delivery decision
+
+Use installed Mobile 4.6's official synchronous `NativeComponent::emit()` from the package-owned child, in addition to the existing Laravel `event()`. Do not add a concern, custom dispatcher, or `BroadcastsGlobally`. Inspection of `vendor/nativephp/mobile/src/Edge/NativeComponent.php` shows `emit()` invokes ancestor `#[On]` listeners and the enclosing interaction re-renders; `dispatch()` queues component delivery until after the action returns. Synchronous emission preserves action/dismissal order even when a screen listener throws. `dispatchNativeEvent()` and `Events/Concerns/BroadcastsGlobally.php` implement the opposite direction: an incoming native event is additionally sent to Laravel. Marking a PHP event alone cannot deliver it to a screen.
+
+For each outcome Laravel listeners run before the matching screen listener. The successful sequence is Laravel action → screen action → Laravel dismissal → screen dismissal. Component payloads use named `id` / `actionKey` and `id` / `reason` arguments; `reason` is the enum instance, not its wire string and not the whole event object. Action removal precedes all listeners. The existing `finally` covers both Laravel and screen action exceptions. Exceptions propagate; a Laravel exception skips that outcome's screen emission, and a dismissal exception can supersede an action exception. Programmatic dismissal stays silent.
+
+The complete screen-local Undo example is maintained in [Transient Feedback: Undo on the active screen](../../docs/components/transient-feedback.md#undo-on-the-active-screen). Its contract is: archive changes state and saves the generated feedback ID; `#[On(FeedbackActionPressed::class)] undo(string $id, string $actionKey)` restores only the matching ID/key; `#[On(FeedbackDismissed::class)] feedbackDismissed(string $id, FeedbackDismissReason $reason)` clears the matching pending ID after the action or on timeout/manual dismissal; `render()` returns a chrome-wrapped tree showing the updated state. The native callback interaction publishes that state without an explicit render call.
+
+Delivery is to the current screen's ancestor chain, never an off-screen originating instance or unrelated sibling. Cross-navigation Undo requires application-owned authorized persistence and Laravel listeners, not retained screen state. Do not perform the same business mutation in both Laravel and screen listeners. Direct application `event()` calls remain Laravel-only.
+
+Exactly-once consumption remains keyed by semantic ID. Publication generation continues to distinguish callback expressions, not authorize events: a still-owned callback from an older same-ID publication can consume the current record once if its action key matches. Subsequent stale/current callbacks see no record and emit neither Laravel nor screen outcomes. No new per-generation rejection or event replay is introduced by this delivery fix.
+
 ## Native queue and reconciliation
 
 Each platform retains eligible published records in FIFO order and renders only the first. Same-ID publication refreshes content, node ID, and callbacks in place without restarting elapsed time. Programmatic absence removes a record silently and advances the queue.

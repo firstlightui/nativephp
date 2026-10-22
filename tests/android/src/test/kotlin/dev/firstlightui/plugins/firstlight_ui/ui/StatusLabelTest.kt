@@ -8,6 +8,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
@@ -20,8 +25,45 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+@OptIn(ExperimentalTestApi::class)
+@RunWith(RobolectricTestRunner::class)
+class StatusLabelIconSemanticsTest {
+    @Test
+    fun `production renderer keeps decorative icon glyph out of accessibility`() = runComposeUiTest {
+        setContent {
+            MaterialTheme {
+                StatusLabelRenderer.Render(
+                    NativeUINode(id = 7, props = GenericProps(mapOf(
+                        "label" to "Warning", "icon" to "warning",
+                    ))),
+                    Modifier,
+                )
+            }
+        }
+        onNodeWithContentDescription("Warning").assertIsDisplayed()
+        // MaterialIcon's test shim draws this text; clearing its semantics
+        // must keep it out of the merged accessibility node.
+        onNodeWithText("◆").assertDoesNotExist()
+    }
+}
 
 class StatusLabelContractTest {
+    @Test
+    fun `resolved icon and variant reconcile and remain outside the accessible name`() {
+        val state = StatusLabelRendererState(node().copy(props = GenericProps(mapOf(
+            "label" to "Warning", "icon" to "warning", "icon_variant" to "outlined",
+        ))))
+        assertEquals("warning", state.configuration.icon)
+        assertEquals("outlined", state.configuration.iconVariant)
+        assertEquals("Warning", state.configuration.accessibilityLabel)
+        assertTrue(state.serverPublished(NativeUITree(node())))
+        assertEquals("", state.configuration.icon)
+        assertEquals("", state.configuration.iconVariant)
+    }
+
     @Test
     fun `warning pair is decoded independently for all surfaces and both appearances`() {
         val warningNode = node().copy(props = GenericProps(mapOf(

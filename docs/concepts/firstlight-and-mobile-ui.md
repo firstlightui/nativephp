@@ -111,6 +111,23 @@ Some Firstlight behaviour is not a new control. Field validation (`ValidatesFiel
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
+### Custom tappable content and accessibility
+
+NativePHP core owns arbitrary-content `native:pressable` surfaces. In the supported
+Mobile 4.6 implementation, Blade preserves their authored accessibility labels,
+but the generic native renderers do not consume those labels/hints or explicitly
+map a button role and disabled/selected state. Android's clickable supplies implicit
+Compose grouping; iOS uses a tap gesture without explicit accessibility grouping.
+Adding `a11y-label` to a `native:column` does not turn it into one accessible
+measurement either. Do not assume a visual tap target is accessible.
+
+Use [Button](../components/button.md) for labelled actions and
+[List Item](../components/list-item.md) for application rows when their content
+contracts fit. Use [Metric](../components/metric.md) for a static grouped statistic.
+There is no supported arbitrary-content accessible action wrapper in Firstlight;
+custom interactive banners need an upstream core accessibility fix. Panels,
+dividers and tile grids remain Mobile UI layout, not catalogue controls.
+
 ## Reusing Mobile UI when it already fits
 
 Firstlight does not maintain duplicate native code merely to put every control under its own namespace. **Button** and **Progress** currently keep public Firstlight element types while delegating directly to the official Mobile UI SwiftUI and Material 3 renderers.

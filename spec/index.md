@@ -41,6 +41,7 @@ sources:
 - [Tabs component contract](components/tabs.md) — Defines section values, badges, state timing, tab accessibility, the catalogue boundary, and native expression.
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
+- [Metric component contract](components/metric.md) — Defines a static measurement with tabular figures and one accessible description.
 - [Text Area component contract](components/text-area.md) — Defines focused multiline editing, line bounds, sync policies, accessibility, and the paired-renderer boundary.
 - [Code Editor component contract](components/code-editor.md) — Defines focused code editing, shared indentation and scroll-anchor fixtures, key row, follow mode, and the paired-renderer boundary.
 - [Package architecture](architecture/package.md) — Maps the public PHP API to the iOS and Android renderer lifecycle.

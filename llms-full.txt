@@ -1130,6 +1130,23 @@ Some Firstlight behaviour is not a new control. Field validation (`ValidatesFiel
 
 Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
+### Custom tappable content and accessibility
+
+NativePHP core owns arbitrary-content `native:pressable` surfaces. In the supported
+Mobile 4.6 implementation, Blade preserves their authored accessibility labels,
+but the generic native renderers do not consume those labels/hints or explicitly
+map a button role and disabled/selected state. Android's clickable supplies implicit
+Compose grouping; iOS uses a tap gesture without explicit accessibility grouping.
+Adding `a11y-label` to a `native:column` does not turn it into one accessible
+measurement either. Do not assume a visual tap target is accessible.
+
+Use [Button](../components/button.md) for labelled actions and
+[List Item](../components/list-item.md) for application rows when their content
+contracts fit. Use [Metric](../components/metric.md) for a static grouped statistic.
+There is no supported arbitrary-content accessible action wrapper in Firstlight;
+custom interactive banners need an upstream core accessibility fix. Panels,
+dividers and tile grids remain Mobile UI layout, not catalogue controls.
+
 ## Reusing Mobile UI when it already fits
 
 Firstlight does not maintain duplicate native code merely to put every control under its own namespace. **Button** and **Progress** currently keep public Firstlight element types while delegating directly to the official Mobile UI SwiftUI and Material 3 renderers.
@@ -1524,6 +1541,75 @@ public function boot(): void
 Pressing an action removes the item, dispatches `FeedbackActionPressed`, then dispatches `FeedbackDismissed` with `FeedbackDismissReason::Action`. The dismissal event is still dispatched if an action listener throws, and the listener exception is not swallowed. An automatic timeout dispatches only `FeedbackDismissed` with `FeedbackDismissReason::Timeout`. A manual native dismissal dispatches only `FeedbackDismissed` with `FeedbackDismissReason::Manual`.
 
 `Feedback::dismiss($id)` is programmatic reconciliation. It dispatches neither event, including when it removes the visible item.
+
+### Undo on the active screen
+
+The package-owned feedback child also delivers both outcomes through NativePHP's synchronous `emit()` lifecycle to the active screen's `#[On]` handlers. Use named payload parameters, not an event-object parameter: `string $id, string $actionKey` for actions and `string $id, FeedbackDismissReason $reason` for dismissals. The normal interaction then re-renders the screen; do not call `render()` yourself.
+
+This complete in-memory example archives one item and restores it when Undo is pressed:
+
+```php
+namespace App\Native;
+
+use FirstlightUI\Elements\Button;
+use FirstlightUI\Events\FeedbackActionPressed;
+use FirstlightUI\Events\FeedbackDismissed;
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Feedback\FeedbackDismissReason;
+use FirstlightUI\NativeComponent;
+use Native\Mobile\Attributes\On;
+use Native\Mobile\Edge\Element;
+use Native\Mobile\Edge\Elements\Column;
+use Native\Mobile\Edge\Elements\Text;
+
+final class Inbox extends NativeComponent
+{
+    public bool $archived = false;
+    public ?string $undoFeedbackId = null;
+
+    public function archive(): void
+    {
+        if ($this->archived) {
+            return;
+        }
+
+        $this->archived = true;
+        $this->undoFeedbackId = Feedback::success('Item archived')
+            ->action('Undo', 'undo-archive')->send();
+    }
+
+    #[On(FeedbackActionPressed::class)]
+    public function undo(string $id, string $actionKey): void
+    {
+        if ($id === $this->undoFeedbackId && $actionKey === 'undo-archive') {
+            $this->archived = false;
+        }
+    }
+
+    #[On(FeedbackDismissed::class)]
+    public function feedbackDismissed(string $id, FeedbackDismissReason $reason): void
+    {
+        if ($id === $this->undoFeedbackId) {
+            // Action has already run; Timeout and Manual simply end Undo.
+            $this->undoFeedbackId = null;
+        }
+    }
+
+    public function render(): Element
+    {
+        return $this->response(Column::make(
+            Text::make($this->archived ? 'Item archived' : 'Active item'),
+            Button::make('Archive')->onPress('archive'),
+        ));
+    }
+}
+```
+
+Laravel listeners run first for each outcome, then screen handlers, in this order: Laravel action → screen action → Laravel dismissal → screen dismissal. Avoid performing the same Undo in both places. If a Laravel listener throws, that outcome's screen delivery is skipped; action dismissal still runs in `finally`. A throwing screen action also runs dismissal before propagating. A dismissal-listener exception can supersede an action exception, following normal PHP `finally` semantics.
+
+Screen delivery targets the **currently mounted** screen, not a retained reference to the screen that sent the message. The example's state is intentionally screen-local: for Undo that must work after navigation, store an authorized, durable undo token in your application and handle it in a Laravel listener instead (then reload screen state as needed). `event(new FeedbackActionPressed(...))` on its own is still only a Laravel event, not a screen notification.
+
+No `BroadcastsGlobally` marker is needed: that Mobile interface forwards incoming device events to Laravel, not Laravel events to screens. Feedback outcomes already arrive through the package child's EDGE callbacks; Firstlight uses Mobile's existing child-to-screen event support rather than a parallel dispatcher.
 
 ## Queue and stable-ID updates
 
@@ -3977,6 +4063,9 @@ Status Label presents short display-only metadata or status text as a native cap
 <firstlight:status-label
     label="Awaiting review"
     tone="warning"
+    icon="warning"
+    icon-ios="exclamationmark.triangle"
+    icon-android="warning"
     a11y-label="Referral status: awaiting review"
     a11y-hint="Updated by the referrals team"
 />
@@ -3990,9 +4079,16 @@ The same authored tag renders on iOS and Android.
 | --- | --- | --- |
 | `label` | non-empty `string` | Visible status text. Required. |
 | `tone` | `neutral`, `info`, `success`, `warning`, or `danger` | Semantic colour intent. Defaults to `neutral`. |
+| `icon` | `string` or `null` | Optional decorative leading icon; shared fallback. |
+| `icon-ios` | `IosSymbol`, `string`, or `null` | iOS override of `icon`. |
+| `icon-android` | `AndroidSymbol`, `string`, or `null` | Android override of `icon`. |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
 | `class` | `string` | External EDGE layout utilities. |
+
+## Icons
+
+Icons use NativePHP's `Native\Mobile\Icon\IconResolver`. PHP also accepts `iconIos` and `iconAndroid` aliases. The fluent API is `StatusLabel::make('Warning')->icon('warning', ios: 'exclamationmark.triangle', android: 'warning')`; typed symbols implement `Native\Mobile\Icon\IosSymbol` or `AndroidSymbol`. Each platform uses its override when supplied, otherwise the shared name; tooling with no platform uses the shared name. Omitting icons keeps the text-only presentation. Android typed variants are retained in the published props; NativePHP's current Material icon-font helper renders the resolved name, not a separate variant font.
 
 ## Events and values
 
@@ -4012,11 +4108,15 @@ Disabled, loading, and validation states do not apply to display-only status tex
 
 The visible `label` is the accessible name by default. `a11y-label` replaces that name, and `a11y-hint` adds context. Both renderers expose static text semantics without a button, selected, disabled, or live-region role.
 
+The optional icon is decorative and silent to VoiceOver and TalkBack. It uses the same contrast-checked tone foreground as the text in light and dark appearances; it never replaces the required label. Leading placement follows the native layout direction.
+
 Text follows Dynamic Type on iOS and system font scaling on Android. Long labels and accessibility sizes expand or wrap rather than truncating their meaning. Semantic theme colours are checked at render time; when a customised foreground and background are below 4.5:1 contrast, Firstlight uses whichever of black or white has the stronger ratio.
 
 ## Validation and failure behaviour
 
 A missing, `null`, empty, or whitespace-only `label` throws an `InvalidArgumentException`. An unsupported tone also throws and lists the accepted values. Malformed tone data that reaches a native renderer unexpectedly falls back defensively to `neutral` instead of crashing the host.
+
+Non-string shared icons and platform overrides other than strings, matching platform symbol types, or `null` throw with the public prop name.
 
 ## Platform behaviour
 
@@ -4028,10 +4128,80 @@ Status Label supports the versions listed in the current [compatibility referenc
 
 ## Screenshots
 
+The existing captures below show the text-only presentation. Updated icon-bearing light, dark, and accessibility-size native captures are pending runner permission; they are not evidence for the new icon treatment.
+
 | Platform | Light | Dark |
 | --- | --- | --- |
 | iOS | ![Status Label on iOS in light mode](../screenshots/status-label/ios-light.png) | ![Status Label on iOS in dark mode](../screenshots/status-label/ios-dark.png) |
 | Android | ![Status Label on Android in light mode](../screenshots/status-label/android-light.png) | ![Status Label on Android in dark mode](../screenshots/status-label/android-dark.png) |
+
+--- Source: docs/components/metric.md ---
+
+# Metric
+
+Metric displays a named statistic, such as an event count or response time. Its
+label, value and optional detail form one screen-reader element, not three text
+fragments. It does not draw a tile, panel or grid; use Mobile UI for outer layout.
+
+```blade
+<native:column class="w-full gap-4">
+    <firstlight:metric label="Events" value="5" detail="last 10h ago" />
+    <firstlight:metric label="Users" value="0" detail="affected" />
+    <firstlight:metric label="Response" value="234 ms" detail="last check" tone="success" />
+</native:column>
+```
+
+## Props
+
+| Prop | Contract |
+| --- | --- |
+| `label` | Required nonempty string naming the measurement. |
+| `value` | Required nonempty **string**, already formatted in PHP. `"0"` is valid. |
+| `detail` | Optional string; omitted or empty means no supporting line. |
+| `tone` | `neutral` (default), `info`, `success`, `warning`, or `danger`; colours the value using semantic theme tokens. |
+| `a11y-label` | Optional nonempty name replacing the default `label: value, detail`. Use it for localized full sentences or pronunciation. |
+| `a11y-hint` | Optional nonempty supplementary description. |
+| `class` | External EDGE layout only. Do not impose a fixed height that clips large text. |
+
+CamelCase `a11yLabel` and `a11yHint` aliases are accepted. Format units, dates,
+numbers and relative times in the application; Metric does not parse them or run a
+timer. For bound numeric counts, format explicitly, for example `:value="(string) $events"`.
+
+Programmatic roots can use `Metric::make('Events', '5')` from
+`FirstlightUI\Elements\Metric`. `applyAttributes()` accepts the same props.
+
+## Events, values and state
+
+Metric is static: there is no `native:model`, `@change`, `@press`, selected,
+disabled, loading or error state. New PHP publications update the text without
+emitting an event. It accepts no children. Put a labelled Button alongside a
+metric when an action is needed; it does not make a generic container accessible.
+
+## Accessibility and platforms
+
+SwiftUI uses native text styles and monospaced digits. Compose uses Material text
+styles and tabular figures (`tnum`). Values wrap at large Dynamic Type/font scales;
+they are not shrunk or ellipsized. Available width and font glyph support determine
+line wrapping. The component is a single static accessibility element, with no
+button role or duplicate child announcements. Android appends the hint to its
+content description; iOS supplies a separate accessibility hint.
+
+All five tones inherit the application's theme, including package warning tokens.
+Tone is supplementary; always communicate the measurement in text as well.
+
+## Validation and compatibility
+
+Missing/blank labels or values, non-string content, unsupported tones, empty
+explicit accessibility text and interaction/field-state attributes throw
+`InvalidArgumentException`. Metric uses the ordinary Firstlight installation and
+the [supported NativePHP versions](../reference/compatibility.md).
+
+## Screenshot evidence
+
+The stable showcase route is `/captures/metric`. The required matrix is
+`docs/screenshots/metric/{ios,android}-{light,dark}.png`, plus largest accessibility
+text evidence on both platforms. Native capture and screen-reader verification
+remain pending; this page does not claim release qualification from PHP tests.
 
 --- Source: docs/components/text-field.md ---
 

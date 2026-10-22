@@ -19,6 +19,8 @@ data class StatusLabelRendererConfiguration(
     val accessibilityLabel: String,
     val accessibilityHint: String,
     val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
+    val icon: String = "",
+    val iconVariant: String = "",
 ) {
     constructor(node: NativeUINode) : this(
         label = node.props.getString("label"),
@@ -28,6 +30,8 @@ data class StatusLabelRendererConfiguration(
         },
         accessibilityHint = node.props.getString("a11y_hint"),
         warningColors = FirstlightWarningColors(node),
+        icon = node.props.getString("icon"),
+        iconVariant = node.props.getString("icon_variant"),
     )
 
     val isInteractive = false
@@ -70,6 +74,7 @@ object StatusLabelRenderer {
                 accessibilityHint = configuration.accessibilityHint,
             ),
             modifier = modifier,
+            icon = configuration.icon,
         )
     }
 }

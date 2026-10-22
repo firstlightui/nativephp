@@ -7,14 +7,34 @@ use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\NativeTagPrecompiler;
+use Native\Mobile\Icon\AndroidSymbol;
+use Native\Mobile\Icon\IosSymbol;
+use Native\Mobile\Platform;
+
+enum StatusLabelIosIcon: string implements IosSymbol
+{
+    case Warning = 'exclamationmark.triangle';
+}
+
+enum StatusLabelAndroidIcon: string implements AndroidSymbol
+{
+    case Warning = 'warning';
+
+    public function variant(): string
+    {
+        return 'outlined';
+    }
+}
 
 beforeEach(function () {
+    Platform::set(null);
     NativeElementCollector::reset();
     ElementRegistry::reset();
     ElementRegistry::register('firstlight.status-label', StatusLabel::class);
 });
 
 afterEach(function () {
+    Platform::set(null);
     NativeTagPrecompiler::setActive(false);
     NativeElementCollector::reset();
     ElementRegistry::reset();
@@ -26,6 +46,42 @@ function collectStatusLabel(array $attributes): array
 
     return NativeElementCollector::collect()->toArray(new CallbackRegistry);
 }
+
+it('resolves optional decorative icons using the shared platform contract', function (?string $platform, string $expected) {
+    Platform::set($platform);
+    $props = collectStatusLabel([
+        'label' => 'Warning',
+        'icon' => 'shared-warning',
+        'icon-ios' => StatusLabelIosIcon::Warning,
+        'icon-android' => StatusLabelAndroidIcon::Warning,
+    ])['props'];
+
+    expect($props['icon'])->toBe($expected)
+        ->and($props['label'])->toBe('Warning')
+        ->and($props['icon_variant'] ?? null)->toBe($platform === Platform::ANDROID ? 'outlined' : null)
+        ->and($props)->not->toHaveKeys(['icon-ios', 'icon-android', 'on_press']);
+})->with([[null, 'shared-warning'], [Platform::IOS, 'exclamationmark.triangle'], [Platform::ANDROID, 'warning']]);
+
+it('accepts camelCase string overrides and shared fallbacks', function (string $platform, string $alias) {
+    Platform::set($platform);
+    expect(collectStatusLabel(['label' => 'Error', 'icon' => 'error'])['props']['icon'])->toBe('error')
+        ->and(collectStatusLabel(['label' => 'Error', $alias => 'custom'])['props']['icon'])->toBe('custom');
+})->with([[Platform::IOS, 'iconIos'], [Platform::ANDROID, 'iconAndroid']]);
+
+it('clears a prior fluent icon and variant when replaced or removed', function () {
+    Platform::set(Platform::ANDROID);
+    $element = StatusLabel::make('Warning')->icon(android: StatusLabelAndroidIcon::Warning);
+    expect($element->toArray(new CallbackRegistry)['props']['icon_variant'])->toBe('outlined');
+    $element->icon('warning');
+    expect($element->toArray(new CallbackRegistry)['props'])->not->toHaveKey('icon_variant');
+    $element->icon();
+    expect($element->toArray(new CallbackRegistry)['props'])->not->toHaveKeys(['icon', 'icon_variant']);
+});
+
+it('rejects invalid icon types with public prop guidance', function (string $prop) {
+    collectStatusLabel(['label' => 'Warning', $prop => []]);
+})->with(['icon', 'icon-ios', 'icon-android'])
+    ->throws(InvalidArgumentException::class, 'Firstlight Status Label `icon');
 
 it('publishes display-only semantic status metadata as primitive props', function () {
     $tree = collectStatusLabel([

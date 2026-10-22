@@ -19,13 +19,19 @@ use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory;
 use Illuminate\View\FileViewFinder;
 use Illuminate\View\View;
+use Native\Mobile\Attributes\On;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ChromeContributorRegistry;
 use Native\Mobile\Edge\ComponentRegistry;
 use Native\Mobile\Edge\Element;
+use Native\Mobile\Edge\Elements\Column;
+use Native\Mobile\Edge\Elements\Text;
 use Native\Mobile\Edge\NativeComponent;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\NativeTagPrecompiler;
+use Native\Mobile\Testing\Native;
+
+require_once __DIR__.'/../../vendor/nativephp/mobile/src/jump_bridge_functions.php';
 
 if (! function_exists('app')) {
     function app(?string $abstract = null): mixed
@@ -88,6 +94,53 @@ if (! function_exists('config')) {
         }
 
         return $value;
+    }
+}
+
+final class FeedbackUndoTestScreen extends \FirstlightUI\NativeComponent
+{
+    public bool $archived = false;
+
+    public bool $failUndo = false;
+
+    public array $outcomes = [];
+
+    public function archive(): void
+    {
+        $this->archived = true;
+        app(FeedbackManager::class)->success('Archived')->id('archive')
+            ->action('Undo', 'undo-archive')->send();
+    }
+
+    #[On(FeedbackActionPressed::class)]
+    public function undo(string $id, string $actionKey): void
+    {
+        $this->outcomes[] = ['action', $id, $actionKey];
+        if ($this->failUndo) {
+            throw new RuntimeException('screen undo failed');
+        }
+        if ($id === 'archive' && $actionKey === 'undo-archive') {
+            $this->archived = false;
+        }
+    }
+
+    #[On(FeedbackDismissed::class)]
+    public function dismissed(string $id, FeedbackDismissReason $reason): void
+    {
+        $this->outcomes[] = ['dismissed', $id, $reason];
+    }
+
+    public function replayCallback(int $callbackId): void
+    {
+        $this->dispatchUiEvent(['type' => 1, 'callback_id' => $callbackId]);
+    }
+
+    public function render(): Element
+    {
+        return $this->response(Column::make(
+            Text::make($this->archived ? 'Archived item' : 'Active item'),
+            Text::make('Archive')->onPress('archive'),
+        ));
     }
 }
 
@@ -205,6 +258,96 @@ function configureFeedbackCenterViews(Container $container, Dispatcher $events):
     $container->instance('blade.compiler', $blade);
     $container->instance('view', $views);
 }
+
+it('delivers feedback outcomes through the mounted screen lifecycle and republishes Undo state', function () {
+    configureFeedbackCenterViews($this->container, $this->events);
+    $this->provider->boot();
+
+    $global = [];
+    $screen = null;
+    $this->events->listen(FeedbackActionPressed::class, function (FeedbackActionPressed $event) use (&$global, &$screen): void {
+        expect($screen->instance()->outcomes)->toBe([]);
+        $global[] = ['action', $event->id, $event->actionKey];
+    });
+    $this->events->listen(FeedbackDismissed::class, function (FeedbackDismissed $event) use (&$global, &$screen): void {
+        expect($screen->instance()->outcomes)->toBe([['action', $event->id, 'undo-archive']]);
+        $global[] = ['dismissed', $event->id, $event->reason];
+    });
+
+    $screen = Native::test(FeedbackUndoTestScreen::class)
+        ->assertSee('Active item')->fireEvent('archive', 1)->assertSee('Archived item');
+    $screen->fireEvent('action', 1)->assertSet('archived', false)->assertSee('Active item');
+
+    $expected = [
+        ['action', 'archive', 'undo-archive'],
+        ['dismissed', 'archive', FeedbackDismissReason::Action],
+    ];
+    expect($screen->instance()->outcomes)->toBe($expected)
+        ->and($global)->toBe($expected)
+        ->and(app(FeedbackStore::class)->all())->toBe([]);
+});
+
+it('delivers dismissal when a screen action throws and propagates the failure', function () {
+    configureFeedbackCenterViews($this->container, $this->events);
+    $this->provider->boot();
+    $screen = Native::test(FeedbackUndoTestScreen::class)
+        ->fireEvent('archive', 1)->set('failUndo', true);
+
+    expect(fn () => $screen->fireEvent('action', 1))
+        ->toThrow(RuntimeException::class, 'screen undo failed');
+    expect($screen->instance()->outcomes)->toBe([
+        ['action', 'archive', 'undo-archive'],
+        ['dismissed', 'archive', FeedbackDismissReason::Action],
+    ])->and(app(FeedbackStore::class)->all())->toBe([]);
+});
+
+it('delivers typed dismissal payloads to the screen without an action', function (string $reason) {
+    configureFeedbackCenterViews($this->container, $this->events);
+    $this->provider->boot();
+
+    $screen = Native::test(FeedbackUndoTestScreen::class)->fireEvent('archive', 1);
+    $screen->fireEvent('dismiss("archive", "'.$reason.'", 1)', 1)
+        ->assertSet('archived', true);
+
+    expect($screen->instance()->outcomes)->toBe([
+        ['dismissed', 'archive', FeedbackDismissReason::from($reason)],
+    ]);
+})->with(['timeout', 'manual']);
+
+it('completes a semantic id once across refreshed and stale publications on the active screen', function () {
+    configureFeedbackCenterViews($this->container, $this->events);
+    $this->provider->boot();
+
+    $screen = Native::test(FeedbackUndoTestScreen::class)->fireEvent('archive', 1);
+    $findAction = function (array $node) use (&$findAction): ?int {
+        if ($node['type'] === 'firstlight.feedback-item') {
+            return $node['props']['on_action'];
+        }
+        foreach ($node['children'] ?? [] as $child) {
+            if (($id = $findAction($child)) !== null) {
+                return $id;
+            }
+        }
+
+        return null;
+    };
+    $oldCallback = $findAction($screen->tree());
+    expect($oldCallback)->toBeInt();
+
+    // Generation distinguishes publications, not authorization: a still-owned
+    // old callback can complete the current semantic record, but only once.
+    $screen->fireEvent('archive', 1);
+    $currentCallback = $findAction($screen->tree());
+    expect($currentCallback)->not->toBe($oldCallback);
+    $screen->call('replayCallback', $oldCallback)
+        ->call('replayCallback', $currentCallback)
+        ->call('replayCallback', $oldCallback)
+        ->assertSet('archived', false)->assertSee('Active item');
+    expect($screen->instance()->outcomes)->toBe([
+        ['action', 'archive', 'undo-archive'],
+        ['dismissed', 'archive', FeedbackDismissReason::Action],
+    ]);
+});
 
 it('publishes the full fifo queue with package-owned callbacks', function () {
     $store = app(FeedbackStore::class);

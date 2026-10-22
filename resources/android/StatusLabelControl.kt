@@ -1,20 +1,26 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nativephp.plugins.native_ui.NativeUITokens
+import com.nativephp.mobile.ui.MaterialIcon
 
 enum class StatusLabelTone(val wireName: String) {
     Neutral("neutral"),
@@ -97,6 +103,7 @@ fun FirstlightStatusLabelControl(
     colors: StatusLabelTokenColors,
     accessibilityDescription: String,
     modifier: Modifier = Modifier,
+    icon: String = "",
 ) {
     Surface(
         modifier = modifier.semantics(mergeDescendants = true) {
@@ -106,13 +113,27 @@ fun FirstlightStatusLabelControl(
         color = colors.background,
         contentColor = colors.foreground,
     ) {
-        Text(
-            text = label,
+        Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-            color = colors.foreground,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (icon.isNotEmpty()) {
+                MaterialIcon(
+                    name = icon,
+                    contentDescription = null,
+                    modifier = Modifier.clearAndSetSemantics { }.size(
+                        24.dp * androidx.compose.ui.platform.LocalDensity.current.fontScale
+                    ),
+                )
+            }
+            Text(
+                text = label,
+                color = colors.foreground,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 

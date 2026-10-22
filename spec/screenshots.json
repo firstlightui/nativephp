@@ -1,5 +1,15 @@
 {
     "components": {
+        "metric": {
+            "route": "/captures/metric",
+            "test": "php artisan test tests/Feature/MetricCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/metric/ios-light.png",
+                "ios-dark": "docs/screenshots/metric/ios-dark.png",
+                "android-light": "docs/screenshots/metric/android-light.png",
+                "android-dark": "docs/screenshots/metric/android-dark.png"
+            }
+        },
         "activity-indicator": {
             "route": "/captures/activity-indicator",
             "test": "php artisan test tests/Feature/ActivityIndicatorCaptureTest.php",

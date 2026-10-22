@@ -6,6 +6,9 @@ use FirstlightUI\Support\WarningColors;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
+use Native\Mobile\Icon\AndroidSymbol;
+use Native\Mobile\Icon\IconResolver;
+use Native\Mobile\Icon\IosSymbol;
 
 class StatusLabel extends Element
 {
@@ -28,7 +31,7 @@ class StatusLabel extends Element
         '_press',
     ];
 
-    /** @var array{label: string, tone: string} */
+    /** @var array<string, string> */
     protected array $statusProps = [
         'label' => '',
         'tone' => 'neutral',
@@ -52,6 +55,39 @@ class StatusLabel extends Element
         }
 
         $this->applyA11yAttributes($attrs);
+
+        $name = $attrs['icon'] ?? null;
+        $ios = $attrs['icon-ios'] ?? $attrs['iconIos'] ?? null;
+        $android = $attrs['icon-android'] ?? $attrs['iconAndroid'] ?? null;
+        if ($name !== null && ! is_string($name)) {
+            throw new InvalidArgumentException('Firstlight Status Label `icon` must be a string.');
+        }
+        if ($ios !== null && ! is_string($ios) && ! $ios instanceof IosSymbol) {
+            throw new InvalidArgumentException('Firstlight Status Label `icon-ios` must be an IosSymbol or string.');
+        }
+        if ($android !== null && ! is_string($android) && ! $android instanceof AndroidSymbol) {
+            throw new InvalidArgumentException('Firstlight Status Label `icon-android` must be an AndroidSymbol or string.');
+        }
+        if (array_intersect(array_keys($attrs), ['icon', 'icon-ios', 'iconIos', 'icon-android', 'iconAndroid'])) {
+            $this->icon($name, $ios, $android);
+        }
+    }
+
+    public function icon(
+        ?string $name = null,
+        IosSymbol|string|null $ios = null,
+        AndroidSymbol|string|null $android = null,
+    ): static {
+        $resolved = IconResolver::resolve($name, $ios, $android);
+        unset($this->statusProps['icon'], $this->statusProps['icon_variant']);
+        if ($resolved['icon'] !== null) {
+            $this->statusProps['icon'] = $resolved['icon'];
+        }
+        if ($resolved['variant'] !== null) {
+            $this->statusProps['icon_variant'] = $resolved['variant'];
+        }
+
+        return $this;
     }
 
     public function label(string $label): static

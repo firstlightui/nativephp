@@ -73,6 +73,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.metric',
+            'element' => 'FirstlightUI\\Elements\\Metric',
+            'blade' => 'FirstlightUI\\Components\\Metric',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.MetricRenderer',
+            'ios_renderer' => 'MetricRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.callout',
             'element' => 'FirstlightUI\\Elements\\Callout',
             'blade' => 'FirstlightUI\\Components\\Callout',
