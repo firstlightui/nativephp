@@ -90,9 +90,22 @@ Status Label supports the versions listed in the current [compatibility referenc
 
 ## Screenshots
 
-The existing captures below show the text-only presentation. Updated icon-bearing light, dark, and accessibility-size native captures are pending runner permission; they are not evidence for the new icon treatment.
+These approved native captures use iPhone 17 Pro / iOS 26.5 and Pixel 9 Pro /
+Android 16 API 36. Draft retains the optional text-only presentation; the other
+tones include decorative platform icons.
 
 | Platform | Light | Dark |
 | --- | --- | --- |
 | iOS | ![Status Label on iOS in light mode](../screenshots/status-label/ios-light.png) | ![Status Label on iOS in dark mode](../screenshots/status-label/ios-dark.png) |
 | Android | ![Status Label on Android in light mode](../screenshots/status-label/android-light.png) | ![Status Label on Android in dark mode](../screenshots/status-label/android-dark.png) |
+
+Long labels wrap within their fill at maximum iOS accessibility text size and
+Android font scale 2.0. The interactive showcase is scrolled to show the complete
+long label below.
+
+| iOS maximum accessibility text | Android font scale 2.0 |
+| --- | --- |
+| ![Status Label with a wrapped long label on iOS](../screenshots/status-label/ios-largest-text.png) | ![Status Label with a wrapped long label on Android](../screenshots/status-label/android-largest-text.png) |
+
+These are simulator/emulator visual checks, not spoken VoiceOver/TalkBack or
+physical-device release qualification.

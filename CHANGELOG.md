@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Optional decorative Status Label icons using the shared `icon`, `icon-ios`, and `icon-android` contract, with tone-owned foregrounds in both appearances.
+- Static Metric display with a label, formatted string value, optional detail and semantic tone, one accessible description, tabular figures and large-text wrapping.
+- Catalogue decision notes for the core-owned accessible tappable surface and a design-only status-history display.
+
+### Fixed
+
+- Deliver Feedback action and dismissal events to the active screen's `#[On]` handlers as well as Laravel listeners, preserving exactly-once consumption and action-before-dismiss ordering. Screen-local Undo now participates in the normal interaction repaint.
+
+### Known limitations
+
+- Physical-device, spoken VoiceOver/TalkBack traversal, soak/performance and wider-application qualification remain outstanding; simulator/emulator evidence is not stable-release qualification.
+- Arbitrary tappable surfaces remain a NativePHP core accessibility handoff; Metric is display-only, and no status-history control is implemented.
+- NativePHP's Android Material icon helper draws the resolved icon name but does not accept a separate variant-font argument.
+- Opposite-system appearance previews in the showcase can lose contrast when upstream worker bootstraps overwrite the shared native theme. This existing theme-ownership race is explicitly deferred, not patched in Firstlight.
+- Requirements remain PHP `^8.4`, NativePHP Mobile `^4.6`, Mobile UI `^0.8`, iOS 18+, Android API 29+, and Swift tools 6.2.
+
 ## 1.0.0-RC1 - 2026-10-21
 
 ### Added

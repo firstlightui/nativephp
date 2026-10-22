@@ -75,7 +75,22 @@ the [supported NativePHP versions](../reference/compatibility.md).
 
 ## Screenshot evidence
 
-The stable showcase route is `/captures/metric`. The required matrix is
-`docs/screenshots/metric/{ios,android}-{light,dark}.png`, plus largest accessibility
-text evidence on both platforms. Native capture and screen-reader verification
-remain pending; this page does not claim release qualification from PHP tests.
+The stable showcase route is `/captures/metric`. These approved native captures
+use iPhone 17 Pro / iOS 26.5 and Pixel 9 Pro / Android 16 API 36.
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Metric on iOS in light mode](../screenshots/metric/ios-light.png) | ![Metric on iOS in dark mode](../screenshots/metric/ios-dark.png) |
+| Android | ![Metric on Android in light mode](../screenshots/metric/android-light.png) | ![Metric on Android in dark mode](../screenshots/metric/android-dark.png) |
+
+The interactive showcase's longer value remains complete at maximum iOS
+accessibility text size and Android font scale 2.0. The iOS capture is scrolled to
+show the wrapped value; content behind native navigation chrome is outside the
+current viewport, not truncated by Metric.
+
+| iOS maximum accessibility text | Android font scale 2.0 |
+| --- | --- |
+| ![Metric with a wrapped long value on iOS](../screenshots/metric/ios-largest-text.png) | ![Metric with a long value on Android](../screenshots/metric/android-largest-text.png) |
+
+These are simulator/emulator visual checks. Spoken VoiceOver/TalkBack traversal
+and physical-device release qualification remain unverified.
