@@ -42,7 +42,7 @@ upstream theme race. No stable/alpha qualification is claimed.
 | VII. Theme | PASS | Semantic NativePHP tokens and package warning colours; no arbitrary style bag. |
 | VIII. Small expansion | PASS | Only Metric adds a semantic control; generic pressable/panels remain upstream; history is design-only. |
 | IX. Evidence | PASS (development), BLOCKED (release) | Package/consumer/platform checks, native host builds, capture review and explicit maintainer visual approval pass. Physical-device, spoken AT, soak/performance and broader app qualification remain absent. |
-| X. Stewardship | PASS | Additive APIs; no version bump, tag or release-readiness claim. |
+| X. Stewardship | PASS | Additive APIs; RC2 metadata and release notes retain explicit qualification limits, with maintainer approval to publish an RC on that basis. No stable/alpha readiness claim. |
 | XI. Process | PASS | Create, platform, docs and review skills applied; Metric design/plan and public/maintained docs, manifest and showcase coverage exist. |
 
 ## Executed checks
@@ -133,6 +133,8 @@ the official helper. Do not treat JVM icon shims as native glyph evidence.
 Overall development verdict: **PASS with the explicitly deferred upstream preview
 race**. Release qualification remains **BLOCKED** on physical-device, spoken
 screen-reader and broader runtime gates; no stable/alpha-ready claim is made here.
-Pushing directly to main is authorized. The user requested the next RC when ready;
-the separate question about retaining RC1's disclosed qualification limits remains
-unanswered and is not inferred from screenshot approval or theme-race deferral.
+The maintainer explicitly authorized direct-to-main landing and publication of
+`v1.0.0-RC2` retaining RC1's disclosed physical-device, spoken VoiceOver/TalkBack,
+soak/performance and wider-app qualification limits. This is an RC-specific risk
+acceptance, not evidence that those gates passed or a change to stable/alpha
+qualification policy. The changelog and annotated tag retain these limitations.
