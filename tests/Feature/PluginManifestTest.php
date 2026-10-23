@@ -28,6 +28,12 @@ it('registers the Feedback Center root host without feature bridge functions', f
         ->and($manifest['ios'])->not->toHaveKey('bridge_functions');
 });
 
+it('declares the iOS camera usage description Media needs on a physical device', function () {
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($manifest['ios']['info_plist']['NSCameraUsageDescription'] ?? '')->not->toBe('');
+});
+
 it('registers the production component catalogue with canonical renderers', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 

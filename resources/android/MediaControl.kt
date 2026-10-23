@@ -1,5 +1,15 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +18,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -136,6 +145,7 @@ internal fun FirstlightMediaCropSheet(
     onSkip: () -> Unit,
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
+    image: ImageBitmap? = null,
     confirmLabel: String = "Confirm",
     cancelLabel: String = "Cancel",
     skipLabel: String = "Skip",
@@ -152,26 +162,31 @@ internal fun FirstlightMediaCropSheet(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                val ratio = policy.aspectRatio ?: 1f
+                // The frame shows exactly the region Confirm commits: a centred
+                // crop at the policy (or image) aspect, magnified by zoom.
+                val ratio = policy.aspectRatio
+                    ?: image?.let { it.width.toFloat() / it.height }
+                    ?: 1f
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
+                        .heightIn(max = 320.dp)
+                        .aspectRatio(ratio, matchHeightConstraintsFirst = ratio < 1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .graphicsLayer(scaleX = zoom, scaleY = zoom),
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
-                    MaterialIcon(
-                        name = "image",
-                        contentDescription = "Crop preview",
-                    )
-                    if (policy.aspectRatio != null) {
-                        Box(
+                    if (image != null) {
+                        Image(
+                            bitmap = image,
+                            contentDescription = cropLabel,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .size(width = 140.dp, height = (140f / ratio).dp)
-                                .border(2.dp, MaterialTheme.colorScheme.onSurfaceVariant, RoundedCornerShape(2.dp)),
+                                .matchParentSize()
+                                .graphicsLayer(scaleX = zoom, scaleY = zoom),
                         )
+                    } else {
+                        MaterialIcon(name = "image", contentDescription = cropLabel)
                     }
                 }
 
@@ -208,5 +223,42 @@ internal fun FirstlightMediaCropSheet(
                 Text(cancelLabel)
             }
         },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun FirstlightMediaSourceChooser(
+    title: String,
+    photoLibraryLabel: String,
+    cameraLabel: String,
+    cancelLabel: String,
+    onPhotoLibrary: () -> Unit,
+    onCamera: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onCancel) {
+        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            )
+            MediaSourceRow(photoLibraryLabel, "photo_library", onPhotoLibrary)
+            MediaSourceRow(cameraLabel, "photo_camera", onCamera)
+            MediaSourceRow(cancelLabel, "close", onCancel)
+        }
+    }
+}
+
+@Composable
+private fun MediaSourceRow(label: String, icon: String, onClick: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(label) },
+        leadingContent = { MaterialIcon(name = icon, contentDescription = null) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 56.dp)
+            .clickable(role = Role.Button, onClick = onClick),
     )
 }

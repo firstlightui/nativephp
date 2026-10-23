@@ -32,7 +32,7 @@ Firstlight fields.
 ## Complete example
 
 Use `FirstlightUI\NativeComponent` for the full nonstreaming
-[response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[response-revision contract](../reference/compatibility.md#runtime-response-contract).
 
 ```php
 <?php
@@ -121,6 +121,10 @@ Document mode rejects `crop` and `aspect`. Unsupported attributes such as
 - `crop="optional"` without aspect → freeform crop; Skip is allowed.
 - `crop="required"` without aspect → freeform crop; Confirm is required.
 
+Confirm stores the region the crop sheet shows: the largest centred rectangle
+at the locked aspect (or the photo's own aspect when freeform), narrowed by the
+zoom controls. Skip stores the whole photo. Image mode always stores a JPEG.
+
 Clear, Skip, Confirm, Cancel, Crop, zoom, and source-chooser copy are package
 chrome; see [Localize chrome](../how-to/localize.md).
 
@@ -163,10 +167,32 @@ meeting 44-point (iOS) and 48-dp (Android) minima. Zoom is not pinch-only.
 
 ## Platform behaviour
 
-iOS uses PhotosPicker, camera capture, and fileImporter with a Firstlight
-SwiftUI crop sheet. Android uses Material 3 field chrome and a Firstlight
-Compose crop dialog. Geometry and system pickers stay platform-native; crop
-semantics stay shared.
+iOS offers Photo Library (PhotosPicker) and Camera in a confirmation dialog,
+uses `fileImporter` for documents, and shows a Firstlight SwiftUI crop sheet.
+Android offers Photo Library (the system photo picker) and Camera (the system
+camera app) in a Material bottom sheet, uses the system document picker, and
+shows a Firstlight Compose crop dialog. Picked files are copied to the app's
+temporary directory before `@change` receives the path. Geometry and system
+pickers stay platform-native; crop semantics stay shared.
+
+## Host application setup
+
+On iOS, image mode's Camera option requires a camera usage description, or
+iOS terminates the app when the camera opens. Firstlight's plugin manifest
+supplies a generic one ("Used to take a photo for a form field."). Override it
+in `config/nativephp.php` with wording specific to your app for App Store
+review; app entries win over plugin entries:
+
+```php
+'permissions' => [
+    'NSCameraUsageDescription' => 'Used to take a photo for your profile.',
+],
+```
+
+The photo picker and document picker need no permission on either platform.
+Android needs no manifest change: the system camera app writes through the
+FileProvider that NativePHP's Android host already declares. If your app adds
+the `CAMERA` permission for another feature, grant it before offering Camera.
 
 ## Compatibility
 

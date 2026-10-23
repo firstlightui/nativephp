@@ -81,6 +81,26 @@ final class MediaSnapshotTests: XCTestCase {
         XCTAssertEqual(Double(MediaCropPolicy.requiredAspect("1:1").aspectRatio ?? -1), 1, accuracy: 0.001)
     }
 
+    func testCropRectIsCentredPolicyAspectDividedByZoom() {
+        let square = MediaCropPolicy.requiredAspect("1:1")
+        XCTAssertEqual(square.cropRect(imageSize: CGSize(width: 4000, height: 3000), zoom: 1), CGRect(x: 500, y: 0, width: 3000, height: 3000))
+        XCTAssertEqual(square.cropRect(imageSize: CGSize(width: 4000, height: 3000), zoom: 2), CGRect(x: 1250, y: 750, width: 1500, height: 1500))
+        XCTAssertEqual(
+            MediaCropPolicy.requiredAspect("16:9").cropRect(imageSize: CGSize(width: 3000, height: 4000), zoom: 1),
+            CGRect(x: 0, y: 1156, width: 3000, height: 1688)
+        )
+        XCTAssertEqual(
+            MediaCropPolicy.optionalFreeform.cropRect(imageSize: CGSize(width: 4000, height: 3000), zoom: 2),
+            CGRect(x: 1000, y: 750, width: 2000, height: 1500)
+        )
+
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 40, height: 30)).image { context in
+            UIColor.blue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 40, height: 30))
+        }
+        XCTAssertEqual(square.crop(image, zoom: 1).size, CGSize(width: 30, height: 30))
+    }
+
     func testEmptyAndDisabledFieldDoNotClear() {
         let empty = MediaRendererState(node: makeNode(hasValue: false))
         let disabled = MediaRendererState(node: makeNode(hasValue: true, disabled: true))

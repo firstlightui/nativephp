@@ -150,6 +150,38 @@ enum MediaCropPolicy: Equatable {
         }
         return nil
     }
+
+    /// The committed region: the largest centred rectangle with the policy's
+    /// aspect (or the image's own aspect when freeform), divided by zoom.
+    /// The crop sheet previews exactly this region.
+    func cropRect(imageSize: CGSize, zoom: CGFloat) -> CGRect {
+        let ratio = aspectRatio ?? imageSize.width / imageSize.height
+        var width = imageSize.width
+        var height = width / ratio
+        if height > imageSize.height {
+            height = imageSize.height
+            width = height * ratio
+        }
+        let scale = min(max(zoom, 1), 4)
+        let cropWidth = min(max((width / scale).rounded(), 1), imageSize.width)
+        let cropHeight = min(max((height / scale).rounded(), 1), imageSize.height)
+        return CGRect(
+            x: ((imageSize.width - cropWidth) / 2).rounded(.down),
+            y: ((imageSize.height - cropHeight) / 2).rounded(.down),
+            width: cropWidth,
+            height: cropHeight
+        )
+    }
+
+    /// Draws the region in orientation-corrected image coordinates.
+    func crop(_ image: UIImage, zoom: CGFloat) -> UIImage {
+        let rect = cropRect(imageSize: image.size, zoom: zoom)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = image.scale
+        return UIGraphicsImageRenderer(size: rect.size, format: format).image { _ in
+            image.draw(at: CGPoint(x: -rect.minX, y: -rect.minY))
+        }
+    }
 }
 
 enum MediaRendererEvent: Equatable {
@@ -360,27 +392,29 @@ struct FirstlightMediaCropSheet: View {
     var zoomInLabel: String = "Zoom in"
     var zoomOutLabel: String = "Zoom out"
 
+    private var previewAspect: CGFloat {
+        if let aspect = policy.aspectRatio { return aspect }
+        guard image.size.width > 0, image.size.height > 0 else { return 1 }
+        return image.size.width / image.size.height
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                ZStack {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .scaleEffect(zoom)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .clipped()
-
-                    if let aspect = policy.aspectRatio {
-                        RoundedRectangle(cornerRadius: 2)
-                            .stroke(Color.white, lineWidth: 2)
-                            .aspectRatio(aspect, contentMode: .fit)
-                            .padding(24)
-                            .allowsHitTesting(false)
+                // The frame shows exactly the region Confirm commits: a centred
+                // crop at the policy (or image) aspect, magnified by zoom.
+                Color.clear
+                    .aspectRatio(previewAspect, contentMode: .fit)
+                    .overlay {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .scaleEffect(zoom)
                     }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
+                    .clipped()
+                    .padding(24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
 
                 HStack(spacing: 16) {
                     Button(action: onZoomOut) {

@@ -85,6 +85,23 @@ class MediaTest {
     }
 
     @Test
+    fun `crop rect is the centred policy aspect divided by zoom`() {
+        val square = MediaCropPolicy.RequiredAspect("1:1")
+        assertEquals(MediaCropRect(500, 0, 3000, 3000), square.cropRect(4000, 3000, 1f))
+        assertEquals(MediaCropRect(1250, 750, 1500, 1500), square.cropRect(4000, 3000, 2f))
+
+        // A landscape aspect on a portrait photo is width-bound, not height-bound.
+        assertEquals(
+            MediaCropRect(0, 1156, 3000, 1688),
+            MediaCropPolicy.RequiredAspect("16:9").cropRect(3000, 4000, 1f),
+        )
+
+        // Freeform keeps the image's own aspect; zoom alone narrows it.
+        assertEquals(MediaCropRect(0, 0, 4000, 3000), MediaCropPolicy.RequiredFreeform.cropRect(4000, 3000, 1f))
+        assertEquals(MediaCropRect(1000, 750, 2000, 1500), MediaCropPolicy.OptionalFreeform.cropRect(4000, 3000, 2f))
+    }
+
+    @Test
     fun `clear and change events`() {
         val state = MediaRendererState(node(hasValue = true))
         assertEquals(MediaRendererEvent.Clear(42, 7), state.clear())

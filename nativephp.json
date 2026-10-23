@@ -291,6 +291,9 @@
     "ios": {
         "min_version": "18.0",
         "init_function": "registerFirstlightUI",
+        "info_plist": {
+            "NSCameraUsageDescription": "Used to take a photo for a form field."
+        },
         "dependencies": {
             "swift_packages": [],
             "pods": []

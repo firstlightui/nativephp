@@ -157,7 +157,7 @@ struct MediaRenderer: View {
     }
 
     private func confirmCrop(_ image: UIImage) {
-        emitImage(image)
+        emitImage(state.configuration.cropPolicy.crop(image, zoom: state.cropZoom))
         state.dismissSheet()
     }
 

@@ -99,9 +99,15 @@ optional dimensions, `preview_url`, and optional `on_change` / `on_clear`.
 
 - iOS: SwiftUI field chrome, PhotosPicker / camera / fileImporter, Firstlight
   crop sheet with explicit zoom in/out (44pt targets).
-- Android: Material 3 field chrome and crop dialog with explicit zoom
-  controls (48dp targets). Host pickers emit temp paths through the same
-  change channel.
+- Android: Material 3 field chrome, a bottom-sheet source chooser, the
+  system photo picker (`PickVisualMedia`), camera (`TakePicture` through the
+  host FileProvider) and document picker (`OpenDocument`), and a crop dialog
+  with explicit zoom controls (48dp targets). Picks are copied to the cache
+  directory and emitted through the same change channel.
+- Both platforms commit the previewed region: the largest centred rectangle
+  at the locked (or image) aspect divided by zoom. Image mode stores JPEG.
+- The plugin manifest declares a default iOS `NSCameraUsageDescription`;
+  application `permissions` entries override it.
 
 ## Non-goals (v1)
 
