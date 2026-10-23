@@ -99,7 +99,7 @@ Select is [server-authoritative](../concepts/server-authoritative-state.md). Cho
 
 An unchanged PHP response must also release the pending-interaction guard.
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[nonstreaming response-revision contract](../reference/compatibility.md#runtime-response-contract).
 Revisions are not per-event acknowledgements
 and do not prevent coalescing or serialize simultaneous proposals.
 

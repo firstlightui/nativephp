@@ -4,7 +4,7 @@ Native controls for NativePHP, shaped for each platform. Firstlight exposes a sh
 
 [Documentation](https://firstlightui.dev) · [Components](https://firstlightui.dev/components) · [Source](https://github.com/firstlightui/nativephp) · [Email](mailto:team@firstlightui.dev)
 
-> **Pre-alpha.** Firstlight is pending physical-device, soak/performance, and wider application qualification. It is not yet a production-readiness claim.
+> **Release candidate.** Firstlight is pending physical-device, soak/performance, and wider application qualification. It is not yet a production-readiness claim.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ See [Compatibility](docs/reference/compatibility.md) for the full table.
 ## Installation
 
 ```bash
-composer require firstlightui/nativephp
+composer require "firstlightui/nativephp:^1.0@RC"
 php artisan native:plugin:register
 php artisan native:install --force
 ```
@@ -88,7 +88,7 @@ Use `Feedback::fake()` to assert application feedback without native presentatio
 
 ## Response contract
 
-Firstlight stamps each complete screen response with a process-wide increasing revision, so an otherwise identical response still reaches the native renderers. Blade render paths are automatic. Hand-built Element roots must return `$this->response($element)`. Streaming is disabled. See the [response contract and limitations](docs/reference/compatibility.md#pre-alpha-runtime-limitation).
+Firstlight stamps each complete screen response with a process-wide increasing revision, so an otherwise identical response still reaches the native renderers. Blade render paths are automatic. Hand-built Element roots must return `$this->response($element)`. Streaming is disabled. See the [response contract and limitations](docs/reference/compatibility.md#runtime-response-contract).
 
 ## Documentation
 

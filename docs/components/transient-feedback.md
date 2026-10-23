@@ -253,7 +253,7 @@ Both platforms own one visible item and the same FIFO/event contract. Native exp
 
 ## Compatibility
 
-Transient Feedback supports the package versions and platform floors in the current [compatibility reference](../reference/compatibility.md): PHP 8.4, NativePHP Mobile 4, NativePHP Mobile UI 0.3, iOS 18 or later, and Android API 29 or later. Both Firstlight native hosts must be compiled into the application.
+Transient Feedback supports the package versions and platform floors in the current [compatibility reference](../reference/compatibility.md): PHP 8.4, NativePHP Mobile 4.6, NativePHP Mobile UI 0.8, iOS 18 or later, and Android API 29 or later. Both Firstlight native hosts must be compiled into the application.
 
 ## Screenshots
 

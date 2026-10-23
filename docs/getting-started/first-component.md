@@ -31,7 +31,7 @@ or an inferred view) automatically receive normal chrome and a root response
 revision. For a hand-built Element root, return `$this->response($element)`
 from `render()` instead of returning the Element directly. Nested children are
 untouched and partials are unstamped. Streaming is disabled and cannot be opted
-into. See the [full contract and limits](../reference/compatibility.md#pre-alpha-runtime-limitation).
+into. See the [full contract and limits](../reference/compatibility.md#runtime-response-contract).
 
 Add the selected value and stable value-to-label options to your component:
 

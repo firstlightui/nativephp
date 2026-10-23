@@ -30,7 +30,7 @@ These are the package's current declared floors. Firstlight does not promise sup
 
 After changing NativePHP versions, run `composer update` and `php artisan native:install --force` so bundled PHP binaries, native project files, and plugin copies match the resolved release.
 
-## Pre-alpha runtime limitation
+## Runtime response contract
 
 ### Supported response-revision contract
 
@@ -88,5 +88,5 @@ baseline Segmented failure, so these results do not establish a Segmented fix.
 
 Package regression tests cover Blade, inferred views, hand-built responses,
 remounts, nested children, and unstamped partials. This is not production
-qualification. Firstlight remains pre-alpha pending physical-device,
+qualification. Firstlight 1.0.0 is a release candidate pending physical-device,
 soak/performance, and wider app qualification, including simultaneous controls.

@@ -45,7 +45,7 @@ programmatic Element roots must return `$this->response($element)` to add normal
 chrome and the revision. Nested children are untouched, partials are unstamped,
 and streaming cannot be opted into. Repeated validation responses use this
 same contract, not a per-event acknowledgement. See
-[Compatibility](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[Compatibility](../reference/compatibility.md#runtime-response-contract).
 
 ## Declare rules and bind fields
 

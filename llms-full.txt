@@ -10,16 +10,18 @@ Start with a NativePHP Mobile 4 application that meets the [current compatibilit
 
 Use NativePHP Mobile `^4.6` and Mobile UI `^0.8`. Firstlight screens must
 extend `FirstlightUI\NativeComponent` for the
-[response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
-Firstlight remains pre-alpha pending physical-device, soak/performance, and
-wider app qualification.
+[response-revision contract](../reference/compatibility.md#runtime-response-contract).
+Firstlight 1.0.0 is a release candidate pending physical-device,
+soak/performance, and wider app qualification.
 
 ## Install and register the plugin
 
-Install Firstlight as a normal Composer dependency:
+Install Firstlight as a normal Composer dependency. Until 1.0.0 is stable,
+allow release candidates in the constraint; Laravel's default minimum
+stability otherwise finds no installable version:
 
 ```bash
-composer require firstlightui/nativephp
+composer require "firstlightui/nativephp:^1.0@RC"
 ```
 
 Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
@@ -68,7 +70,7 @@ or an inferred view) automatically receive normal chrome and a root response
 revision. For a hand-built Element root, return `$this->response($element)`
 from `render()` instead of returning the Element directly. Nested children are
 untouched and partials are unstamped. Streaming is disabled and cannot be opted
-into. See the [full contract and limits](../reference/compatibility.md#pre-alpha-runtime-limitation).
+into. See the [full contract and limits](../reference/compatibility.md#runtime-response-contract).
 
 Add the selected value and stable value-to-label options to your component:
 
@@ -149,7 +151,7 @@ programmatic Element roots must return `$this->response($element)` to add normal
 chrome and the revision. Nested children are untouched, partials are unstamped,
 and streaming cannot be opted into. Repeated validation responses use this
 same contract, not a per-event acknowledgement. See
-[Compatibility](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[Compatibility](../reference/compatibility.md#runtime-response-contract).
 
 ## Declare rules and bind fields
 
@@ -1664,7 +1666,7 @@ Both platforms own one visible item and the same FIFO/event contract. Native exp
 
 ## Compatibility
 
-Transient Feedback supports the package versions and platform floors in the current [compatibility reference](../reference/compatibility.md): PHP 8.4, NativePHP Mobile 4, NativePHP Mobile UI 0.3, iOS 18 or later, and Android API 29 or later. Both Firstlight native hosts must be compiled into the application.
+Transient Feedback supports the package versions and platform floors in the current [compatibility reference](../reference/compatibility.md): PHP 8.4, NativePHP Mobile 4.6, NativePHP Mobile UI 0.8, iOS 18 or later, and Android API 29 or later. Both Firstlight native hosts must be compiled into the application.
 
 ## Screenshots
 
@@ -1858,7 +1860,7 @@ no nullable or indeterminate state.
 ## State timing
 
 Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
-receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
+receive the [response revision](../reference/compatibility.md#runtime-response-contract).
 
 Checkbox is [server-authoritative](../concepts/server-authoritative-state.md).
 A tap emits the inverse Boolean as one proposal, but the visible checkmark
@@ -2016,7 +2018,7 @@ Choice Group is [server-authoritative](../concepts/server-authoritative-state.md
 
 An unchanged PHP response must also release the pending-interaction guard.
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[nonstreaming response-revision contract](../reference/compatibility.md#runtime-response-contract).
 Revisions are not per-event acknowledgements
 and do not prevent coalescing or serialize simultaneous proposals.
 
@@ -2070,7 +2072,7 @@ Firstlight fields.
 ## Complete example
 
 Use `FirstlightUI\NativeComponent` for the full nonstreaming
-[response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[response-revision contract](../reference/compatibility.md#runtime-response-contract).
 
 ```php
 <?php
@@ -2159,6 +2161,10 @@ Document mode rejects `crop` and `aspect`. Unsupported attributes such as
 - `crop="optional"` without aspect → freeform crop; Skip is allowed.
 - `crop="required"` without aspect → freeform crop; Confirm is required.
 
+Confirm stores the region the crop sheet shows: the largest centred rectangle
+at the locked aspect (or the photo's own aspect when freeform), narrowed by the
+zoom controls. Skip stores the whole photo. Image mode always stores a JPEG.
+
 Clear, Skip, Confirm, Cancel, Crop, zoom, and source-chooser copy are package
 chrome; see [Localize chrome](../how-to/localize.md).
 
@@ -2201,10 +2207,32 @@ meeting 44-point (iOS) and 48-dp (Android) minima. Zoom is not pinch-only.
 
 ## Platform behaviour
 
-iOS uses PhotosPicker, camera capture, and fileImporter with a Firstlight
-SwiftUI crop sheet. Android uses Material 3 field chrome and a Firstlight
-Compose crop dialog. Geometry and system pickers stay platform-native; crop
-semantics stay shared.
+iOS offers Photo Library (PhotosPicker) and Camera in a confirmation dialog,
+uses `fileImporter` for documents, and shows a Firstlight SwiftUI crop sheet.
+Android offers Photo Library (the system photo picker) and Camera (the system
+camera app) in a Material bottom sheet, uses the system document picker, and
+shows a Firstlight Compose crop dialog. Picked files are copied to the app's
+temporary directory before `@change` receives the path. Geometry and system
+pickers stay platform-native; crop semantics stay shared.
+
+## Host application setup
+
+On iOS, image mode's Camera option requires a camera usage description, or
+iOS terminates the app when the camera opens. Firstlight's plugin manifest
+supplies a generic one ("Used to take a photo for a form field."). Override it
+in `config/nativephp.php` with wording specific to your app for App Store
+review; app entries win over plugin entries:
+
+```php
+'permissions' => [
+    'NSCameraUsageDescription' => 'Used to take a photo for your profile.',
+],
+```
+
+The photo picker and document picker need no permission on either platform.
+Android needs no manifest change: the system camera app writes through the
+FileProvider that NativePHP's Android host already declares. If your app adds
+the `CAMERA` permission for another feature, grant it before offering Camera.
 
 ## Compatibility
 
@@ -3806,7 +3834,7 @@ Select is [server-authoritative](../concepts/server-authoritative-state.md). Cho
 
 An unchanged PHP response must also release the pending-interaction guard.
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[nonstreaming response-revision contract](../reference/compatibility.md#runtime-response-contract).
 Revisions are not per-event acknowledgements
 and do not prevent coalescing or serialize simultaneous proposals.
 
@@ -3916,7 +3944,7 @@ publications emit nothing. A publication is authoritative and replaces the
 native draft, including when PHP rejects a proposal and keeps the prior value.
 
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[nonstreaming response-revision contract](../reference/compatibility.md#runtime-response-contract).
 It makes an unchanged full response observable to the renderers. Revisions are
 not per-event acknowledgements, do not prevent coalescing, and do not serialize
 simultaneous proposals. Wider release qualification remains pending.
@@ -4022,7 +4050,7 @@ value. The control does not change optimistically and performs no arithmetic on
 the device.
 
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[nonstreaming response-revision contract](../reference/compatibility.md#runtime-response-contract).
 It makes an unchanged full response observable to the renderers. Revisions are
 not per-event acknowledgements, do not prevent coalescing, and do not serialize
 simultaneous proposals. Wider release qualification remains pending.
@@ -4700,7 +4728,7 @@ Switch accepts only strict PHP booleans: `true` and `false`. Bind a literal Bool
 ## State timing
 
 Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
-receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
+receive the [response revision](../reference/compatibility.md#runtime-response-contract).
 
 Switch is [server-authoritative](../concepts/server-authoritative-state.md). A native interaction immediately emits its proposed Boolean, but the visible on/off state remains the last value published by PHP. A response that accepts the proposal changes the visible state; a response that rejects it leaves the visible state unchanged. Every server publication clears a pending proposal, including one that republishes the same value. Programmatic publications update the accepted state without emitting `@change`.
 
@@ -4839,7 +4867,7 @@ These are the package's current declared floors. Firstlight does not promise sup
 
 After changing NativePHP versions, run `composer update` and `php artisan native:install --force` so bundled PHP binaries, native project files, and plugin copies match the resolved release.
 
-## Pre-alpha runtime limitation
+## Runtime response contract
 
 ### Supported response-revision contract
 
@@ -4897,5 +4925,5 @@ baseline Segmented failure, so these results do not establish a Segmented fix.
 
 Package regression tests cover Blade, inferred views, hand-built responses,
 remounts, nested children, and unstamped partials. This is not production
-qualification. Firstlight remains pre-alpha pending physical-device,
+qualification. Firstlight 1.0.0 is a release candidate pending physical-device,
 soak/performance, and wider app qualification, including simultaneous controls.

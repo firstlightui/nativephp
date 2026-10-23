@@ -85,7 +85,7 @@ value. The control does not change optimistically and performs no arithmetic on
 the device.
 
 Host the control in `FirstlightUI\NativeComponent` for the
-[nonstreaming response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
+[nonstreaming response-revision contract](../reference/compatibility.md#runtime-response-contract).
 It makes an unchanged full response observable to the renderers. Revisions are
 not per-event acknowledgements, do not prevent coalescing, and do not serialize
 simultaneous proposals. Wider release qualification remains pending.

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Android Media now opens the system photo picker, camera and document picker, copies the pick to the cache directory and emits its real path. It previously emitted fixed placeholder paths that the PHP side could not store.
+- Media crop Confirm now stores the region the crop sheet shows (centred at the locked or image aspect, narrowed by zoom) on iOS and Android, instead of the uncropped original.
+- The plugin manifest declares a default iOS `NSCameraUsageDescription`, so Media's Camera option no longer terminates apps on physical iPhones that omit one. Application `permissions` entries still override it.
+- Document the installable Composer constraint (`^1.0@RC`) and describe the package as a release candidate.
+
 ## 1.0.0-RC2 - 2026-10-23
 
 ### Added

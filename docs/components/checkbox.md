@@ -116,7 +116,7 @@ no nullable or indeterminate state.
 ## State timing
 
 Host the control in `FirstlightUI\NativeComponent` so unchanged full responses
-receive the [response revision](../reference/compatibility.md#pre-alpha-runtime-limitation).
+receive the [response revision](../reference/compatibility.md#runtime-response-contract).
 
 Checkbox is [server-authoritative](../concepts/server-authoritative-state.md).
 A tap emits the inverse Boolean as one proposal, but the visible checkmark

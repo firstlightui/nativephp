@@ -18,16 +18,18 @@ Start with a NativePHP Mobile 4 application that meets the [current compatibilit
 
 Use NativePHP Mobile `^4.6` and Mobile UI `^0.8`. Firstlight screens must
 extend `FirstlightUI\NativeComponent` for the
-[response-revision contract](../reference/compatibility.md#pre-alpha-runtime-limitation).
-Firstlight remains pre-alpha pending physical-device, soak/performance, and
-wider app qualification.
+[response-revision contract](../reference/compatibility.md#runtime-response-contract).
+Firstlight 1.0.0 is a release candidate pending physical-device,
+soak/performance, and wider app qualification.
 
 ## Install and register the plugin
 
-Install Firstlight as a normal Composer dependency:
+Install Firstlight as a normal Composer dependency. Until 1.0.0 is stable,
+allow release candidates in the constraint; Laravel's default minimum
+stability otherwise finds no installable version:
 
 ```bash
-composer require firstlightui/nativephp
+composer require "firstlightui/nativephp:^1.0@RC"
 ```
 
 Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
