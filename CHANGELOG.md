@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.0.0-RC3 - 2026-10-23
 
 ### Fixed
 
@@ -15,6 +15,13 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Bottom Sheets open at the height of their content on iOS and Android instead of a fixed half-height stop. Short sheets stay short and tall sheets open fully, so controls at the bottom are visible without dragging; the height follows content and text-size changes, up to a full-height sheet. Both platforms now use Firstlight renderers instead of Mobile UI's `bottom_sheet` renderers. The public API is unchanged and `detents` is still rejected.
+
+### Known limitations
+
+- The iOS Bottom Sheet renderer and its XCTest cases were written without an iOS build: neither has been compiled nor run on a simulator or device. Content-height presentation, the full-height cap for very tall content, and the first-presentation transition still need simulator verification.
+- Android Bottom Sheet content taller than the screen is clipped rather than scrolled. The Callout and Bottom Sheet fixes have no emulator or device evidence yet, and the Bottom Sheet documentation screenshots predate the content-height change.
+- The RC2 qualification limits still apply: physical-device, spoken VoiceOver/TalkBack traversal, soak/performance and wider-application qualification remain outstanding, and the upstream theme-ownership race remains deferred.
+- Requirements remain PHP `^8.4`, NativePHP Mobile `^4.6`, Mobile UI `^0.8`, iOS 18+, Android API 29+, and Swift tools 6.2.
 
 ## 1.0.0-RC2 - 2026-10-23
 
