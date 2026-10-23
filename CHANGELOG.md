@@ -11,7 +11,10 @@ All notable changes to this project will be documented in this file.
 - The plugin manifest declares a default iOS `NSCameraUsageDescription`, so Media's Camera option no longer terminates apps on physical iPhones that omit one. Application `permissions` entries still override it.
 - Document the installable Composer constraint (`^1.0@RC`) and describe the package as a release candidate.
 - Android Callout tone icons are no longer clipped. The icon matches the message's first line height and scales with font size, as on iOS. It is now hidden from TalkBack, as the contract requires.
-- Android Bottom Sheets with content taller than half the screen now open fully expanded rather than at Material's half-height stop. Short sheets still open at their content height. iOS is unchanged.
+
+### Changed
+
+- Bottom Sheets open at the height of their content on iOS and Android instead of a fixed half-height stop. Short sheets stay short and tall sheets open fully, so controls at the bottom are visible without dragging; the height follows content and text-size changes, up to a full-height sheet. Both platforms now use Firstlight renderers instead of Mobile UI's `bottom_sheet` renderers. The public API is unchanged and `detents` is still rejected.
 
 ## 1.0.0-RC2 - 2026-10-23
 

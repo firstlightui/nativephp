@@ -273,15 +273,8 @@
             "element": "FirstlightUI\\Elements\\BottomSheet",
             "blade": "FirstlightUI\\Components\\BottomSheet",
             "android_renderer": "dev.firstlightui.plugins.firstlight_ui.ui.FirstlightBottomSheetRenderer",
-            "ios_renderer": "NativeUIBottomSheetRenderer",
-            "self_closing": false,
-            "adapter": {
-                "package": "nativephp/mobile-ui",
-                "type": "bottom_sheet",
-                "platforms": [
-                    "ios"
-                ]
-            }
+            "ios_renderer": "BottomSheetRenderer",
+            "self_closing": false
         }
     ],
     "android": {

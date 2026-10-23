@@ -95,6 +95,19 @@ final class NativeUIBridge: ObservableObject {
     static func sendPressEvent(_ callbackId: Int, nodeId: Int) {}
     static func sendTextChangeEvent(_ callbackId: Int, nodeId: Int, text: String) {}
     static func sendSubmitEvent(_ callbackId: Int, nodeId: Int, text: String) {}
+    static func sendSheetDismissEvent(_ callbackId: Int, nodeId: Int) {}
+}
+
+// Stand-in for NativePHP's NodeView dispatch: a row `height` points tall
+// showing `label`, enough to exercise container renderers.
+struct NodeView: View, Equatable {
+    let node: NativeUINode
+
+    var body: some View {
+        Text(node.props.getString("label"))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: CGFloat(node.props.getInt("height", default: 44)))
+    }
 }
 
 final class NativeElementBridge {

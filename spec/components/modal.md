@@ -24,7 +24,7 @@ focus containment, close controls, and motion.
 Modal is not a Confirmation Dialog, an Alert Dialog, a Bottom Sheet, a modelled field, or a
 layout primitive. Alert Dialog remains the contract for a one-action
 acknowledgement. Confirmation Dialog remains the contract for a single
-confirm/cancel decision. Bottom Sheet remains the contract for a detent-height
+confirm/cancel decision. Bottom Sheet remains the contract for a content-height
 panel that slides up from the bottom.
 
 ## Public API

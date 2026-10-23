@@ -102,7 +102,7 @@ BLADE);
         ->not->toContain('<firstlight:bottom-sheet');
 });
 
-it('adapts the Mobile UI sheet on iOS and owns the Android renderer', function () {
+it('registers paired Firstlight renderers rather than the Mobile UI adapter', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest['components'])->toContain([
@@ -110,12 +110,8 @@ it('adapts the Mobile UI sheet on iOS and owns the Android renderer', function (
         'element' => 'FirstlightUI\\Elements\\BottomSheet',
         'blade' => 'FirstlightUI\\Components\\BottomSheet',
         'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightBottomSheetRenderer',
-        'ios_renderer' => 'NativeUIBottomSheetRenderer',
+        'ios_renderer' => 'BottomSheetRenderer',
         'self_closing' => false,
-        'adapter' => [
-            'package' => 'nativephp/mobile-ui',
-            'type' => 'bottom_sheet',
-            'platforms' => ['ios'],
-        ],
-    ]);
+    ])->and(collect($manifest['components'])->firstWhere('type', 'firstlight.bottom-sheet'))
+        ->not->toHaveKey('adapter');
 });

@@ -23,10 +23,10 @@ data class BottomSheetRendererConfiguration(
 }
 
 /**
- * Android expression of `firstlight.bottom-sheet`. iOS keeps Mobile UI's
- * `NativeUIBottomSheetRenderer`; Mobile UI's Android renderer cannot be used
- * because Firstlight publishes no detents, and its `medium,large` fallback
- * opens tall content at the half-height stop with the rest off-screen.
+ * Android expression of `firstlight.bottom-sheet`, paired with the iOS
+ * `BottomSheetRenderer`. Mobile UI's renderer is not used because Firstlight
+ * publishes no detents, and its `medium,large` fallback opens tall content at
+ * the half-height stop with the rest off-screen.
  */
 object FirstlightBottomSheetRenderer {
     @Composable

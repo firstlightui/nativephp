@@ -2435,7 +2435,8 @@ own surface colour. Close controls, when shown, use the native Close name.
 
 Bottom Sheet presents authored content in a panel that slides up from the
 bottom of the screen. PHP owns whether the sheet is requested; each platform
-owns sheet chrome, drag to dismiss, and height stops.
+owns sheet chrome and drag to dismiss. The sheet opens at the height of its
+content.
 
 Use [Modal](modal.md) for a full-screen overlay. Use
 [Alert Dialog](alert-dialog.md) for a single acknowledgement. Use
@@ -2471,17 +2472,24 @@ The dismiss handler should set `$showingFilters` to `false`.
 outside, or uses system back. Set the bound visibility property to `false` in
 that handler.
 
-There is no overlay `@press`, `native:model`, `dismissible`, or shared
-`detents` API. Height stops stay native so iOS detents and Material sheet
-stops are not forced into one geometry.
+There is no overlay `@press`, `native:model`, `dismissible`, or `detents`
+API. You don't set the height: the sheet measures its content.
+
+## Height
+
+The sheet opens at the height of its content on both platforms. A short sheet
+stays short, and a sheet taller than half the screen opens fully, so a button
+at the bottom is visible without dragging. The height follows the content when
+it changes, including for larger text sizes, up to a full-height sheet.
+Content taller than that scrolls on iOS but is clipped on Android, so keep
+sheet content shorter than the screen.
 
 ## Platform expression
 
-iOS uses Mobile UI's SwiftUI `.sheet` with a drag indicator and medium/large
-detents. Android uses Material 3 `ModalBottomSheet` sized to its content: a
-short sheet opens at its own height, and a sheet taller than half the screen
-opens fully expanded so every control is reachable without dragging. Theme
-tokens own surface and scrim colour.
+iOS uses a SwiftUI `.sheet` with a drag indicator and a height detent
+measured from the content. Android uses Material 3 `ModalBottomSheet` sized to
+its content without the half-height stop. Theme tokens own surface and scrim
+colour.
 
 ## Screenshots
 
