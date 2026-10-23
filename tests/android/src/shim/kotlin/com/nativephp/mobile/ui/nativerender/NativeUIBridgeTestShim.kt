@@ -11,4 +11,5 @@ object NativeUIBridge {
     fun sendToggleChangeEvent(callbackId: Int, nodeId: Int, value: Boolean) = Unit
     fun sendCheckboxChangeEvent(callbackId: Int, nodeId: Int, value: Boolean) = Unit
     fun sendSubmitEvent(callbackId: Int, nodeId: Int, text: String) = Unit
+    fun sendSheetDismissEvent(callbackId: Int, nodeId: Int) = Unit
 }

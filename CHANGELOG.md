@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - Media crop Confirm now stores the region the crop sheet shows (centred at the locked or image aspect, narrowed by zoom) on iOS and Android, instead of the uncropped original.
 - The plugin manifest declares a default iOS `NSCameraUsageDescription`, so Media's Camera option no longer terminates apps on physical iPhones that omit one. Application `permissions` entries still override it.
 - Document the installable Composer constraint (`^1.0@RC`) and describe the package as a release candidate.
+- Android Callout tone icons are no longer clipped. The icon matches the message's first line height and scales with font size, as on iOS. It is now hidden from TalkBack, as the contract requires.
+- Android Bottom Sheets with content taller than half the screen now open fully expanded rather than at Material's half-height stop. Short sheets still open at their content height. iOS is unchanged.
 
 ## 1.0.0-RC2 - 2026-10-23
 

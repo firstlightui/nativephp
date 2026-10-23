@@ -9,6 +9,9 @@ sources:
   - vendor/nativephp/mobile-ui/src/Elements/BottomSheet.php
   - vendor/nativephp/mobile-ui/resources/ios/NativeUIBottomSheetRenderer.swift
   - vendor/nativephp/mobile-ui/resources/android/BottomSheetRenderer.kt
+  - resources/android/BottomSheetControl.kt
+  - resources/android/BottomSheetRenderer.kt
+  - tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/BottomSheetTest.kt
   - spec/components/modal.md
 ---
 
@@ -77,22 +80,33 @@ native sheet semantics.
 
 - iOS delegates to Mobile UI SwiftUI `.sheet` with a visible drag indicator
   and the upstream default medium/large detents.
-- Android delegates to Material 3 `ModalBottomSheet` with theme-sourced
-  surface and scrim. Partial versus full expansion follows the upstream
-  default detent string; Firstlight does not expose that string.
+- Android renders a Firstlight Material 3 `ModalBottomSheet` with
+  theme-sourced surface and scrim. The sheet is sized to its content and
+  skips the partially expanded stop, so content taller than half the screen
+  opens fully expanded and every authored control is reachable without a
+  drag. Short content opens at its own height.
 
 ## Adapter decision
 
-Mobile UI 0.4 `bottom_sheet` already uses paired native sheet primitives.
 Firstlight adds validation, a required `@dismiss` seam, and the public
-`<firstlight:bottom-sheet>` tag rather than paired renderers. The public
-Element Tree type is `firstlight.bottom-sheet`. Shared detent props are
-rejected so the catalogue does not promise identical geometry.
+`<firstlight:bottom-sheet>` tag. The public Element Tree type is
+`firstlight.bottom-sheet`. Shared detent props are rejected so the catalogue
+does not promise identical geometry.
+
+The manifest adapter covers iOS only (`"platforms": ["ios"]`): iOS delegates
+to Mobile UI `NativeUIBottomSheetRenderer`. Android uses
+`FirstlightBottomSheetRenderer` because Mobile UI 0.8's Android renderer
+cannot meet the contract without a detent string. With no `detents` prop it
+falls back to `medium,large`, keeps Material's partially expanded stop, and
+fills the content column to full height, so tall content opens at the
+half-height stop with its lower controls off-screen.
 
 ## Evidence boundary
 
 Development evidence requires Pest contracts, manifest registration, showcase
-fixtures, public documentation, and constitutional review. Adapter-backed
-components do not require package-local Swift or Kotlin renderer files.
+fixtures, public documentation, and constitutional review. The iOS adapter
+needs no package-local Swift renderer. The Android renderer has Robolectric
+tests that check tall content opens fully expanded and short content keeps its
+own height.
 Screenshot capture, VoiceOver/TalkBack, and physical-device rows remain
 release evidence.

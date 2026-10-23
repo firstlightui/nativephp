@@ -302,12 +302,13 @@ it('registers the production component catalogue with canonical renderers', func
             'type' => 'firstlight.bottom-sheet',
             'element' => 'FirstlightUI\\Elements\\BottomSheet',
             'blade' => 'FirstlightUI\\Components\\BottomSheet',
-            'android_renderer' => 'com.nativephp.plugins.native_ui.ui.BottomSheetRenderer',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightBottomSheetRenderer',
             'ios_renderer' => 'NativeUIBottomSheetRenderer',
             'self_closing' => false,
             'adapter' => [
                 'package' => 'nativephp/mobile-ui',
                 'type' => 'bottom_sheet',
+                'platforms' => ['ios'],
             ],
         ],
     ]);

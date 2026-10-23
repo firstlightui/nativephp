@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -15,13 +14,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
 
@@ -55,6 +59,25 @@ internal fun firstlightCalloutAccessibilityLabel(
 ): String = explicit.ifEmpty { "${tone.accessibilityName}: $message" }
 
 @Composable
+private fun FirstlightCalloutIcon(tone: CalloutTone) {
+    // Core MaterialIcon draws its glyph at `size.value.sp` inside a `size` dp box,
+    // so a smaller caller size modifier, or any font scale above 1.0, clips it. Size the
+    // box like the 20sp first line of message text (honouring nonlinear font
+    // scaling, as iOS scales the symbol with Dynamic Type), then draw the glyph
+    // without a second font-scale pass so it fills that box exactly.
+    val density = LocalDensity.current
+    val size = with(density) { 20.sp.toDp() }
+    CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+        MaterialIcon(
+            name = tone.iconName,
+            contentDescription = null,
+            modifier = Modifier.clearAndSetSemantics { },
+            size = size,
+        )
+    }
+}
+
+@Composable
 fun FirstlightCalloutControl(
     configuration: CalloutRendererConfiguration,
     tokens: NativeUITokens,
@@ -74,11 +97,7 @@ fun FirstlightCalloutControl(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            MaterialIcon(
-                name = configuration.tone.iconName,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-            )
+            FirstlightCalloutIcon(configuration.tone)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(

@@ -8,6 +8,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
@@ -21,6 +26,26 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+@OptIn(ExperimentalTestApi::class)
+@RunWith(RobolectricTestRunner::class)
+class CalloutIconSemanticsTest {
+    @Test
+    fun `production renderer keeps the decorative tone icon out of accessibility`() = runComposeUiTest {
+        setContent {
+            MaterialTheme {
+                CalloutRenderer.Render(calloutNode(tone = "danger"), Modifier)
+            }
+        }
+        onNodeWithContentDescription("Submission warning. Review the form before continuing").assertIsDisplayed()
+        // MaterialIcon's test shim draws these glyphs as text, as core draws
+        // ligature names; neither may reach TalkBack.
+        onNodeWithText("■").assertDoesNotExist()
+        onNodeWithText("◆").assertDoesNotExist()
+    }
+}
 
 class CalloutContractTest {
     @Test

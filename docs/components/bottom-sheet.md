@@ -8,6 +8,7 @@ sources:
   - nativephp.json
   - src/Components/BottomSheet.php
   - src/Elements/BottomSheet.php
+  - resources/android/BottomSheetControl.kt
   - tests/Feature/BottomSheetElementTest.php
 ---
 
@@ -57,9 +58,11 @@ stops are not forced into one geometry.
 
 ## Platform expression
 
-Bottom Sheet is an adapter over Mobile UI `bottom_sheet`. iOS uses SwiftUI
-`.sheet` with a drag indicator. Android uses Material 3 `ModalBottomSheet`.
-Theme tokens own surface and scrim colour.
+iOS uses Mobile UI's SwiftUI `.sheet` with a drag indicator and medium/large
+detents. Android uses Material 3 `ModalBottomSheet` sized to its content: a
+short sheet opens at its own height, and a sheet taller than half the screen
+opens fully expanded so every control is reachable without dragging. Theme
+tokens own surface and scrim colour.
 
 ## Screenshots
 

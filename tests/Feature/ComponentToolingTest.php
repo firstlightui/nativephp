@@ -254,6 +254,33 @@ it('rejects adapter renderer mappings that drift from the official primitive', f
         ->toContain('Manifest ios_renderer must match nativephp/mobile-ui button: NativeUIButtonRenderer');
 });
 
+it('requires Firstlight renderers for platforms an adapter does not cover', function () {
+    $root = makeButtonAdapterValidationCopy();
+    $manifest = json_decode(file_get_contents($root.'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    $manifest['components'][0]['adapter']['platforms'] = ['ios'];
+    file_put_contents($root.'/nativephp.json', json_encode($manifest, JSON_THROW_ON_ERROR));
+
+    $process = new Process([$root.'/bin/check-component', 'Button', '--development']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1)
+        ->and($process->getErrorOutput())
+        ->toContain('resources/android/ButtonControl.kt')
+        ->toContain('resources/android/ButtonRenderer.kt')
+        ->toContain('Missing Android tests')
+        ->toContain('Manifest android_renderer must be dev.firstlightui.plugins.firstlight_ui.ui.FirstlightButtonRenderer')
+        ->not->toContain('resources/ios/')
+        ->not->toContain('ios_renderer');
+});
+
+it('accepts the iOS-adapted Bottom Sheet with its Firstlight Android renderer', function () {
+    $process = new Process([dirname(__DIR__, 2).'/bin/check-component', 'BottomSheet', '--development']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(0)
+        ->and($process->getOutput())->toContain('Constitution checks passed');
+});
+
 it('keeps the release gate closed until all documentation evidence exists', function () {
     $root = makeSegmentedValidationCopy();
 

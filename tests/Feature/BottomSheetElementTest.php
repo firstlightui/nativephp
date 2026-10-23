@@ -102,19 +102,20 @@ BLADE);
         ->not->toContain('<firstlight:bottom-sheet');
 });
 
-it('declares an exact nativephp mobile ui adapter mapping', function () {
+it('adapts the Mobile UI sheet on iOS and owns the Android renderer', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest['components'])->toContain([
         'type' => 'firstlight.bottom-sheet',
         'element' => 'FirstlightUI\\Elements\\BottomSheet',
         'blade' => 'FirstlightUI\\Components\\BottomSheet',
-        'android_renderer' => 'com.nativephp.plugins.native_ui.ui.BottomSheetRenderer',
+        'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightBottomSheetRenderer',
         'ios_renderer' => 'NativeUIBottomSheetRenderer',
         'self_closing' => false,
         'adapter' => [
             'package' => 'nativephp/mobile-ui',
             'type' => 'bottom_sheet',
+            'platforms' => ['ios'],
         ],
     ]);
 });

@@ -48,7 +48,7 @@ An invalid message or tone throws `InvalidArgumentException` before publication.
 
 Tone is never communicated by colour alone. Each renderer uses a distinct semantic symbol and prefixes the default accessible message with the tone meaning. `a11y-label` replaces that generated name, while `a11y-hint` adds context. The icon is decorative to assistive technology. The optional action remains a separate native button with the visible label as its accessible name and meets the 44-point iOS and 48-dp Android target baselines.
 
-Text wraps and the surface grows for Dynamic Type or font scale. Neither renderer creates a live region because persistence does not imply an interruption announcement.
+Text wraps and the surface grows for Dynamic Type or font scale. The tone icon scales with the message text on both platforms; on Android it is sized to the first line of message text and drawn whole at every font scale. Neither renderer creates a live region because persistence does not imply an interruption announcement.
 
 ## Platform expression
 

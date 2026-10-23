@@ -50,11 +50,29 @@ $required = [
     "tests/Feature/{$name}ElementTest.php",
 ];
 
-if ($adapter === null) {
+// An adapter may cover only some platforms; the rest need Firstlight renderers.
+$adaptedPlatforms = [];
+if ($adapter !== null) {
+    $adaptedPlatforms = $adapter['platforms'] ?? ['ios', 'android'];
+    if (! is_array($adaptedPlatforms) || $adaptedPlatforms === [] || array_diff($adaptedPlatforms, ['ios', 'android']) !== []) {
+        $errors[] = 'Manifest adapter platforms must be a non-empty list of ios and/or android';
+        $adaptedPlatforms = ['ios', 'android'];
+    }
+}
+$ownsIos = ! in_array('ios', $adaptedPlatforms, true);
+$ownsAndroid = ! in_array('android', $adaptedPlatforms, true);
+
+if ($ownsIos) {
     array_push(
         $required,
         "resources/ios/{$controlName}.swift",
         "resources/ios/{$rendererName}.swift",
+    );
+}
+
+if ($ownsAndroid) {
+    array_push(
+        $required,
         "resources/android/{$controlName}.kt",
         "resources/android/{$rendererName}.kt",
     );
@@ -69,12 +87,14 @@ foreach ($required as $path) {
 $iosTests = [];
 $androidTests = [];
 
-if ($adapter === null) {
+if ($ownsIos) {
     $iosTests = glob($root."/tests/ios/{$name}*Test*.swift") ?: [];
     if ($iosTests === []) {
         $errors[] = "Missing iOS tests matching: tests/ios/{$name}*Test*.swift";
     }
+}
 
+if ($ownsAndroid) {
     $androidTestPattern = "tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/{$name}*Test*.kt";
     $androidTests = glob($root.'/'.$androidTestPattern) ?: [];
     if ($androidTests === []) {
@@ -87,7 +107,7 @@ if (is_array($component)) {
         'blade' => "FirstlightUI\\Components\\{$name}",
     ];
 
-    if ($adapter === null) {
+    if ($ownsAndroid) {
         $androidRendererName = $rendererName;
         foreach (glob($root.'/vendor/*/*/nativephp.json') ?: [] as $dependencyManifestPath) {
             $dependencyManifest = json_decode((string) file_get_contents($dependencyManifestPath), true);
@@ -105,9 +125,14 @@ if (is_array($component)) {
             }
         }
 
-        $expected['ios_renderer'] = $rendererName;
         $expected['android_renderer'] = "dev.firstlightui.plugins.firstlight_ui.ui.{$androidRendererName}";
-    } else {
+    }
+
+    if ($ownsIos) {
+        $expected['ios_renderer'] = $rendererName;
+    }
+
+    if ($adapter !== null) {
         $package = $adapter['package'] ?? null;
         $type = $adapter['type'] ?? null;
 
@@ -136,7 +161,7 @@ if (is_array($component)) {
             if (is_array($officialManifest) && ! is_array($officialComponent)) {
                 $errors[] = "Adapter package {$package} does not register component type {$type}";
             } elseif (is_array($officialComponent)) {
-                foreach (['ios_renderer', 'android_renderer'] as $key) {
+                foreach (array_map(fn (string $platform): string => "{$platform}_renderer", $adaptedPlatforms) as $key) {
                     $value = $officialComponent[$key] ?? null;
                     if (! is_string($value) || $value === '') {
                         $errors[] = "Adapter package {$package} component {$type} has no {$key}";
