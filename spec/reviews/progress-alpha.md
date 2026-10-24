@@ -153,9 +153,9 @@ This section supersedes the capture and release-readiness statements above. Earl
 | Component | `Progress` / `<firstlight:progress>` |
 | State class | Action/display; PHP publishes work state, native code owns indeterminate animation |
 | Implementation | Firstlight adapter over the official `nativephp/mobile-ui` `progress_bar` renderers |
-| Package revision captured | `19d12ff9d48baeddd312a6ef5d1a749bdba585e8` (`v1.0.0-RC6`), clean |
-| Package revision tested | `42e875a91949981b324cd20854e591a292b9475f` on `release/component-reviews`, clean; later commits on the branch change only reviews and documentation |
-| Showcase revision | `c7ed28ef489e1caae305fc84961af9f549eb409d` (`firstlightui/showcase` `main`), clean; its lock installs `firstlightui/nativephp` at `19d12ff9d48baeddd312a6ef5d1a749bdba585e8` |
+| Package revision captured | `8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` on `release/component-reviews`, clean (recaptured after fixes) |
+| Package revision tested | `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` on `release/component-reviews`, clean; later commits on the branch change only reviews and documentation |
+| Showcase revision | `f48dbb7ea0c1666984a3b500241d46488ae24ccf` (`firstlightui/showcase` branch `release/component-review-fixtures`, on `c7ed28e`), clean; its lock installs `firstlightui/nativephp` at `8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` |
 | iOS simulator | Firstlight iPhone 17 Pro iOS 26.5 (`758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC`); XCTest also on Firstlight iPhone 17 Pro iOS 27.0 (`731CC3F2-1651-4522-A5A3-A781710EE166`) |
 | Android emulator | `emulator-5554`, AVD Medium_Phone, Android 17 (API 37), `google_apis_playstore_ps16k` (not a Pixel 9 Pro) |
 | Visual reviewer | Pending maintainer approval (row below) |
@@ -165,9 +165,9 @@ This section supersedes the capture and release-readiness statements above. Earl
 
 | Result | Command and evidence |
 | --- | --- |
-| PASS | `bin/capture-doc-screenshot-batch ListItem List Media PillGroup Progress --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 07:05:14 AEDT (batch 3). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/progress` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
-| PASS | The orchestrator reported `Package: 19d12ff9d48baeddd312a6ef5d1a749bdba585e8` and `Showcase: c7ed28ef489e1caae305fc84961af9f549eb409d` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. Published images were moved out of the tree between batches so that each batch started clean, and were committed unchanged. |
-| PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. Observation: the Android bar stays at the Material default width (about 240 dp) because the fixture omits `w-full`. |
+| PASS | `bin/capture-doc-screenshot-batch Modal BottomSheet Checkbox Progress SearchField --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 09:04:53 AEDT (recapture after the heading, Checkbox, Progress and Search Field fixes; attempt 1). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/progress` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
+| PASS | The orchestrator reported `Package: 8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` and `Showcase: f48dbb7ea0c1666984a3b500241d46488ae24ccf` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. The published images were committed unchanged. |
+| PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. Fixed: Android bars now span the full width with `w-full`. |
 | BLOCKED | Maintainer visual approval of this release matrix is not yet recorded. |
 
 | Platform | Light | Dark |
@@ -175,19 +175,19 @@ This section supersedes the capture and release-readiness statements above. Earl
 | iOS | `docs/screenshots/progress/ios-light.png` | `docs/screenshots/progress/ios-dark.png` |
 | Android | `docs/screenshots/progress/android-light.png` | `docs/screenshots/progress/android-dark.png` |
 
-Thirty matrices were captured with `bin/capture-doc-screenshot-batch` in six five-component batches rather than 31 separate `bin/capture-doc-screenshots` runs. Release mode requires both repositories to be clean before launch, and each single-component run publishes into the package tree. The batch entrypoint uses the same `DocumentationScreenshotCapture` guards.
+Thirty matrices were captured with `bin/capture-doc-screenshot-batch` in six five-component batches rather than 31 separate `bin/capture-doc-screenshots` runs. Release mode requires both repositories to be clean before launch, and each single-component run publishes into the package tree. The batch entrypoint uses the same `DocumentationScreenshotCapture` guards. This matrix was then recaptured, after the fixes listed in the CHANGELOG Unreleased section, in one five-component batch (Modal, BottomSheet, Checkbox, Progress, SearchField) from clean trees.
 
 ### Automated and consumer evidence
 
 | Result | Command and evidence |
 | --- | --- |
-| PASS | `vendor/bin/pest` at `42e875a91949981b324cd20854e591a292b9475f` — 1470 passed, 5 skipped, 1 deprecation, 4 warnings, exit 0 (48.4 s). |
-| PASS | `xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC' -resultBundlePath ../evidence/run2/ios26.xcresult test` (iPhone 17 Pro, iOS 26.5) — TEST SUCCEEDED: 304 tests, 298 passed, 0 failed, 6 skipped. |
-| PASS | Same command on `id=731CC3F2-1651-4522-A5A3-A781710EE166` (iPhone 17 Pro, iOS 27.0) — TEST SUCCEEDED: 304 tests, 298 passed, 0 failed, 6 skipped. |
-| PASS | `JAVA_HOME=<jdk-21> tests/android/gradlew -p tests/android testDebugUnitTest verifyPaparazziDebug --rerun-tasks` — BUILD SUCCESSFUL, 35 tasks executed; 309 tests in 87 classes, 0 failures, 0 errors. |
+| PASS | `vendor/bin/pest` at `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` — 1470 passed, 5 skipped, 1 deprecation, 4 warnings, exit 0 (106.9 s). |
+| PASS | `xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC' -resultBundlePath ../evidence/run3/ios26.xcresult test` (iPhone 17 Pro, iOS 26.5) — TEST SUCCEEDED: 305 tests, 299 passed, 0 failed, 6 skipped. |
+| PASS | Same command on `id=731CC3F2-1651-4522-A5A3-A781710EE166` (iPhone 17 Pro, iOS 27.0) — TEST SUCCEEDED: 305 tests, 299 passed, 0 failed, 6 skipped. |
+| PASS | `JAVA_HOME=<jdk-21> tests/android/gradlew -p tests/android testDebugUnitTest verifyPaparazziDebug --rerun-tasks` — BUILD SUCCESSFUL, 35 tasks executed; 311 tests in 88 classes, 0 failures, 0 errors. |
 | PASS | `bin/check-docs --development` — "Documentation checks passed.", exit 0. |
 | PASS | `bin/check-component <Name> --development` for all 31 manifest components — exit 0 each. |
-| PASS | Showcase `php artisan test` at `acc4dc1` (local branch `release/component-review-fixtures` on `c7ed28e`) — 206 passed (4206 assertions). |
+| PASS | Showcase `php artisan test` at `f48dbb7` (branch `release/component-review-fixtures` on `c7ed28e`) — 206 passed (4206 assertions). |
 | PASS | Showcase `php artisan native:plugin:validate ../nativephp` — exit 0, with one warning: "No bridge_functions defined in manifest". |
 
 Component-specific tests within those runs:
@@ -201,7 +201,7 @@ Focused showcase tests: `tests/Feature/ProgressCaptureTest.php`, `tests/Feature/
 
 ### Showcase demo audit
 
-Audited `firstlightui/showcase` `c7ed28ef489e1caae305fc84961af9f549eb409d` against `docs/components/progress.md`. Covered on the interactive page:
+Audited `firstlightui/showcase` `c7ed28ef489e1caae305fc84961af9f549eb409d` (re-checked at `f48dbb7ea0c1666984a3b500241d46488ae24ccf`, which only changes the fixtures: `class="w-full"` added to every progress in `progress-showcase` and `captures/progress`; coverage is unchanged) against `docs/components/progress.md`. Covered on the interactive page:
 
 - determinate 0, 0.42, 0.87 and 1
 - explicit and inferred (`null`) indeterminate
@@ -230,12 +230,12 @@ Article XII is not applicable.
 
 ### Release checklist — 2026-10-25
 
-- [x] Clean `--release` capture from `19d12ff9d48baeddd312a6ef5d1a749bdba585e8` and `c7ed28ef489e1caae305fc84961af9f549eb409d` published the four-image matrix (2026-10-25).
-- [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component Progress --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `42e875a91949981b324cd20854e591a292b9475f`.
+- [x] Clean `--release` capture from `8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` and `f48dbb7ea0c1666984a3b500241d46488ae24ccf` published the four-image matrix (2026-10-25, recaptured after fixes).
+- [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component Progress --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02`.
 - [x] Showcase demo audited against every documented state; gaps listed above.
 - [ ] BLOCKED — Maintainer visual approval of the four release images listed above (record reviewer, date and verdict per image).
 - [ ] BLOCKED — Physical iOS device row:
-  - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `42e875a91949981b324cd20854e591a292b9475f` or later and open **Progress** from the showcase home (`/components/progress`).
+  - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` or later and open **Progress** from the showcase home (`/components/progress`).
   - [ ] Compare 0%, 42%, 87%, 100% and indeterminate bars.
   - [ ] Advance progress from 25% to 100%; further presses stay at 100%; Reset returns 25% with no event.
   - [ ] Rapid input: press Advance repeatedly; the bar never exceeds 100%.
@@ -246,7 +246,7 @@ Article XII is not applicable.
   - [ ] Right-to-left (device language Arabic or Hebrew, or the Right-to-Left pseudolanguage): determinate fill grows from the right edge.
   - [ ] Light and dark appearance both match the approved captures; airplane mode on: the screen still loads and every interaction round-trips locally.
 - [ ] BLOCKED — Physical Android device row:
-  - [ ] Device: record model, Android version, date and tester. Install the showcase built from `42e875a91949981b324cd20854e591a292b9475f` or later and open **Progress** from the showcase home.
+  - [ ] Device: record model, Android version, date and tester. Install the showcase built from `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` or later and open **Progress** from the showcase home.
   - [ ] Compare 0%, 42%, 87%, 100% and indeterminate bars.
   - [ ] Advance progress from 25% to 100%; further presses stay at 100%; Reset returns 25% with no event.
   - [ ] Rapid input: press Advance repeatedly; the bar never exceeds 100%.
