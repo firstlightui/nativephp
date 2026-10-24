@@ -21,7 +21,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
 ## Workflow
 
 1. Create the screen class extending `FirstlightUI\NativeComponent`, its view in `resources/views/native/`, and a `Route::native()` entry with the app's native-chrome layout.
-2. Bind controls with `native:model` (use `.blur` for text fields that validate on leave, `.debounce.300ms` for search). Choose a control by meaning:
+2. Bind controls with `native:model`. Use plain `native:model` or `.live` for text fields submitted by a separate Button, because `.blur` is not guaranteed to reach PHP before the press. Use `.blur` only with `updated{Property}` validation on leave, and `.debounce.300ms` for search. Choose a control by meaning:
    - Text: `text-field`, `text-area`, `search-field`, `code-editor`
    - One choice: `segmented` (2–5 short options), `select` (many), `choice-group` (visible radios)
    - Many choices: `pill-group`, `choice-group multiple`
