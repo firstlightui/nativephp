@@ -180,6 +180,7 @@ struct TextFieldRenderer: View {
     @Environment(\.colorScheme) private var colorScheme
     @FocusState private var focused: Bool
     @State private var state: TextFieldRendererState
+    @State private var focusToken = UUID()
     private let events: TextFieldRendererEvents
 
     init(node: NativeUINode, events: TextFieldRendererEvents = .native) {
@@ -212,8 +213,12 @@ struct TextFieldRenderer: View {
             if let event = state.userChanged(value) { events.send(event) }
         }
         .onChange(of: focused) { _, value in
+            KeyboardFocusPolicy.firstlightFieldFocusChanged(value, token: focusToken) {
+                if let event = state.flush() { events.send(event) }
+            }
             if let event = state.focusChanged(value) { events.send(event) }
         }
+        .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)

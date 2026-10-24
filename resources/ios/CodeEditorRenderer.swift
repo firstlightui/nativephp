@@ -160,6 +160,7 @@ struct CodeEditorRenderer: View {
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var state: CodeEditorRendererState
+    @State private var focusToken = UUID()
     private let events: CodeEditorRendererEvents
 
     init(node: NativeUINode, events: CodeEditorRendererEvents = .native) {
@@ -179,10 +180,14 @@ struct CodeEditorRenderer: View {
             ),
             replacementRevision: state.replacementRevision,
             onFocusChanged: { focused in
+                KeyboardFocusPolicy.firstlightFieldFocusChanged(focused, token: focusToken) {
+                    if let event = state.flush() { events.send(event) }
+                }
                 if let event = state.focusChanged(focused) { events.send(event) }
             },
             tokens: themeStore.resolve(for: colorScheme)
         )
+        .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)

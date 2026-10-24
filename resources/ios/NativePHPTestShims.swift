@@ -98,6 +98,35 @@ final class NativeUIBridge: ObservableObject {
     static func sendSheetDismissEvent(_ callbackId: Int, nodeId: Int) {}
 }
 
+// Mirrors NativePHP Mobile 4.6's focus registry. The real `dispatchPress` also resigns the
+// keyboard and defers the press one runloop turn; the shim keeps the flush-before-press contract.
+@MainActor
+enum KeyboardFocusPolicy {
+    private static var focusedField: AnyHashable?
+    private static var flushFocusedField: (() -> Void)?
+    private(set) static var focusedFieldKeepsFocus = false
+
+    static var focusedFieldActive: Bool { focusedField != nil }
+
+    static func fieldFocused(_ field: AnyHashable, keepsFocus: Bool, flush: @escaping () -> Void) {
+        focusedField = field
+        focusedFieldKeepsFocus = keepsFocus
+        flushFocusedField = flush
+    }
+
+    static func fieldBlurred(_ field: AnyHashable) {
+        guard focusedField == field else { return }
+        focusedField = nil
+        focusedFieldKeepsFocus = false
+        flushFocusedField = nil
+    }
+
+    static func dispatchPress(_ send: @escaping () -> Void) {
+        flushFocusedField?()
+        send()
+    }
+}
+
 // Stand-in for NativePHP's NodeView dispatch: a row `height` points tall
 // showing `label`, enough to exercise container renderers.
 struct NodeView: View, Equatable {

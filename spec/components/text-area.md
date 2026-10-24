@@ -125,9 +125,10 @@ tests or an arbitrary press delay.
 In locked Mobile 4.6.0 / Mobile UI 0.8.0, the official iOS Button calls
 `KeyboardFocusPolicy.dispatchPress` in `NativeUIButtonRenderer.swift`. Official
 `NativeUITextInputCore.swift` registers a focused-editor flush closure with
-`KeyboardFocusPolicy.fieldFocused`. Firstlight Text Field, Text Area, and Search
-Field do not register there: their buffers flush on their own blur/submit paths.
-This is a Firstlight iOS integration gap, not exclusively an upstream defect.
+`KeyboardFocusPolicy.fieldFocused`. Firstlight Text Field, Text Area, Code
+Editor, and Search Field now register there too, so on iOS a Button press
+flushes their pending change first (`FocusedFieldFlushTests`, plus a simulator
+check of the form recipe with `.blur`).
 On Android, `ButtonRenderer.kt` calls `dismissForInteractiveTap`, but Mobile's
 `ui/nativerender/KeyboardFocusPolicy.kt` exposes no synchronous buffer-flush hook;
 focus loss alone is not an ordering barrier. A paired fix needs an official

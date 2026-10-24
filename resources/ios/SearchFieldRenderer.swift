@@ -143,6 +143,7 @@ struct SearchFieldRendererState {
 struct SearchFieldRenderer: View {
     @ObservedObject private var bridge = NativeUIBridge.shared
     @State private var state: SearchFieldRendererState
+    @State private var focusToken = UUID()
     private let events: SearchFieldRendererEvents
 
     init(node: NativeUINode, events: SearchFieldRendererEvents = .native) {
@@ -166,10 +167,14 @@ struct SearchFieldRenderer: View {
                 for event in state.submit() { events.send(event) }
             },
             onFocusChanged: { focused in
+                KeyboardFocusPolicy.firstlightFieldFocusChanged(focused, token: focusToken) {
+                    if let event = state.flush() { events.send(event) }
+                }
                 if let event = state.focusChanged(focused) { events.send(event) }
             }
         )
         .frame(minHeight: 44)
+        .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

@@ -146,6 +146,7 @@ struct TextAreaRenderer: View {
     @Environment(\.colorScheme) private var colorScheme
     @FocusState private var focused: Bool
     @State private var state: TextAreaRendererState
+    @State private var focusToken = UUID()
     private let events: TextAreaRendererEvents
 
     init(node: NativeUINode, events: TextAreaRendererEvents = .native) {
@@ -165,8 +166,12 @@ struct TextAreaRenderer: View {
             if let event = state.userChanged(value) { events.send(event) }
         }
         .onChange(of: focused) { _, value in
+            KeyboardFocusPolicy.firstlightFieldFocusChanged(value, token: focusToken) {
+                if let event = state.flush() { events.send(event) }
+            }
             if let event = state.focusChanged(value) { events.send(event) }
         }
+        .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)

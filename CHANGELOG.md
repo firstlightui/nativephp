@@ -19,6 +19,10 @@ All notable changes to this project will be documented in this file.
 - `submit()` now keeps the messages of a `ValidationException` thrown by its action (for example `ValidationException::withMessages(['form' => ...])`), so actions can fail the whole form. Previously those messages were discarded.
 - The package now requires `illuminate/console` to register the generator.
 
+### Fixed
+
+- iOS: pressing a Button while a Text Field, Text Area, Code Editor or Search Field is focused now publishes the field's pending `.blur` or `.debounce` change before the press, so the handler reads the typed value instead of the previous one. The fields now register with NativePHP's keyboard focus policy, as Mobile UI's own inputs do. Android is unchanged until NativePHP ships the equivalent hook.
+
 ### Known limitations
 
 - TalkBack focus on the first invalid field was observed on the Android emulator. VoiceOver cannot run in the iOS Simulator, and spoken output was not captured on either platform; those parts are covered by PHP, XCTest and Robolectric tests. Physical-device VoiceOver and TalkBack checks remain outstanding.

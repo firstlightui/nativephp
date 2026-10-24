@@ -80,12 +80,14 @@ period and flushes on blur or submit; durations below 50 ms are rejected.
 Native typing, selection, cursor position, and marked-text composition remain
 local while focused so PHP acknowledgements do not cause keyboard jumps.
 
-For forms submitted by a separate button, use `native:model.live="email"`
-(or plain `native:model`). A button press is not the field's `@submit` event:
-blur/debounce changes are not guaranteed to reach PHP before that press, so
-the handler can read the previously published value. Do not rely on keyboard
-dismissal to flush the field first. For keyboard submission, the field's own
-`@submit` handler receives the current string directly.
+On iOS, pressing a `<firstlight:button>` while the field is focused publishes
+its pending `.blur` or `.debounce` change before the press, so the handler reads
+the current value. Icon Button and List Item presses do not flush the field
+first. On Android, blur/debounce changes are not yet guaranteed to reach PHP
+before a button press, so for forms submitted by a separate button use
+`native:model.live="email"` (or plain `native:model`). A button press is not the
+field's `@submit` event; for keyboard submission, the field's own `@submit`
+handler receives the current string directly.
 
 ## Icons and trailing actions
 
