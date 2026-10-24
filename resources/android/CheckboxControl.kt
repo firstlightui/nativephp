@@ -43,6 +43,8 @@ fun FirstlightCheckboxControl(
         error = error,
     )
     val supportingText = error.ifEmpty { helper }
+    // Match Stepper: disabled label and helper use the Material 0.38 disabled-content alpha.
+    val fieldColor = if (disabled) tokens.onSurface.copy(alpha = 0.38f) else tokens.onSurface
 
     Column(
         modifier = modifier
@@ -86,7 +88,7 @@ fun FirstlightCheckboxControl(
             if (label.isNotEmpty()) {
                 Text(
                     text = if (required) "$label *" else label,
-                    color = tokens.onSurface,
+                    color = fieldColor,
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -95,7 +97,11 @@ fun FirstlightCheckboxControl(
         if (supportingText.isNotEmpty()) {
             Text(
                 text = supportingText,
-                color = if (error.isNotEmpty()) tokens.destructive else tokens.onSurfaceVariant,
+                color = when {
+                    error.isNotEmpty() -> tokens.destructive
+                    disabled -> fieldColor
+                    else -> tokens.onSurfaceVariant
+                },
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 48.dp),
             )

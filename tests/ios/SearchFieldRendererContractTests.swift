@@ -77,6 +77,21 @@ final class SearchFieldRendererContractTests: XCTestCase {
         XCTAssertEqual(firstlightSearchFieldMinimumHeight, 36)
     }
 
+    func testDisabledFieldDimsTextAndSearchGlyphAndEnablingRestoresThem() {
+        let field = FirstlightSearchTextField()
+        configureSearchTextField(field, configuration: SearchFieldRendererConfiguration(node: node(disabled: true)))
+
+        XCTAssertFalse(field.isEnabled)
+        XCTAssertEqual(field.textColor, .tertiaryLabel)
+        XCTAssertEqual(field.leftView?.alpha ?? 0, 0.38, accuracy: 0.001)
+
+        configureSearchTextField(field, configuration: SearchFieldRendererConfiguration(node: node()))
+
+        XCTAssertTrue(field.isEnabled)
+        XCTAssertEqual(field.textColor, .label)
+        XCTAssertEqual(field.leftView?.alpha ?? 0, 1, accuracy: 0.001)
+    }
+
     func testRendererCompilesAgainstNativePHPContractShims() {
         let renderer = SearchFieldRenderer(node: node(), events: SearchFieldRendererEvents { _ in })
         XCTAssertNotNil(renderer.body)

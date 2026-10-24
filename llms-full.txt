@@ -2549,7 +2549,9 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Shows native progress presentation and prevents interaction. Defaults to `false`. |
 | `icon` | `string` | Optional leading cross-platform icon name. |
+| `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
+| `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
 | `class` | `string` | External EDGE layout utilities. |
@@ -3590,7 +3592,8 @@ One user outcome produces one callback. Programmatic closure produces none.
 After a user dismisses the dialog, copy-only publications do not reopen it; a
 later server transition from `false` to `true` presents a new decision.
 
-iOS uses SwiftUI `confirmationDialog`; Android uses Material 3 `AlertDialog`.
+iOS uses a UIKit action sheet (`UIAlertController`); Android uses Material 3
+`AlertDialog`.
 Their native controls own modal focus, action order, destructive expression,
 Dynamic Type or font scaling, dark appearance, contrast, reduced motion, and
 right-to-left behavior. Use specific action labels such as `Delete` rather
@@ -3624,11 +3627,14 @@ bottom.
     a11y-label="Account details"
     @dismiss="closeAccount"
 >
-    <firstlight:status-label label="Account details" />
+    <native:text class="text-lg font-semibold text-theme-on-surface">Account details</native:text>
 </firstlight:modal>
 ```
 
 The dismiss handler should set `$showingAccount` to `false`.
+
+The visible title is ordinary text styled as a heading. Mobile UI text has no
+heading role yet, so screen readers announce the surface by its `a11y-label`.
 
 ## Props
 
@@ -3685,11 +3691,14 @@ decision.
     a11y-label="Filters"
     @dismiss="closeFilters"
 >
-    <firstlight:status-label label="Filters" />
+    <native:text class="text-lg font-semibold text-theme-on-surface">Filters</native:text>
 </firstlight:bottom-sheet>
 ```
 
 The dismiss handler should set `$showingFilters` to `false`.
+
+The visible title is ordinary text styled as a heading. Mobile UI text has no
+heading role yet, so screen readers announce the surface by its `a11y-label`.
 
 ## Props
 
@@ -4595,6 +4604,7 @@ Publish a determinate fraction from `0.0` through `1.0`:
 <firstlight:progress
     :value="$completed / $total"
     a11y-label="Uploading documents"
+    class="w-full"
 />
 ```
 
@@ -4604,10 +4614,14 @@ Use indeterminate progress when no meaningful fraction is available:
 <firstlight:progress
     indeterminate
     a11y-label="Preparing documents"
+    class="w-full"
 />
 ```
 
 Omitting `value` also selects indeterminate progress.
+
+Add `class="w-full"` to span the container. Without it, Android keeps the
+Material default track width while iOS fills the available width.
 
 ## Props
 
@@ -5471,8 +5485,8 @@ Status Label supports the versions listed in the current [compatibility referenc
 
 ## Screenshots
 
-These approved native captures use iPhone 17 Pro / iOS 26.5 and Pixel 9 Pro /
-Android 16 API 36. Draft retains the optional text-only presentation; the other
+These native captures use iPhone 17 Pro / iOS 26.5 and an Android 17 (API 37)
+emulator. Draft retains the optional text-only presentation; the other
 tones include decorative platform icons.
 
 | Platform | Light | Dark |
@@ -5554,8 +5568,8 @@ the [supported NativePHP versions](../reference/compatibility.md).
 
 ## Screenshot evidence
 
-The stable showcase route is `/captures/metric`. These approved native captures
-use iPhone 17 Pro / iOS 26.5 and Pixel 9 Pro / Android 16 API 36.
+The stable showcase route is `/captures/metric`. These native captures use
+iPhone 17 Pro / iOS 26.5 and an Android 17 (API 37) emulator.
 
 | Platform | Light | Dark |
 | --- | --- | --- |

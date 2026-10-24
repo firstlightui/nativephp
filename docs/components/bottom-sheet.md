@@ -33,11 +33,14 @@ decision.
     a11y-label="Filters"
     @dismiss="closeFilters"
 >
-    <firstlight:status-label label="Filters" />
+    <native:text class="text-lg font-semibold text-theme-on-surface">Filters</native:text>
 </firstlight:bottom-sheet>
 ```
 
 The dismiss handler should set `$showingFilters` to `false`.
+
+The visible title is ordinary text styled as a heading. Mobile UI text has no
+heading role yet, so screen readers announce the surface by its `a11y-label`.
 
 ## Props
 

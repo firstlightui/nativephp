@@ -90,8 +90,8 @@ Status Label supports the versions listed in the current [compatibility referenc
 
 ## Screenshots
 
-These approved native captures use iPhone 17 Pro / iOS 26.5 and Pixel 9 Pro /
-Android 16 API 36. Draft retains the optional text-only presentation; the other
+These native captures use iPhone 17 Pro / iOS 26.5 and an Android 17 (API 37)
+emulator. Draft retains the optional text-only presentation; the other
 tones include decorative platform icons.
 
 | Platform | Light | Dark |

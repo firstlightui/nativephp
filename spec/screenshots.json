@@ -151,8 +151,8 @@
             }
         },
         "list-section": {
-            "route": "/captures/list",
-            "test": "php artisan test tests/Feature/ListCaptureTest.php",
+            "route": "/captures/list-section",
+            "test": "php artisan test tests/Feature/ListSectionCaptureTest.php",
             "outputs": {
                 "ios-light": "docs/screenshots/list-section/ios-light.png",
                 "ios-dark": "docs/screenshots/list-section/ios-dark.png",

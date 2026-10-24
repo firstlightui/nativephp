@@ -73,6 +73,7 @@ struct MediaRenderer: View {
                     zoomInLabel: state.configuration.zoomInLabel,
                     zoomOutLabel: state.configuration.zoomOutLabel
                 )
+                .tint(tokens.primary)
             }
         }
         .fullScreenCover(isPresented: $showCamera) {

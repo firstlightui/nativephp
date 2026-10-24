@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Button accepts the shared icon contract overrides `icon-ios`, `icon-android`, `icon-trailing-ios` and `icon-trailing-android`, plus their camelCase aliases. Before, they were silently ignored, so a shared name that NativePHP's iOS icon helper cannot resolve, such as `chevron-right`, left the iOS button without a glyph.
+
 ### Changed
 
 - Documentation now presents Firstlight as the app-shell layer for NativePHP. The four recipes lead the documentation index, a new "Build with a coding agent" page covers the Boost guideline, skills, and `llms.txt`, the concept page states what Firstlight is not, and the accessibility page leads with what users get and its verification status.
@@ -11,6 +15,13 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- iOS Confirmation Dialog: on iOS 26 the dialog showed as a popover at the top leading edge over the navigation title, without its cancel action. It is now a UIKit action sheet that always shows both actions. It is anchored only at regular width (iPad). Callbacks, copy updates and programmatic closure are unchanged.
+- iOS Media: the Choose/Replace button and the crop sheet actions use the theme primary instead of the system blue.
+- Android Checkbox: a disabled checkbox now dims its label and helper with the 0.38 disabled-content alpha, as Stepper does.
+- iOS Search Field: a disabled field now dims its text and search glyph. Before, only Android dimmed them.
+- Docs: the Modal and Bottom Sheet examples use a real heading (`native:text` at title weight) instead of a Status Label, which read as a badge. The Progress examples set `class="w-full"`, because Android otherwise keeps the Material default track width.
+- `bin/check-component` takes the documentation, screenshot and review slug from the manifest type, so List (`ListContainer`) is checked against `list`, not `list-container`.
+- `spec/screenshots.json` captures List Section from its own showcase route instead of reusing `/captures/list`.
 - The Boost guideline, the `firstlight-init` and `building-firstlight-screens` skills, and `llms.txt` linked to `https://firstlightui.dev/how-to/...` and similar paths, which return 404. They now link to `https://firstlightui.dev/docs/...`.
 
 ## 1.0.0-RC6 - 2026-10-24

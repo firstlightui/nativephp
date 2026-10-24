@@ -75,8 +75,8 @@ the [supported NativePHP versions](../reference/compatibility.md).
 
 ## Screenshot evidence
 
-The stable showcase route is `/captures/metric`. These approved native captures
-use iPhone 17 Pro / iOS 26.5 and Pixel 9 Pro / Android 16 API 36.
+The stable showcase route is `/captures/metric`. These native captures use
+iPhone 17 Pro / iOS 26.5 and an Android 17 (API 37) emulator.
 
 | Platform | Light | Dark |
 | --- | --- | --- |

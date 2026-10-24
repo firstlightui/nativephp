@@ -33,6 +33,7 @@ Publish a determinate fraction from `0.0` through `1.0`:
 <firstlight:progress
     :value="$completed / $total"
     a11y-label="Uploading documents"
+    class="w-full"
 />
 ```
 
@@ -42,10 +43,14 @@ Use indeterminate progress when no meaningful fraction is available:
 <firstlight:progress
     indeterminate
     a11y-label="Preparing documents"
+    class="w-full"
 />
 ```
 
 Omitting `value` also selects indeterminate progress.
+
+Add `class="w-full"` to span the container. Without it, Android keeps the
+Material default track width while iOS fills the available width.
 
 ## Props
 

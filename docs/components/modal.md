@@ -30,11 +30,14 @@ bottom.
     a11y-label="Account details"
     @dismiss="closeAccount"
 >
-    <firstlight:status-label label="Account details" />
+    <native:text class="text-lg font-semibold text-theme-on-surface">Account details</native:text>
 </firstlight:modal>
 ```
 
 The dismiss handler should set `$showingAccount` to `false`.
+
+The visible title is ordinary text styled as a heading. Mobile UI text has no
+heading role yet, so screen readers announce the surface by its `a11y-label`.
 
 ## Props
 
