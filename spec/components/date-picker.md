@@ -134,9 +134,12 @@ dark mode, increased contrast, right-to-left layout, and Reduced Motion.
 
 ## Platform expression
 
-- iOS uses an Apple-native labelled trigger and an adaptive popover or sheet
-  containing a genuine SwiftUI `DatePicker` restricted to `.date`, plus
-  explicit native Cancel and Confirm actions. The draft maps through a
+- iOS uses an Apple-native labelled trigger and presents a genuine SwiftUI
+  `DatePicker` restricted to `.date`, plus explicit native Cancel and Confirm
+  actions: in a content-sized sheet on iPhone (the measured content height as
+  its detent, `.large` until measured) and a popover on iPad. A compact
+  popover is not used because UIKit shrinks it to the space on one side of a
+  mid-screen trigger and clips the actions. The draft maps through a
   Gregorian calendar in `timezone` without changing the wire string.
 - Android uses a read-only Material trigger and Material 3
   `DatePickerDialog`. `selectedDateMillis` is decoded as UTC midnight because

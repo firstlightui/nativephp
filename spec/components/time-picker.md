@@ -89,9 +89,10 @@ both visible `label` and `a11y-label` are blank.
 
 ## Platform expression and accessibility
 
-- iOS uses a native labelled trigger and adaptive popover or sheet containing
-  a genuine SwiftUI `DatePicker` restricted to `.hourAndMinute`, with native
-  Cancel and Confirm actions.
+- iOS uses a native labelled trigger and presents a genuine SwiftUI
+  `DatePicker` restricted to `.hourAndMinute`, with native Cancel and Confirm
+  actions, in a content-sized sheet on iPhone and a popover on iPad, as for
+  Date Picker.
 - Android uses a read-only Material trigger and genuine Material 3
   `TimePickerDialog` plus `TimePicker`. Its 12/24-hour presentation follows
   platform locale and clock convention; no override leaks into the API.

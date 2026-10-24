@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Slider: a fractional step such as `0.1` no longer breaks the screen after a drag. The renderer sends its value back as a 32-bit Float (0.3 arrives as 0.30000001192…), which the strict step-grid and bounds checks rejected on the next render, so PHP showed the error screen. The iOS slider could then take props from an unrelated error-screen node with the same id, which is the likely cause of a reported TestFlight crash. Values from the renderer now get Float round-trip tolerance, authored off-grid values are still rejected, and on both platforms a slider takes new props only from a `firstlight.slider` node.
+- iOS Date Picker and Time Picker: on iPhone the calendar or time wheel now opens in a sheet sized to its content instead of a full-height sheet. The sheet's detent is the measured height of the picker and its Cancel and Confirm actions, so it grows with Dynamic Type and falls back to the large detent only when the content needs it. iPad keeps its popover. A compact popover was tried and rejected: UIKit shrinks it to the space on one side of a mid-screen trigger and clips the month header and actions. Cancel and Confirm, dismiss-to-cancel, min/max bounds, accessibility and validation focus are unchanged. Android is unchanged.
 
 ## 1.0.0-RC5 - 2026-10-24
 

@@ -59,7 +59,7 @@ struct FirstlightDatePickerControl: View {
                 arrowEdge: .bottom
             ) {
                 pickerPresentation
-                    .presentationCompactAdaptation(.sheet)
+                    .firstlightPickerPresentation()
             }
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error
@@ -102,7 +102,7 @@ struct FirstlightDatePickerControl: View {
         )
     }
 
-    private var pickerPresentation: some View {
+    var pickerPresentation: some View {
         VStack(spacing: 0) {
             constrainedPicker
                 .datePickerStyle(.graphical)

@@ -55,7 +55,7 @@ struct FirstlightTimePickerControl: View {
                 arrowEdge: .bottom
             ) {
                 pickerPresentation
-                    .presentationCompactAdaptation(.sheet)
+                    .firstlightPickerPresentation()
             }
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error
@@ -89,7 +89,7 @@ struct FirstlightTimePickerControl: View {
         )
     }
 
-    private var pickerPresentation: some View {
+    var pickerPresentation: some View {
         VStack(spacing: 0) {
             DatePicker("Time", selection: draftBinding, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.wheel)

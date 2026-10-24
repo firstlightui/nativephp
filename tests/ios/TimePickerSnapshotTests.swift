@@ -1,4 +1,6 @@
+import SnapshotTesting
 import SwiftUI
+import UIKit
 import XCTest
 
 @testable import FirstlightIOSControls
@@ -78,6 +80,41 @@ final class TimePickerSnapshotTests: XCTestCase {
         XCTAssertNotNil(renderer.body)
     }
 
+    func testPresentedPickerIsSizedToItsContentOnIPhone() {
+        var heights: [String: CGFloat] = [:]
+        for (name, scheme, size) in [
+            ("light", ColorScheme.light, DynamicTypeSize.large),
+            ("dark", .dark, .large),
+            ("accessibility-extra-extra-extra-large", .light, .accessibility5),
+        ] {
+            var state = TimePickerRendererState(node: node())
+            state.open(currentTime: "14:30")
+            let host = UIHostingController(rootView: PresentedTimePickerContent(state: state)
+                .environment(\.colorScheme, scheme)
+                .environment(\.dynamicTypeSize, size))
+            let fitted = settledSize(of: host)
+            heights[name] = fitted.height
+
+            // The wheel is not snapshotted: UIPickerView's 3D layer transforms do not rasterise
+            // offscreen, so a reference image would not show what the device shows.
+        }
+
+        // The iPhone sheet detent is the content height: well short of a full-height sheet at the
+        // default size, and growing with Dynamic Type rather than clipping.
+        XCTAssertLessThan(heights["light", default: .infinity], 874 * 0.7)
+        XCTAssertGreaterThan(heights["accessibility-extra-extra-extra-large", default: 0], heights["light", default: .infinity])
+    }
+
+    /// UIKit-backed pickers grow after their first layout pass, so measure after layout settles,
+    /// as the presented sheet's geometry observer does.
+    private func settledSize(of host: UIViewController) -> CGSize {
+        host.view.frame = CGRect(x: 0, y: 0, width: 402, height: 2000)
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+        host.view.layoutIfNeeded()
+        return host.view.sizeThatFits( CGSize(width: 402, height: CGFloat.infinity))
+    }
+
     private func node(
         hasValue: Bool = true,
         value: String = "14:30",
@@ -109,5 +146,16 @@ final class TimePickerSnapshotTests: XCTestCase {
 
     private func tree(root: NativeUINode) -> NativeUITree {
         NativeUITree(version: 1, callbackCount: 1, root: root)
+    }
+}
+
+/// The picker content exactly as the control presents it, without the trigger.
+private struct PresentedTimePickerContent: View {
+    @State var state: TimePickerRendererState
+
+    var body: some View {
+        FirstlightTimePickerControl(state: $state, tokens: .fallback, onConfirm: {})
+            .pickerPresentation
+            .background(Color(uiColor: .systemBackground))
     }
 }
