@@ -205,3 +205,27 @@ by an explicitly approved documentation matrix. It is not development-complete,
 component-release-ready, or public-alpha-ready until the manual accessibility,
 Android icon-variant, immutable-revision, and physical-device gates above are
 closed.
+
+## Context menu development evidence (2026-10-24)
+
+Branch `feat/context-menu` in both repositories. The menu is a List Item
+feature (`context-menu`), not a wrapper tag; see the component contract.
+
+- PHP: `vendor/bin/pest --exclude-group=evals` 1442 passed, 5 skipped;
+  showcase `php artisan test` 175 passed.
+- iOS: `ListItemSnapshotTests` passed on iPhone 17 Pro (iOS 26.5) Simulator,
+  including dispatch guards and hosted VoiceOver custom actions; existing
+  snapshots unchanged.
+- Android: `testDebugUnitTest --tests '*ListItem*'` and `verifyPaparazziDebug`
+  passed, including long-press, disabled-item, RTL, TalkBack custom action,
+  semantic long-click, and disable-while-open cases.
+- Runtime: both showcase hosts built and ran. Long press presented the system
+  SwiftUI context menu on iOS and a Material 3 dropdown at the press point on
+  the Pixel_9_Pro emulator. On iOS the live accessibility tree exposed Reply,
+  Pin, and Delete (not disabled Forward) as custom actions; a disabled-item tap
+  did nothing and Pin recorded `Pin #42` with no row press.
+- Screenshots: `docs/screenshots/list-item-context-menu/{ios,android}-{light,dark}.png`,
+  captured manually because the guarded capture script cannot open a menu.
+
+Open: spoken VoiceOver/TalkBack traversal, physical devices, and a guarded
+capture path for open-menu states.

@@ -60,6 +60,7 @@ arrange List Items; swipe-enabled rows require a List host.
 | `trailing-icon-android` | Optional `AndroidSymbol|string` override; requires `trailing-icon`; typed variants are preserved. |
 | `trailing-text` | Optional nullable metadata. Non-empty text is mutually exclusive with `trailing-icon`; null/empty/whitespace omit it. |
 | `leading-actions`, `trailing-actions` | Optional arrays of labelled callback descriptors; see Swipe actions below. |
+| `context-menu` | Optional array of labelled callback descriptors with `disabled`; see Context menu below. |
 | `disabled` | Prevents row and swipe action presses and exposes native disabled semantics. Defaults to `false`. |
 | `a11y-label` | Optional replacement for the row's combined visible accessible name. |
 | `a11y-hint` | Optional supplementary screen-reader context. |
@@ -109,7 +110,7 @@ non-boolean `disabled`, invalid icon override types, icon overrides without a
 shared fallback, multiple leading sources, multiple trailing affordances, and
 unsupported APIs fail with actionable `InvalidArgumentException` messages.
 Unsupported APIs include overline text, embedded controls, secondary embedded
-actions, menus, long press, navigation directives, selection, field state,
+actions, `trailing-menu`, raw `@longPress`, navigation directives, selection, field state,
 non-icon arbitrary colours, elevation, typography, and child content.
 
 ## Swipe actions
@@ -143,6 +144,47 @@ not SwiftUI's optimistic destructive-button role or a native dismissal state.
 The existing destructive-list helper remains responsible for confirmation,
 authorization, persistence, and row removal. Per-action tint/disabled options
 and the legacy swipe-delete shortcut remain excluded.
+
+## Context menu
+
+Decision: the context menu is a List Item feature, not a wrapper tag. A
+wrapper around arbitrary content would need a child slot (out of catalogue as
+layout), would conflict with List Item's single accessibility node, and could
+not attach to the iOS List row that owns `swipeActions`. The row already owns
+its long press, so the menu attaches to it.
+
+List Item accepts `context-menu`, the `contextMenu` alias, and fluent
+`contextMenu(array)`. Each item requires non-empty string `method` and `label`.
+Optional keys are `icon`, `ios`, `android`, `role` (empty or `destructive`), and
+`disabled` (bool). Icon overrides require a shared fallback and resolve through
+IconResolver. Unknown keys (including nested `items`) and malformed values fail
+before publication. An empty array publishes nothing.
+
+Firstlight emits a private `firstlight_context_menu_json` string prop with
+`cb`, `label`, `icon`, `icon_variant`, `role`, and `disabled`. Disabled items
+publish `cb: 0` and register no callback. It never emits upstream
+`trailing_menu` or `on_long_press`.
+
+A long press on an enabled row presents the menu; the row `@press` never fires
+from a long press. Choosing an enabled item dispatches its callback once
+through the standard press event after re-checking that the callback belongs to
+an enabled item of the currently published, enabled row. Disabled rows have no
+menu, long-press action, or menu accessibility actions. Republishing closes an
+open Android menu; a retained iOS system menu dispatches nothing.
+
+Destructive role selects native destructive styling only; PHP owns
+confirmation and removal. Submenus, sections, selection/checkmark state,
+shortcuts, custom previews, and per-item colours are excluded.
+
+Accessibility: every enabled item is a VoiceOver accessibility action and a
+TalkBack custom action named by its label, available without a long press.
+Android also exposes the row's semantic long-click to open the visible menu.
+Menus follow layout direction, including RTL.
+
+Platform expression: SwiftUI `.contextMenu` with `Button(role:)` and `Label`
+items plus `.accessibilityActions`; Material 3 `DropdownMenu` /
+`DropdownMenuItem` with `MenuDefaults.itemColors` for destructive items,
+opened from `combinedClickable(onLongClick:)` and anchored at the press point.
 
 ## Accessibility
 

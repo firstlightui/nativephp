@@ -89,6 +89,9 @@ final class ListItem extends Element
     /** @var array<string, list<array<string, mixed>>> */
     private array $swipeActions = [];
 
+    /** @var list<array<string, mixed>> */
+    private array $contextMenu = [];
+
     public static function make(string $headline = ''): static
     {
         $item = new self;
@@ -161,6 +164,31 @@ final class ListItem extends Element
                 $this->{"{$edge}Actions"}($actions);
             }
         }
+
+        if ($this->hasAny($attrs, ['context-menu', 'contextMenu'])) {
+            $items = $this->firstValue($attrs, ['context-menu', 'contextMenu']);
+            if (! is_array($items)) {
+                throw new InvalidArgumentException('Firstlight List Item `context-menu` must be an array.');
+            }
+
+            $this->contextMenu($items);
+        }
+    }
+
+    /** @param list<array<string, mixed>> $items */
+    public function contextMenu(array $items): static
+    {
+        foreach ($items as $item) {
+            $this->validateActionDescriptor($item, 'context-menu', 'context menu item', ['disabled']);
+
+            if (array_key_exists('disabled', $item) && ! is_bool($item['disabled'])) {
+                throw new InvalidArgumentException('Firstlight List Item context menu item `disabled` must be a boolean.');
+            }
+        }
+
+        $this->contextMenu = array_values($items);
+
+        return $this;
     }
 
     /** @param list<array<string, mixed>> $actions */
@@ -179,40 +207,46 @@ final class ListItem extends Element
     private function setSwipeActions(string $edge, array $actions): static
     {
         foreach ($actions as $action) {
-            if (! is_array($action)
-                || array_diff(array_keys($action), ['method', 'label', 'icon', 'ios', 'android', 'role']) !== []) {
-                throw new InvalidArgumentException("Firstlight List Item `{$edge}-actions` accepts action arrays with method, label, icon, ios, android, and role only.");
-            }
-
-            foreach (['method', 'label'] as $key) {
-                if (! is_string($action[$key] ?? null) || trim($action[$key]) === '') {
-                    throw new InvalidArgumentException("Firstlight List Item swipe actions require a non-empty `{$key}`.");
-                }
-            }
-
-            if (! in_array($action['role'] ?? '', ['', 'destructive'], true)) {
-                throw new InvalidArgumentException('Firstlight List Item swipe action `role` must be empty or destructive.');
-            }
-
-            if (array_key_exists('icon', $action)
-                && (! is_string($action['icon']) || trim($action['icon']) === '')) {
-                throw new InvalidArgumentException('Firstlight List Item swipe action `icon` must be a non-empty string.');
-            }
-
-            foreach (['ios' => IosSymbol::class, 'android' => AndroidSymbol::class] as $key => $symbol) {
-                if (! array_key_exists($key, $action)) {
-                    continue;
-                }
-                if (! isset($action['icon'])
-                    || (! $action[$key] instanceof $symbol && (! is_string($action[$key]) || trim($action[$key]) === ''))) {
-                    throw new InvalidArgumentException("Firstlight List Item swipe action `{$key}` requires a shared icon and a platform symbol or non-empty string.");
-                }
-            }
+            $this->validateActionDescriptor($action, "{$edge}-actions", 'swipe action');
         }
 
         $this->swipeActions[$edge] = array_values($actions);
 
         return $this;
+    }
+
+    /** @param list<string> $extraKeys */
+    private function validateActionDescriptor(mixed $action, string $prop, string $noun, array $extraKeys = []): void
+    {
+        $keys = ['method', 'label', 'icon', 'ios', 'android', 'role', ...$extraKeys];
+        if (! is_array($action) || array_diff(array_keys($action), $keys) !== []) {
+            throw new InvalidArgumentException("Firstlight List Item `{$prop}` accepts arrays with ".implode(', ', $keys).' only.');
+        }
+
+        foreach (['method', 'label'] as $key) {
+            if (! is_string($action[$key] ?? null) || trim($action[$key]) === '') {
+                throw new InvalidArgumentException("Firstlight List Item {$noun}s require a non-empty `{$key}`.");
+            }
+        }
+
+        if (! in_array($action['role'] ?? '', ['', 'destructive'], true)) {
+            throw new InvalidArgumentException("Firstlight List Item {$noun} `role` must be empty or destructive.");
+        }
+
+        if (array_key_exists('icon', $action)
+            && (! is_string($action['icon']) || trim($action['icon']) === '')) {
+            throw new InvalidArgumentException("Firstlight List Item {$noun} `icon` must be a non-empty string.");
+        }
+
+        foreach (['ios' => IosSymbol::class, 'android' => AndroidSymbol::class] as $key => $symbol) {
+            if (! array_key_exists($key, $action)) {
+                continue;
+            }
+            if (! isset($action['icon'])
+                || (! $action[$key] instanceof $symbol && (! is_string($action[$key]) || trim($action[$key]) === ''))) {
+                throw new InvalidArgumentException("Firstlight List Item {$noun} `{$key}` requires a shared icon and a platform symbol or non-empty string.");
+            }
+        }
     }
 
     public function headline(string $value): static
@@ -437,6 +471,25 @@ final class ListItem extends Element
             // Firstlight owns the swipe layer. Upstream action props would add
             // a second drawer and enable iOS full-swipe/optimistic deletion.
             $props["firstlight_{$edge}_actions_json"] = json_encode($resolved, JSON_THROW_ON_ERROR);
+        }
+
+        if ($this->contextMenu !== []) {
+            $resolved = [];
+            foreach ($this->contextMenu as $item) {
+                $icon = IconResolver::resolve($item['icon'] ?? null, $item['ios'] ?? null, $item['android'] ?? null);
+                $disabled = $item['disabled'] ?? false;
+                $resolved[] = [
+                    // Disabled items register no callback, so no renderer can dispatch them.
+                    'cb' => $disabled ? 0 : $registry->register($item['method']),
+                    'label' => $item['label'],
+                    'icon' => $icon['icon'] ?? '',
+                    'icon_variant' => $icon['variant'] ?? '',
+                    'role' => $item['role'] ?? '',
+                    'disabled' => $disabled,
+                ];
+            }
+
+            $props['firstlight_context_menu_json'] = json_encode($resolved, JSON_THROW_ON_ERROR);
         }
 
         return $props;

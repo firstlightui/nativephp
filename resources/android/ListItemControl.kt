@@ -5,6 +5,10 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -23,7 +27,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +48,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -52,6 +63,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +71,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
@@ -230,19 +244,48 @@ private fun FirstlightListItemContent(
     )
     val enabled = configuration.enabled
     val isDark = isSystemInDarkTheme()
+    val hasMenu = configuration.hasContextMenu
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // Republishing the menu or disabling the row closes an open menu.
+    var menuExpanded by remember(configuration.contextMenu, hasMenu) { mutableStateOf(false) }
+    var menuAnchor by remember { mutableStateOf(Offset.Zero) }
+    var rowSize by remember { mutableStateOf(IntSize.Zero) }
+    val accessibilityActions = buildList {
+        (configuration.leadingActions + configuration.trailingActions).forEach { add(it.label to it.callbackId) }
+        // Enabled menu items are direct screen-reader actions; no long press needed.
+        if (hasMenu) configuration.contextMenu.filter { it.enabled }.forEach { add(it.label to it.callbackId) }
+    }
     val rowModifier = modifier
         .minimumInteractiveComponentSize()
-        .clickable(enabled = enabled, role = Role.Button, onClick = onPress)
+        .onSizeChanged { rowSize = it }
+        .then(
+            if (hasMenu) {
+                Modifier.pointerInput(Unit) {
+                    // Observe, never consume, the press so the menu opens at the touch point.
+                    awaitEachGesture {
+                        menuAnchor = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial).position
+                    }
+                }
+            } else {
+                Modifier
+            },
+        )
+        .combinedClickable(
+            enabled = enabled,
+            role = Role.Button,
+            onClick = onPress,
+            onLongClick = if (hasMenu) ({ menuExpanded = true }) else null,
+        )
         .clearAndSetSemantics {
             contentDescription = description
             role = Role.Button
             if (!enabled) {
                 disabled()
-            } else if ((configuration.leadingActions + configuration.trailingActions).isNotEmpty()) {
-                customActions = (configuration.leadingActions + configuration.trailingActions).map { action ->
-                    CustomAccessibilityAction(action.label) {
-                        if (configuration.actionEvent(action.callbackId) == null) false else {
-                            onAction(action.callbackId)
+            } else if (accessibilityActions.isNotEmpty()) {
+                customActions = accessibilityActions.map { (label, callbackId) ->
+                    CustomAccessibilityAction(label) {
+                        if (configuration.actionEvent(callbackId) == null) false else {
+                            onAction(callbackId)
                             true
                         }
                     }
@@ -256,9 +299,65 @@ private fun FirstlightListItemContent(
                     false
                 }
             }
+            if (hasMenu) {
+                onLongClick {
+                    // Assistive long press anchors the menu below the row's logical start.
+                    menuAnchor = Offset(if (isRtl) rowSize.width.toFloat() else 0f, rowSize.height.toFloat())
+                    menuExpanded = true
+                    true
+                }
+            }
         }
         .alpha(if (configuration.disabled) 0.5f else 1f)
 
+    Box(modifier = rowModifier) {
+        FirstlightListItemRow(configuration, tokens, isDark)
+        if (hasMenu) {
+            val density = LocalDensity.current
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                // Offsets are relative to the row's bottom logical-start corner.
+                offset = with(density) {
+                    DpOffset(
+                        (if (isRtl) rowSize.width - menuAnchor.x else menuAnchor.x).toDp(),
+                        (menuAnchor.y - rowSize.height).toDp(),
+                    )
+                },
+            ) {
+                configuration.contextMenu.forEach { item ->
+                    val destructive = item.role == "destructive"
+                    DropdownMenuItem(
+                        text = { Text(item.label) },
+                        onClick = {
+                            menuExpanded = false
+                            onAction(item.callbackId)
+                        },
+                        enabled = item.enabled,
+                        leadingIcon = if (item.icon.isEmpty()) null else ({
+                            // Core renders icons as text; scale the label, not the glyph.
+                            CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+                                MaterialIcon(item.icon, contentDescription = null, modifier = Modifier.size(24.dp))
+                            }
+                        }),
+                        colors = if (destructive) {
+                            MenuDefaults.itemColors(textColor = tokens.destructive, leadingIconColor = tokens.destructive)
+                        } else {
+                            MenuDefaults.itemColors()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FirstlightListItemRow(
+    configuration: ListItemRendererConfiguration,
+    tokens: NativeUITokens,
+    isDark: Boolean,
+) {
     ListItem(
         headlineContent = {
             Text(
@@ -266,7 +365,7 @@ private fun FirstlightListItemContent(
                 style = MaterialTheme.typography.bodyLarge,
             )
         },
-        modifier = rowModifier,
+        modifier = Modifier.fillMaxWidth(),
         supportingContent = if (configuration.supporting.isNotEmpty()) {
             {
                 Text(

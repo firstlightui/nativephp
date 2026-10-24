@@ -101,6 +101,59 @@ final class ListItemSnapshotTests: XCTestCase {
         XCTAssertNil(state.configuration.actionEvent(callbackID: 52))
     }
 
+    func testContextMenuDispatchesOnlyEnabledPublishedItems() {
+        let configuration = ListItemRendererConfiguration(node: makeNode(menu: true))
+        XCTAssertEqual(configuration.contextMenu.map(\.label), ["Reply", "Forward", "Delete"])
+        XCTAssertEqual(configuration.contextMenu.map(\.isEnabled), [true, false, true])
+        XCTAssertEqual(configuration.contextMenu.last?.role, "destructive")
+        XCTAssertTrue(configuration.hasContextMenu)
+        XCTAssertEqual(configuration.actionEvent(callbackID: 61), .press(callbackID: 61, nodeID: 7))
+        XCTAssertEqual(configuration.actionEvent(callbackID: 63), .press(callbackID: 63, nodeID: 7))
+        XCTAssertNil(configuration.actionEvent(callbackID: 0), "disabled items publish no callback")
+        XCTAssertNil(configuration.actionEvent(callbackID: 999))
+
+        let disabledRow = ListItemRendererConfiguration(node: makeNode(disabled: true, menu: true))
+        XCTAssertFalse(disabledRow.hasContextMenu)
+        XCTAssertNil(disabledRow.actionEvent(callbackID: 61))
+
+        var state = ListItemRendererState(node: makeNode(menu: true))
+        XCTAssertTrue(state.serverPublished(NativeUITree(version: 2, callbackCount: 1, root: makeNode())))
+        XCTAssertFalse(state.configuration.hasContextMenu)
+        XCTAssertNil(state.configuration.actionEvent(callbackID: 61))
+    }
+
+    func testContextMenuExposesEnabledItemsAsVoiceOverActions() {
+        let enabled = accessibilityCustomActionNames(for: makeNode(menu: true))
+        XCTAssertTrue(enabled.contains("Reply"), "\(enabled)")
+        XCTAssertTrue(enabled.contains("Delete"), "\(enabled)")
+        XCTAssertFalse(enabled.contains("Forward"), "disabled items are not offered: \(enabled)")
+
+        let disabledRow = accessibilityCustomActionNames(for: makeNode(disabled: true, menu: true))
+        XCTAssertFalse(disabledRow.contains("Reply"), "\(disabledRow)")
+    }
+
+    private func accessibilityCustomActionNames(for node: NativeUINode) -> [String] {
+        let host = UIHostingController(rootView: FirstlightListItemControl(
+            configuration: ListItemRendererConfiguration(node: node),
+            tokens: .listItemTest,
+            onPress: {}
+        ))
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 200))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+        defer { window.isHidden = true }
+        return customActionNames(in: host.view)
+    }
+
+    private func customActionNames(in root: NSObject) -> [String] {
+        var names = (root.accessibilityCustomActions ?? []).map(\.name)
+        var children = (root.accessibilityElements as? [NSObject]) ?? []
+        if let view = root as? UIView { children += view.subviews }
+        for child in children { names += customActionNames(in: child) }
+        return names
+    }
+
     func testServerPublicationUpdatesMetadataWithoutEmitting() {
         var state = ListItemRendererState(node: makeNode())
         let updated = makeNode(
@@ -208,6 +261,7 @@ final class ListItemSnapshotTests: XCTestCase {
         disabled: Bool = false,
         callbackID: Int = 41,
         actions: Bool = false,
+        menu: Bool = false,
         iconProps: [String: Any] = [:]
     ) -> NativeUINode {
         NativeUINode(
@@ -233,6 +287,11 @@ final class ListItemSnapshotTests: XCTestCase {
                 "firstlight_trailing_actions_json": actions ? """
                     [{"cb":52,"label":"Delete","icon":"trash","icon_variant":"","role":"destructive"},
                      {"cb":53,"label":"Flag","icon":"flag","icon_variant":"","role":""}]
+                    """ : "",
+                "firstlight_context_menu_json": menu ? """
+                    [{"cb":61,"label":"Reply","icon":"arrowshape.turn.up.left","icon_variant":"","role":"","disabled":false},
+                     {"cb":0,"label":"Forward","icon":"","icon_variant":"","role":"","disabled":true},
+                     {"cb":63,"label":"Delete","icon":"trash","icon_variant":"","role":"destructive","disabled":false}]
                     """ : "",
             ].merging(iconProps) { _, value in value }),
             onPress: callbackID,

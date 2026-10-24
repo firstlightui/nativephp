@@ -2834,6 +2834,7 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
 | `trailing-actions` | `array` of action descriptors | Optional actions revealed from the logical trailing edge inside List. |
+| `context-menu` | `array` of menu item descriptors | Optional native context menu opened by long press, with matching screen-reader actions. |
 | `disabled` | `bool` | Prevents row and swipe action presses and exposes native disabled state. Defaults to `false`. |
 | `a11y-label` | non-empty `string` | Optional replacement for the combined visible accessible name. |
 | `a11y-hint` | non-empty `string` | Optional supplementary VoiceOver or TalkBack guidance. |
@@ -2895,6 +2896,54 @@ Per-action tint, enabled flags, full-swipe options, and the legacy
 `on-swipe-delete` shortcut are not supported. Omit unavailable actions or disable
 the entire row, and always authorize sensitive operations in PHP.
 
+## Context menu
+
+Give a row a `context-menu` to offer secondary commands without adding a
+second target. The same example works on both platforms, inside or outside List:
+
+```blade
+<firstlight:list-item
+    headline="Message"
+    supporting="From Alex"
+    @press="openMessage(42)"
+    :context-menu="[
+        ['method' => 'reply(42)', 'label' => 'Reply', 'icon' => 'reply', 'ios' => 'arrowshape.turn.up.left'],
+        ['method' => 'forward(42)', 'label' => 'Forward', 'icon' => 'forward', 'ios' => 'arrowshape.turn.up.right', 'disabled' => ! $canForward],
+        ['method' => 'requestDestroy(42)', 'label' => 'Delete', 'icon' => 'delete', 'ios' => 'trash', 'role' => 'destructive'],
+    ]"
+/>
+```
+
+Each item requires a non-empty `method` callback expression and visible
+`label`. Optional fields are `icon` (shared fallback), `ios` (`IosSymbol|string`),
+`android` (`AndroidSymbol|string`), `role` (empty or `destructive`), and
+`disabled` (a real boolean, default `false`). Icon overrides require a shared
+`icon`. Items appear in the authored order. An empty array means no menu. The
+`contextMenu` alias and fluent `->contextMenu([...])` are supported.
+
+Long-pressing the row opens the menu: a SwiftUI context menu with the row
+preview on iOS, and a Material 3 dropdown menu anchored at the touch point on
+Android. Choosing an enabled item closes the menu and invokes its PHP method
+once. Tapping the row still invokes `@press`; a long press never does.
+
+Disabled items stay visible with native disabled styling and cannot be chosen.
+Firstlight registers no callback for them, so publishing `disabled => false`
+later is what makes an item actionable. A disabled row has no menu at all.
+
+`role="destructive"` only applies native destructive styling (red text and
+icon). Choosing Delete does not remove the row; connect it to the
+[destructive-list helper](../how-to/destroy-list-items.md) so PHP confirms,
+authorizes, and deletes.
+
+Publishing a different menu, or disabling the row, replaces what the next menu
+shows without emitting an event. Android closes an open menu when that happens.
+An open iOS system menu can stay on screen until dismissed, but its items then
+emit nothing.
+
+Context menus and swipe actions can be combined. Submenus, section titles,
+checkmark or selected state, keyboard shortcuts, custom previews, and
+per-item colours are not supported.
+
 ## Events and state timing
 
 `@press` is required and invokes the named PHP action once after a native user
@@ -2953,9 +3002,9 @@ Use `trailing-icon` for a decorative directional or state affordance, or
 a second action. It remains silent to assistive technology inside the row's
 single button node.
 
-Independent trailing buttons, switches, checkboxes, radio buttons, menus, and
-other embedded targets are excluded. Swipe actions are separate from these
-decorative trailing affordances.
+Independent trailing buttons, switches, checkboxes, radio buttons, overflow
+menus, and other embedded targets are excluded. Swipe actions and the
+long-press context menu are separate from these decorative trailing affordances.
 
 ## Accessibility
 
@@ -2973,14 +3022,21 @@ Inside List, swipe actions are available through native VoiceOver actions and
 TalkBack custom actions without performing a swipe gesture. Revealed Android
 buttons also expose their visible labels and button roles.
 
+Every enabled context menu item is also a VoiceOver action and a TalkBack custom
+action named by its label, so screen-reader users can run it from the Actions
+rotor or TalkBack actions menu without a long press. Disabled items are not
+offered as actions. TalkBack's own long-press action still opens the visible
+menu. Menu items follow the reading direction, including RTL, and their text
+scales with Dynamic Type and Android font scaling.
+
 ## Validation and excluded APIs
 
 Firstlight rejects missing or blank headlines, missing `@press`, blank accessible
 labels/hints, non-boolean disabled values, invalid icon override types, icon overrides
 without shared fallbacks, ambiguous leading or trailing content, and content
 slots. It also rejects overline text, embedded controls, independent trailing
-actions, malformed or unlabelled swipe descriptors, long-press gestures, menus,
-navigation directives, model or selection state, loading and validation props,
+actions, malformed or unlabelled swipe or context menu descriptors, raw
+`@longPress` handlers, `trailing-menu`, navigation directives, model or selection state, loading and validation props,
 non-icon colours, elevation, typography, and per-platform layout escape hatches.
 
 Optional `supporting` and `trailing-text` values may be null or empty, including
@@ -2997,7 +3053,11 @@ trailing metadata or symbol, native press and disabled behaviour, and a
 
 Android uses Material 3 `ListItem` inside one enabled-aware clickable surface,
 with Material typography, content slots, ripple and disabled semantics, and a
-48-dp minimum target. Shared content and action meaning stay the same while
+48-dp minimum target.
+
+The context menu is SwiftUI `.contextMenu` with `Button(role: .destructive)`
+items on iOS, and Material 3 `DropdownMenu` / `DropdownMenuItem` on Android,
+opened by the row's long-click and anchored where the finger went down. Shared content and action meaning stay the same while
 spacing, typography, motion, and pressed state remain native.
 
 ## Compatibility
@@ -3012,6 +3072,13 @@ both Firstlight-owned native renderers declared by the package manifest.
 | --- | --- | --- |
 | iOS | ![List Item on iOS in light mode](../screenshots/list-item/ios-light.png) | ![List Item on iOS in dark mode](../screenshots/list-item/ios-dark.png) |
 | Android | ![List Item on Android in light mode](../screenshots/list-item/android-light.png) | ![List Item on Android in dark mode](../screenshots/list-item/android-dark.png) |
+
+Open context menu:
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![List Item context menu on iOS in light mode](../screenshots/list-item-context-menu/ios-light.png) | ![List Item context menu on iOS in dark mode](../screenshots/list-item-context-menu/ios-dark.png) |
+| Android | ![List Item context menu on Android in light mode](../screenshots/list-item-context-menu/android-light.png) | ![List Item context menu on Android in dark mode](../screenshots/list-item-context-menu/android-dark.png) |
 
 --- Source: docs/components/list.md ---
 

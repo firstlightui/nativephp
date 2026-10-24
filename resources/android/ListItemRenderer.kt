@@ -43,6 +43,36 @@ private fun decodeListItemActions(json: String): List<ListItemSwipeAction> {
     }.getOrDefault(emptyList())
 }
 
+data class ListItemMenuItem(
+    val callbackId: Int,
+    val label: String,
+    val icon: String,
+    val iconVariant: String,
+    val role: String,
+    val disabled: Boolean,
+) {
+    val enabled: Boolean
+        get() = !disabled && callbackId != 0
+}
+
+private fun decodeListItemMenu(json: String): List<ListItemMenuItem> {
+    if (json.isEmpty()) return emptyList()
+    return runCatching {
+        val array = JSONArray(json)
+        (0 until array.length()).map { index ->
+            val item = array.getJSONObject(index)
+            ListItemMenuItem(
+                callbackId = item.getInt("cb"),
+                label = item.getString("label"),
+                icon = item.getString("icon"),
+                iconVariant = item.getString("icon_variant"),
+                role = item.getString("role"),
+                disabled = item.getBoolean("disabled"),
+            )
+        }.filter { (it.callbackId != 0 || it.disabled) && it.label.isNotBlank() }
+    }.getOrDefault(emptyList())
+}
+
 data class ListItemRendererConfiguration(
     val nodeId: Int,
     val headline: String,
@@ -59,6 +89,7 @@ data class ListItemRendererConfiguration(
     val callbackId: Int,
     val leadingActions: List<ListItemSwipeAction>,
     val trailingActions: List<ListItemSwipeAction>,
+    val contextMenu: List<ListItemMenuItem>,
     val leadingIconTone: String,
     val trailingIconTone: String,
     val leadingIconColor: String,
@@ -85,6 +116,7 @@ data class ListItemRendererConfiguration(
         callbackId = node.onPress,
         leadingActions = decodeListItemActions(node.props.getString("firstlight_leading_actions_json")),
         trailingActions = decodeListItemActions(node.props.getString("firstlight_trailing_actions_json")),
+        contextMenu = decodeListItemMenu(node.props.getString("firstlight_context_menu_json")),
         leadingIconTone = node.props.getString("leading_icon_tone"),
         trailingIconTone = node.props.getString("trailing_icon_tone"),
         leadingIconColor = node.props.getString("leading_icon_color"),
@@ -101,8 +133,16 @@ data class ListItemRendererConfiguration(
         null
     }
 
+    /** The row exposes its context menu only while the row itself can act. */
+    val hasContextMenu: Boolean
+        get() = enabled && contextMenu.isNotEmpty()
+
     fun actionEvent(callbackId: Int): ListItemRendererEvent.Press? =
-        if (enabled && (leadingActions + trailingActions).any { it.callbackId == callbackId }) {
+        if (enabled && callbackId != 0 && (
+                (leadingActions + trailingActions).any { it.callbackId == callbackId } ||
+                    contextMenu.any { it.callbackId == callbackId && it.enabled }
+                )
+        ) {
             ListItemRendererEvent.Press(callbackId, nodeId)
         } else {
             null

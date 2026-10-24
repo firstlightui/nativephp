@@ -78,6 +78,13 @@ struct FirstlightListItemControl: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(configuration.resolvedAccessibilityLabel))
         .accessibilityHint(Text(configuration.accessibilityHint))
+        .modifier(FirstlightListItemContextMenu(
+            items: configuration.hasContextMenu ? configuration.contextMenu : [],
+            onAction: { callbackID in
+                guard configuration.actionEvent(callbackID: callbackID) != nil else { return }
+                onAction(callbackID)
+            }
+        ))
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
             actionButtons(configuration.leadingActions)
         }
@@ -167,6 +174,44 @@ struct FirstlightListItemControl: View {
                 .foregroundStyle(tokens.onSurfaceVariant)
                 .multilineTextAlignment(.trailing)
                 .accessibilityHidden(true)
+        }
+    }
+}
+
+/// Presents published menu items through the system context menu and
+/// mirrors enabled items as VoiceOver actions, so no long press is required.
+struct FirstlightListItemContextMenu: ViewModifier {
+    let items: [ListItemMenuItem]
+    let onAction: (Int) -> Void
+
+    func body(content: Content) -> some View {
+        if items.isEmpty {
+            content
+        } else {
+            content
+                .contextMenu {
+                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                        // A context menu destructive role only styles the item;
+                        // PHP still owns confirmation and removal.
+                        Button(role: item.role == "destructive" ? .destructive : nil) {
+                            if item.isEnabled { onAction(item.cb) }
+                        } label: {
+                            if item.icon.isEmpty {
+                                Text(item.label)
+                            } else {
+                                Label(item.label, systemImage: getIconForName(item.icon))
+                            }
+                        }
+                        .disabled(!item.isEnabled)
+                    }
+                }
+                .accessibilityActions {
+                    ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                        if item.isEnabled {
+                            Button(item.label) { onAction(item.cb) }
+                        }
+                    }
+                }
         }
     }
 }

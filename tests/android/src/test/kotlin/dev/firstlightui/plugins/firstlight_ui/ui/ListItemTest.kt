@@ -19,6 +19,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -129,6 +131,28 @@ class ListItemContractTest {
     }
 
     @Test
+    fun `context menu dispatches only enabled published items`() {
+        val configuration = ListItemRendererConfiguration(node(menu = true))
+        assertEquals(listOf("Reply", "Forward", "Delete"), configuration.contextMenu.map { it.label })
+        assertEquals(listOf(true, false, true), configuration.contextMenu.map { it.enabled })
+        assertEquals("destructive", configuration.contextMenu.last().role)
+        assertTrue(configuration.hasContextMenu)
+        assertEquals(ListItemRendererEvent.Press(61, 7), configuration.actionEvent(61))
+        assertEquals(ListItemRendererEvent.Press(63, 7), configuration.actionEvent(63))
+        assertNull(configuration.actionEvent(0))
+        assertNull(configuration.actionEvent(999))
+
+        val disabledRow = ListItemRendererConfiguration(node(disabled = true, menu = true))
+        assertFalse(disabledRow.hasContextMenu)
+        assertNull(disabledRow.actionEvent(61))
+
+        val state = ListItemRendererState(node(menu = true))
+        assertTrue(state.serverPublished(NativeUITree(node())))
+        assertFalse(state.configuration.hasContextMenu)
+        assertNull(state.configuration.actionEvent(61))
+    }
+
+    @Test
     fun `server publication updates metadata without emitting`() {
         val state = ListItemRendererState(node())
         val updated = node(
@@ -193,6 +217,7 @@ class ListItemContractTest {
         disabled: Boolean = false,
         callbackId: Int = 41,
         actions: Boolean = false,
+        menu: Boolean = false,
     ) = NativeUINode(
         id = 7,
         onPress = callbackId,
@@ -211,6 +236,7 @@ class ListItemContractTest {
                 "a11y_hint" to "Opens account settings",
                 "firstlight_leading_actions_json" to if (actions) LEADING_ACTIONS else "",
                 "firstlight_trailing_actions_json" to if (actions) TRAILING_ACTIONS else "",
+                "firstlight_context_menu_json" to if (menu) CONTEXT_MENU else "",
             ),
         ),
     )
@@ -292,6 +318,80 @@ class ListItemSwipeInteractionTest {
         row.performTouchInput { swipeLeft() }
         assertEquals(listOf(53), events)
         assertFalse(row.fetchSemanticsNode().config.contains(SemanticsActions.CustomActions))
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+@RunWith(RobolectricTestRunner::class)
+class ListItemContextMenuInteractionTest {
+    @Test
+    fun `long press opens the menu, items dispatch once, and disabled items are inert`() {
+        for (direction in listOf(LayoutDirection.Ltr, LayoutDirection.Rtl)) {
+            runComposeUiTest {
+                val actions = mutableListOf<Int>()
+                var presses = 0
+                setContent {
+                    CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                        MaterialTheme {
+                            FirstlightListItemControl(
+                                configuration = ListItemRendererConfiguration(screenshotNode(menu = true)),
+                                tokens = NativeUITheme.light,
+                                onPress = { presses++ },
+                                onAction = { actions += it },
+                            )
+                        }
+                    }
+                }
+
+                val row = onNodeWithContentDescription("Account. Manage your profile and security")
+                onAllNodesWithText("Reply").assertCountEquals(0)
+                row.performTouchInput { longClick() }
+                onNodeWithText("Reply").assertIsDisplayed()
+                onNodeWithText("Forward").assertIsNotEnabled().performClick()
+                assertTrue(actions.isEmpty())
+                onNodeWithText("Delete").performClick()
+                assertEquals(listOf(63), actions)
+                onAllNodesWithText("Reply").assertCountEquals(0)
+                assertEquals(0, presses)
+
+                row.performClick()
+                assertEquals(1, presses)
+                assertEquals(listOf(63), actions)
+            }
+        }
+    }
+
+    @Test
+    fun `talkback exposes enabled items without long press and disabling removes the menu`() = runComposeUiTest {
+        val configuration = mutableStateOf(ListItemRendererConfiguration(screenshotNode(menu = true, actions = true)))
+        val events = mutableListOf<Int>()
+        setContent {
+            MaterialTheme {
+                FirstlightListItemControl(
+                    configuration = configuration.value,
+                    tokens = NativeUITheme.light,
+                    onPress = {},
+                    onAction = { events += it },
+                )
+            }
+        }
+
+        val row = onNodeWithContentDescription("Account. Manage your profile and security")
+        val actions = row.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertEquals(listOf("Archive", "Delete", "Flag", "Reply", "Delete"), actions.map { it.label })
+        runOnIdle { assertTrue(actions.first { it.label == "Reply" }.action()) }
+        assertEquals(listOf(61), events)
+        assertTrue(row.fetchSemanticsNode().config.contains(SemanticsActions.OnLongClick))
+
+        row.performTouchInput { longClick() }
+        onNodeWithText("Reply").assertIsDisplayed()
+        runOnIdle { configuration.value = configuration.value.copy(disabled = true) }
+        onAllNodesWithText("Reply").assertCountEquals(0)
+        row.performTouchInput { longClick() }
+        onAllNodesWithText("Reply").assertCountEquals(0)
+        assertFalse(row.fetchSemanticsNode().config.contains(SemanticsActions.CustomActions))
+        assertFalse(row.fetchSemanticsNode().config.contains(SemanticsActions.OnLongClick))
+        assertEquals(listOf(61), events)
     }
 }
 
@@ -413,6 +513,7 @@ private fun screenshotNode(
     trailingValue: String = "chevron_right",
     disabled: Boolean = false,
     actions: Boolean = false,
+    menu: Boolean = false,
 ) = NativeUINode(
     id = headline.hashCode(),
     onPress = 41,
@@ -427,9 +528,11 @@ private fun screenshotNode(
             "disabled" to disabled,
             "firstlight_leading_actions_json" to if (actions) LEADING_ACTIONS else "",
             "firstlight_trailing_actions_json" to if (actions) TRAILING_ACTIONS else "",
+            "firstlight_context_menu_json" to if (menu) CONTEXT_MENU else "",
         ),
     ),
 )
 
 private const val LEADING_ACTIONS = """[{"cb":51,"label":"Archive","icon":"archive","icon_variant":"outlined","role":""}]"""
 private const val TRAILING_ACTIONS = """[{"cb":52,"label":"Delete","icon":"delete","icon_variant":"outlined","role":"destructive"},{"cb":53,"label":"Flag","icon":"flag","icon_variant":"","role":""}]"""
+private const val CONTEXT_MENU = """[{"cb":61,"label":"Reply","icon":"reply","icon_variant":"","role":"","disabled":false},{"cb":0,"label":"Forward","icon":"","icon_variant":"","role":"","disabled":true},{"cb":63,"label":"Delete","icon":"delete","icon_variant":"outlined","role":"destructive","disabled":false}]"""

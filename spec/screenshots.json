@@ -120,6 +120,16 @@
                 "android-dark": "docs/screenshots/list-item/android-dark.png"
             }
         },
+        "list-item-context-menu": {
+            "route": "/captures/list-item-context-menu",
+            "test": "php artisan test tests/Feature/ListItemContextMenuCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/list-item-context-menu/ios-light.png",
+                "ios-dark": "docs/screenshots/list-item-context-menu/ios-dark.png",
+                "android-light": "docs/screenshots/list-item-context-menu/android-light.png",
+                "android-dark": "docs/screenshots/list-item-context-menu/android-dark.png"
+            }
+        },
         "list": {
             "route": "/captures/list",
             "test": "php artisan test tests/Feature/ListCaptureTest.php",

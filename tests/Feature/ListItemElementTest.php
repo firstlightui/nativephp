@@ -148,6 +148,67 @@ it('rejects malformed or inaccessible swipe actions', function (mixed $actions) 
     'unsupported action field' => [[['method' => 'delete', 'label' => 'Delete', 'disabled' => true]]],
 ])->throws(InvalidArgumentException::class);
 
+it('publishes a context menu with roles, disabled items, and resolved icons', function () {
+    Platform::set(Platform::IOS);
+    $registry = new CallbackRegistry;
+    $tree = collectListItem([
+        'headline' => 'Message',
+        '_press' => 'openMessage(42)',
+        'context-menu' => [
+            ['method' => 'reply(42)', 'label' => 'Reply', 'icon' => 'person',
+                'ios' => ListItemTestIosIcon::Account, 'android' => ListItemTestAndroidIcon::Account],
+            ['method' => 'forward(42)', 'label' => 'Forward', 'disabled' => true],
+            ['method' => 'requestDestroy(42)', 'label' => 'Delete', 'role' => 'destructive', 'disabled' => false],
+        ],
+    ], $registry);
+
+    $menu = json_decode($tree['props']['firstlight_context_menu_json'], true, flags: JSON_THROW_ON_ERROR);
+
+    expect(array_column($menu, 'label'))->toBe(['Reply', 'Forward', 'Delete'])
+        ->and($menu[0])->toMatchArray(['icon' => 'person.crop.circle', 'role' => '', 'disabled' => false])
+        ->and($menu[1])->toMatchArray(['cb' => 0, 'icon' => '', 'role' => '', 'disabled' => true])
+        ->and($menu[2])->toMatchArray(['role' => 'destructive', 'disabled' => false])
+        ->and($registry->resolve($menu[0]['cb']))->toBe(['method' => 'reply', 'args' => [42]])
+        ->and($registry->resolve($menu[2]['cb']))->toBe(['method' => 'requestDestroy', 'args' => [42]])
+        ->and($tree['props'])->not->toHaveKeys(['trailing_menu', 'on_long_press'])
+        ->and($tree)->not->toHaveKey('on_long_press');
+});
+
+it('accepts the camel case alias, fluent context menus, and an empty menu', function () {
+    Platform::set(Platform::ANDROID);
+    $alias = collectListItem([
+        'headline' => 'Message',
+        '_press' => 'openMessage',
+        'contextMenu' => [['method' => 'pin', 'label' => 'Pin', 'icon' => 'person', 'android' => ListItemTestAndroidIcon::Account]],
+    ]);
+    $fluent = ListItem::make('Message')->onPress('openMessage')
+        ->contextMenu([['method' => 'pin', 'label' => 'Pin']])
+        ->toArray(new CallbackRegistry);
+    $empty = ListItem::make('Message')->onPress('openMessage')->contextMenu([])->toArray(new CallbackRegistry);
+
+    expect(json_decode($alias['props']['firstlight_context_menu_json'], true)[0])
+        ->toMatchArray(['label' => 'Pin', 'icon' => 'account_circle', 'icon_variant' => 'outlined'])
+        ->and(json_decode($fluent['props']['firstlight_context_menu_json'], true)[0])
+        ->toMatchArray(['label' => 'Pin', 'icon' => '', 'icon_variant' => '', 'role' => '', 'disabled' => false])
+        ->and($empty['props'])->not->toHaveKey('firstlight_context_menu_json');
+});
+
+it('rejects malformed or inaccessible context menu items', function (mixed $items) {
+    collectListItem(['headline' => 'Message', '_press' => 'openMessage', 'context-menu' => $items]);
+})->with([
+    'not an array' => ['reply'],
+    'not a descriptor' => [['reply']],
+    'missing method' => [[['label' => 'Reply']]],
+    'blank method' => [[['method' => ' ', 'label' => 'Reply']]],
+    'missing label' => [[['method' => 'reply']]],
+    'blank label' => [[['method' => 'reply', 'label' => ' ']]],
+    'unknown role' => [[['method' => 'reply', 'label' => 'Reply', 'role' => 'cancel']]],
+    'non-boolean disabled' => [[['method' => 'reply', 'label' => 'Reply', 'disabled' => 'yes']]],
+    'invalid icon' => [[['method' => 'reply', 'label' => 'Reply', 'icon' => 42]]],
+    'override without fallback' => [[['method' => 'reply', 'label' => 'Reply', 'ios' => 'arrowshape.turn.up.left']]],
+    'nested submenu' => [[['method' => 'reply', 'label' => 'Reply', 'items' => []]]],
+])->throws(InvalidArgumentException::class);
+
 it('accepts each leading identity and exactly one trailing affordance', function (array $attributes, array $expected) {
     expect(collectListItem([
         'headline' => 'Account',

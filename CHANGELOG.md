@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- List Item `context-menu`: a native long-press menu (SwiftUI `.contextMenu` on iOS, Material 3 `DropdownMenu` on Android) with labelled items, shared/platform icons, destructive role, disabled items, and PHP callbacks. Enabled items are also VoiceOver and TalkBack actions, so no long press is required.
+
 ## 1.0.0-RC3 - 2026-10-23
 
 ### Fixed

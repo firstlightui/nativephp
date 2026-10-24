@@ -19,6 +19,23 @@ struct ListItemSwipeAction: Decodable, Equatable {
     }
 }
 
+struct ListItemMenuItem: Decodable, Equatable {
+    let cb: Int
+    let label: String
+    let icon: String
+    let icon_variant: String
+    let role: String
+    let disabled: Bool
+
+    var isEnabled: Bool { !disabled && cb != 0 }
+
+    static func decode(_ json: String) -> [Self] {
+        guard let data = json.data(using: .utf8),
+              let items = try? JSONDecoder().decode([Self].self, from: data) else { return [] }
+        return items.filter { ($0.cb != 0 || $0.disabled) && !$0.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+}
+
 struct ListItemRendererConfiguration: Equatable {
     let nodeID: Int
     let headline: String
@@ -35,6 +52,7 @@ struct ListItemRendererConfiguration: Equatable {
     let callbackID: Int
     let leadingActions: [ListItemSwipeAction]
     let trailingActions: [ListItemSwipeAction]
+    let contextMenu: [ListItemMenuItem]
     let leadingIconTone: String
     let trailingIconTone: String
     let leadingIconColor: String
@@ -61,6 +79,7 @@ struct ListItemRendererConfiguration: Equatable {
         callbackID = node.onPress
         leadingActions = ListItemSwipeAction.decode(node.props.getString("firstlight_leading_actions_json"))
         trailingActions = ListItemSwipeAction.decode(node.props.getString("firstlight_trailing_actions_json"))
+        contextMenu = ListItemMenuItem.decode(node.props.getString("firstlight_context_menu_json"))
         leadingIconTone = node.props.getString("leading_icon_tone")
         trailingIconTone = node.props.getString("trailing_icon_tone")
         leadingIconColor = node.props.getString("leading_icon_color")
@@ -86,8 +105,15 @@ struct ListItemRendererConfiguration: Equatable {
         return .press(callbackID: callbackID, nodeID: nodeID)
     }
 
+    /// The row exposes its context menu only while the row itself can act.
+    var hasContextMenu: Bool {
+        isEnabled && !contextMenu.isEmpty
+    }
+
     func actionEvent(callbackID: Int) -> ListItemRendererEvent? {
-        guard isEnabled, (leadingActions + trailingActions).contains(where: { $0.cb == callbackID }) else { return nil }
+        guard isEnabled, callbackID != 0,
+              (leadingActions + trailingActions).contains(where: { $0.cb == callbackID })
+                || contextMenu.contains(where: { $0.cb == callbackID && $0.isEnabled }) else { return nil }
         return .press(callbackID: callbackID, nodeID: nodeID)
     }
 }
