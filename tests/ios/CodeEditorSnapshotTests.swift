@@ -7,10 +7,6 @@ import XCTest
 
 @MainActor
 final class CodeEditorSnapshotTests: XCTestCase {
-    private let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-        "FIRSTLIGHT_RECORD_SNAPSHOTS"
-    ] == "1" ? .all : .never
-
     func testStateSnapshots() {
         let states: [(name: String, props: [String: Any])] = [
             ("empty", ["value": "", "helper": "One KEY=value per line."]),
@@ -25,27 +21,25 @@ final class CodeEditorSnapshotTests: XCTestCase {
             ("no-wrap", ["language": "plain", "value": Self.plain, "wrap": false]),
         ]
         for state in states {
-            assertSnapshot(
+            assertFirstlightSnapshot(
                 of: controller(props: state.props),
                 as: .image(on: .iPhoneSe),
-                named: state.name,
-                record: record
+                named: state.name
             )
         }
     }
 
     func testLightDarkAndAccessibilitySnapshots() {
         let props: [String: Any] = ["language": "json", "value": Self.json, "helper": "Webhook body sent to Forge."]
-        assertSnapshot(of: controller(props: props, style: .light), as: .image(on: .iPhoneSe), named: "light", record: record)
-        assertSnapshot(of: controller(props: props, style: .dark), as: .image(on: .iPhoneSe), named: "dark", record: record)
-        assertSnapshot(
+        assertFirstlightSnapshot(of: controller(props: props, style: .light), as: .image(on: .iPhoneSe), named: "light")
+        assertFirstlightSnapshot(of: controller(props: props, style: .dark), as: .image(on: .iPhoneSe), named: "dark")
+        assertFirstlightSnapshot(
             of: controller(
                 props: props.merging(["min_lines": 3, "max_lines": 4]) { _, new in new },
                 contentSize: .accessibilityExtraExtraExtraLarge
             ),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: record
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 
@@ -66,7 +60,7 @@ final class CodeEditorSnapshotTests: XCTestCase {
         row.frame = container.bounds
         container.addSubview(row)
         container.layoutIfNeeded()
-        assertSnapshot(of: container, as: .image, named: "json", record: record)
+        assertFirstlightSnapshot(of: container, as: .image, named: "json")
     }
 
     private static let plain = """

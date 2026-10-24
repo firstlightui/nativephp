@@ -16,20 +16,15 @@ final class SwitchControlSnapshotTests: XCTestCase {
             )
         }
 
-        let recordMode: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
-        assertSnapshot(of: makeViewController(style: .light), as: .image(on: .iPhoneSe), named: "light", record: recordMode)
-        assertSnapshot(of: makeViewController(style: .dark), as: .image(on: .iPhoneSe), named: "dark", record: recordMode)
-        assertSnapshot(of: makeViewController(value: true, disabled: true), as: .image(on: .iPhoneSe), named: "disabled-on", record: recordMode)
-        assertSnapshot(of: makeViewController(error: "Notifications are required for this account."), as: .image(on: .iPhoneSe), named: "error", record: recordMode)
-        assertSnapshot(of: makeViewController(label: "Receive secure clinical updates and practice workflow notifications"), as: .image(on: .iPhoneSe), named: "long-label", record: recordMode)
-        assertSnapshot(
+        assertFirstlightSnapshot(of: makeViewController(style: .light), as: .image(on: .iPhoneSe), named: "light")
+        assertFirstlightSnapshot(of: makeViewController(style: .dark), as: .image(on: .iPhoneSe), named: "dark")
+        assertFirstlightSnapshot(of: makeViewController(value: true, disabled: true), as: .image(on: .iPhoneSe), named: "disabled-on")
+        assertFirstlightSnapshot(of: makeViewController(error: "Notifications are required for this account."), as: .image(on: .iPhoneSe), named: "error")
+        assertFirstlightSnapshot(of: makeViewController(label: "Receive secure clinical updates and practice workflow notifications"), as: .image(on: .iPhoneSe), named: "long-label")
+        assertFirstlightSnapshot(
             of: makeViewController(contentSize: .accessibilityExtraExtraExtraLarge),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: recordMode
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 

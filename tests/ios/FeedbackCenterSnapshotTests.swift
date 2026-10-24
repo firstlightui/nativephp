@@ -103,10 +103,6 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
     }
 
     func testLightDarkToneActionHoldLongCopyAndAccessibilitySnapshots() {
-        let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
         let cases: [(String, FeedbackCenterItemConfiguration)] = [
             ("default", configuration(message: "Changes saved")),
             ("success-action", configuration(
@@ -136,31 +132,26 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
 
         for style: UIUserInterfaceStyle in [.light, .dark] {
             for (name, item) in cases {
-                assertSnapshot(
+                assertFirstlightSnapshot(
                     of: controller(item, style: style, contentSize: .large),
                     as: .image(size: CGSize(width: 390, height: 180)),
-                    named: "\(name)-\(style == .light ? "light" : "dark")",
-                    record: record
+                    named: "\(name)-\(style == .light ? "light" : "dark")"
                 )
             }
         }
 
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: controller(
                 cases[1].1,
                 style: .light,
                 contentSize: .accessibilityExtraExtraExtraLarge
             ),
             as: .image(size: CGSize(width: 390, height: 300)),
-            named: "accessibility-extra-extra-extra-large",
-            record: record
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 
     func testReusableButtonLabelHitTargetSnapshot() throws {
-        let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
         let policies = try buttonLabelPolicies()
         let labels = HStack(spacing: 8) {
             ForEach(Array(policies.enumerated()), id: \.offset) { _, policy in
@@ -177,11 +168,10 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
         // Pin the reference appearance so the simulator's system setting cannot change it.
         host.overrideUserInterfaceStyle = .dark
 
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: host,
             as: .image(size: CGSize(width: 220, height: 84)),
-            named: "reusable-button-label-hit-targets",
-            record: record
+            named: "reusable-button-label-hit-targets"
         )
     }
 

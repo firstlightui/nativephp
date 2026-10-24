@@ -62,7 +62,6 @@ final class BadgeSnapshotTests: XCTestCase {
     }
 
     func testLightDarkAndLargeTextSnapshots() {
-        let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment["FIRSTLIGHT_RECORD_SNAPSHOTS"] == "1" ? .all : .never
         for style: UIUserInterfaceStyle in [.light, .dark] {
             let view = HStack(spacing: 12) {
                 ForEach(StatusLabelTone.allCases, id: \.self) { tone in
@@ -76,7 +75,7 @@ final class BadgeSnapshotTests: XCTestCase {
             let controller = UIHostingController(rootView: view)
             controller.overrideUserInterfaceStyle = style
             controller.view.frame = CGRect(x: 0, y: 0, width: 320, height: 120)
-            assertSnapshot(of: controller, as: .image(size: CGSize(width: 320, height: 120)), named: style == .light ? "light" : "dark", record: record)
+            assertFirstlightSnapshot(of: controller, as: .image(size: CGSize(width: 320, height: 120)), named: style == .light ? "light" : "dark")
         }
     }
 

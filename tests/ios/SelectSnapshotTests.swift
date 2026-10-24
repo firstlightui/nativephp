@@ -217,17 +217,12 @@ final class SelectControlSnapshotTests: XCTestCase {
             throw XCTSkip("Select screenshot evidence is controller-owned.")
         }
 
-        let recordMode: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
-        assertSnapshot(of: controller(searchEnabled: false, style: .light, size: .large), as: .image(on: .iPhoneSe), named: "compact-light", record: recordMode)
-        assertSnapshot(of: controller(searchEnabled: true, style: .dark, size: .large), as: .image(on: .iPhoneSe), named: "searchable-dark", record: recordMode)
-        assertSnapshot(
+        assertFirstlightSnapshot(of: controller(searchEnabled: false, style: .light, size: .large), as: .image(on: .iPhoneSe), named: "compact-light")
+        assertFirstlightSnapshot(of: controller(searchEnabled: true, style: .dark, size: .large), as: .image(on: .iPhoneSe), named: "searchable-dark")
+        assertFirstlightSnapshot(
             of: controller(searchEnabled: false, style: .light, size: .accessibilityExtraExtraExtraLarge),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: recordMode
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 

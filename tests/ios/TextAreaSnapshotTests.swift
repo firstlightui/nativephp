@@ -77,17 +77,12 @@ final class TextAreaSnapshotTests: XCTestCase {
     }
 
     func testLightDarkAndAccessibilitySnapshots() {
-        let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
-        assertSnapshot(of: controller(style: .light), as: .image(on: .iPhoneSe), named: "light", record: record)
-        assertSnapshot(of: controller(style: .dark, error: "Add one observation"), as: .image(on: .iPhoneSe), named: "dark-error", record: record)
-        assertSnapshot(
+        assertFirstlightSnapshot(of: controller(style: .light), as: .image(on: .iPhoneSe), named: "light")
+        assertFirstlightSnapshot(of: controller(style: .dark, error: "Add one observation"), as: .image(on: .iPhoneSe), named: "dark-error")
+        assertFirstlightSnapshot(
             of: controller(style: .light, contentSize: .accessibilityExtraExtraExtraLarge),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: record
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 

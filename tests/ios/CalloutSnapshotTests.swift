@@ -70,28 +70,21 @@ final class CalloutSnapshotTests: XCTestCase {
     }
 
     func testLightDarkAndAccessibilitySnapshots() {
-        let recordMode: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .light, contentSize: .large),
             as: .image(on: .iPhoneSe),
-            named: "light",
-            record: recordMode
+            named: "light"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .dark, contentSize: .large),
             as: .image(on: .iPhoneSe),
-            named: "dark",
-            record: recordMode
+            named: "dark"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .light, contentSize: .accessibilityExtraExtraExtraLarge),
             // Preserve the narrow viewport while showing every message and action.
             as: .image(on: .iPhoneSe, size: CGSize(width: 320, height: 2400)),
-            named: "accessibility-extra-extra-extra-large",
-            record: recordMode
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 

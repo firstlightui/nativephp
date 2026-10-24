@@ -37,7 +37,7 @@ PHP resolves icon overrides through `IosSymbol`. Swift consumes resolved props, 
 
 ## Workflow
 
-1. Write failing XCTest behaviour, accessibility, and snapshot cases appropriate to the state class before implementation.
+1. Write failing XCTest behaviour, accessibility, and snapshot cases appropriate to the state class before implementation. Assert snapshots with `assertFirstlightSnapshot`; references are kept per iOS major version (`tests/ios/__Snapshots__` for iOS 26, `tests/ios/__Snapshots__iOS27` for iOS 27). Record each set on its runtime with `TEST_RUNNER_FIRSTLIGHT_RECORD_SNAPSHOTS=1`; see `spec/workflows/testing.md`.
 2. Prove adapter mapping; otherwise implement the minimum renderer through the official SuperNative seam.
 3. Use NativePHP semantic theme tokens, Apple-native typography and motion, and targets of at least 44 points.
 4. Run the package gate. Run the Simulator command only after explicit permission for the exact target; a supplied ID is not permission.
