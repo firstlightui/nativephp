@@ -262,6 +262,15 @@ it('accepts the paired Firstlight Bottom Sheet renderers', function () {
         ->and($process->getOutput())->toContain('Constitution checks passed');
 });
 
+it('derives release evidence paths from the manifest type, not the element class', function () {
+    $process = new Process([dirname(__DIR__, 2).'/bin/check-component', 'ListContainer']);
+    $process->run();
+
+    expect($process->getErrorOutput().$process->getOutput())
+        ->not->toContain('list-container')
+        ->not->toContain('Missing release evidence: docs/');
+});
+
 it('keeps the release gate closed until all documentation evidence exists', function () {
     $root = makeSegmentedValidationCopy();
 

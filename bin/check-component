@@ -38,6 +38,9 @@ if (! is_array($manifest)) {
 
     if (! is_array($component)) {
         $errors[] = "Manifest does not register FirstlightUI\\Elements\\{$name}";
+    } elseif (preg_match('/^firstlight\.([a-z0-9-]+)$/', (string) ($component['type'] ?? ''), $typeMatch) === 1) {
+        // Documentation and review evidence follow the public type, not the PHP class name.
+        $slug = $typeMatch[1];
     }
 }
 
