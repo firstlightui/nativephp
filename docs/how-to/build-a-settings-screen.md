@@ -29,8 +29,15 @@ validated and saved together with a button.
 Settings controls are not List Item rows, so the container is Mobile UI's
 `native:list` with `native:list-section`, not `firstlight:list`. Mobile UI
 renders that container with a SwiftUI `List` in the inset-grouped style on iOS
-and grouped Material sections on Android, and places Firstlight controls inside
-it unchanged. There is no settings tag to learn.
+and grouped Material sections on Android. There is no settings tag to learn.
+
+Mobile UI gives each row no padding and, on iOS, no background. List Item pads
+itself, but Switch and Select do not, so their labels would touch the card edge
+and the first letter can be clipped. Wrap each row in a `native:column` with
+`px-4 py-3 bg-theme-surface`: the padding gives the native row insets, and the
+surface colour draws the grouped card on iOS and matches List Item's surface on
+Android. Add `separator` to the list so iOS draws dividers between rows in a
+card; Android always does.
 
 ## 1. Register the route
 
@@ -115,24 +122,32 @@ class SettingsScreen extends NativeComponent
 Save this as `resources/views/native/settings.blade.php`:
 
 ```blade
-<native:list class="w-full flex-1">
+<native:list class="w-full flex-1" separator>
     <native:list-section header="Notifications" footer="Alerts for replies and mentions.">
-        <firstlight:switch label="Push notifications" native:model="notifications" />
-        <firstlight:switch label="Product news" native:model="marketing" />
+        <native:column class="w-full px-4 py-3 bg-theme-surface">
+            <firstlight:switch label="Push notifications" native:model="notifications" />
+        </native:column>
+        <native:column class="w-full px-4 py-3 bg-theme-surface">
+            <firstlight:switch label="Product news" native:model="marketing" />
+        </native:column>
     </native:list-section>
 
     <native:list-section header="Email" footer="A summary of activity you missed.">
-        <firstlight:select label="Digest" :options="$digestOptions" native:model="digest" />
+        <native:column class="w-full px-4 py-3 bg-theme-surface">
+            <firstlight:select label="Digest" :options="$digestOptions" native:model="digest" />
+        </native:column>
     </native:list-section>
 
     <native:list-section header="Account">
-        <firstlight:list-item
-            headline="Privacy"
-            trailing-icon="chevron-right"
-            trailing-icon-ios="chevron.right"
-            trailing-icon-android="chevron_right"
-            @press="openPrivacy"
-        />
+        <native:column class="w-full bg-theme-surface">
+            <firstlight:list-item
+                headline="Privacy"
+                trailing-icon="chevron-right"
+                trailing-icon-ios="chevron.right"
+                trailing-icon-android="chevron_right"
+                @press="openPrivacy"
+            />
+        </native:column>
     </native:list-section>
 </native:list>
 ```
@@ -141,7 +156,9 @@ Save this as `resources/views/native/settings.blade.php`:
 
 | Behaviour | iOS | Android |
 | --- | --- | --- |
-| Grouping | SwiftUI `List` in the inset-grouped style | Grouped Material sections with headers and footers |
+| Grouping | SwiftUI `List` in the inset-grouped style; the row columns paint the cards | Rounded section cards with headers and footers, drawn by Mobile UI |
+| Row insets | The row column's `px-4 py-3` | The row column's `px-4 py-3` inside the card's 16 dp margin |
+| Dividers | Between rows when the list sets `separator` | Always between rows in a card |
 | Switches | SwiftUI `Toggle` | Material 3 `Switch` |
 | Digest | Native menu picker | Material 3 exposed dropdown |
 | Privacy row | List Item row with a chevron | Material list item with a chevron |
@@ -150,6 +167,8 @@ Save this as `resources/views/native/settings.blade.php`:
 
 - Save in `updated{Property}`, not in a Save button. Settings screens apply each
   change immediately.
+- Wrap every control row in a padded `native:column` with
+  `bg-theme-surface`. Rows placed straight in a section have no insets.
 - Keep a section footer short. It explains the section, not each control.
 - Use `firstlight:list` only when every row is a List Item, such as a list of
   records. Settings mix controls, so they use `native:list`.
