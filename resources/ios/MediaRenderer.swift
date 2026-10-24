@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 import UIKit
 
 struct MediaRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -15,6 +16,7 @@ struct MediaRenderer: View {
     private let events: MediaRendererEvents
 
     init(node: NativeUINode, events: MediaRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: MediaRendererState(node: node))
         self.events = events
     }
@@ -89,6 +91,7 @@ struct MediaRenderer: View {
         ) { result in
             handleDocumentResult(result)
         }
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             _ = state.serverPublished(tree)
         }

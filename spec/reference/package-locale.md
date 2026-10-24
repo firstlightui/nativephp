@@ -6,6 +6,8 @@ audience: maintainer
 sources:
   - Constitution.md
   - lang/en/chrome.php
+  - lang/en/validation.php
+  - src/Validation/ErrorSummary.php
   - src/Support/Chrome.php
   - src/FirstlightServiceProvider.php
   - src/Elements/DatePicker.php
@@ -53,6 +55,12 @@ The English file is `lang/en/chrome.php`. Keys are `confirm`, `cancel`, `ok`,
 `camera`, `browse_files`, `show_password`, `hide_password`, `indent`,
 `outdent`, `undo`, `redo`, `toggle_comment`, and the Code Editor symbol names
 `insert_left_brace` through `insert_underscore` (one per key-row symbol).
+
+`lang/en/validation.php` holds `summary`, a Laravel pluralised heading
+(`There is :count error.|There are :count errors.`) used by error-summary
+Callouts and validation announcements when two or more keys have messages.
+`ErrorSummary` resolves it with `choice()` and falls back to the English
+string without a translator.
 
 Chrome uses the bound `translator` and `config` services. The package does
 not depend on `illuminate/foundation` or the `__()` helper.

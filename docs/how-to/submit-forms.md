@@ -6,6 +6,7 @@ audience: consumer
 sources:
   - src/Concerns/SubmitsForms.php
   - src/Concerns/ValidatesFields.php
+  - src/Elements/Callout.php
   - src/NativeComponent.php
   - src/Facades/Feedback.php
   - src/Elements/Button.php
@@ -83,7 +84,9 @@ Use the existing fields, `native:model`, and Button:
 `submit()` runs `$this->validate()` first. A validation failure returns
 `false`, skips the callable and success Feedback, and lets
 `ValidatesFields` publish each first Laravel message through the matching
-field's native `error` slot. See [Validate Firstlight fields](validate-fields.md)
+field's native `error` slot. Screen readers hear a summary and move to the
+first invalid field; add `<firstlight:callout error-summary />` for a visible
+summary. See [Validate Firstlight fields](validate-fields.md)
 for rule sources, Form Requests, custom messages, and explicit error binding. The
 [ValidatesFields reference](../reference/validates-fields.md) lists the method
 contract and participating fields.
@@ -101,7 +104,30 @@ $sent = $this->submit(
 );
 ```
 
-Unexpected exceptions from the callable are not converted to Feedback or
+To fail the whole form from inside the action, throw Laravel's
+`ValidationException`. Its messages replace the screen's error bag, `submit()`
+returns `false`, and no success Feedback is sent:
+
+```php
+use Illuminate\Validation\ValidationException;
+
+$this->submit(
+    action: function (): void {
+        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+            throw ValidationException::withMessages([
+                'form' => 'These credentials do not match our records.',
+            ]);
+        }
+    },
+    successMessage: 'Signed in',
+);
+```
+
+```blade
+<firstlight:callout error-for="form" />
+```
+
+Other unexpected exceptions from the callable are not converted to Feedback or
 swallowed.
 
 ## Loading and duplicate submissions

@@ -307,3 +307,119 @@ it('exposes the current bag to fields while view hooks run', function () {
     expect($tree['props']['error'])->toBe('Enter a valid email.')
         ->and(FieldErrorBag::current())->toBeNull();
 });
+
+function renderAlertFrame(ValidatingScreen $screen, callable $leaves): array
+{
+    return (new ReflectionClass($screen))
+        ->getMethod('withFieldErrorBag')
+        ->invoke($screen, function () use ($leaves): array {
+            $leaves();
+
+            return NativeElementCollector::collect()->toArray(new CallbackRegistry);
+        }, true);
+}
+
+function signupLeaves(bool $summaryFirst = false): callable
+{
+    return function () use ($summaryFirst): void {
+        NativeElementCollector::open('column', []);
+        if ($summaryFirst) {
+            NativeElementCollector::leaf('firstlight.callout', ['error-summary' => true]);
+        }
+        NativeElementCollector::leaf('firstlight.checkbox', ['label' => 'I agree', 'native:model' => 'accepted', 'value' => false]);
+        NativeElementCollector::leaf('firstlight.text-field', ['label' => 'Email', 'native:model.blur' => 'email']);
+        NativeElementCollector::close();
+    };
+}
+
+it('announces every message and focuses the first invalid field in render order after a failed press', function () {
+    ElementRegistry::register('firstlight.callout', FirstlightUI\Elements\Callout::class);
+    $screen = new ValidatingScreen;
+    $screen->dispatchEvent(['callback_id' => $screen->bootCallbacks()->register('save'), 'type' => 0]);
+
+    [$checkbox, $email] = renderAlertFrame($screen, signupLeaves())['children'];
+
+    // Rules list email first; the checkbox renders first, so it takes focus.
+    expect($checkbox['props'])->toMatchArray([
+        'validation_alert' => $checkbox['props']['validation_alert'],
+        'validation_focus' => true,
+        'validation_announcement' => 'There are 2 errors. The email field is required. The accepted must be accepted.',
+    ])
+        ->and($checkbox['props']['validation_alert'])->toBeInt()->toBeGreaterThan(0)
+        ->and($email['props'])->not->toHaveKeys(['validation_alert', 'validation_focus', 'validation_announcement'])
+        ->and($email['props']['error'])->toBe('The email field is required.');
+
+    // Published once: the next frame keeps the errors but drops the alert.
+    [$checkbox] = renderAlertFrame($screen, signupLeaves())['children'];
+
+    expect($checkbox['props'])->not->toHaveKey('validation_alert')
+        ->and($checkbox['props']['error'])->toBe('The accepted must be accepted.');
+});
+
+it('lets a leading summary Callout carry the announcement while the first field takes focus', function () {
+    ElementRegistry::register('firstlight.callout', FirstlightUI\Elements\Callout::class);
+    $screen = new ValidatingScreen;
+    $screen->dispatchEvent(['callback_id' => $screen->bootCallbacks()->register('save'), 'type' => 4]);
+
+    [$summary, $checkbox] = renderAlertFrame($screen, signupLeaves(summaryFirst: true))['children'];
+
+    expect($summary['props'])->toMatchArray([
+        'message' => "There are 2 errors.\nThe email field is required.\nThe accepted must be accepted.",
+        'tone' => 'danger',
+        'validation_announcement' => 'There are 2 errors. The email field is required. The accepted must be accepted.',
+    ])
+        ->and($summary['props'])->not->toHaveKey('validation_focus')
+        ->and($checkbox['props']['validation_focus'])->toBeTrue()
+        ->and($checkbox['props']['validation_alert'])->toBe($summary['props']['validation_alert'])
+        ->and($checkbox['props'])->not->toHaveKey('validation_announcement');
+});
+
+it('announces only the field a property sync failed, without moving focus', function () {
+    $screen = new ValidatingScreen;
+    $screen->addError('accepted', 'Earlier message');
+    $screen->dispatchEvent(['callback_id' => $screen->bootCallbacks()->register('checkEmail'), 'type' => 2]);
+
+    [$checkbox, $email] = renderAlertFrame($screen, signupLeaves())['children'];
+
+    // The earlier checkbox error renders first but is not what just failed.
+    expect($checkbox['props'])->not->toHaveKey('validation_alert')
+        ->and($email['props'])->toMatchArray(['validation_announcement' => 'The email field is required.'])
+        ->and($email['props'])->not->toHaveKey('validation_focus');
+});
+
+it('raises a new alert for a repeated identical failure and none for a passing interaction', function () {
+    $screen = new ValidatingScreen;
+    $save = $screen->bootCallbacks()->register('save');
+
+    $screen->dispatchEvent(['callback_id' => $save, 'type' => 0]);
+    $first = renderAlertFrame($screen, signupLeaves())['children'][0]['props']['validation_alert'];
+    $screen->dispatchEvent(['callback_id' => $save, 'type' => 0]);
+    $second = renderAlertFrame($screen, signupLeaves())['children'][0]['props']['validation_alert'];
+
+    $screen->email = 'clinician@example.com';
+    $screen->accepted = true;
+    $screen->dispatchEvent(['callback_id' => $save, 'type' => 0]);
+    $passed = renderAlertFrame($screen, signupLeaves())['children'][0]['props'];
+
+    expect($second)->toBeGreaterThan($first)
+        ->and($passed)->not->toHaveKey('validation_alert')
+        ->and($passed['error'])->toBe('');
+});
+
+it('alerts for addError from a press, such as a server-side check after validation', function () {
+    $screen = new class extends ValidatingScreen
+    {
+        public function register(): void
+        {
+            $this->addError('email', 'This account is already registered.');
+        }
+    };
+    $screen->dispatchEvent(['callback_id' => $screen->bootCallbacks()->register('register'), 'type' => 0]);
+
+    [, $email] = renderAlertFrame($screen, signupLeaves())['children'];
+
+    expect($email['props'])->toMatchArray([
+        'validation_focus' => true,
+        'validation_announcement' => 'This account is already registered.',
+    ]);
+});

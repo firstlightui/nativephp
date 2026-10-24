@@ -83,6 +83,7 @@ class SwitchRendererState(node: NativeUINode) {
 object SwitchRenderer {
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { SwitchRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value
         LaunchedEffect(publishedTree) {

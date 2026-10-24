@@ -5,6 +5,7 @@ type: how-to
 audience: consumer
 sources:
   - lang/en/chrome.php
+  - lang/en/validation.php
   - src/Support/Chrome.php
   - src/FirstlightServiceProvider.php
   - src/Elements/DatePicker.php
@@ -38,7 +39,10 @@ locales through Laravel vendor language publishing.
 php artisan vendor:publish --tag=firstlight-lang
 ```
 
-Laravel copies the files to `lang/vendor/firstlight`. Add a locale next to
+Laravel copies the files to `lang/vendor/firstlight`. `validation.php` holds
+the pluralised error summary heading (`'summary' => 'There is :count
+error.|There are :count errors.'`) used by `error-summary` Callouts and
+screen-reader announcements. Add a locale next to
 English, for example `lang/vendor/firstlight/fr/chrome.php`, and keep the same
 keys:
 

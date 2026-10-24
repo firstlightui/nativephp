@@ -174,6 +174,7 @@ struct TextFieldRendererState {
 }
 
 struct TextFieldRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -182,6 +183,7 @@ struct TextFieldRenderer: View {
     private let events: TextFieldRendererEvents
 
     init(node: NativeUINode, events: TextFieldRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: TextFieldRendererState(node: node))
         self.events = events
     }
@@ -212,6 +214,7 @@ struct TextFieldRenderer: View {
         .onChange(of: focused) { _, value in
             if let event = state.focusChanged(value) { events.send(event) }
         }
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

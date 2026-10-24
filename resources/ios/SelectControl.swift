@@ -65,6 +65,7 @@ struct FirstlightSelectField: View {
             }
 
             trigger
+                .firstlightValidationFocusTarget()
 
             let supportingText = error.isEmpty ? helper : error
             if !supportingText.isEmpty {

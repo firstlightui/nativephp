@@ -91,12 +91,14 @@ struct SwitchRendererState: Equatable {
 }
 
 struct SwitchRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var rendererState: SwitchRendererState
 
     init(node: NativeUINode) {
+        validationNodeID = node.id
         _rendererState = State(initialValue: SwitchRendererState(node: node))
     }
 
@@ -115,6 +117,7 @@ struct SwitchRenderer: View {
             tokens: tokens,
             onProposal: proposeChange
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             // A PHP response may keep the same accepted value. Reconcile every
             // publication so that response still clears the pending proposal.

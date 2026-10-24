@@ -43,6 +43,7 @@ struct FirstlightTextAreaControl: View {
                     .modifier(TextAreaAccessibilityLabelModifier(label: configuration.accessibilityLabel))
                     .modifier(TextAreaAccessibilityHintModifier(hint: configuration.accessibilityHint))
                     .accessibilityValue(TextAreaAccessibility.value(text: text, error: configuration.error))
+                    .firstlightValidationFocusTarget()
             }
             .frame(minHeight: minimumHeight, maxHeight: maximumHeight, alignment: .topLeading)
             .padding(.horizontal, 7)

@@ -7,13 +7,17 @@ sources:
   - Constitution.md
   - spec/designs/2026-08-04-firstlight-alpha-component-system-design.md
   - vendor/nativephp/mobile-ui/nativephp.json
+  - src/Components/Callout.php
+  - src/Elements/Callout.php
+  - src/Validation/ErrorSummary.php
+  - spec/reference/field-validation.md
 ---
 
 # Callout Component Contract
 
 ## Purpose and state class
 
-`<firstlight:callout>` presents a persistent inline semantic message with one optional labelled action. It is an action/display component: it has no model, change event, dismissal lifecycle, timeout, queue, loading state, or validation state.
+`<firstlight:callout>` presents a persistent inline semantic message with one optional labelled action. It is an action/display component: it has no model, change event, dismissal lifecycle, timeout, queue, loading state, or validation state. It may display form-level `ValidatesFields` messages through `error-for` or `error-summary` (see below); that binding presents bag text and adds no field state.
 
 Callout is for information that must remain visible in the authored layout until the server publishes a tree without it. Brief queued outcomes belong to Transient Feedback; one-action acknowledgement belongs to Alert Dialog; confirmation belongs to Confirmation Dialog; compact metadata belongs to Status Label.
 
@@ -37,6 +41,10 @@ Callout is for information that must remain visible in the authored layout until
 | `a11y-label` | Optional replacement for the message's generated accessible name. |
 | `a11y-hint` | Optional supplementary context for the message. |
 | `class` | External EDGE layout only. |
+| `error-for` | Optional non-empty `MessageBag` key. The Callout shows that key's first message, defaults to `danger`, and publishes no node while the key has no message. Camel-case `errorFor` is accepted. |
+| `error-summary` | Optional Boolean. The Callout shows every key's first message in bag order (one message alone, or the package heading and one message per line), defaults to `danger`, and publishes no node while the bag is empty. Camel-case `errorSummary` is accepted. |
+
+`error-for` and `error-summary` are mutually exclusive and both reject an authored `message`. An authored `tone` and an action still apply. The bag is the screen's `ValidatesFields` bag during the Blade view pass; without it a bound Callout publishes nothing. Programmatic `Callout::make()` roots do not bind and pass an explicit message.
 
 There is no `value`, `native:model`, `@change`, dismissal prop or event, title, icon override, disabled, loading, error, helper, required, or visual escape prop. The renderer owns the tone icon because it is a semantic affordance.
 
@@ -48,7 +56,7 @@ An invalid message or tone throws `InvalidArgumentException` before publication.
 
 Tone is never communicated by colour alone. Each renderer uses a distinct semantic symbol and prefixes the default accessible message with the tone meaning. `a11y-label` replaces that generated name, while `a11y-hint` adds context. The icon is decorative to assistive technology. The optional action remains a separate native button with the visible label as its accessible name and meets the 44-point iOS and 48-dp Android target baselines.
 
-Text wraps and the surface grows for Dynamic Type or font scale. The tone icon scales with the message text on both platforms; on Android it is sized to the first line of message text and drawn whole at every font scale. Neither renderer creates a live region because persistence does not imply an interruption announcement.
+Text wraps and the surface grows for Dynamic Type or font scale. The tone icon scales with the message text on both platforms; on Android it is sized to the first line of message text and drawn whole at every font scale. Neither renderer creates a live region because persistence does not imply an interruption announcement. The only spoken interruption is the one-time `validation_alert` described in [Field validation](../reference/field-validation.md#screen-reader-alerts), which an error-bound Callout may carry.
 
 ## Platform expression
 

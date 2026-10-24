@@ -32,7 +32,13 @@ trait SubmitsForms
             }
 
             return true;
-        } catch (ValidationException) {
+        } catch (ValidationException $exception) {
+            // The action may fail the form itself, for example with
+            // ValidationException::withMessages(['form' => ...]).
+            if (method_exists($this, 'storeValidationException')) {
+                $this->storeValidationException($exception);
+            }
+
             return false;
         } finally {
             $this->submitting = false;

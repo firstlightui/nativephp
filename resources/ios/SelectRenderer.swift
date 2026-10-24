@@ -117,6 +117,7 @@ struct SelectRendererState: Equatable {
 }
 
 struct SelectRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -125,6 +126,7 @@ struct SelectRenderer: View {
     private let events: SelectRendererEvents
 
     init(node: NativeUINode, events: SelectRendererEvents = .native) {
+        validationNodeID = node.id
         _rendererState = State(initialValue: SelectRendererState(node: node))
         self.events = events
     }
@@ -155,6 +157,7 @@ struct SelectRenderer: View {
                 events.send(event)
             }
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             rendererState.serverPublished(tree)
         }

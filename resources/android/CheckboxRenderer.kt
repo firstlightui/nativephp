@@ -85,6 +85,7 @@ class CheckboxRendererState(node: NativeUINode) {
 object FirstlightCheckboxRenderer {
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { CheckboxRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value
         LaunchedEffect(publishedTree) {

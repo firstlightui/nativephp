@@ -181,6 +181,7 @@ enum DatePickerCalendar {
 }
 
 struct DatePickerRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -188,6 +189,7 @@ struct DatePickerRenderer: View {
     private let events: DatePickerRendererEvents
 
     init(node: NativeUINode, events: DatePickerRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: DatePickerRendererState(node: node))
         self.events = events
     }
@@ -200,6 +202,7 @@ struct DatePickerRenderer: View {
                 if let event = state.confirm() { events.send(event) }
             }
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

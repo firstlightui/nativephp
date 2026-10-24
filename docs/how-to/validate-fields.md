@@ -8,6 +8,12 @@ sources:
   - src/NativeComponent.php
   - src/Validation/FieldErrorBag.php
   - src/Validation/FieldErrorBinder.php
+  - src/Validation/ErrorSummary.php
+  - src/Validation/ValidationAlert.php
+  - src/Elements/Callout.php
+  - lang/en/validation.php
+  - resources/ios/FirstlightValidationAlert.swift
+  - resources/android/FirstlightValidationAlert.kt
   - tests/Feature/ValidatesFieldsTest.php
 ---
 
@@ -246,6 +252,68 @@ public function save(): void
 
 `resetValidation('email')` forgets one key. `resetValidation()` clears the
 bag. `hasError('email')` and `getErrorBag()` inspect the current messages.
+
+## Show form-level errors
+
+Some failures belong to the form, not one field: wrong credentials, a declined
+card, a server conflict. Add them under a key no field uses and show that key
+with a Callout:
+
+```php
+public function signIn(): void
+{
+    $this->validate();
+
+    if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+        $this->addError('form', 'These credentials do not match our records.');
+    }
+}
+```
+
+```blade
+<firstlight:callout error-for="form" />
+<firstlight:text-field label="Email" native:model.blur="email" />
+<firstlight:text-field label="Password" secure native:model.blur="password" />
+<firstlight:button label="Sign in" @press="signIn" />
+```
+
+To summarise every message above a long form, use `error-summary`:
+
+```blade
+<firstlight:callout error-summary />
+```
+
+The summary lists each key's first message in bag order. One message is shown
+alone; two or more get a heading such as `There are 3 errors.` and one message
+per line.
+
+Both Callouts default to the `danger` tone, take their text from the bag (so
+`message` is rejected), and render nothing while there is nothing to show. You
+can still set `tone` or add an `action-label` with `@press`. `error-for` and
+`error-summary` cannot be combined.
+
+## Screen-reader announcements
+
+After a failed interaction, Firstlight announces the errors once:
+
+- **A press or keyboard submit** (Button `@press`, field `@submit`) speaks the
+  whole summary, for example `There are 2 errors. The name field is required.
+  The email field is required.`, and moves screen-reader focus to the first
+  invalid field on the screen.
+- **A field update** (`native:model.blur`, `.live`, `@change`, and
+  `updated{Property}` hooks) speaks only the message that update just added
+  and leaves focus where it is.
+
+On iOS, VoiceOver focus moves to the first invalid field and the announcement
+follows it; the keyboard does not open. On Android, while TalkBack is on, Text
+Field, Text Area, and Code Editor take input focus, which TalkBack reads with
+the error; other fields only announce, because Android moves focus only to
+editable text. Nothing is spoken when no message was added, and republishing
+the same screen does not repeat the announcement.
+
+The summary heading is package chrome. Translate it by publishing the language
+files (see [Localize chrome](localize.md)) and editing
+`lang/vendor/firstlight/{locale}/validation.php`.
 
 ## Do not validate during mount or render
 

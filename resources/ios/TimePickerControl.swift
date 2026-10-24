@@ -42,6 +42,7 @@ struct FirstlightTimePickerControl: View {
             .disabled(!configuration.isInteractive)
             .accessibilityLabel(Text(configuration.accessibilityLabel))
             .accessibilityHint(Text(configuration.accessibilityHint))
+            .firstlightValidationFocusTarget()
             .accessibilityValue(Text(configuration.acceptedValue.map {
                 TimePickerClock.display($0, locale: configuration.locale, timezone: configuration.timezone)
             } ?? configuration.placeholder))

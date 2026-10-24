@@ -103,6 +103,7 @@ object StepperRenderer {
         modifier: Modifier,
         events: StepperRendererEvents = StepperRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { StepperRendererState(node) }
 
         LaunchedEffect(node.props, node.onPress) {

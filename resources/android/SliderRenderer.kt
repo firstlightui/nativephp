@@ -144,6 +144,7 @@ object FirstlightSliderRenderer {
         modifier: Modifier,
         events: SliderRendererEvents = SliderRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { SliderRendererState(node) }
 
         LaunchedEffect(node.props, node.onPress) { state.serverPublished(SliderRendererConfiguration(node)) }

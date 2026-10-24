@@ -316,6 +316,7 @@ struct FirstlightMediaControl: View {
                     .buttonStyle(.bordered)
                     .disabled(!configuration.isInteractive)
                     .frame(minHeight: 44)
+                    .firstlightValidationFocusTarget()
 
                     if configuration.canClear {
                         Button(configuration.clearLabel, role: .destructive, action: onClear)

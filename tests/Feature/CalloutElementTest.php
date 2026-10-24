@@ -3,6 +3,8 @@
 use FirstlightUI\Elements\Callout;
 use FirstlightUI\FirstlightTagPrecompiler;
 use FirstlightUI\Support\WarningColors;
+use FirstlightUI\Validation\FieldErrorBag;
+use Illuminate\Support\MessageBag;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -162,3 +164,14 @@ it('precompiles only the self-closing public Firstlight tag', function () {
             '<firstlight:callout tone="warning">Please review</firstlight:callout>'
         );
 });
+
+it('rejects ambiguous error-bound Callout attributes', function (array $attributes, string $message) {
+    expect(fn () => FieldErrorBag::using(
+        new MessageBag(['form' => ['Failed.']]),
+        fn () => collectCallout($attributes),
+    ))->toThrow(InvalidArgumentException::class, $message);
+})->with([
+    'message and key' => [['message' => 'Static', 'error-for' => 'form'], 'remove `message`'],
+    'key and summary' => [['error-for' => 'form', 'error-summary' => true], 'mutually exclusive'],
+    'blank key' => [['error-for' => ' '], 'non-empty MessageBag key'],
+]);

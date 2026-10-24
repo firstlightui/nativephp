@@ -113,6 +113,7 @@ struct PillGroupRendererState: Equatable {
 }
 
 struct PillGroupRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -121,6 +122,7 @@ struct PillGroupRenderer: View {
     private let events: PillGroupRendererEvents
 
     init(node: NativeUINode, events: PillGroupRendererEvents = .native) {
+        validationNodeID = node.id
         _rendererState = State(initialValue: PillGroupRendererState(node: node))
         self.events = events
     }
@@ -153,6 +155,7 @@ struct PillGroupRenderer: View {
                 events.send(event)
             }
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             rendererState.serverPublished(tree)
         }

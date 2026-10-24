@@ -45,6 +45,7 @@ struct FirstlightSwitchControl: View {
         .modifier(SwitchAccessibilityLabelModifier(label: accessibilityLabel))
         .modifier(SwitchAccessibilityHintModifier(hint: accessibilityHint))
         .modifier(SwitchAccessibilityErrorModifier(value: value, error: error))
+        .firstlightValidationFocusTarget()
     }
 }
 

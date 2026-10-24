@@ -39,6 +39,7 @@ struct FirstlightSliderControl: View {
             .accessibilityLabel(Text(configuration.accessibilityLabel))
             .accessibilityHint(Text(accessibilityHint))
             .accessibilityValue(Text(accessibilityValue))
+            .firstlightValidationFocusTarget()
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error
             if !supporting.isEmpty {

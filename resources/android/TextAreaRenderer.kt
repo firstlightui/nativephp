@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
@@ -140,6 +141,7 @@ object TextAreaRenderer {
         modifier: Modifier,
         events: TextAreaRendererEvents = TextAreaRendererEvents.native,
     ) {
+        val validationFocus = firstlightValidationAlert(node.id)
         val state = remember(node.id) { TextAreaRendererState(node) }
 
         NativeUIBridge.currentTree.value?.let { tree ->
@@ -158,7 +160,7 @@ object TextAreaRenderer {
             draft = state.draft,
             tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
             onValueChange = { state.userChanged(it)?.let(events::dispatch) },
-            modifier = modifier.onFocusChanged { state.focusChanged(it.isFocused)?.let(events::dispatch) },
+            modifier = modifier.focusRequester(validationFocus).onFocusChanged { state.focusChanged(it.isFocused)?.let(events::dispatch) },
         )
     }
 }

@@ -52,6 +52,7 @@ struct FirstlightChoiceGroupField: View {
             VStack(spacing: 0) {
                 ForEach(labels.indices, id: \.self) { index in
                     choiceRow(index: index)
+                        .firstlightValidationFocusTarget(index == labels.indices.first)
 
                     if index != labels.indices.last {
                         Divider().overlay(tokens.divider)

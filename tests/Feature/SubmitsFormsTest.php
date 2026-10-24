@@ -148,3 +148,24 @@ it('rethrows unexpected exceptions and releases the submission guard', function 
         ->and($screen->submitting)->toBeFalse()
         ->and($this->feedbackStore->all())->toBe([]);
 });
+
+it('stores form-level messages an action throws and skips success Feedback', function () {
+    $screen = new SubmittingFormScreen;
+    $screen->email = 'person@example.com';
+    $screen->addError('email', 'Stale');
+    $this->container->instance('validator', new Illuminate\Validation\Factory(
+        new Illuminate\Translation\Translator(new Illuminate\Translation\ArrayLoader, 'en'),
+    ));
+
+    $result = $screen->submit(function (): void {
+        throw Illuminate\Validation\ValidationException::withMessages([
+            'form' => 'These credentials do not match our records.',
+        ]);
+    }, 'Signed in');
+
+    expect($result)->toBeFalse()
+        ->and($screen->getErrorBag()->toArray())->toBe([
+            'form' => ['These credentials do not match our records.'],
+        ])
+        ->and($this->feedbackStore->all())->toBe([]);
+});

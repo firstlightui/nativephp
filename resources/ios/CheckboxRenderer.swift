@@ -93,6 +93,7 @@ struct CheckboxRendererState: Equatable {
 }
 
 struct CheckboxRenderer: View {
+    private let validationNodeID: Int
     let node: NativeUINode
 
     @ObservedObject private var themeStore = NativeUITheme.shared
@@ -101,6 +102,7 @@ struct CheckboxRenderer: View {
     @State private var rendererState: CheckboxRendererState
 
     init(node: NativeUINode) {
+        validationNodeID = node.id
         self.node = node
         _rendererState = State(initialValue: CheckboxRendererState(node: node))
     }
@@ -111,6 +113,7 @@ struct CheckboxRenderer: View {
             tokens: themeStore.resolve(for: colorScheme),
             onProposal: proposeChange
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             // Reconcile every publication: an unchanged value can still be a
             // server rejection and must release the pending proposal guard.

@@ -8,6 +8,9 @@ sources:
   - src/NativeComponent.php
   - src/Validation/FieldErrorBag.php
   - src/Validation/FieldErrorBinder.php
+  - src/Validation/ErrorSummary.php
+  - src/Validation/ValidationAlert.php
+  - src/Elements/Callout.php
   - tests/Feature/ValidatesFieldsTest.php
 ---
 
@@ -61,6 +64,33 @@ name stay empty. Only the first message for a key is published.
 
 The view also receives `$errorBag` for explicit `:error="$errorBag->first('email')"`
 bindings.
+
+## Form-level Callouts
+
+[Callout](../components/callout.md) displays bag messages that belong to no
+field:
+
+| Attribute | Shows | Publishes nothing when |
+| --- | --- | --- |
+| `error-for="key"` | `MessageBag::first('key')` | the key has no message |
+| `error-summary` | every key's first message, in bag order; a `firstlight::validation.summary` heading when there are two or more | the bag is empty |
+
+Both default to `danger`, reject `message`, and are mutually exclusive. They
+never receive field focus.
+
+## Announcements and focus
+
+| Interaction | Spoken once | Screen-reader focus |
+| --- | --- | --- |
+| `@press` or `@submit` that adds messages | the summary of the whole bag | first invalid field in render order |
+| any other event (model sync, `@change`, `updated{Property}`) that adds messages | only the messages it added | unchanged |
+| an interaction that adds no message | nothing | unchanged |
+
+"Adds messages" means a failed `validate()` or `validateOnly()`, or
+`addError()`. The alert is published with the next frame only. iOS moves
+VoiceOver focus and posts an announcement. Android acts while TalkBack is on:
+Text Field, Text Area, and Code Editor take input focus, and every field
+announces.
 
 ## Participating fields
 

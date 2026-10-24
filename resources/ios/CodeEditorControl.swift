@@ -26,6 +26,7 @@ struct FirstlightCodeEditorField: View {
                 replacementRevision: replacementRevision,
                 onFocusChanged: onFocusChanged
             )
+            .firstlightValidationFocusTarget()
             .background(
                 Color(uiColor: .secondarySystemBackground)
             )

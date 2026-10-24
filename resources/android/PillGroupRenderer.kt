@@ -123,6 +123,7 @@ object PillGroupRenderer {
         modifier: Modifier,
         events: PillGroupRendererEvents = PillGroupRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val rendererState = remember(node.id) { PillGroupRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value
 

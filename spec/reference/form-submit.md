@@ -65,6 +65,12 @@ stores the validator's `MessageBag` before rethrowing, so the next normal
 publication binds first messages into native field `error` slots. The
 callable and success Feedback are skipped after failed validation.
 
+A `ValidationException` thrown by the callable itself, such as
+`ValidationException::withMessages(['form' => ...])`, is handled the same way:
+its bag replaces the screen's bag, `submit()` returns `false`, and success
+Feedback is skipped. This is the form-level error path shown by an
+`error-for="form"` Callout.
+
 Passing `$validate = false` skips `$this->validate()` entirely. It does not
 clear existing field errors.
 

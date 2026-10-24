@@ -151,6 +151,7 @@ struct SegmentedRendererState: Equatable {
 }
 
 struct SegmentedRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -159,6 +160,7 @@ struct SegmentedRenderer: View {
     private let events: SegmentedRendererEvents
 
     init(node: NativeUINode, events: SegmentedRendererEvents = .native) {
+        validationNodeID = node.id
         _rendererState = State(initialValue: SegmentedRendererState(node: node))
         self.events = events
     }
@@ -189,6 +191,7 @@ struct SegmentedRenderer: View {
                 events.send(event)
             }
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             // NativeUIBridge publishes every PHP tree response. Reconcile by
             // node ID from that publication, even when the server kept the

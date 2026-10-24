@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Form-level validation errors on the existing Callout: `error-for="key"` shows that `ValidatesFields` key's first message, and `error-summary` lists every key's first message under a translatable heading (`firstlight::validation.summary`). Both default to `danger` and render nothing while there is nothing to show. No new catalogue tag.
+- `submit()` now keeps the messages of a `ValidationException` thrown by its action (for example `ValidationException::withMessages(['form' => ...])`), so actions can fail the whole form. Previously those messages were discarded.
+- Screen-reader announcements for validation errors. After a failed press or keyboard submit, VoiceOver and TalkBack speak a summary of all messages once and screen-reader focus moves to the first invalid field; a failed field update (blur, live, change, `updated{Property}`) speaks only its own message without moving focus. iOS moves VoiceOver focus without opening the keyboard; Android moves input focus only to Text Field, Text Area, and Code Editor, and only while TalkBack is on.
+
+### Known limitations
+
+- Announcement wording and focus order are covered by PHP, XCTest and Robolectric tests and by simulator/emulator screenshots, not by spoken VoiceOver or TalkBack runs on a physical device.
+
 ## 1.0.0-RC3 - 2026-10-23
 
 ### Fixed
