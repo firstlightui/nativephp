@@ -307,14 +307,22 @@ After a failed interaction, Firstlight announces the errors once:
 
 On iOS, VoiceOver focus moves to the first invalid field and the announcement
 follows it; the keyboard does not open. On Android, while TalkBack is on, Text
-Field, Text Area, and Code Editor take input focus, which TalkBack reads with
-the error; other fields only announce, because Android moves focus only to
-editable text. Nothing is spoken when no message was added, and republishing
+Field, Text Area, and Code Editor take input focus, which TalkBack follows and
+reads with the error, and the keyboard opens; other fields only announce,
+because Android moves focus only to editable text. Nothing is spoken when no message was added, and republishing
 the same screen does not repeat the announcement.
 
 The summary heading is package chrome. Translate it by publishing the language
 files (see [Localize chrome](localize.md)) and editing
 `lang/vendor/firstlight/{locale}/validation.php`.
+
+The `/captures/form-errors` showcase route shows a summary above failed
+fields:
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Form error summary on iOS in light mode](../screenshots/form-errors/ios-light.png) | ![Form error summary on iOS in dark mode](../screenshots/form-errors/ios-dark.png) |
+| Android | ![Form error summary on Android in light mode](../screenshots/form-errors/android-light.png) | ![Form error summary on Android in dark mode](../screenshots/form-errors/android-dark.png) |
 
 ## Do not validate during mount or render
 

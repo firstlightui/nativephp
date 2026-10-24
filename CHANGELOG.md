@@ -12,7 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ### Known limitations
 
-- Announcement wording and focus order are covered by PHP, XCTest and Robolectric tests and by simulator/emulator screenshots, not by spoken VoiceOver or TalkBack runs on a physical device.
+- TalkBack focus on the first invalid field was observed on the Android emulator. VoiceOver cannot run in the iOS Simulator, and spoken output was not captured on either platform; those parts are covered by PHP, XCTest and Robolectric tests. Physical-device VoiceOver and TalkBack checks remain outstanding.
+- The error summary lists messages in rule order, not screen order; declare rules in the order fields appear.
 
 ## 1.0.0-RC3 - 2026-10-23
 
