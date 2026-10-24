@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- iOS XCTest: rendered-accessibility tests for List Item context-menu actions and Switch semantics now enable system accessibility themselves, so they no longer see an empty accessibility tree on simulators where accessibility was never switched on. The Feedback Center hit-target snapshot pins dark appearance. Assertions and reference images are unchanged.
+
+### Known limitations
+
+- Correction to RC4: not all 62 iOS failures predated RC4. On the reference iPhone 17 Pro / iOS 26.5 simulator the suite had 4 failures, all environmental and now fixed; it passes with 0 failures. The other 59 are pixel-level runtime differences on iOS 27.0, where snapshot references have not been recorded.
+- Tabs snapshot references do not capture the selected-segment indicator on iOS 26.5.
+
 ## 1.0.0-RC4 - 2026-10-24
 
 ### Added
