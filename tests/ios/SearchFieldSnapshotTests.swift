@@ -19,9 +19,11 @@ final class SearchFieldSnapshotTests: XCTestCase {
             as: .image(on: .iPhoneSe),
             named: "accessibility-extra-extra-extra-large"
         )
+        assertFirstlightSnapshot(of: controller(style: .light, size: .large, disabled: true), as: .image(on: .iPhoneSe), named: "disabled-light")
+        assertFirstlightSnapshot(of: controller(style: .dark, size: .large, disabled: true), as: .image(on: .iPhoneSe), named: "disabled-dark")
     }
 
-    private func controller(style: UIUserInterfaceStyle, size: UIContentSizeCategory) -> UIViewController {
+    private func controller(style: UIUserInterfaceStyle, size: UIContentSizeCategory, disabled: Bool = false) -> UIViewController {
         let node = NativeUINode(
             id: 7,
             type: "firstlight_search_field",
@@ -31,6 +33,7 @@ final class SearchFieldSnapshotTests: XCTestCase {
                 "value": "Referral",
                 "placeholder": "Search referrals",
                 "a11y_label": "Search referrals",
+                "disabled": disabled,
             ]),
             onPress: 0,
             onLongPress: 0,

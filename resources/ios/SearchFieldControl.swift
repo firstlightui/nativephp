@@ -106,6 +106,9 @@ func configureSearchTextField(
 ) {
     field.placeholder = configuration.placeholder
     field.isEnabled = !configuration.disabled
+    // UISearchTextField keeps full-contrast text when disabled; dim it like other disabled fields.
+    field.textColor = configuration.disabled ? .tertiaryLabel : .label
+    field.leftView?.alpha = configuration.disabled ? 0.38 : 1
     field.clearButtonMode = configuration.disabled ? .never : .whileEditing
     field.returnKeyType = .search
     field.enablesReturnKeyAutomatically = false
