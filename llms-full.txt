@@ -2344,7 +2344,9 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Shows native progress presentation and prevents interaction. Defaults to `false`. |
 | `icon` | `string` | Optional leading cross-platform icon name. |
+| `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
+| `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
 | `class` | `string` | External EDGE layout utilities. |

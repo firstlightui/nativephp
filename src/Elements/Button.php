@@ -65,6 +65,21 @@ class Button extends \Native\Mobile\UI\Elements\Button
             }
         }
 
+        // Shared icon contract names (spec/reference/icons.md) for the official primitive's overrides.
+        foreach ([
+            'ios-icon' => ['icon-ios', 'iconIos'],
+            'android-icon' => ['icon-android', 'iconAndroid'],
+            'ios-icon-trailing' => ['icon-trailing-ios', 'iconTrailingIos'],
+            'android-icon-trailing' => ['icon-trailing-android', 'iconTrailingAndroid'],
+        ] as $official => $aliases) {
+            foreach ($aliases as $alias) {
+                if (array_key_exists($alias, $attrs)) {
+                    $attrs[$official] = $attrs[$alias];
+                    unset($attrs[$alias]);
+                }
+            }
+        }
+
         parent::applyAttributes($attrs);
     }
 

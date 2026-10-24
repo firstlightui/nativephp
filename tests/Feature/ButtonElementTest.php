@@ -9,6 +9,7 @@ use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\NativeTagPrecompiler;
+use Native\Mobile\Platform;
 
 beforeEach(function () {
     NativeElementCollector::reset();
@@ -64,6 +65,26 @@ it('publishes the portable button contract through the official primitive shape'
             'args' => [],
         ]);
 });
+
+it('resolves the shared icon contract platform overrides for both icon slots', function (?string $platform, array $attributes, string $leading, string $trailing) {
+    Platform::set($platform);
+
+    try {
+        $props = collectButton(['label' => 'Continue', 'icon' => 'arrow-right', 'icon-trailing' => 'chevron-right'] + $attributes)['props'];
+    } finally {
+        Platform::set(null);
+    }
+
+    expect($props['leading_icon'])->toBe($leading)
+        ->and($props['trailing_icon'])->toBe($trailing)
+        ->and($props)->not->toHaveKeys(['icon-ios', 'icon-trailing-ios', 'icon-android', 'icon-trailing-android']);
+})->with([
+    'unknown platform keeps shared names' => [null, ['icon-ios' => 'arrow.right', 'icon-trailing-ios' => 'chevron.right'], 'arrow-right', 'chevron-right'],
+    'iOS kebab-case' => [Platform::IOS, ['icon-ios' => 'arrow.right', 'icon-trailing-ios' => 'chevron.right', 'icon-trailing-android' => 'chevron_right'], 'arrow.right', 'chevron.right'],
+    'iOS camelCase' => [Platform::IOS, ['iconIos' => 'arrow.right', 'iconTrailingIos' => 'chevron.right'], 'arrow.right', 'chevron.right'],
+    'Android kebab-case' => [Platform::ANDROID, ['icon-android' => 'arrow_forward', 'icon-trailing-android' => 'chevron_right', 'icon-trailing-ios' => 'chevron.right'], 'arrow_forward', 'chevron_right'],
+    'Android camelCase' => [Platform::ANDROID, ['iconAndroid' => 'arrow_forward', 'iconTrailingAndroid' => 'chevron_right'], 'arrow_forward', 'chevron_right'],
+]);
 
 it('publishes stable defaults for every ordinary text button', function () {
     expect(collectButton(['label' => 'Save'])['props'])->toBe([
