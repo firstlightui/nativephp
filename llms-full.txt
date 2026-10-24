@@ -115,6 +115,675 @@ Use `@change` when the selection should call a method instead of directly synchr
 
 The method receives the selected string value. See the [Segmented reference](../components/segmented.md) for integer values, disabled choices, accessibility, and validation rules. When the screen should show Laravel messages on Firstlight fields, follow [Validate fields](../how-to/validate-fields.md).
 
+--- Source: docs/how-to/build-a-list-detail-flow.md ---
+
+# Build a List and Detail Flow
+
+This recipe gives an app its shell: a layout with the platform's own title bar
+and back navigation, a list screen, and a detail screen it pushes. Every other
+recipe runs inside this layout.
+
+Firstlight does not draw navigation. NativePHP Mobile renders it natively when
+a layout opts in with `usesNativeChrome()`:
+
+| Behaviour | iOS | Android |
+| --- | --- | --- |
+| Stack | SwiftUI `NavigationStack` | Material 3 `Scaffold` |
+| Title | Large title that collapses to inline on scroll | `LargeTopAppBar` / `TopAppBar` |
+| Back | System back button and edge swipe | Top app bar back arrow and system back |
+
+PHP stays in charge of the screen stack. A back swipe or back press pops PHP's
+stack, so `mount()` and screen state behave the same on both platforms.
+
+## 1. Write the layout
+
+Save this as `app/NativeComponents/Layouts/AppLayout.php`:
+
+```php
+<?php
+
+namespace App\NativeComponents\Layouts;
+
+use FirstlightUI\NativeComponent as FirstlightScreen;
+use Native\Mobile\Edge\Layouts\Builders\NavBar;
+use Native\Mobile\Edge\Layouts\NativeLayout;
+use Native\Mobile\Edge\NativeComponent;
+
+class AppLayout extends NativeLayout
+{
+    public function usesNativeChrome(): bool
+    {
+        return true;
+    }
+
+    public function navBar(NativeComponent $screen): ?NavBar
+    {
+        $isRoot = $screen instanceof FirstlightScreen && $screen->isRootScreen();
+
+        return NavBar::make()
+            ->title($screen->navTitle())
+            ->displayMode($isRoot ? 'large' : 'inline')
+            ->back(! $isRoot);
+    }
+}
+```
+
+`isRootScreen()` is true when nothing is below the screen on PHP's stack. The
+first screen gets a large title and no back button; every pushed screen gets an
+inline title and a back button. Android shows a back arrow only when the bar
+asks for one, so pushed screens must pass `back(true)`. Each screen supplies its
+title through `navTitle()`.
+
+## 2. Register the routes
+
+```php
+use App\NativeComponents\Layouts\AppLayout;
+use App\NativeComponents\PostScreen;
+use App\NativeComponents\PostsScreen;
+use Illuminate\Support\Facades\Route;
+
+Route::native('/posts', PostsScreen::class)->layout(AppLayout::class);
+Route::native('/posts/{post}', PostScreen::class)->layout(AppLayout::class);
+```
+
+## 3. Write the list screen
+
+Use the [searchable list recipe](build-a-searchable-list-screen.md). Its row
+press pushes the detail screen:
+
+```php
+public function openPost(int $id): void
+{
+    $this->navigate('/posts/'.$id);
+}
+```
+
+`navigate()` pushes. Use `replace()` to swap the current screen without adding
+to the stack, and `back()` to pop it from PHP, for example after saving.
+
+## 4. Write the detail screen
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\Post;
+use FirstlightUI\NativeComponent;
+use Illuminate\View\View;
+
+class PostScreen extends NativeComponent
+{
+    public Post $post;
+
+    public function navTitle(): string
+    {
+        return $this->post->title;
+    }
+
+    public function render(): View
+    {
+        return view('native.post');
+    }
+}
+```
+
+NativePHP fills a typed public property from the route parameter with the same
+name, using Laravel route model binding: `{post}` becomes a `Post` loaded by id.
+No `mount()` is needed.
+
+Save the view as `resources/views/native/post.blade.php`:
+
+```blade
+<native:scroll-view class="w-full flex-1">
+    <native:column class="w-full p-4 gap-3">
+        <native:text class="text-sm text-theme-on-surface-variant">{{ $post->created_at->diffForHumans() }}</native:text>
+        <native:text class="text-base text-theme-on-surface">{{ $post->body }}</native:text>
+    </native:column>
+</native:scroll-view>
+```
+
+## Rules to keep
+
+- Return `true` from `usesNativeChrome()`. Without it, NativePHP falls back to
+  drawn bars that do not support large titles or the iOS back swipe.
+- Do not add the `custom` attribute to `<native:top-bar>` or
+  `<native:bottom-nav>`. It keeps the drawn bar.
+- Pass stable ids in URLs, never list positions.
+- Let the platform draw the back button. Do not add your own back Button.
+
+## Known limits
+
+- Tabs added with `tabBar()` share PHP's single stack. Switching tabs replaces
+  the screen, so each tab does not keep its own history.
+- Android receives back only when the gesture completes. It does not show the
+  predictive-back preview while the user drags.
+
+--- Source: docs/how-to/build-a-searchable-list-screen.md ---
+
+# Build a Searchable List Screen
+
+This recipe builds the index screen most apps need: a search field above a
+list of records, with pull-to-refresh, infinite scrolling, a tap that opens
+the record, and a swipe action that deletes it after native confirmation.
+
+Use it when a screen shows many records of one model and the user needs to
+find, open, or remove one. Use [List](../components/list.md) without search for
+short, fixed collections, and a settings layout when rows change preferences
+instead of opening records.
+
+Every piece is an existing Firstlight tag or `NativeComponent` helper. There is
+no list-screen tag to learn.
+
+## 1. Register the route
+
+```php
+use App\NativeComponents\Layouts\AppLayout;
+use App\NativeComponents\PostsScreen;
+use Illuminate\Support\Facades\Route;
+
+Route::native('/posts', PostsScreen::class)
+    ->name('posts')
+    ->layout(AppLayout::class);
+```
+
+`AppLayout` gives the screen a native title bar and back navigation. It is
+defined in [Build a list and detail flow](build-a-list-detail-flow.md).
+
+## 2. Write the screen
+
+Extend `FirstlightUI\NativeComponent`. It already includes
+[PaginatesLists](paginate-lists.md), [DestroysListItems](destroy-list-items.md),
+and [AuthorizesActions](authorize-actions.md).
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\Post;
+use FirstlightUI\NativeComponent;
+use FirstlightUI\Pagination\ListPage;
+use Illuminate\View\View;
+
+class PostsScreen extends NativeComponent
+{
+    public string $query = '';
+
+    public function mount(): void
+    {
+        $this->reload();
+    }
+
+    public function updatedQuery(): void
+    {
+        $this->reload();
+    }
+
+    public function reload(): void
+    {
+        $this->refreshList(fn (ListPage $page) => $this->posts($page));
+    }
+
+    public function loadMore(): void
+    {
+        $this->loadMoreList(fn (ListPage $page) => $this->posts($page));
+    }
+
+    public function openPost(int $id): void
+    {
+        $this->navigate('/posts/'.$id);
+    }
+
+    public function requestDeletion(int $id): void
+    {
+        $this->requestDestructiveListAction($id, 'delete');
+    }
+
+    public function cancelDeletion(): void
+    {
+        $this->cancelDestructiveListAction();
+    }
+
+    public function deletePost(): void
+    {
+        $this->confirmDestructiveListAction(
+            destroy: fn (Post $post) => $post->delete(),
+            ability: 'delete',
+            successMessage: 'Post deleted',
+        );
+    }
+
+    public function navTitle(): string
+    {
+        return 'Posts';
+    }
+
+    public function render(): View
+    {
+        return view('native.posts');
+    }
+
+    private function posts(ListPage $page)
+    {
+        return Post::query()
+            ->when($this->query !== '', fn ($query) => $query->where('title', 'like', '%'.$this->query.'%'))
+            ->latest()
+            ->paginate(perPage: 20, page: $page->page);
+    }
+}
+```
+
+`updatedQuery()` runs whenever PHP accepts a new query, so the list restarts
+from page one for each search. Keys passed to `openPost()` and
+`requestDeletion()` are model ids, never loop positions.
+
+## 3. Write the view
+
+Save this as `resources/views/native/posts.blade.php`:
+
+```blade
+<native:column class="w-full flex-1">
+    <firstlight:search-field
+        placeholder="Search posts"
+        a11y-label="Search posts"
+        native:model.debounce.300ms="query"
+        class="mx-4 my-2"
+    />
+
+    @if (count($listItems) === 0)
+        <firstlight:status-label
+            label="{{ $query === '' ? 'No posts yet' : 'No matching posts' }}"
+            tone="neutral"
+            class="mx-4"
+        />
+    @endif
+
+    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1">
+        @foreach ($listItems as $post)
+            <firstlight:list-item
+                :headline="$post->title"
+                :supporting="$post->excerpt"
+                trailing-icon="chevron-right"
+                trailing-icon-ios="chevron.right"
+                trailing-icon-android="chevron_right"
+                @press="openPost({{ $post->id }})"
+                :trailing-actions="[
+                    ['method' => 'requestDeletion('.$post->id.')', 'label' => 'Delete', 'role' => 'destructive'],
+                ]"
+            />
+        @endforeach
+    </firstlight:list>
+
+    <firstlight:confirmation-dialog
+        :visible="$confirmingListDestruction"
+        title="Delete post?"
+        message="This action cannot be undone."
+        confirm-label="Delete"
+        cancel-label="Keep post"
+        tone="destructive"
+        @press="deletePost"
+        @dismiss="cancelDeletion"
+    />
+</native:column>
+```
+
+## What each platform shows
+
+| Behaviour | iOS | Android |
+| --- | --- | --- |
+| Search | `UISearchTextField` with the system clear button | Material 3 search field with the search IME action |
+| Rows | SwiftUI `List` rows with dividers | `LazyColumn` Material list items with dividers |
+| Refresh | System pull-to-refresh | Material pull-to-refresh |
+| Delete | Trailing swipe action, then a native confirmation dialog | Trailing swipe action, then a native confirmation dialog |
+| Feedback | "Post deleted" through Transient Feedback | "Post deleted" through Transient Feedback |
+
+The same Blade works on both platforms. Swipe actions are also exposed as
+VoiceOver and TalkBack actions, so screen-reader users can delete without a
+swipe gesture.
+
+## Rules to keep
+
+- Keep `@endReached` bound even on the last page; extra events are ignored.
+- Do not omit the Delete action for rows the Policy denies. Disable the row
+  with `:disabled` instead, as described in [Authorize actions](authorize-actions.md).
+- Full swipes never delete. The swipe only opens the confirmation dialog, and
+  PHP authorizes again before deleting.
+- Use `native:model.debounce.300ms` for search so each keystroke does not
+  query the database.
+
+## Adapt the recipe
+
+- **No deletion:** remove `trailing-actions`, the dialog, and the three
+  deletion methods.
+- **Cursor pagination:** pass `$page->cursor` to `cursorPaginate()`, as shown
+  in [Paginate lists](paginate-lists.md#cursor-pagination).
+- **Search on submit instead of while typing:** bind `native:model.lazy="query"`.
+
+--- Source: docs/how-to/build-a-form-screen.md ---
+
+# Build a Form Screen
+
+This recipe builds the create screen most apps need: labelled fields, Laravel
+validation through a Form Request, errors shown by each native field, an error
+for problems that belong to the whole form, a Save button with a loading state,
+and a return to the previous screen with success Feedback.
+
+Use it when several values are checked and saved together. Use the
+[settings recipe](build-a-settings-screen.md) when each value saves on its own.
+
+## 1. Register the route
+
+```php
+use App\NativeComponents\CreatePostScreen;
+use Illuminate\Support\Facades\Route;
+
+Route::native('/posts/create', CreatePostScreen::class)->name('posts.create');
+```
+
+Register it before any `/posts/{post}` route so `create` is not read as an id.
+
+## 2. Write the Form Request
+
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StorePostRequest extends FormRequest
+{
+    public function rules(): array
+    {
+        return [
+            'title' => 'required|min:3|max:80',
+            'body' => 'required|min:10',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'body.min' => 'Write at least a sentence.',
+        ];
+    }
+}
+```
+
+Declare rules in the order the fields appear. The error summary lists messages
+in rule order.
+
+## 3. Write the screen
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use App\Http\Requests\StorePostRequest;
+use App\Models\Post;
+use FirstlightUI\NativeComponent;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+
+class CreatePostScreen extends NativeComponent
+{
+    public string $title = '';
+
+    public string $body = '';
+
+    public function save(): void
+    {
+        $saved = $this->submit(
+            action: function (): void {
+                $this->validate(StorePostRequest::class);
+
+                if (Post::query()->where('title', $this->title)->exists()) {
+                    throw ValidationException::withMessages([
+                        'form' => 'A post with this title already exists.',
+                    ]);
+                }
+
+                Post::query()->create([
+                    'title' => $this->title,
+                    'excerpt' => str($this->body)->limit(60)->toString(),
+                    'body' => $this->body,
+                ]);
+            },
+            successMessage: 'Post created',
+            validate: false,
+        );
+
+        if ($saved) {
+            $this->back();
+        }
+    }
+
+    public function navTitle(): string
+    {
+        return 'New post';
+    }
+
+    public function render(): View
+    {
+        return view('native.create-post');
+    }
+}
+```
+
+`validate: false` stops `submit()` from running `$rules` first, because the Form
+Request supplies them inside the action. Any `ValidationException` thrown inside
+the action, from the Form Request or from your own check, is shown on the
+screen and `submit()` returns `false`.
+
+## 4. Write the view
+
+Save this as `resources/views/native/create-post.blade.php`:
+
+```blade
+<native:scroll-view class="w-full flex-1">
+    <native:column class="w-full p-4 gap-4">
+        <firstlight:callout error-for="form" />
+
+        <firstlight:text-field
+            label="Title"
+            autocapitalize="sentences"
+            submit-label="next"
+            native:model.blur="title"
+            required
+        />
+
+        <firstlight:text-area
+            label="Body"
+            native:model.blur="body"
+            required
+        />
+
+        <firstlight:button variant="primary" :loading="$submitting" @press="save">
+            Save post
+        </firstlight:button>
+    </native:column>
+</native:scroll-view>
+```
+
+No `:error` wiring is needed. After a failed save, each field shows its first
+message in its native error slot, and the Callout shows the `form` message.
+For long forms, add `<firstlight:callout error-summary />` above the fields to
+list every message in one place.
+
+## What each platform shows
+
+| Behaviour | iOS | Android |
+| --- | --- | --- |
+| Field errors | Error text under the field with error colouring | Material 3 supporting text in the error state |
+| Form error | Danger Callout | Danger Callout |
+| Screen reader | VoiceOver reads the errors and moves to the first invalid field | TalkBack reads the errors and moves to the first invalid field |
+| Success | Returns to the previous screen and shows "Post created" | Returns to the previous screen and shows "Post created" |
+
+## Rules to keep
+
+- Do not wrap `save()` in `try`/`catch`. Firstlight shows validation errors for
+  you.
+- Do not place `@nativeError` next to Firstlight fields. It skips native error
+  colouring and screen-reader announcements.
+- Use a key that is not a field name, such as `form`, for errors that belong to
+  the whole form.
+- `required` on a field is display only. The Form Request enforces it.
+
+## Adapt the recipe
+
+- **Edit instead of create:** load the model in `mount()`, copy its values into
+  the properties, and call `update()` instead of `create()`.
+- **Validate as the user leaves a field:** add
+  `public function updatedTitle(): void { $this->validateOnly('title', StorePostRequest::class); }`.
+- **Test it:** see [Test screens](test-screens.md).
+
+--- Source: docs/how-to/build-a-settings-screen.md ---
+
+# Build a Settings Screen
+
+This recipe builds a standard settings screen: grouped sections with headers
+and footers, switches and pickers that save as soon as they change, and rows
+that open other screens.
+
+Use it for preferences the user changes one at a time. Use the
+[form recipe](build-a-form-screen.md) instead when several fields must be
+validated and saved together with a button.
+
+## How the pieces fit
+
+Settings controls are not List Item rows, so the container is Mobile UI's
+`native:list` with `native:list-section`, not `firstlight:list`. Mobile UI
+renders that container with a SwiftUI `List` in the inset-grouped style on iOS
+and grouped Material sections on Android, and places Firstlight controls inside
+it unchanged. There is no settings tag to learn.
+
+## 1. Register the route
+
+```php
+use App\NativeComponents\SettingsScreen;
+use Illuminate\Support\Facades\Route;
+
+Route::native('/settings', SettingsScreen::class)->name('settings');
+```
+
+## 2. Write the screen
+
+Each setting is a public property. `updated{Property}` runs when PHP accepts a
+new value, so it is where the value is saved. This example stores values with
+Laravel's cache; use your own model or storage instead.
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use FirstlightUI\NativeComponent;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\View\View;
+
+class SettingsScreen extends NativeComponent
+{
+    public bool $notifications = true;
+
+    public bool $marketing = false;
+
+    public string $digest = 'weekly';
+
+    /** @var array<string, string> */
+    public array $digestOptions = [
+        'daily' => 'Daily',
+        'weekly' => 'Weekly',
+        'never' => 'Never',
+    ];
+
+    public function mount(): void
+    {
+        $this->notifications = Cache::get('settings.notifications', true);
+        $this->marketing = Cache::get('settings.marketing', false);
+        $this->digest = Cache::get('settings.digest', 'weekly');
+    }
+
+    public function updatedNotifications(bool $value): void
+    {
+        Cache::forever('settings.notifications', $value);
+    }
+
+    public function updatedMarketing(bool $value): void
+    {
+        Cache::forever('settings.marketing', $value);
+    }
+
+    public function updatedDigest(string $value): void
+    {
+        Cache::forever('settings.digest', $value);
+    }
+
+    public function openPrivacy(): void
+    {
+        $this->navigate('/settings/privacy');
+    }
+
+    public function navTitle(): string
+    {
+        return 'Settings';
+    }
+
+    public function render(): View
+    {
+        return view('native.settings');
+    }
+}
+```
+
+## 3. Write the view
+
+Save this as `resources/views/native/settings.blade.php`:
+
+```blade
+<native:list class="w-full flex-1">
+    <native:list-section header="Notifications" footer="Alerts for replies and mentions.">
+        <firstlight:switch label="Push notifications" native:model="notifications" />
+        <firstlight:switch label="Product news" native:model="marketing" />
+    </native:list-section>
+
+    <native:list-section header="Email" footer="A summary of activity you missed.">
+        <firstlight:select label="Digest" :options="$digestOptions" native:model="digest" />
+    </native:list-section>
+
+    <native:list-section header="Account">
+        <firstlight:list-item
+            headline="Privacy"
+            trailing-icon="chevron-right"
+            trailing-icon-ios="chevron.right"
+            trailing-icon-android="chevron_right"
+            @press="openPrivacy"
+        />
+    </native:list-section>
+</native:list>
+```
+
+## What each platform shows
+
+| Behaviour | iOS | Android |
+| --- | --- | --- |
+| Grouping | SwiftUI `List` in the inset-grouped style | Grouped Material sections with headers and footers |
+| Switches | SwiftUI `Toggle` | Material 3 `Switch` |
+| Digest | Native menu picker | Material 3 exposed dropdown |
+| Privacy row | List Item row with a chevron | Material list item with a chevron |
+
+## Rules to keep
+
+- Save in `updated{Property}`, not in a Save button. Settings screens apply each
+  change immediately.
+- Keep a section footer short. It explains the section, not each control.
+- Use `firstlight:list` only when every row is a List Item, such as a list of
+  records. Settings mix controls, so they use `native:list`.
+- Put the screen under a layout that uses native chrome, as described in
+  [Build a list and detail flow](build-a-list-detail-flow.md), so the title and
+  back navigation come from the platform.
+
 --- Source: docs/how-to/validate-fields.md ---
 
 # Validate Firstlight Fields
@@ -942,6 +1611,113 @@ protected function resolveDestructiveListItem(mixed $key): mixed
 
 When you resolve from the database, `$listItems` is still updated after a
 successful destroy so the published List matches the mutation.
+
+--- Source: docs/how-to/test-screens.md ---
+
+# Test Firstlight Screens
+
+Firstlight screens are tested with NativePHP's screen test harness,
+`Native\Mobile\Testing\Native::test()`. The harness mounts the screen,
+renders the Element Tree, and sends taps and input through the same callbacks a
+device uses. Firstlight adds checks for its own controls: field errors,
+List rows, Confirmation Dialog, and Feedback.
+
+## Scaffold a screen
+
+```bash
+php artisan make:firstlight-screen Posts --form --destroy --test
+```
+
+This creates the following files:
+
+- `app/NativeComponents/Posts.php`: a `FirstlightUI\NativeComponent` with a
+  validated `name` field and `save()` (`--form`), and paginated
+  `reload()`, `loadMore()`, and `listQuery()` (`--list`). It also has
+  `requestDeletion()`, `cancelDeletion()`, and `deleteItem()` (`--destroy`,
+  which turns on `--list`).
+- `resources/views/native/posts.blade.php`: the matching Text Field, Button,
+  List, and Confirmation Dialog markup.
+- `tests/Feature/NativeComponents/PostsTest.php`: a Pest test that uses the
+  checks below (`--test`).
+
+Nested names such as `Settings/Notifications` create
+`App\NativeComponents\Settings\Notifications` and the view
+`native.settings.notifications`. The command does not overwrite existing files
+unless you pass `--force`. Register the route it prints in `routes/mobile.php`.
+
+Replace the body of `listQuery()` with your paginator query, for example
+`Post::query()->latest()->paginate(perPage: 20, page: $page->page)`.
+
+## Register the checks
+
+Register the Firstlight checks once from `tests/Pest.php`:
+
+```php
+FirstlightUI\Testing\ScreenAssertions::register();
+```
+
+Calling it again has no effect. The generated test also calls it in
+`beforeEach()`.
+
+## Test a form
+
+```php
+use App\NativeComponents\EditProfile;
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Feedback\FeedbackTone;
+use Native\Mobile\Testing\Native;
+
+it('validates and saves the profile', function () {
+    Feedback::fake();
+
+    Native::test(EditProfile::class)
+        ->input('email', 'not-an-email')
+        ->tap('Save')
+        ->assertFieldError('email', 'The email must be a valid email address.')
+        ->assertNoFeedbackSent()
+        ->input('email', 'ada@example.com')
+        ->tap('Save')
+        ->assertNoFieldError('email')
+        ->assertHasNoErrors()
+        ->assertFeedbackSent('Profile saved', FeedbackTone::Success);
+});
+```
+
+`assertFieldError()` reads the `error` value the field shows in the rendered
+tree, so it confirms the message reached the control, not only the
+MessageBag. Use `assertHasErrors()` to check the bag directly.
+
+Select a Select, Segmented, Pill Group, or Choice Group option by its stable
+value, never by its label or position:
+
+```php
+Native::test(EditProfile::class)
+    ->choose('plan', 'team')
+    ->assertSet('plan', 'team');
+```
+
+## Test a list and its destructive action
+
+```php
+it('deletes a post after confirmation', function () {
+    Feedback::fake();
+
+    Native::test(PostsScreen::class)
+        ->assertListItem('Draft', fn (array $row) => $row['props']['disabled'] === false)
+        ->pressListItem('Draft', 'Delete')
+        ->assertConfirmationDialog('Delete post?')
+        ->confirmDialog()
+        ->assertMissingListItem('Draft')
+        ->assertFeedbackSent('Post deleted');
+});
+```
+
+`pressListItem('Draft')` presses the row. Pass a swipe action label as the
+second argument to press that action. Both fail when the row is disabled, as
+the device would ignore the press. `cancelDialog()` sends the dismissal that
+both platforms send for Cancel and system dismissal.
+
+See [Screen assertions](../reference/screen-assertions.md) for every method.
 
 --- Source: docs/how-to/localize.md ---
 
@@ -5064,6 +5840,96 @@ and [Stepper](../components/stepper.md).
   paints the red overlay instead of field messages.
 - `addError()` does not throw and may run from `render()` when a fixture needs
   a stable failed frame.
+
+--- Source: docs/reference/screen-assertions.md ---
+
+# Screen Assertions
+
+`FirstlightUI\Testing\ScreenAssertions::register()` adds the methods below to
+NativePHP's `Native\Mobile\Testing\TestableComponent`, the object returned by
+`Native::test()` and `Native::visit()`. They read the most recently published
+Element Tree. Interactions send the event type and callback id that the
+Firstlight iOS and Android renderers send, then re-render the screen as the
+harness does after `tap()` or `input()`.
+
+NativePHP's own methods are unchanged and work on Firstlight controls. These
+include `input()`, `tap()`, `toggle()`, `check()`, `set()`, `assertSee()`,
+`assertSet()`, and `assertElement()`. For example, `input('email', ...)` types
+into a Text Field bound with `native:model="email"`.
+
+## Targets
+
+A field target is either an element `ref` or the property name in the
+element's `native:model` binding. A List row is identified by its exact
+`headline`.
+
+## Fields and validation
+
+| Method | Contract |
+| --- | --- |
+| `field($target)` | Returns the wire node for the target, or fails. |
+| `assertFieldError($target, $message = null)` | The field's published `error` is not empty and, when given, equals `$message`. |
+| `assertNoFieldError($target)` | The field's published `error` is empty. |
+| `assertHasErrors($keys)` | The screen's `ValidatesFields` MessageBag has each key. `['email' => 'message']` also requires that message. |
+| `assertHasNoErrors($keys = null)` | The bag is empty, or has none of the given keys. |
+| `choose($target, $value)` | Chooses the option whose stable value equals `$value` (compared as a string) in a Select, Segmented, Pill Group, or Choice Group. Fails when no option has that value, or the option is disabled or cannot be chosen. A Select option that is already selected cannot be chosen. |
+
+## Lists
+
+| Method | Contract |
+| --- | --- |
+| `listItem($headline)` | Returns the first List Item node with that headline, or fails and lists the headlines. |
+| `assertListItem($headline, $matcher = null)` | A row exists. `$matcher` receives the wire node and must return `true`. |
+| `assertMissingListItem($headline)` | No row has that headline. |
+| `assertListItemCount($count)` | The tree contains exactly `$count` List Item rows. |
+| `pressListItem($headline, $action = null)` | Presses the row, or the leading or trailing swipe action with the label `$action`. Fails for a disabled row. |
+
+## Confirmation Dialog
+
+| Method | Contract |
+| --- | --- |
+| `assertConfirmationDialog($title = null)` | A Confirmation Dialog is visible, optionally with that title. |
+| `assertNoConfirmationDialog()` | No Confirmation Dialog is visible. |
+| `confirmDialog($title = null)` | Sends the visible dialog's `@press`. |
+| `cancelDialog($title = null)` | Sends the visible dialog's `@dismiss`. |
+
+## Feedback
+
+Call `FirstlightUI\Facades\Feedback::fake()` before the screen sends Feedback.
+
+| Method | Contract |
+| --- | --- |
+| `assertFeedbackSent($message, $tone = null)` | Feedback with that message, and optionally that `FeedbackTone`, was sent. |
+| `assertNoFeedbackSent()` | No Feedback was sent. |
+
+## Pest expectations
+
+`register()` also adds two expectations when Pest is loaded:
+
+```php
+expect(Native::test(SignupScreen::class))
+    ->toHaveFieldError('email')
+    ->toHaveListItem('Inbox');
+```
+
+They pair with NativePHP's `Native\Mobile\Testing\PestExpectations`.
+
+## make:firstlight-screen
+
+```bash
+php artisan make:firstlight-screen {name} [--form] [--list] [--destroy] [--test] [--force]
+```
+
+| Option | Generates |
+| --- | --- |
+| none | `App\NativeComponents\{name}` extending `FirstlightUI\NativeComponent`, with `render()` returning `native.{kebab-name}`, and a Blade view with a title. |
+| `--form` | A required `name` property, `$rules`, `save()` calling `submit()`, a Text Field bound with `native:model`, and a Save Button with `:loading="$submitting"`. |
+| `--list` | `mount()`, `reload()`, `loadMore()`, `open()`, and a `listQuery()` stub. A List bound to `@refresh` and `@endReached` renders `$this->listItems`. |
+| `--destroy` | Includes `--list`. Adds `requestDeletion()`, `cancelDeletion()`, and `deleteItem()`; rows disabled by `denies('delete', $item)`; a Delete swipe action; and a destructive Confirmation Dialog. |
+| `--test` | `tests/Feature/NativeComponents/{name}Test.php` that uses `Native::test()` and these assertions. |
+| `--force` | Overwrites existing files. Without it the command fails and writes nothing if any target exists. |
+
+The command is registered only when the application runs in the console.
 
 --- Source: docs/reference/compatibility.md ---
 

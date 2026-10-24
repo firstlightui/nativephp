@@ -24,6 +24,15 @@ class NativeComponent extends EdgeNativeComponent
     private static int $responseRevision = 0;
 
     /**
+     * True when nothing is below this screen on PHP's navigation stack.
+     * Layouts use it to decide whether the native bar shows a back button.
+     */
+    public function isRootScreen(): bool
+    {
+        return $this->nativeRouter?->isRootScreen() ?? true;
+    }
+
+    /**
      * Complete a hand-built screen tree, just as view()/fromView() do for
      * Blade. Nested components contribute content, not separate responses.
      */

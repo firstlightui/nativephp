@@ -10,11 +10,16 @@
 
 - [Install Firstlight UI](https://firstlightui.dev/getting-started/installation): Install Firstlight, register its NativePHP plugin, and rebuild the native projects.
 - [Add your first Firstlight component](https://firstlightui.dev/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
+- [Build a list and detail flow](https://firstlightui.dev/how-to/build-a-list-detail-flow): Recipe for an app layout with native navigation chrome, a list screen that pushes a detail screen, and native back navigation on iOS and Android.
+- [Build a searchable list screen](https://firstlightui.dev/how-to/build-a-searchable-list-screen): Recipe for a complete screen with native search, a paginated List, pull-to-refresh, row navigation, and confirmed swipe deletion.
+- [Build a form screen](https://firstlightui.dev/how-to/build-a-form-screen): Recipe for a create form with a Form Request, native field errors, a form-level error, a loading Save button, success Feedback, and return navigation.
+- [Build a settings screen](https://firstlightui.dev/how-to/build-a-settings-screen): Recipe for a grouped settings screen with native section headers and footers, Switch and Select rows, and save-on-change.
 - [Validate Firstlight fields](https://firstlightui.dev/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate(), validateOnly(), and Form Requests.
 - [Submit Firstlight forms](https://firstlightui.dev/how-to/submit-forms): Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize Firstlight actions](https://firstlightui.dev/how-to/authorize-actions): Apply Laravel Gate and Policy decisions to Firstlight actions with explicit hide, disable, and destructive confirmation patterns.
 - [Paginate Firstlight lists](https://firstlightui.dev/how-to/paginate-lists): Bind Laravel paginators to List pull-to-refresh and end-reached without a new Firstlight tag.
 - [Destroy Firstlight list items](https://firstlightui.dev/how-to/destroy-list-items): Authorize Confirmation Dialog deletion of List rows by stable keys, then Feedback and list republish.
+- [Test Firstlight screens](https://firstlightui.dev/how-to/test-screens): Scaffold a screen with make:firstlight-screen and test its fields, lists, dialogs, and Feedback with Native::test().
 - [Localize Firstlight chrome](https://firstlightui.dev/how-to/localize): Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
 - [Theme Firstlight components](https://firstlightui.dev/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
 - [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
@@ -53,4 +58,5 @@
 - [Code Editor](https://firstlightui.dev/components/code-editor): Public API, language-aware indentation, key row, follow mode, synchronisation, accessibility, and native platform behaviour for Firstlight Code Editor.
 - [Switch](https://firstlightui.dev/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
 - [ValidatesFields](https://firstlightui.dev/reference/validates-fields): Public contract for Firstlight Laravel field validation, MessageBag binding, and validate() timing.
+- [Screen assertions](https://firstlightui.dev/reference/screen-assertions): Firstlight methods added to NativePHP's Native::test() harness, and the make:firstlight-screen options.
 - [Compatibility](https://firstlightui.dev/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.

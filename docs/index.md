@@ -12,11 +12,16 @@ sources:
 
 - [Installation](getting-started/installation.md) — Install Firstlight and make its native renderers available to a NativePHP application.
 - [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
+- [Build a list and detail flow](how-to/build-a-list-detail-flow.md) — Give the app a native navigation shell with a list screen that pushes a detail screen.
+- [Build a searchable list screen](how-to/build-a-searchable-list-screen.md) — Search, paginate, refresh, open, and delete records from one native List.
+- [Build a form screen](how-to/build-a-form-screen.md) — Validate with a Form Request, show field and form-level errors, and save with Feedback.
+- [Build a settings screen](how-to/build-a-settings-screen.md) — Group switches and pickers in native sections that save on change.
 - [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()`, `validateOnly()`, and Form Requests.
 - [Submit forms](how-to/submit-forms.md) — Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize actions](how-to/authorize-actions.md) — Hide, disable, or guard Firstlight actions with Laravel Gate and Policy decisions.
 - [Paginate lists](how-to/paginate-lists.md) — Bind Laravel paginators to List pull-to-refresh and end-reached.
 - [Destroy list items](how-to/destroy-list-items.md) — Authorize Confirmation Dialog deletion of List rows by stable keys.
+- [Test screens](how-to/test-screens.md) — Scaffold a screen with `make:firstlight-screen` and test fields, lists, dialogs, and Feedback with `Native::test()`.
 - [Localize chrome](how-to/localize.md) — Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
@@ -55,4 +60,5 @@ sources:
 - [Code Editor](components/code-editor.md) — Edit JSON, YAML, env, and plain text with native indentation, a key row, and follow mode for live logs.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.
 - [ValidatesFields](reference/validates-fields.md) — Look up the public `validate()` contract, MessageBag binding, and current limitations.
+- [Screen assertions](reference/screen-assertions.md) — Look up the Firstlight `Native::test()` assertions and the `make:firstlight-screen` options.
 - [Compatibility](reference/compatibility.md) — Check the currently supported PHP, NativePHP, iOS, Android, and Swift versions.

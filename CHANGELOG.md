@@ -8,8 +8,16 @@ All notable changes to this project will be documented in this file.
 
 - List Item `context-menu`: a native long-press menu (SwiftUI `.contextMenu` on iOS, Material 3 `DropdownMenu` on Android) with labelled items, shared/platform icons, destructive role, disabled items, and PHP callbacks. Enabled items are also VoiceOver and TalkBack actions, so no long press is required.
 - Form-level validation errors on the existing Callout: `error-for="key"` shows that `ValidatesFields` key's first message, and `error-summary` lists every key's first message under a translatable heading (`firstlight::validation.summary`). Both default to `danger` and render nothing while there is nothing to show. No new catalogue tag.
-- `submit()` now keeps the messages of a `ValidationException` thrown by its action (for example `ValidationException::withMessages(['form' => ...])`), so actions can fail the whole form. Previously those messages were discarded.
 - Screen-reader announcements for validation errors. After a failed press or keyboard submit, VoiceOver and TalkBack speak a summary of all messages once and screen-reader focus moves to the first invalid field; a failed field update (blur, live, change, `updated{Property}`) speaks only its own message without moving focus. iOS moves VoiceOver focus without opening the keyboard; Android moves input focus only to Text Field, Text Area, and Code Editor, and only while TalkBack is on.
+- `FirstlightUI\Testing\ScreenAssertions::register()` adds Firstlight checks to NativePHP's `Native::test()` harness: `assertFieldError()`, `assertNoFieldError()`, `assertHasErrors()`, `assertHasNoErrors()`, `field()`, `choose()` by stable value, `listItem()`, `assertListItem()`, `assertMissingListItem()`, `assertListItemCount()`, `pressListItem()` including swipe actions, Confirmation Dialog `assertConfirmationDialog()`, `confirmDialog()` and `cancelDialog()`, `assertFeedbackSent()` and `assertNoFeedbackSent()`. It also adds the Pest expectations `toHaveFieldError()` and `toHaveListItem()`.
+- `php artisan make:firstlight-screen` creates a `FirstlightUI\NativeComponent` screen and its Blade view. `--form`, `--list` and `--destroy` add `submit()`, list pagination and confirmed deletion. `--test` adds a Pest test.
+- `NativeComponent::isRootScreen()` reports whether anything is below the screen on PHP's navigation stack, so a native-chrome layout can show a large title on the first screen and a back button on pushed ones.
+- App recipes for a list and detail flow, a searchable list, a form screen, and a settings screen. Each runs unchanged in the showcase app with tests.
+
+### Changed
+
+- `submit()` now keeps the messages of a `ValidationException` thrown by its action (for example `ValidationException::withMessages(['form' => ...])`), so actions can fail the whole form. Previously those messages were discarded.
+- The package now requires `illuminate/console` to register the generator.
 
 ### Known limitations
 
