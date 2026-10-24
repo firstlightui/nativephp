@@ -280,6 +280,16 @@
                 "android-dark": "docs/screenshots/text-area/android-dark.png"
             }
         },
+        "form-errors": {
+            "route": "/captures/form-errors",
+            "test": "php artisan test tests/Feature/FormErrorsCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/form-errors/ios-light.png",
+                "ios-dark": "docs/screenshots/form-errors/ios-dark.png",
+                "android-light": "docs/screenshots/form-errors/android-light.png",
+                "android-dark": "docs/screenshots/form-errors/android-dark.png"
+            }
+        },
         "validate-fields": {
             "route": "/captures/validate-fields",
             "test": "php artisan test tests/Feature/ValidateFieldsCaptureTest.php",

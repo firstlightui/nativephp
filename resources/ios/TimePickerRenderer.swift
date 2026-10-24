@@ -171,6 +171,7 @@ enum TimePickerClock {
 }
 
 struct TimePickerRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -178,6 +179,7 @@ struct TimePickerRenderer: View {
     private let events: TimePickerRendererEvents
 
     init(node: NativeUINode, events: TimePickerRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: TimePickerRendererState(node: node))
         self.events = events
     }
@@ -190,6 +192,7 @@ struct TimePickerRenderer: View {
                 if let event = state.confirm() { events.send(event) }
             }
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

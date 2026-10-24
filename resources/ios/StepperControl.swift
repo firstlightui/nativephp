@@ -32,6 +32,7 @@ struct FirstlightStepperControl: View {
             .accessibilityLabel(Text(configuration.accessibilityLabel))
             .accessibilityHint(Text(accessibilityHint))
             .accessibilityValue(Text(configuration.displayValue))
+            .firstlightValidationFocusTarget()
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error
             if !supporting.isEmpty {

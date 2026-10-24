@@ -133,6 +133,7 @@ struct StepperRendererState: Equatable {
 }
 
 struct StepperRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -140,6 +141,7 @@ struct StepperRenderer: View {
     private let events: StepperRendererEvents
 
     init(node: NativeUINode, events: StepperRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: StepperRendererState(node: node))
         self.events = events
     }
@@ -150,6 +152,7 @@ struct StepperRenderer: View {
             tokens: themeStore.resolve(for: colorScheme),
             onEvent: events.send
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

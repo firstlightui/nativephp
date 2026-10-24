@@ -1,6 +1,7 @@
 <?php
 
 use FirstlightUI\Components\Concerns\DecodesBladeAttributes;
+use FirstlightUI\Elements\Callout;
 use FirstlightUI\Elements\CodeEditor;
 use FirstlightUI\Elements\ListContainer;
 use FirstlightUI\Elements\ListItem;
@@ -10,7 +11,9 @@ use FirstlightUI\FirstlightServiceProvider;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use Illuminate\Events\Dispatcher;
+use FirstlightUI\Validation\FieldErrorBag;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\MessageBag;
 use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\Component;
 use Illuminate\View\Engines\CompilerEngine;
@@ -40,6 +43,7 @@ beforeEach(function () {
     ElementRegistry::register('firstlight.text-field', TextField::class);
     ElementRegistry::register('firstlight.list', ListContainer::class);
     ElementRegistry::register('firstlight.list-item', ListItem::class);
+    ElementRegistry::register('firstlight.callout', Callout::class);
 });
 
 afterEach(function () {
@@ -85,6 +89,7 @@ function renderFirstlightBladeTree(string $source, array $data): array
     $compiler->component('native-firstlight-text-field', FirstlightUI\Components\TextField::class);
     $compiler->component('native-firstlight-list', FirstlightUI\Components\ListContainer::class);
     $compiler->component('native-firstlight-list-item', FirstlightUI\Components\ListItem::class);
+    $compiler->component('native-firstlight-callout', FirstlightUI\Components\Callout::class);
     $compiler->precompiler(new NativeTagPrecompiler);
     (new FirstlightServiceProvider($container))->boot();
     NativeElementCollector::reset();
@@ -162,4 +167,41 @@ it('decodes Blade attributes in every Firstlight adapter', function () {
         ->all();
 
     expect($missing)->toBe([]);
+});
+
+it('publishes error-bound Callouts only while the bag has their messages', function () {
+    $source = '<native:column><firstlight:callout error-for="form" /><firstlight:callout error-summary /><firstlight:callout tone="warning" error-for="payment" action-label="Contact support" @press="contactSupport" /></native:column>';
+
+    $failed = FieldErrorBag::using(new MessageBag([
+        'form' => ['These credentials do not match our records.'],
+        'email' => ['The email field is required.', 'Second email message'],
+        'payment' => ['The card was declined.'],
+    ]), fn () => renderFirstlightBladeTree($source, []));
+    $single = FieldErrorBag::using(new MessageBag([
+        'form' => ['These credentials do not match our records.'],
+    ]), fn () => renderFirstlightBladeTree($source, []));
+    $clean = FieldErrorBag::using(new MessageBag, fn () => renderFirstlightBladeTree($source, []));
+
+    [$form, $summary, $payment] = $failed['children'];
+
+    expect($form['props'])->toMatchArray([
+        'message' => 'These credentials do not match our records.',
+        'tone' => 'danger',
+    ])
+        ->and($summary['props']['message'])->toBe(implode("\n", [
+            'There are 3 errors.',
+            'These credentials do not match our records.',
+            'The email field is required.',
+            'The card was declined.',
+        ]))
+        ->and($payment['props'])->toMatchArray([
+            'message' => 'The card was declined.',
+            'tone' => 'warning',
+            'action_label' => 'Contact support',
+        ])
+        ->and(array_column($single['children'], 'props'))->toBe([
+            ['message' => 'These credentials do not match our records.', 'tone' => 'danger', 'action_label' => ''],
+            ['message' => 'These credentials do not match our records.', 'tone' => 'danger', 'action_label' => ''],
+        ])
+        ->and($clean['children'] ?? [])->toBe([]);
 });

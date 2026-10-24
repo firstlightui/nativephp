@@ -310,6 +310,7 @@ object MediaRenderer {
         modifier: Modifier = Modifier,
         events: MediaRendererEvents = MediaRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { MediaRendererState(node) }
         LaunchedEffect(node.props) { state.serverPublished(node) }
         NativeUIBridge.currentTree.value?.let { tree ->

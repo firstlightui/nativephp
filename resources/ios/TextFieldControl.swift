@@ -31,6 +31,7 @@ struct FirstlightTextFieldControl: View {
                     .disabled(configuration.disabled)
                     .accessibilityLabel(Text(configuration.accessibilityLabel))
                     .accessibilityHint(Text(configuration.accessibilityHint))
+                    .firstlightValidationFocusTarget()
 
                 trailing
             }

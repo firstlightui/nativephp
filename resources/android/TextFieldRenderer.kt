@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -157,6 +158,7 @@ class TextFieldRendererState(node: NativeUINode) {
 object TextFieldRenderer {
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier, events: TextFieldRendererEvents = TextFieldRendererEvents.native) {
+        val validationFocus = firstlightValidationAlert(node.id)
         val state = remember(node.id) { TextFieldRendererState(node) }
         NativeUIBridge.currentTree.value?.let { tree -> LaunchedEffect(tree) { state.serverPublished(tree) } }
         LaunchedEffect(state.draft.text) {
@@ -175,7 +177,7 @@ object TextFieldRenderer {
             onReveal = state::toggleReveal,
             onTrailingPress = { state.configuration.onPressCallback.takeIf { it != 0 }?.let { events.dispatch(TextFieldRendererEvent.Press(it, state.configuration.nodeId)) } },
             onSubmit = { state.submit().forEach(events::dispatch) },
-            modifier = modifier.onFocusChanged { state.focusChanged(it.isFocused)?.let(events::dispatch) },
+            modifier = modifier.focusRequester(validationFocus).onFocusChanged { state.focusChanged(it.isFocused)?.let(events::dispatch) },
         )
     }
 }

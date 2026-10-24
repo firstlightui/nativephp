@@ -94,6 +94,7 @@ struct CalloutRenderer: View {
                 NativeUIBridge.sendPressEvent(callbackID, nodeId: nodeID)
             }
         )
+        .firstlightValidationAlert(nodeID: node.id)
         .onReceive(NativeUIBridge.shared.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

@@ -353,6 +353,77 @@ public function save(): void
 `resetValidation('email')` forgets one key. `resetValidation()` clears the
 bag. `hasError('email')` and `getErrorBag()` inspect the current messages.
 
+## Show form-level errors
+
+Some failures belong to the form, not one field: wrong credentials, a declined
+card, a server conflict. Add them under a key no field uses and show that key
+with a Callout:
+
+```php
+public function signIn(): void
+{
+    $this->validate();
+
+    if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+        $this->addError('form', 'These credentials do not match our records.');
+    }
+}
+```
+
+```blade
+<firstlight:callout error-for="form" />
+<firstlight:text-field label="Email" native:model.blur="email" />
+<firstlight:text-field label="Password" secure native:model.blur="password" />
+<firstlight:button label="Sign in" @press="signIn" />
+```
+
+To summarise every message above a long form, use `error-summary`:
+
+```blade
+<firstlight:callout error-summary />
+```
+
+The summary lists each key's first message in bag order, which follows your
+rules, so declare rules in the order the fields appear. One message is shown
+alone; two or more get a heading such as `There are 3 errors.` and one message
+per line.
+
+Both Callouts default to the `danger` tone, take their text from the bag (so
+`message` is rejected), and render nothing while there is nothing to show. You
+can still set `tone` or add an `action-label` with `@press`. `error-for` and
+`error-summary` cannot be combined.
+
+## Screen-reader announcements
+
+After a failed interaction, Firstlight announces the errors once:
+
+- **A press or keyboard submit** (Button `@press`, field `@submit`) speaks the
+  whole summary, for example `There are 2 errors. The name field is required.
+  The email field is required.`, and moves screen-reader focus to the first
+  invalid field on the screen.
+- **A field update** (`native:model.blur`, `.live`, `@change`, and
+  `updated{Property}` hooks) speaks only the message that update just added
+  and leaves focus where it is.
+
+On iOS, VoiceOver focus moves to the first invalid field and the announcement
+follows it; the keyboard does not open. On Android, while TalkBack is on, Text
+Field, Text Area, and Code Editor take input focus, which TalkBack follows and
+reads with the error, and the keyboard opens; other fields only announce,
+because Android moves focus only to editable text. Nothing is spoken when no message was added, and republishing
+the same screen does not repeat the announcement.
+
+The summary heading is package chrome. Translate it by publishing the language
+files (see [Localize chrome](localize.md)) and editing
+`lang/vendor/firstlight/{locale}/validation.php`.
+
+The `/captures/form-errors` showcase route shows a summary above failed
+fields:
+
+| Platform | Light | Dark |
+| --- | --- | --- |
+| iOS | ![Form error summary on iOS in light mode](../screenshots/form-errors/ios-light.png) | ![Form error summary on iOS in dark mode](../screenshots/form-errors/ios-dark.png) |
+| Android | ![Form error summary on Android in light mode](../screenshots/form-errors/android-light.png) | ![Form error summary on Android in dark mode](../screenshots/form-errors/android-dark.png) |
+
 ## Do not validate during mount or render
 
 `mount()` and `render()` still sit on NativePHP's generic `Throwable` overlay
@@ -447,7 +518,9 @@ Use the existing fields, `native:model`, and Button:
 `submit()` runs `$this->validate()` first. A validation failure returns
 `false`, skips the callable and success Feedback, and lets
 `ValidatesFields` publish each first Laravel message through the matching
-field's native `error` slot. See [Validate Firstlight fields](validate-fields.md)
+field's native `error` slot. Screen readers hear a summary and move to the
+first invalid field; add `<firstlight:callout error-summary />` for a visible
+summary. See [Validate Firstlight fields](validate-fields.md)
 for rule sources, Form Requests, custom messages, and explicit error binding. The
 [ValidatesFields reference](../reference/validates-fields.md) lists the method
 contract and participating fields.
@@ -465,7 +538,30 @@ $sent = $this->submit(
 );
 ```
 
-Unexpected exceptions from the callable are not converted to Feedback or
+To fail the whole form from inside the action, throw Laravel's
+`ValidationException`. Its messages replace the screen's error bag, `submit()`
+returns `false`, and no success Feedback is sent:
+
+```php
+use Illuminate\Validation\ValidationException;
+
+$this->submit(
+    action: function (): void {
+        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+            throw ValidationException::withMessages([
+                'form' => 'These credentials do not match our records.',
+            ]);
+        }
+    },
+    successMessage: 'Signed in',
+);
+```
+
+```blade
+<firstlight:callout error-for="form" />
+```
+
+Other unexpected exceptions from the callable are not converted to Feedback or
 swallowed.
 
 ## Loading and duplicate submissions
@@ -866,7 +962,10 @@ locales through Laravel vendor language publishing.
 php artisan vendor:publish --tag=firstlight-lang
 ```
 
-Laravel copies the files to `lang/vendor/firstlight`. Add a locale next to
+Laravel copies the files to `lang/vendor/firstlight`. `validation.php` holds
+the pluralised error summary heading (`'summary' => 'There is :count
+error.|There are :count errors.'`) used by `error-summary` Callouts and
+screen-reader announcements. Add a locale next to
 English, for example `lang/vendor/firstlight/fr/chrome.php`, and keep the same
 keys:
 
@@ -1401,6 +1500,8 @@ The same tag renders as an idiomatic rounded SwiftUI message surface on iOS and 
 | `a11y-label` | `string` | Replaces the generated accessible message. |
 | `a11y-hint` | `string` | Adds supplementary context to the accessible message. |
 | `class` | `string` | External EDGE layout utilities. |
+| `error-for` | non-empty `string` | Shows the first `ValidatesFields` message for this key instead of `message`. The `errorFor` alias is also accepted. |
+| `error-summary` | `bool` | Shows every key's first message instead of `message`. The `errorSummary` alias is also accepted. |
 
 Callout owns its semantic symbol. There are no `icon`, `icon-ios`, or `icon-android` props because changing that affordance could contradict the tone.
 
@@ -1418,11 +1519,20 @@ Callout remains in its authored position until the next Element Tree omits it. I
 
 Disabled and loading states do not apply. Render or omit the action according to application state, and publish the semantic tone that describes the message. Although `danger` can communicate an error outcome, Callout is not a field-validation control and does not accept `error`, `helper`, or `required`.
 
+For form-level validation messages, bind the screen's error bag instead of a static message:
+
+```blade
+<firstlight:callout error-for="form" />
+<firstlight:callout error-summary />
+```
+
+A bound Callout defaults to `danger`, rejects `message`, and renders nothing while its key (or, for a summary, the whole bag) has no message. See [Validate fields](../how-to/validate-fields.md#show-form-level-errors).
+
 ## Accessibility
 
 Tone is conveyed by a distinct native symbol and by the generated accessible name, such as `Warning: Your changes have not been submitted.` The icon is decorative to VoiceOver and TalkBack. `a11y-label` replaces the generated name, while `a11y-hint` adds context.
 
-The optional action is a separate native button whose visible text is its accessible name. Its target is at least 44 points on iOS and 48 dp on Android. Message text wraps and surfaces grow for Dynamic Type, Android font scaling, and long localisation. Callout is not a live region; persistent content does not automatically interrupt the screen reader.
+The optional action is a separate native button whose visible text is its accessible name. Its target is at least 44 points on iOS and 48 dp on Android. Message text wraps and surfaces grow for Dynamic Type, Android font scaling, and long localisation. Callout is not a live region; persistent content does not automatically interrupt the screen reader. An error-bound Callout may carry the one-time validation announcement after a failed submit, described in [Validate fields](../how-to/validate-fields.md#screen-reader-announcements).
 
 ## Validation and failure behaviour
 
@@ -4895,6 +5005,35 @@ name stay empty. Only the first message for a key is published.
 
 The view also receives `$errorBag` for explicit `:error="$errorBag->first('email')"`
 bindings.
+
+## Form-level Callouts
+
+[Callout](../components/callout.md) displays bag messages that belong to no
+field:
+
+| Attribute | Shows | Publishes nothing when |
+| --- | --- | --- |
+| `error-for="key"` | `MessageBag::first('key')` | the key has no message |
+| `error-summary` | every key's first message, in bag order; a `firstlight::validation.summary` heading when there are two or more | the bag is empty |
+
+Both default to `danger`, reject `message`, and are mutually exclusive. They
+never receive field focus. The summary follows bag order, which is the order
+of your rules, so list rules in screen order.
+
+## Announcements and focus
+
+| Interaction | Spoken once | Screen-reader focus |
+| --- | --- | --- |
+| `@press` or `@submit` that adds messages | the summary of the whole bag | first invalid field in render order |
+| any other event (model sync, `@change`, `updated{Property}`) that adds messages | only the messages it added | unchanged |
+| an interaction that adds no message | nothing | unchanged |
+
+"Adds messages" means a failed `validate()` or `validateOnly()`, or
+`addError()`. Frames republished before the next interaction carry the same
+alert, and the platforms act on it once. iOS moves
+VoiceOver focus and posts an announcement. Android acts while TalkBack is on:
+Text Field, Text Area, and Code Editor take input focus, and every field
+announces.
 
 ## Participating fields
 

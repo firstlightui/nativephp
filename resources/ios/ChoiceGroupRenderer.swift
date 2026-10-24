@@ -112,6 +112,7 @@ struct ChoiceGroupRendererState: Equatable {
 }
 
 struct ChoiceGroupRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -120,6 +121,7 @@ struct ChoiceGroupRenderer: View {
     private let events: ChoiceGroupRendererEvents
 
     init(node: NativeUINode, events: ChoiceGroupRendererEvents = .native) {
+        validationNodeID = node.id
         _rendererState = State(initialValue: ChoiceGroupRendererState(node: node))
         self.events = events
     }
@@ -148,6 +150,7 @@ struct ChoiceGroupRenderer: View {
                 events.send(event)
             }
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             rendererState.serverPublished(tree)
         }

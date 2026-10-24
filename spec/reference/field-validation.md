@@ -22,7 +22,16 @@ sources:
   - src/Elements/Slider.php
   - src/Elements/Stepper.php
   - src/Elements/SearchField.php
+  - src/Validation/ValidationAlert.php
+  - src/Validation/ErrorSummary.php
+  - src/Elements/Callout.php
+  - src/Components/Callout.php
+  - lang/en/validation.php
+  - resources/ios/FirstlightValidationAlert.swift
+  - resources/android/FirstlightValidationAlert.kt
   - tests/Feature/ValidatesFieldsTest.php
+  - tests/ios/ValidationAlertTests.swift
+  - tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/ValidationAlertTest.kt
   - spec/reference/form-submit.md
   - docs/how-to/validate-fields.md
   - docs/reference/validates-fields.md
@@ -95,8 +104,35 @@ Search Field rejects `error`, `required`, `label`, and `helper`. It is a query c
 
 Action, presentation, display, and collection components (Button, Icon Button, Confirmation Dialog, Modal, Bottom Sheet, Badge, Status Label, Callout, Progress, Activity Indicator, List, List Item, List Section) are not MessageBag targets.
 
+## Form-level errors
+
+Messages that belong to no single field (for example a failed sign-in, `addError('form', ...)`) and summaries of field messages reuse [Callout](../components/callout.md); there is no new catalogue tag.
+
+- `<firstlight:callout error-for="form" />` shows `MessageBag::first('form')`.
+- `<firstlight:callout error-summary />` shows `ErrorSummary::text()`: every key's first message in bag order, either the single message alone or the `firstlight::validation.summary` heading (`There are :count errors.`) and one message per line.
+
+Both default to the `danger` tone, reject an authored `message`, and are mutually exclusive. While their key or bag has no message the Blade adapter publishes no node, like Blade's `@error`. A bound Callout is not a field: it never takes the error slot, `required`, or focus.
+
+## Screen-reader alerts
+
+`ValidatesFields` records which keys an interaction added messages for: `validate()` failures (every failed key), `validateOnly()` failures (that key), and `addError()`. When the outermost `dispatchUiEvent()` ends with at least one recorded key that is still in the bag, it stores one `ValidationAlert`. Every `view()` / `fromView()` render until the next interaction republishes it, because NativePHP may render one publication more than once; each render claims the announcement and focus afresh from a copy. The next interaction clears it before dispatching, so a passing interaction publishes none. Partials never carry it.
+
+| Event type | Meaning | Announcement | Focus |
+| --- | --- | --- | --- |
+| `PRESS` (0), `SUBMIT` (4) | form submission | `ErrorSummary::announcement()` of the whole bag | first invalid field |
+| any other (text, toggle, select, slider, …) | property sync, including `updated{Property}` | messages for the keys just failed only | none |
+
+During that publication the first error-bound element in render order that is concerned by the alert (a field whose key is in the alert, or a summary/`error-for` Callout) receives `validation_announcement`; the first error-bound field receives `validation_focus: true` when focus moves. Both carry the same increasing integer `validation_alert` revision. A repeated identical failure gets a new revision. An element concerned by the alert may be an error-bound Callout, which then carries the announcement but never focus.
+
+Renderers act on each revision once, including on the frame that creates the node, and never on republication of the same revision:
+
+- **iOS** moves VoiceOver focus with `@AccessibilityFocusState` to the field's primary accessible element (the input, toggle, trigger, first choice, or Media choose button), then posts `AccessibilityNotification.Announcement` with low speech priority so it queues behind the focused field. Keyboard focus is unchanged; VoiceOver users do not get an unexpected keyboard.
+- **Android** acts only while TalkBack (touch exploration) is enabled. Text Field, Text Area, and Code Editor request input focus with a `FocusRequester`, which TalkBack follows and reads with the field's `error` semantics; other fields do not move focus, because Android moves input focus only to editable text. The announcement is then sent with `View.announceForAccessibility`.
+
+Text that names the error (`Error: …`) remains each control's existing semantics. The alert adds no visible chrome and does not repeat on rotation, reconciliation, or unrelated republication.
+
 ## Native boundary
 
-iOS and Android field renderers already treat a non-empty `error` as visible and accessible validation feedback. PHP validation publishes that string through the ordinary Element Tree. No additional native validation engine, focus-stealing overlay, or WebView error list is permitted.
+iOS and Android field renderers already treat a non-empty `error` as visible and accessible validation feedback. PHP validation publishes that string through the ordinary Element Tree. The only native additions are the one-time alert above; no native validation engine, focus-stealing overlay, live region, or WebView error list is permitted.
 
 Consumer guidance lives in [Validate fields](../../docs/how-to/validate-fields.md) and the [ValidatesFields reference](../../docs/reference/validates-fields.md). Guarded submit plus success Feedback lives in [Form submission](form-submit.md). Catalogue expansion rules live in [Catalogue boundary](catalogue-boundary.md).

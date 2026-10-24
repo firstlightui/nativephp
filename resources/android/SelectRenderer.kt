@@ -123,6 +123,7 @@ object FirstlightSelectRenderer {
         modifier: Modifier,
         events: SelectRendererEvents = SelectRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val rendererState = remember(node.id) { SelectRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value
 

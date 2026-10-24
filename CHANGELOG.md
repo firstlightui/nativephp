@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - List Item `context-menu`: a native long-press menu (SwiftUI `.contextMenu` on iOS, Material 3 `DropdownMenu` on Android) with labelled items, shared/platform icons, destructive role, disabled items, and PHP callbacks. Enabled items are also VoiceOver and TalkBack actions, so no long press is required.
+- Form-level validation errors on the existing Callout: `error-for="key"` shows that `ValidatesFields` key's first message, and `error-summary` lists every key's first message under a translatable heading (`firstlight::validation.summary`). Both default to `danger` and render nothing while there is nothing to show. No new catalogue tag.
+- `submit()` now keeps the messages of a `ValidationException` thrown by its action (for example `ValidationException::withMessages(['form' => ...])`), so actions can fail the whole form. Previously those messages were discarded.
+- Screen-reader announcements for validation errors. After a failed press or keyboard submit, VoiceOver and TalkBack speak a summary of all messages once and screen-reader focus moves to the first invalid field; a failed field update (blur, live, change, `updated{Property}`) speaks only its own message without moving focus. iOS moves VoiceOver focus without opening the keyboard; Android moves input focus only to Text Field, Text Area, and Code Editor, and only while TalkBack is on.
+
+### Known limitations
+
+- TalkBack focus on the first invalid field was observed on the Android emulator. VoiceOver cannot run in the iOS Simulator, and spoken output was not captured on either platform; those parts are covered by PHP, XCTest and Robolectric tests. Physical-device VoiceOver and TalkBack checks remain outstanding.
+- The error summary lists messages in rule order, not screen order; declare rules in the order fields appear.
 
 ## 1.0.0-RC3 - 2026-10-23
 

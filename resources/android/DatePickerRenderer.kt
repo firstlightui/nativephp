@@ -158,6 +158,7 @@ object FirstlightDatePickerRenderer {
         modifier: Modifier,
         events: DatePickerRendererEvents = DatePickerRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { DatePickerRendererState(node) }
         LaunchedEffect(node.props, node.onPress) { state.serverPublished(node) }
         NativeUIBridge.currentTree.value?.let { tree ->

@@ -32,6 +32,7 @@ final class FieldErrorBinder
         $message = $bag->first($name);
         if ($message !== '') {
             $element->error($message);
+            FieldErrorBag::alert()?->claim($element, field: true, key: $name);
         }
     }
 

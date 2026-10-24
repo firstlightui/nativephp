@@ -118,6 +118,7 @@ object ChoiceGroupRenderer {
         modifier: Modifier,
         events: ChoiceGroupRendererEvents = ChoiceGroupRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val rendererState = remember(node.id) { ChoiceGroupRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value
 

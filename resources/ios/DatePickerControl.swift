@@ -46,6 +46,7 @@ struct FirstlightDatePickerControl: View {
                     : configuration.accessibilityLabel
             ))
             .accessibilityHint(Text(accessibilityHint))
+            .firstlightValidationFocusTarget()
             .accessibilityValue(Text(configuration.acceptedValue.map {
                 DatePickerCalendar.display($0, locale: configuration.locale, timezone: configuration.timezone)
             } ?? configuration.placeholder))

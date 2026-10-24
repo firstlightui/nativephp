@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextRange
 import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
@@ -304,6 +305,7 @@ object CodeEditorRenderer {
         modifier: Modifier,
         events: CodeEditorRendererEvents = CodeEditorRendererEvents.native,
     ) {
+        val validationFocus = firstlightValidationAlert(node.id)
         val state = remember(node.id) { CodeEditorRendererState(node) }
 
         NativeUIBridge.currentTree.value?.let { tree ->
@@ -332,7 +334,7 @@ object CodeEditorRenderer {
             onUndo = { state.undo()?.let(events::dispatch) },
             onRedo = { state.redo()?.let(events::dispatch) },
             onFocusChanged = { state.focusChanged(it)?.let(events::dispatch) },
-            modifier = modifier,
+            modifier = modifier.focusRequester(validationFocus),
         )
     }
 }

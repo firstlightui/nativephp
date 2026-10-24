@@ -140,6 +140,7 @@ struct TextAreaRendererState {
 }
 
 struct TextAreaRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -148,6 +149,7 @@ struct TextAreaRenderer: View {
     private let events: TextAreaRendererEvents
 
     init(node: NativeUINode, events: TextAreaRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: TextAreaRendererState(node: node))
         self.events = events
     }
@@ -165,6 +167,7 @@ struct TextAreaRenderer: View {
         .onChange(of: focused) { _, value in
             if let event = state.focusChanged(value) { events.send(event) }
         }
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

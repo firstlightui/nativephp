@@ -7,6 +7,7 @@ sources:
   - nativephp.json
   - src/Components/Callout.php
   - src/Elements/Callout.php
+  - src/Validation/ErrorSummary.php
   - resources/ios/CalloutControl.swift
   - resources/ios/CalloutRenderer.swift
   - resources/android/CalloutControl.kt
@@ -43,6 +44,8 @@ The same tag renders as an idiomatic rounded SwiftUI message surface on iOS and 
 | `a11y-label` | `string` | Replaces the generated accessible message. |
 | `a11y-hint` | `string` | Adds supplementary context to the accessible message. |
 | `class` | `string` | External EDGE layout utilities. |
+| `error-for` | non-empty `string` | Shows the first `ValidatesFields` message for this key instead of `message`. The `errorFor` alias is also accepted. |
+| `error-summary` | `bool` | Shows every key's first message instead of `message`. The `errorSummary` alias is also accepted. |
 
 Callout owns its semantic symbol. There are no `icon`, `icon-ios`, or `icon-android` props because changing that affordance could contradict the tone.
 
@@ -60,11 +63,20 @@ Callout remains in its authored position until the next Element Tree omits it. I
 
 Disabled and loading states do not apply. Render or omit the action according to application state, and publish the semantic tone that describes the message. Although `danger` can communicate an error outcome, Callout is not a field-validation control and does not accept `error`, `helper`, or `required`.
 
+For form-level validation messages, bind the screen's error bag instead of a static message:
+
+```blade
+<firstlight:callout error-for="form" />
+<firstlight:callout error-summary />
+```
+
+A bound Callout defaults to `danger`, rejects `message`, and renders nothing while its key (or, for a summary, the whole bag) has no message. See [Validate fields](../how-to/validate-fields.md#show-form-level-errors).
+
 ## Accessibility
 
 Tone is conveyed by a distinct native symbol and by the generated accessible name, such as `Warning: Your changes have not been submitted.` The icon is decorative to VoiceOver and TalkBack. `a11y-label` replaces the generated name, while `a11y-hint` adds context.
 
-The optional action is a separate native button whose visible text is its accessible name. Its target is at least 44 points on iOS and 48 dp on Android. Message text wraps and surfaces grow for Dynamic Type, Android font scaling, and long localisation. Callout is not a live region; persistent content does not automatically interrupt the screen reader.
+The optional action is a separate native button whose visible text is its accessible name. Its target is at least 44 points on iOS and 48 dp on Android. Message text wraps and surfaces grow for Dynamic Type, Android font scaling, and long localisation. Callout is not a live region; persistent content does not automatically interrupt the screen reader. An error-bound Callout may carry the one-time validation announcement after a failed submit, described in [Validate fields](../how-to/validate-fields.md#screen-reader-announcements).
 
 ## Validation and failure behaviour
 

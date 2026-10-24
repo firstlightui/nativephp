@@ -189,6 +189,7 @@ struct SliderRendererState {
 }
 
 struct SliderRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -196,6 +197,7 @@ struct SliderRenderer: View {
     private let events: SliderRendererEvents
 
     init(node: NativeUINode, events: SliderRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: SliderRendererState(node: node))
         self.events = events
     }
@@ -206,6 +208,7 @@ struct SliderRenderer: View {
             tokens: themeStore.resolve(for: colorScheme),
             onChange: events.send
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

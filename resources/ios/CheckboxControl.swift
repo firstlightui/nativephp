@@ -56,6 +56,7 @@ struct FirstlightCheckboxControl: View {
             )
         )
         .accessibilityAddTraits(.isToggle)
+        .firstlightValidationFocusTarget()
     }
 }
 

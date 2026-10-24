@@ -158,6 +158,7 @@ object SegmentedRenderer {
         modifier: Modifier,
         events: SegmentedRendererEvents = SegmentedRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val rendererState = remember(node.id) { SegmentedRendererState(node) }
 
         val publishedTree = NativeUIBridge.currentTree.value

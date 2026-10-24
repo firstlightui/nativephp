@@ -4,7 +4,9 @@ namespace FirstlightUI\Concerns;
 
 use FirstlightUI\Media\MediaValidation;
 use FirstlightUI\Media\MediaValue;
+use FirstlightUI\Validation\ErrorSummary;
 use FirstlightUI\Validation\FieldErrorBag;
+use FirstlightUI\Validation\ValidationAlert;
 use Illuminate\Support\MessageBag;
 use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\Translator;
@@ -21,6 +23,16 @@ trait ValidatesFields
 {
     protected ?MessageBag $errorBag = null;
 
+    /** Keys whose messages changed during the current interaction; null outside one. */
+    private ?array $failedValidationKeys = null;
+
+    /**
+     * The last interaction's alert. Every render until the next interaction
+     * republishes it (NativePHP may render a frame more than once); native
+     * renderers act once per revision.
+     */
+    private ?ValidationAlert $validationAlert = null;
+
     /**
      * @param  array<string, mixed>|class-string|null  $rules
      * @param  array<string, string>  $messages
@@ -36,6 +48,7 @@ trait ValidatesFields
             $validated = $validator->validate();
         } catch (ValidationException $exception) {
             $this->errorBag = $exception->validator->errors();
+            $this->recordFailedValidation($this->errorBag->keys());
 
             throw $exception;
         }
@@ -61,6 +74,7 @@ trait ValidatesFields
             $validated = $validator->validate();
         } catch (ValidationException $exception) {
             $this->replaceFieldErrors($field, $exception->validator->errors());
+            $this->recordFailedValidation([$field]);
 
             throw $exception;
         }
@@ -73,6 +87,7 @@ trait ValidatesFields
     public function addError(string $field, string $message): void
     {
         $this->getErrorBag()->add($field, $message);
+        $this->recordFailedValidation([$field]);
     }
 
     public function resetValidation(string|array|null $field = null): void
@@ -100,10 +115,69 @@ trait ValidatesFields
 
     protected function dispatchUiEvent(array $event): void
     {
+        $outer = $this->failedValidationKeys;
+        $this->failedValidationKeys = [];
+
+        if ($outer === null) {
+            $this->validationAlert = null;
+        }
+
         try {
             parent::dispatchUiEvent($event);
         } catch (ValidationException $exception) {
-            $this->errorBag = $exception->validator->errors();
+            $this->storeValidationException($exception);
+        } finally {
+            $failed = $this->failedValidationKeys;
+            $this->failedValidationKeys = $outer;
+        }
+
+        if ($outer === null) {
+            $this->queueValidationAlert($failed, $event);
+        } else {
+            // A nested dispatch (for example to a child owner) reports to the outermost one.
+            $this->recordFailedValidation($failed);
+        }
+    }
+
+    /**
+     * A press or keyboard submit is a form submission: announce every
+     * current message and move screen-reader focus to the first invalid
+     * field. Property synchronization (blur, live, debounce, change) only
+     * announces the keys it just failed, so focus is never pulled back.
+     */
+    protected function queueValidationAlert(array $failedKeys, array $event): void
+    {
+        $bag = $this->getErrorBag();
+        $failedKeys = array_values(array_filter(
+            array_unique($failedKeys),
+            fn (string $key): bool => $bag->has($key),
+        ));
+
+        if ($failedKeys === []) {
+            return;
+        }
+
+        $submission = in_array((int) ($event['type'] ?? -1), [0, 4], true);
+
+        $this->validationAlert = ValidationAlert::next(
+            ErrorSummary::announcement($bag, $submission ? null : $failedKeys),
+            movesFocus: $submission,
+            keys: $submission ? null : $failedKeys,
+        );
+    }
+
+    /** Replace the bag with a thrown exception's messages, such as `ValidationException::withMessages()`. */
+    protected function storeValidationException(ValidationException $exception): void
+    {
+        $this->errorBag = $exception->validator->errors();
+        $this->recordFailedValidation($this->errorBag->keys());
+    }
+
+    /** @param  list<string>  $keys */
+    private function recordFailedValidation(array $keys): void
+    {
+        if ($this->failedValidationKeys !== null) {
+            array_push($this->failedValidationKeys, ...$keys);
         }
     }
 
@@ -113,7 +187,7 @@ trait ValidatesFields
             $data['errorBag'] = $this->getErrorBag();
 
             return parent::view($name, $data);
-        });
+        }, publishesAlert: true);
     }
 
     protected function fromView(View $view): Element
@@ -122,7 +196,7 @@ trait ValidatesFields
             $view->with('errorBag', $this->getErrorBag());
 
             return parent::fromView($view);
-        });
+        }, publishesAlert: true);
     }
 
     protected function fromViewPartial(View $view): Element
@@ -247,9 +321,16 @@ trait ValidatesFields
      * @param  callable(): TReturn  $callback
      * @return TReturn
      */
-    protected function withFieldErrorBag(callable $callback): mixed
+    protected function withFieldErrorBag(callable $callback, bool $publishesAlert = false): mixed
     {
-        return FieldErrorBag::using($this->getErrorBag(), $callback);
+        if (! $publishesAlert) {
+            return FieldErrorBag::using($this->getErrorBag(), $callback);
+        }
+
+        // Each render claims the announcement and focus afresh.
+        $alert = $this->validationAlert === null ? null : clone $this->validationAlert;
+
+        return FieldErrorBag::using($this->getErrorBag(), $callback, $alert);
     }
 
     protected function standaloneValidatorFactory(): ValidatorFactory

@@ -155,6 +155,7 @@ struct CodeEditorRendererState {
 }
 
 struct CodeEditorRenderer: View {
+    private let validationNodeID: Int
     @ObservedObject private var themeStore = NativeUITheme.shared
     @ObservedObject private var bridge = NativeUIBridge.shared
     @Environment(\.colorScheme) private var colorScheme
@@ -162,6 +163,7 @@ struct CodeEditorRenderer: View {
     private let events: CodeEditorRendererEvents
 
     init(node: NativeUINode, events: CodeEditorRendererEvents = .native) {
+        validationNodeID = node.id
         _state = State(initialValue: CodeEditorRendererState(node: node))
         self.events = events
     }
@@ -181,6 +183,7 @@ struct CodeEditorRenderer: View {
             },
             tokens: themeStore.resolve(for: colorScheme)
         )
+        .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
             state.serverPublished(tree)
         }

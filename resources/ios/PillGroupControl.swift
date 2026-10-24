@@ -189,6 +189,7 @@ struct FirstlightPillGroupField: View {
             ) {
                 ForEach(labels.indices, id: \.self) { index in
                     pill(index: index)
+                        .firstlightValidationFocusTarget(index == labels.indices.first)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

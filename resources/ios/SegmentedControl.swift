@@ -220,6 +220,7 @@ struct FirstlightSegmentedField: View {
                 onSelection: onSelection
             )
             .frame(maxWidth: .infinity, minHeight: 44)
+            .firstlightValidationFocusTarget()
 
             if !helper.isEmpty {
                 Text(helper)

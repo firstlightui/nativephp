@@ -71,6 +71,7 @@ class CalloutRendererState(node: NativeUINode) {
 object CalloutRenderer {
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { CalloutRendererState(node) }
         val publishedTree = NativeUIBridge.currentTree.value
         LaunchedEffect(publishedTree) {

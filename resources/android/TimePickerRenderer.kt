@@ -152,6 +152,7 @@ object TimePickerRenderer {
         modifier: Modifier,
         events: TimePickerRendererEvents = TimePickerRendererEvents.native,
     ) {
+        firstlightValidationAlert(node.id)
         val state = remember(node.id) { TimePickerRendererState(node) }
         LaunchedEffect(node.props, node.onPress) { state.serverPublished(node) }
         NativeUIBridge.currentTree.value?.let { tree ->

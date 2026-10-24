@@ -3,6 +3,8 @@
 namespace FirstlightUI\Elements;
 
 use FirstlightUI\Support\WarningColors;
+use FirstlightUI\Validation\ErrorSummary;
+use FirstlightUI\Validation\FieldErrorBag;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -35,6 +37,47 @@ final class Callout extends Element
         return (new self)->message($message);
     }
 
+    /**
+     * The MessageBag text an error-bound Callout shows, or null when the
+     * attributes do not bind one. An empty string means there is nothing
+     * to show, so the Blade tag publishes no node.
+     */
+    public static function boundErrorMessage(array $attrs): ?string
+    {
+        $key = $attrs['error-for'] ?? $attrs['errorFor'] ?? null;
+        $summary = $attrs['error-summary'] ?? $attrs['errorSummary'] ?? null;
+
+        if ($key === null && ($summary === null || $summary === false)) {
+            return null;
+        }
+
+        if ($key !== null && $summary !== null && $summary !== false) {
+            throw new InvalidArgumentException(
+                'Firstlight Callout `error-for` and `error-summary` are mutually exclusive.'
+            );
+        }
+
+        if ($key !== null && (! is_string($key) || trim($key) === '')) {
+            throw new InvalidArgumentException(
+                'Firstlight Callout `error-for` must be a non-empty MessageBag key.'
+            );
+        }
+
+        if (array_key_exists('message', $attrs)) {
+            throw new InvalidArgumentException(
+                'Firstlight Callout takes its message from the error bag when `error-for` or `error-summary` is set; remove `message`.'
+            );
+        }
+
+        $bag = FieldErrorBag::current();
+
+        if ($bag === null) {
+            return '';
+        }
+
+        return $key !== null ? $bag->first($key) : ErrorSummary::text($bag);
+    }
+
     public function applyAttributes(array $attrs): void
     {
         foreach (self::UNSUPPORTED_ATTRIBUTES as $attribute) {
@@ -43,6 +86,12 @@ final class Callout extends Element
                     "Firstlight Callout does not support `{$attribute}`."
                 );
             }
+        }
+
+        $boundMessage = self::boundErrorMessage($attrs);
+
+        if ($boundMessage !== null) {
+            $this->message($boundMessage)->tone('danger');
         }
 
         foreach ([
@@ -76,6 +125,11 @@ final class Callout extends Element
         }
 
         $this->applyA11yAttributes($attrs);
+
+        if ($boundMessage !== null && $boundMessage !== '') {
+            $key = $attrs['error-for'] ?? $attrs['errorFor'] ?? null;
+            FieldErrorBag::alert()?->claim($this, field: false, key: $key);
+        }
     }
 
     public function message(string $message): static
