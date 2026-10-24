@@ -21,6 +21,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
 
 class CheckboxRendererContractTest {
     @Test
@@ -167,6 +175,48 @@ class CheckboxRendererContractTest {
     )
 
     private fun tree(node: NativeUINode) = NativeUITree(node)
+}
+
+@OptIn(ExperimentalTestApi::class)
+@RunWith(RobolectricTestRunner::class)
+class CheckboxDisabledTextTest {
+    @Test
+    fun `disabled label and helper use the disabled content alpha`() = runComposeUiTest {
+        setContent { field(disabled = true) }
+        assertEquals(0.38f, textAlpha(onNodeWithText("I agree to the terms", useUnmergedTree = true)), 0.01f)
+        assertEquals(0.38f, textAlpha(onNodeWithText("Required before continuing.", useUnmergedTree = true)), 0.01f)
+    }
+
+    @Test
+    fun `enabled label and helper stay fully opaque`() = runComposeUiTest {
+        setContent { field(disabled = false) }
+        assertEquals(1f, textAlpha(onNodeWithText("I agree to the terms", useUnmergedTree = true)), 0.01f)
+        assertEquals(1f, textAlpha(onNodeWithText("Required before continuing.", useUnmergedTree = true)), 0.01f)
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun field(disabled: Boolean) {
+        MaterialTheme {
+            FirstlightCheckboxControl(
+                value = true,
+                label = "I agree to the terms",
+                helper = "Required before continuing.",
+                error = "",
+                required = false,
+                disabled = disabled,
+                accessibilityLabel = "Accept the terms",
+                accessibilityHint = "",
+                tokens = NativeUITheme.light,
+                onProposal = {},
+            )
+        }
+    }
+
+    private fun textAlpha(node: SemanticsNodeInteraction): Float {
+        val results = mutableListOf<TextLayoutResult>()
+        node.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
+        return results.single().layoutInput.style.color.alpha
+    }
 }
 
 class CheckboxScreenshotTest {
