@@ -2,6 +2,7 @@
 
 namespace FirstlightUI;
 
+use FirstlightUI\Console\MakeScreenCommand;
 use FirstlightUI\Feedback\FeedbackManager;
 use FirstlightUI\Feedback\FeedbackStore;
 use FirstlightUI\NativeComponents\FeedbackCenter;
@@ -36,6 +37,10 @@ class FirstlightServiceProvider extends ServiceProvider
         $this->app->make('blade.compiler')->prepareStringsForCompilationUsing(
             new FirstlightTagPrecompiler
         );
+
+        if (method_exists($this->app, 'runningInConsole') && $this->app->runningInConsole()) {
+            $this->commands([MakeScreenCommand::class]);
+        }
     }
 
     private function loadFirstlightTranslations(): void

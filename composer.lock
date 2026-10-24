@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "81e434791e1ff7623e2fd3de64b4454f",
+    "content-hash": "d990d4a2539324b9574b551f64d3cb6b",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -926,6 +926,60 @@
             "time": "2026-10-17T23:57:19+00:00"
         },
         {
+            "name": "illuminate/bus",
+            "version": "v13.37.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/bus.git",
+                "reference": "3830ae9b5238c14f37a32bb0c57c71a296172121"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/bus/zipball/3830ae9b5238c14f37a32bb0c57c71a296172121",
+                "reference": "3830ae9b5238c14f37a32bb0c57c71a296172121",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/collections": "^13.0",
+                "illuminate/conditionable": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/pipeline": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "suggest": {
+                "illuminate/queue": "Required to use closures when chaining jobs (^13.0)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "13.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Bus\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The Illuminate Bus package.",
+            "homepage": "https://laravel.com",
+            "support": {
+                "issues": "https://github.com/laravel/framework/issues",
+                "source": "https://github.com/laravel/framework"
+            },
+            "time": "2026-10-06T02:42:44+00:00"
+        },
+        {
             "name": "illuminate/collections",
             "version": "v13.37.0",
             "source": {
@@ -1030,6 +1084,73 @@
                 "source": "https://github.com/laravel/framework"
             },
             "time": "2026-10-06T02:42:44+00:00"
+        },
+        {
+            "name": "illuminate/console",
+            "version": "v13.38.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/console.git",
+                "reference": "c09de725a41256ad90f970db9efad798f0beb9e2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/console/zipball/c09de725a41256ad90f970db9efad798f0beb9e2",
+                "reference": "c09de725a41256ad90f970db9efad798f0beb9e2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "illuminate/collections": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/macroable": "^13.0",
+                "illuminate/reflection": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "laravel/prompts": "^0.3.11",
+                "nunomaduro/termwind": "^2.0",
+                "php": "^8.3",
+                "symfony/console": "^7.4.0 || ^8.0.0",
+                "symfony/polyfill-php84": "^1.37",
+                "symfony/process": "^7.4.5 || ^8.0.5"
+            },
+            "suggest": {
+                "dragonmantank/cron-expression": "Required to use scheduler (^3.3.2).",
+                "ext-pcntl": "Required to use signal trapping.",
+                "guzzlehttp/guzzle": "Required to use the ping methods on schedules (^7.8 || ^8.0).",
+                "illuminate/bus": "Required to use the scheduled job dispatcher (^13.0).",
+                "illuminate/container": "Required to use the scheduler (^13.0).",
+                "illuminate/filesystem": "Required to use the generator command (^13.0).",
+                "illuminate/queue": "Required to use closures for scheduled jobs (^13.0)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "13.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Console\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The Illuminate Console package.",
+            "homepage": "https://laravel.com",
+            "support": {
+                "issues": "https://github.com/laravel/framework/issues",
+                "source": "https://github.com/laravel/framework"
+            },
+            "time": "2026-10-18T14:47:00+00:00"
         },
         {
             "name": "illuminate/container",
@@ -1142,6 +1263,62 @@
             "time": "2026-10-08T22:29:36+00:00"
         },
         {
+            "name": "illuminate/events",
+            "version": "v13.37.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/events.git",
+                "reference": "0e75089a8e522982953f23673b5fd8c3dd24e505"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/events/zipball/0e75089a8e522982953f23673b5fd8c3dd24e505",
+                "reference": "0e75089a8e522982953f23673b5fd8c3dd24e505",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/bus": "^13.0",
+                "illuminate/collections": "^13.0",
+                "illuminate/container": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/macroable": "^13.0",
+                "illuminate/reflection": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "13.0.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "functions.php"
+                ],
+                "psr-4": {
+                    "Illuminate\\Events\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The Illuminate Events package.",
+            "homepage": "https://laravel.com",
+            "support": {
+                "issues": "https://github.com/laravel/framework/issues",
+                "source": "https://github.com/laravel/framework"
+            },
+            "time": "2026-10-15T21:32:04+00:00"
+        },
+        {
             "name": "illuminate/filesystem",
             "version": "v13.37.0",
             "source": {
@@ -1249,6 +1426,59 @@
                 }
             ],
             "description": "The Illuminate Macroable package.",
+            "homepage": "https://laravel.com",
+            "support": {
+                "issues": "https://github.com/laravel/framework/issues",
+                "source": "https://github.com/laravel/framework"
+            },
+            "time": "2026-10-06T02:42:44+00:00"
+        },
+        {
+            "name": "illuminate/pipeline",
+            "version": "v13.37.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/pipeline.git",
+                "reference": "1ec578fb5656727b8d7d967a7fb44041b196f591"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/pipeline/zipball/1ec578fb5656727b8d7d967a7fb44041b196f591",
+                "reference": "1ec578fb5656727b8d7d967a7fb44041b196f591",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/conditionable": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/macroable": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "suggest": {
+                "illuminate/database": "Required to use database transactions (^13.0)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "13.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Pipeline\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The Illuminate Pipeline package.",
             "homepage": "https://laravel.com",
             "support": {
                 "issues": "https://github.com/laravel/framework/issues",
@@ -1500,6 +1730,62 @@
                 "source": "https://github.com/laravel/framework"
             },
             "time": "2026-10-15T14:33:27+00:00"
+        },
+        {
+            "name": "illuminate/view",
+            "version": "v13.37.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/view.git",
+                "reference": "91e08653f191bd08c85d53de0fd4059ea1a547c9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/view/zipball/91e08653f191bd08c85d53de0fd4059ea1a547c9",
+                "reference": "91e08653f191bd08c85d53de0fd4059ea1a547c9",
+                "shasum": ""
+            },
+            "require": {
+                "ext-tokenizer": "*",
+                "illuminate/collections": "^13.0",
+                "illuminate/conditionable": "^13.0",
+                "illuminate/container": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/events": "^13.0",
+                "illuminate/filesystem": "^13.0",
+                "illuminate/macroable": "^13.0",
+                "illuminate/reflection": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "13.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\View\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The Illuminate View package.",
+            "homepage": "https://laravel.com",
+            "support": {
+                "issues": "https://github.com/laravel/framework/issues",
+                "source": "https://github.com/laravel/framework"
+            },
+            "time": "2026-10-14T15:44:24+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -1883,6 +2169,93 @@
                 }
             ],
             "time": "2026-10-02T07:26:52+00:00"
+        },
+        {
+            "name": "nunomaduro/termwind",
+            "version": "v2.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nunomaduro/termwind.git",
+                "reference": "712a31b768f5daea284c2169a7d227031001b9a8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nunomaduro/termwind/zipball/712a31b768f5daea284c2169a7d227031001b9a8",
+                "reference": "712a31b768f5daea284c2169a7d227031001b9a8",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^8.2",
+                "symfony/console": "^7.4.4 || ^8.0.4"
+            },
+            "require-dev": {
+                "illuminate/console": "^11.47.0",
+                "laravel/pint": "^1.27.1",
+                "mockery/mockery": "^1.6.12",
+                "pestphp/pest": "^2.36.0 || ^3.8.4 || ^4.3.2",
+                "phpstan/phpstan": "^1.12.32",
+                "phpstan/phpstan-strict-rules": "^1.6.2",
+                "symfony/var-dumper": "^7.3.5 || ^8.0.4",
+                "thecodingmachine/phpstan-strict-rules": "^1.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Termwind\\Laravel\\TermwindServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Functions.php"
+                ],
+                "psr-4": {
+                    "Termwind\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "It's like Tailwind CSS, but for the console.",
+            "keywords": [
+                "cli",
+                "console",
+                "css",
+                "package",
+                "php",
+                "style"
+            ],
+            "support": {
+                "issues": "https://github.com/nunomaduro/termwind/issues",
+                "source": "https://github.com/nunomaduro/termwind/tree/v2.4.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/paypalme/enunomaduro",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/xiCO2k",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-16T23:10:27+00:00"
         },
         {
             "name": "psr/clock",
@@ -5082,116 +5455,6 @@
             "time": "2026-08-24T17:13:02+00:00"
         },
         {
-            "name": "illuminate/bus",
-            "version": "v13.37.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/illuminate/bus.git",
-                "reference": "3830ae9b5238c14f37a32bb0c57c71a296172121"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/bus/zipball/3830ae9b5238c14f37a32bb0c57c71a296172121",
-                "reference": "3830ae9b5238c14f37a32bb0c57c71a296172121",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/collections": "^13.0",
-                "illuminate/conditionable": "^13.0",
-                "illuminate/contracts": "^13.0",
-                "illuminate/pipeline": "^13.0",
-                "illuminate/support": "^13.0",
-                "php": "^8.3"
-            },
-            "suggest": {
-                "illuminate/queue": "Required to use closures when chaining jobs (^13.0)."
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "13.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Illuminate\\Bus\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylor@laravel.com"
-                }
-            ],
-            "description": "The Illuminate Bus package.",
-            "homepage": "https://laravel.com",
-            "support": {
-                "issues": "https://github.com/laravel/framework/issues",
-                "source": "https://github.com/laravel/framework"
-            },
-            "time": "2026-10-06T02:42:44+00:00"
-        },
-        {
-            "name": "illuminate/events",
-            "version": "v13.37.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/illuminate/events.git",
-                "reference": "0e75089a8e522982953f23673b5fd8c3dd24e505"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/events/zipball/0e75089a8e522982953f23673b5fd8c3dd24e505",
-                "reference": "0e75089a8e522982953f23673b5fd8c3dd24e505",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/bus": "^13.0",
-                "illuminate/collections": "^13.0",
-                "illuminate/container": "^13.0",
-                "illuminate/contracts": "^13.0",
-                "illuminate/macroable": "^13.0",
-                "illuminate/reflection": "^13.0",
-                "illuminate/support": "^13.0",
-                "php": "^8.3"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "13.0.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "functions.php"
-                ],
-                "psr-4": {
-                    "Illuminate\\Events\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylor@laravel.com"
-                }
-            ],
-            "description": "The Illuminate Events package.",
-            "homepage": "https://laravel.com",
-            "support": {
-                "issues": "https://github.com/laravel/framework/issues",
-                "source": "https://github.com/laravel/framework"
-            },
-            "time": "2026-10-15T21:32:04+00:00"
-        },
-        {
             "name": "illuminate/http",
             "version": "v13.37.0",
             "source": {
@@ -5258,28 +5521,25 @@
             "time": "2026-10-15T14:24:56+00:00"
         },
         {
-            "name": "illuminate/pipeline",
-            "version": "v13.37.0",
+            "name": "illuminate/pagination",
+            "version": "v13.38.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/illuminate/pipeline.git",
-                "reference": "1ec578fb5656727b8d7d967a7fb44041b196f591"
+                "url": "https://github.com/illuminate/pagination.git",
+                "reference": "70b0a7bd9eee7362782714ed3f435a3f03a84289"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/pipeline/zipball/1ec578fb5656727b8d7d967a7fb44041b196f591",
-                "reference": "1ec578fb5656727b8d7d967a7fb44041b196f591",
+                "url": "https://api.github.com/repos/illuminate/pagination/zipball/70b0a7bd9eee7362782714ed3f435a3f03a84289",
+                "reference": "70b0a7bd9eee7362782714ed3f435a3f03a84289",
                 "shasum": ""
             },
             "require": {
-                "illuminate/conditionable": "^13.0",
+                "ext-filter": "*",
+                "illuminate/collections": "^13.0",
                 "illuminate/contracts": "^13.0",
-                "illuminate/macroable": "^13.0",
                 "illuminate/support": "^13.0",
                 "php": "^8.3"
-            },
-            "suggest": {
-                "illuminate/database": "Required to use database transactions (^13.0)."
             },
             "type": "library",
             "extra": {
@@ -5289,7 +5549,7 @@
             },
             "autoload": {
                 "psr-4": {
-                    "Illuminate\\Pipeline\\": ""
+                    "Illuminate\\Pagination\\": ""
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -5302,7 +5562,7 @@
                     "email": "taylor@laravel.com"
                 }
             ],
-            "description": "The Illuminate Pipeline package.",
+            "description": "The Illuminate Pagination package.",
             "homepage": "https://laravel.com",
             "support": {
                 "issues": "https://github.com/laravel/framework/issues",
@@ -5366,62 +5626,6 @@
                 "source": "https://github.com/laravel/framework"
             },
             "time": "2026-10-06T02:42:44+00:00"
-        },
-        {
-            "name": "illuminate/view",
-            "version": "v13.37.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/illuminate/view.git",
-                "reference": "91e08653f191bd08c85d53de0fd4059ea1a547c9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/view/zipball/91e08653f191bd08c85d53de0fd4059ea1a547c9",
-                "reference": "91e08653f191bd08c85d53de0fd4059ea1a547c9",
-                "shasum": ""
-            },
-            "require": {
-                "ext-tokenizer": "*",
-                "illuminate/collections": "^13.0",
-                "illuminate/conditionable": "^13.0",
-                "illuminate/container": "^13.0",
-                "illuminate/contracts": "^13.0",
-                "illuminate/events": "^13.0",
-                "illuminate/filesystem": "^13.0",
-                "illuminate/macroable": "^13.0",
-                "illuminate/reflection": "^13.0",
-                "illuminate/support": "^13.0",
-                "php": "^8.3"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "13.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Illuminate\\View\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylor@laravel.com"
-                }
-            ],
-            "description": "The Illuminate View package.",
-            "homepage": "https://laravel.com",
-            "support": {
-                "issues": "https://github.com/laravel/framework/issues",
-                "source": "https://github.com/laravel/framework"
-            },
-            "time": "2026-10-14T15:44:24+00:00"
         },
         {
             "name": "jean85/pretty-package-versions",
@@ -5883,93 +6087,6 @@
                 }
             ],
             "time": "2026-07-15T19:09:14+00:00"
-        },
-        {
-            "name": "nunomaduro/termwind",
-            "version": "v2.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/nunomaduro/termwind.git",
-                "reference": "712a31b768f5daea284c2169a7d227031001b9a8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/nunomaduro/termwind/zipball/712a31b768f5daea284c2169a7d227031001b9a8",
-                "reference": "712a31b768f5daea284c2169a7d227031001b9a8",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "php": "^8.2",
-                "symfony/console": "^7.4.4 || ^8.0.4"
-            },
-            "require-dev": {
-                "illuminate/console": "^11.47.0",
-                "laravel/pint": "^1.27.1",
-                "mockery/mockery": "^1.6.12",
-                "pestphp/pest": "^2.36.0 || ^3.8.4 || ^4.3.2",
-                "phpstan/phpstan": "^1.12.32",
-                "phpstan/phpstan-strict-rules": "^1.6.2",
-                "symfony/var-dumper": "^7.3.5 || ^8.0.4",
-                "thecodingmachine/phpstan-strict-rules": "^1.0.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Termwind\\Laravel\\TermwindServiceProvider"
-                    ]
-                },
-                "branch-alias": {
-                    "dev-2.x": "2.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/Functions.php"
-                ],
-                "psr-4": {
-                    "Termwind\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nuno Maduro",
-                    "email": "enunomaduro@gmail.com"
-                }
-            ],
-            "description": "It's like Tailwind CSS, but for the console.",
-            "keywords": [
-                "cli",
-                "console",
-                "css",
-                "package",
-                "php",
-                "style"
-            ],
-            "support": {
-                "issues": "https://github.com/nunomaduro/termwind/issues",
-                "source": "https://github.com/nunomaduro/termwind/tree/v2.4.0"
-            },
-            "funding": [
-                {
-                    "url": "https://www.paypal.com/paypalme/enunomaduro",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/nunomaduro",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/xiCO2k",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-02-16T23:10:27+00:00"
         },
         {
             "name": "pestphp/pest",
