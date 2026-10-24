@@ -23,6 +23,8 @@ class NativeComponent extends EdgeNativeComponent
     // the previous frame's revision within the same PHP runtime.
     private static int $responseRevision = 0;
 
+    private bool $leavingScreen = false;
+
     /**
      * True when nothing is below this screen on PHP's navigation stack.
      * Layouts use it to decide whether the native bar shows a back button.
@@ -43,10 +45,28 @@ class NativeComponent extends EdgeNativeComponent
             : $this->wrapWithChrome($content);
     }
 
+    /**
+     * back() republishes this screen once before it is popped. Keeping that
+     * frame's revision leaves an unchanged screen byte-identical, so NativePHP
+     * drops it: a changed frame reaching iOS mid-pop re-pushes the screen the
+     * user just left (a second back transition over a blank page).
+     */
+    public function back(): static
+    {
+        $this->leavingScreen = true;
+
+        try {
+            return parent::back();
+        } finally {
+            $this->leavingScreen = false;
+        }
+    }
+
     protected function wrapWithChrome(Element $content): Element
     {
         return parent::wrapWithChrome($content)->setProp(
-            'firstlight_response_revision', ++self::$responseRevision,
+            'firstlight_response_revision',
+            $this->leavingScreen ? self::$responseRevision : ++self::$responseRevision,
         );
     }
 

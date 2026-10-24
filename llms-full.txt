@@ -6112,6 +6112,9 @@ The base stamps the **final chrome-wrapped root** with the integer prop
 monotonically increasing across screen instances within the PHP process, not
 component state to bind, persist, or set yourself. An otherwise unchanged full
 response therefore differs from the previous frame and reaches the renderers.
+The one exception is the final frame `back()` publishes before popping the
+screen: it keeps the current revision, so an unchanged screen is not republished
+mid-pop. On iOS such a frame would re-push the screen being left.
 
 This deliberately bypasses whole-frame equality suppression for each completed
 screen response. It trades that deduplication saving for reliable reconciliation

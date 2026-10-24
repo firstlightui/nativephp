@@ -181,6 +181,18 @@ it('does not reuse a revision when a screen is remounted', function () {
         ->and($second['props']['firstlight_response_revision'])->toBeGreaterThan($first['props']['firstlight_response_revision']);
 });
 
+it('republishes an unchanged screen identically when leaving it with back', function () {
+    $screen = Native::test(ResponseBladeScreen::class);
+    $before = $screen->tree();
+    $screen->toggle('rejected', true);
+    $rejected = $screen->tree();
+    $leaving = $screen->pressBack()->assertWentBack()->tree();
+
+    unset($rejected['_hash'], $leaving['_hash']);
+    expect($rejected['props']['firstlight_response_revision'])->toBe($before['props']['firstlight_response_revision'] + 1)
+        ->and($leaving)->toBe($rejected);
+});
+
 it('leaves detached partials unstamped', function () {
     $screen = Native::test(ResponseBladeScreen::class);
     $fragment = $screen->instance()->fragment()->toArray(new CallbackRegistry);
