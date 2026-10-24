@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.0.0-RC4 - 2026-10-24
 
 ### Added
 
@@ -27,6 +27,9 @@ All notable changes to this project will be documented in this file.
 
 - TalkBack focus on the first invalid field was observed on the Android emulator. VoiceOver cannot run in the iOS Simulator, and spoken output was not captured on either platform; those parts are covered by PHP, XCTest and Robolectric tests. Physical-device VoiceOver and TalkBack checks remain outstanding.
 - The error summary lists messages in rule order, not screen order; declare rules in the order fields appear.
+- Android does not yet publish a focused field's pending `.blur` or `.debounce` change before a Button press; that needs the hook from NativePHP/mobile-air#565, which is merged but not released. Use plain `native:model` or `.live` for Button-submitted forms that must work on both platforms. On iOS, Icon Button and List Item presses also do not flush the focused field.
+- The app recipes were verified on an iOS 27 simulator and an API 37 Android emulator, not on physical devices, in dark mode, or with VoiceOver or TalkBack.
+- The RC3 qualification limits still apply: physical-device, spoken VoiceOver/TalkBack traversal, soak/performance and wider-application qualification remain outstanding.
 
 ## 1.0.0-RC3 - 2026-10-23
 
