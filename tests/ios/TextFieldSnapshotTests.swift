@@ -8,31 +8,24 @@ import XCTest
 @MainActor
 final class TextFieldSnapshotTests: XCTestCase {
     func testLightDarkAndAccessibilitySnapshots() {
-        let recordMode: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeController(style: .light, size: .large, error: ""),
             as: .image(on: .iPhoneSe),
-            named: "light-clearable",
-            record: recordMode
+            named: "light-clearable"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeController(style: .dark, size: .large, error: "Enter a valid email"),
             as: .image(on: .iPhoneSe),
-            named: "dark-error",
-            record: recordMode
+            named: "dark-error"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeController(
                 style: .light,
                 size: .accessibilityExtraExtraExtraLarge,
                 error: ""
             ),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: recordMode
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 

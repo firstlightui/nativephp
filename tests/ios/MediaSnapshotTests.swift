@@ -7,10 +7,6 @@ import XCTest
 
 @MainActor
 final class MediaSnapshotTests: XCTestCase {
-    private let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-        "FIRSTLIGHT_RECORD_SNAPSHOTS"
-    ] == "1" ? .all : .never
-
     func testConfigurationDecodesImageFieldContract() {
         let configuration = MediaRendererConfiguration(node: makeNode(
             mode: "image",
@@ -148,7 +144,7 @@ final class MediaSnapshotTests: XCTestCase {
             onZoomOut: {}
         )
 
-        assertSnapshot(of: controller(view), as: .image(on: .iPhoneSe), record: record)
+        assertFirstlightSnapshot(of: controller(view), as: .image(on: .iPhoneSe))
     }
 
     func testEmptyFieldSnapshot() {
@@ -161,7 +157,7 @@ final class MediaSnapshotTests: XCTestCase {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
 
-        assertSnapshot(of: controller(view), as: .image(on: .iPhoneSe), record: record)
+        assertFirstlightSnapshot(of: controller(view), as: .image(on: .iPhoneSe))
     }
 
     func testValueErrorDisabledSnapshots() {
@@ -187,8 +183,8 @@ final class MediaSnapshotTests: XCTestCase {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
 
-        assertSnapshot(of: controller(valued), as: .image(on: .iPhoneSe), named: "value-error", record: record)
-        assertSnapshot(of: controller(disabled), as: .image(on: .iPhoneSe), named: "disabled", record: record)
+        assertFirstlightSnapshot(of: controller(valued), as: .image(on: .iPhoneSe), named: "value-error")
+        assertFirstlightSnapshot(of: controller(disabled), as: .image(on: .iPhoneSe), named: "disabled")
     }
 
     private func controller<Content: View>(_ view: Content) -> UIViewController {

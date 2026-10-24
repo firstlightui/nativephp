@@ -140,27 +140,20 @@ final class TabsRendererContractTests: XCTestCase {
 @MainActor
 final class TabsControlSnapshotTests: XCTestCase {
     func testLightDarkAndAccessibilitySnapshots() {
-        let recordMode: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .light, contentSize: .large),
             as: .image(on: .iPhoneSe),
-            named: "light",
-            record: recordMode
+            named: "light"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .dark, contentSize: .large),
             as: .image(on: .iPhoneSe),
-            named: "dark",
-            record: recordMode
+            named: "dark"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .light, contentSize: .accessibilityExtraExtraExtraLarge),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: recordMode
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 

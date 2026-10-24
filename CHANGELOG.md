@@ -4,14 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- iOS XCTest: snapshot references are now kept per iOS major version. iOS 26 keeps the existing `tests/ios/__Snapshots__` set unchanged, and a new `tests/ios/__Snapshots__iOS27` set was recorded on an iPhone 17 Pro / iOS 27.0 simulator. The suite passes on both runtimes. Any other runtime fails with a message to record a set. `TEST_RUNNER_FIRSTLIGHT_RECORD_SNAPSHOTS=1` records only the running runtime's set.
+
 ### Fixed
 
 - iOS XCTest: rendered-accessibility tests for List Item context-menu actions and Switch semantics now enable system accessibility themselves, so they no longer see an empty accessibility tree on simulators where accessibility was never switched on. The Feedback Center hit-target snapshot pins dark appearance. Assertions and reference images are unchanged.
 
 ### Known limitations
 
-- Correction to RC4: not all 62 iOS failures predated RC4. On the reference iPhone 17 Pro / iOS 26.5 simulator the suite had 4 failures, all environmental and now fixed; it passes with 0 failures. The other 59 are pixel-level runtime differences on iOS 27.0, where snapshot references have not been recorded.
-- Tabs snapshot references do not capture the selected-segment indicator on iOS 26.5.
+- Correction to RC4: not all 62 iOS failures predated RC4. On the reference iPhone 17 Pro / iOS 26.5 simulator the suite had 4 failures, all environmental and now fixed; it passes with 0 failures. The other 59 are pixel-level runtime differences on iOS 27.0, where snapshot references had not been recorded. The iOS 27 set under Changed resolves them.
+- Tabs snapshot references do not capture the selected-segment indicator on iOS 26.5. The iOS 27 references do.
+- The iOS 27 Media crop-sheet reference does not show the "Crop" navigation title, which the iOS 26.5 reference draws in white. A host-app capture on iOS 27 has not yet confirmed whether the title is legible on device.
 
 ## 1.0.0-RC4 - 2026-10-24
 

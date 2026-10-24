@@ -88,10 +88,6 @@ final class ActivityIndicatorSnapshotTests: XCTestCase {
     }
 
     func testLightAndDarkSnapshotsContainEverySemanticSize() {
-        let record: SnapshotTestingConfiguration.Record = ProcessInfo.processInfo.environment[
-            "FIRSTLIGHT_RECORD_SNAPSHOTS"
-        ] == "1" ? .all : .never
-
         for style: UIUserInterfaceStyle in [.light, .dark] {
             let view = HStack(spacing: 32) {
                 ForEach(ActivityIndicatorSize.allCases, id: \.self) { size in
@@ -109,11 +105,10 @@ final class ActivityIndicatorSnapshotTests: XCTestCase {
             let controller = UIHostingController(rootView: view)
             controller.overrideUserInterfaceStyle = style
 
-            assertSnapshot(
+            assertFirstlightSnapshot(
                 of: controller,
                 as: .image(size: CGSize(width: 320, height: 140)),
-                named: style == .light ? "light" : "dark",
-                record: record
+                named: style == .light ? "light" : "dark"
             )
         }
     }

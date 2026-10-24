@@ -142,28 +142,23 @@ final class CheckboxSnapshotTests: XCTestCase {
             "Checkbox snapshots require the controller-owned capture gate."
         )
 
-        let record: SnapshotTestingConfiguration.Record = shouldRecord ? .all : .never
-
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .light, contentSize: .large),
             as: .image(on: .iPhoneSe),
-            named: "light",
-            record: record
+            named: "light"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(style: .dark, contentSize: .large),
             as: .image(on: .iPhoneSe),
-            named: "dark",
-            record: record
+            named: "dark"
         )
-        assertSnapshot(
+        assertFirstlightSnapshot(
             of: makeViewController(
                 style: .light,
                 contentSize: .accessibilityExtraExtraExtraLarge
             ),
             as: .image(on: .iPhoneSe),
-            named: "accessibility-extra-extra-extra-large",
-            record: record
+            named: "accessibility-extra-extra-extra-large"
         )
     }
 
