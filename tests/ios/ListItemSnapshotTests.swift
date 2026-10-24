@@ -133,6 +133,7 @@ final class ListItemSnapshotTests: XCTestCase {
     }
 
     private func accessibilityCustomActionNames(for node: NativeUINode) -> [String] {
+        AccessibilityRuntime.enable()
         let host = UIHostingController(rootView: FirstlightListItemControl(
             configuration: ListItemRendererConfiguration(node: node),
             tokens: .listItemTest,

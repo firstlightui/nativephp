@@ -174,6 +174,8 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
         .padding(12)
         .background(Color(uiColor: .systemBackground))
         let host = UIHostingController(rootView: labels)
+        // Pin the reference appearance so the simulator's system setting cannot change it.
+        host.overrideUserInterfaceStyle = .dark
 
         assertSnapshot(
             of: host,
