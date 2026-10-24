@@ -26,8 +26,12 @@ trait ValidatesFields
     /** Keys whose messages changed during the current interaction; null outside one. */
     private ?array $failedValidationKeys = null;
 
-    /** Published once with the next screen frame, then cleared. */
-    private ?ValidationAlert $pendingValidationAlert = null;
+    /**
+     * The last interaction's alert. Every render until the next interaction
+     * republishes it (NativePHP may render a frame more than once); native
+     * renderers act once per revision.
+     */
+    private ?ValidationAlert $validationAlert = null;
 
     /**
      * @param  array<string, mixed>|class-string|null  $rules
@@ -114,6 +118,10 @@ trait ValidatesFields
         $outer = $this->failedValidationKeys;
         $this->failedValidationKeys = [];
 
+        if ($outer === null) {
+            $this->validationAlert = null;
+        }
+
         try {
             parent::dispatchUiEvent($event);
         } catch (ValidationException $exception) {
@@ -123,7 +131,12 @@ trait ValidatesFields
             $this->failedValidationKeys = $outer;
         }
 
-        $this->queueValidationAlert($failed, $event);
+        if ($outer === null) {
+            $this->queueValidationAlert($failed, $event);
+        } else {
+            // A nested dispatch (for example to a child owner) reports to the outermost one.
+            $this->recordFailedValidation($failed);
+        }
     }
 
     /**
@@ -146,7 +159,7 @@ trait ValidatesFields
 
         $submission = in_array((int) ($event['type'] ?? -1), [0, 4], true);
 
-        $this->pendingValidationAlert = ValidationAlert::next(
+        $this->validationAlert = ValidationAlert::next(
             ErrorSummary::announcement($bag, $submission ? null : $failedKeys),
             movesFocus: $submission,
             keys: $submission ? null : $failedKeys,
@@ -314,8 +327,8 @@ trait ValidatesFields
             return FieldErrorBag::using($this->getErrorBag(), $callback);
         }
 
-        $alert = $this->pendingValidationAlert;
-        $this->pendingValidationAlert = null;
+        // Each render claims the announcement and focus afresh.
+        $alert = $this->validationAlert === null ? null : clone $this->validationAlert;
 
         return FieldErrorBag::using($this->getErrorBag(), $callback, $alert);
     }

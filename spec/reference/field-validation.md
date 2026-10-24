@@ -115,14 +115,14 @@ Both default to the `danger` tone, reject an authored `message`, and are mutuall
 
 ## Screen-reader alerts
 
-`ValidatesFields` records which keys an interaction added messages for: `validate()` failures (every failed key), `validateOnly()` failures (that key), and `addError()`. When `dispatchUiEvent()` ends with at least one recorded key that is still in the bag, it queues one `ValidationAlert` for the next `view()` / `fromView()` publication. Partials never consume it. A passing interaction queues nothing.
+`ValidatesFields` records which keys an interaction added messages for: `validate()` failures (every failed key), `validateOnly()` failures (that key), and `addError()`. When the outermost `dispatchUiEvent()` ends with at least one recorded key that is still in the bag, it stores one `ValidationAlert`. Every `view()` / `fromView()` render until the next interaction republishes it, because NativePHP may render one publication more than once; each render claims the announcement and focus afresh from a copy. The next interaction clears it before dispatching, so a passing interaction publishes none. Partials never carry it.
 
 | Event type | Meaning | Announcement | Focus |
 | --- | --- | --- | --- |
 | `PRESS` (0), `SUBMIT` (4) | form submission | `ErrorSummary::announcement()` of the whole bag | first invalid field |
 | any other (text, toggle, select, slider, …) | property sync, including `updated{Property}` | messages for the keys just failed only | none |
 
-During that publication the first error-bound element in render order that is concerned by the alert (a field whose key is in the alert, or a summary/`error-for` Callout) receives `validation_announcement`; the first error-bound field receives `validation_focus: true` when focus moves. Both carry the same increasing integer `validation_alert` revision. The alert is published once; the next frame keeps the `error` props but drops the alert props. A repeated identical failure gets a new revision.
+During that publication the first error-bound element in render order that is concerned by the alert (a field whose key is in the alert, or a summary/`error-for` Callout) receives `validation_announcement`; the first error-bound field receives `validation_focus: true` when focus moves. Both carry the same increasing integer `validation_alert` revision. A repeated identical failure gets a new revision. An element concerned by the alert may be an error-bound Callout, which then carries the announcement but never focus.
 
 Renderers act on each revision once, including on the frame that creates the node, and never on republication of the same revision:
 

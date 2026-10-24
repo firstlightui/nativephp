@@ -76,7 +76,8 @@ field:
 | `error-summary` | every key's first message, in bag order; a `firstlight::validation.summary` heading when there are two or more | the bag is empty |
 
 Both default to `danger`, reject `message`, and are mutually exclusive. They
-never receive field focus.
+never receive field focus. The summary follows bag order, which is the order
+of your rules, so list rules in screen order.
 
 ## Announcements and focus
 
@@ -87,7 +88,8 @@ never receive field focus.
 | an interaction that adds no message | nothing | unchanged |
 
 "Adds messages" means a failed `validate()` or `validateOnly()`, or
-`addError()`. The alert is published with the next frame only. iOS moves
+`addError()`. Frames republished before the next interaction carry the same
+alert, and the platforms act on it once. iOS moves
 VoiceOver focus and posts an announcement. Android acts while TalkBack is on:
 Text Field, Text Area, and Code Editor take input focus, and every field
 announces.

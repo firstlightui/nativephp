@@ -283,7 +283,8 @@ To summarise every message above a long form, use `error-summary`:
 <firstlight:callout error-summary />
 ```
 
-The summary lists each key's first message in bag order. One message is shown
+The summary lists each key's first message in bag order, which follows your
+rules, so declare rules in the order the fields appear. One message is shown
 alone; two or more get a heading such as `There are 3 errors.` and one message
 per line.
 

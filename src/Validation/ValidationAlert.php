@@ -5,10 +5,10 @@ namespace FirstlightUI\Validation;
 use Native\Mobile\Edge\Element;
 
 /**
- * One screen-reader alert for the frame published after a failed
- * interaction. The first error-bound element in render order carries the
- * announcement; the first invalid field carries the focus request. Each
- * alert is published once, and native renderers act once per revision.
+ * One screen-reader alert for the frames rendered after a failed
+ * interaction. In each render the first concerned error-bound element
+ * carries the announcement and the first invalid field carries the focus
+ * request. Native renderers act once per revision.
  */
 final class ValidationAlert
 {

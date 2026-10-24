@@ -349,11 +349,22 @@ it('announces every message and focuses the first invalid field in render order 
         ->and($email['props'])->not->toHaveKeys(['validation_alert', 'validation_focus', 'validation_announcement'])
         ->and($email['props']['error'])->toBe('The email field is required.');
 
-    // Published once: the next frame keeps the errors but drops the alert.
-    [$checkbox] = renderAlertFrame($screen, signupLeaves())['children'];
+    // NativePHP may render a frame more than once: every render until the
+    // next interaction carries the same revision, so natives act only once.
+    [$again] = renderAlertFrame($screen, signupLeaves())['children'];
 
-    expect($checkbox['props'])->not->toHaveKey('validation_alert')
-        ->and($checkbox['props']['error'])->toBe('The accepted must be accepted.');
+    expect($again['props'])->toMatchArray([
+        'validation_alert' => $checkbox['props']['validation_alert'],
+        'validation_focus' => true,
+    ]);
+
+    // The next interaction clears it even when it adds no message.
+    $screen->email = 'clinician@example.com';
+    $screen->dispatchEvent(['callback_id' => $screen->bootCallbacks()->register('checkEmail'), 'type' => 2]);
+    [$after] = renderAlertFrame($screen, signupLeaves())['children'];
+
+    expect($after['props'])->not->toHaveKey('validation_alert')
+        ->and($after['props']['error'])->toBe('The accepted must be accepted.');
 });
 
 it('lets a leading summary Callout carry the announcement while the first field takes focus', function () {
