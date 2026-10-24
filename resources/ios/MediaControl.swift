@@ -314,6 +314,7 @@ struct FirstlightMediaControl: View {
                         onPick()
                     }
                     .buttonStyle(.bordered)
+                    .tint(tokens.primary)
                     .disabled(!configuration.isInteractive)
                     .frame(minHeight: 44)
                     .firstlightValidationFocusTarget()
