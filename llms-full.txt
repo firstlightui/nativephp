@@ -3387,7 +3387,8 @@ One user outcome produces one callback. Programmatic closure produces none.
 After a user dismisses the dialog, copy-only publications do not reopen it; a
 later server transition from `false` to `true` presents a new decision.
 
-iOS uses SwiftUI `confirmationDialog`; Android uses Material 3 `AlertDialog`.
+iOS uses a UIKit action sheet (`UIAlertController`); Android uses Material 3
+`AlertDialog`.
 Their native controls own modal focus, action order, destructive expression,
 Dynamic Type or font scaling, dark appearance, contrast, reduced motion, and
 right-to-left behavior. Use specific action labels such as `Delete` rather
