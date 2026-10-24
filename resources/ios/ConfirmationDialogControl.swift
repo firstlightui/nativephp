@@ -13,7 +13,8 @@ enum FirstlightConfirmationDialogTone: String {
 /// Presents the decision as a UIKit action sheet. SwiftUI `confirmationDialog`
 /// anchors to the view it modifies on iOS 26; this element has no visible
 /// trigger, so the sheet would hang off a zero-size placeholder and hide its
-/// cancel action. Without a source view, iPhone presents from the bottom edge.
+/// cancel action. Without a source view, iPhone presents from the bottom edge;
+/// iPad (regular width) requires an anchor, so it is centred without an arrow.
 struct ConfirmationDialogControl: View {
     @Binding var state: ConfirmationDialogRendererState
     let onConfirm: () -> Void
@@ -137,7 +138,10 @@ private struct ConfirmationActionSheetPresenter: UIViewControllerRepresentable {
                     self?.onDismiss()
                 }
             )
-            if let popover = sheet.popoverPresentationController {
+            // Only regular width needs (and must have) an anchor. On iPhone an anchor turns the
+            // iOS 26 action sheet into a popover that drops the cancel action.
+            if presenter.traitCollection.horizontalSizeClass == .regular,
+               let popover = sheet.popoverPresentationController {
                 popover.sourceView = presenter.view
                 popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
                 popover.permittedArrowDirections = []
