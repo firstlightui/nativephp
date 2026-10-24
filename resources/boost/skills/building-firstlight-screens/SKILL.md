@@ -11,10 +11,10 @@ Firstlight renders genuine SwiftUI and Jetpack Compose controls from one Blade v
 
 | The screen... | Start from |
 | --- | --- |
-| Is the app shell, or pushes a detail view | [List and detail flow](https://firstlightui.dev/how-to/build-a-list-detail-flow) |
-| Shows many records to find, open, or delete | [Searchable list](https://firstlightui.dev/how-to/build-a-searchable-list-screen) |
-| Validates several values and saves with a button | [Form screen](https://firstlightui.dev/how-to/build-a-form-screen) |
-| Changes preferences one at a time | [Settings screen](https://firstlightui.dev/how-to/build-a-settings-screen) |
+| Is the app shell, or pushes a detail view | [List and detail flow](https://firstlightui.dev/docs/how-to/build-a-list-detail-flow) |
+| Shows many records to find, open, or delete | [Searchable list](https://firstlightui.dev/docs/how-to/build-a-searchable-list-screen) |
+| Validates several values and saves with a button | [Form screen](https://firstlightui.dev/docs/how-to/build-a-form-screen) |
+| Changes preferences one at a time | [Settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen) |
 
 Copy the recipe, then change names, models and fields. Or scaffold with `php artisan make:firstlight-screen Name [--form] [--list] [--destroy] [--test]` and replace every `TODO`.
 
@@ -48,4 +48,4 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
 
 ## Theming
 
-Colours and fonts come from `config/native-ui.php` (`php artisan vendor:publish --tag=native-ui-config`). Set accessible `primary`/`on-primary`, `warning`/`on-warning` and other pairs for light and optionally dark. Use `bg-theme-*` and `text-theme-*` classes on surrounding `native:*` layout. See https://firstlightui.dev/getting-started/theming.
+Colours and fonts come from `config/native-ui.php` (`php artisan vendor:publish --tag=native-ui-config`). Set accessible `primary`/`on-primary`, `warning`/`on-warning` and other pairs for light and optionally dark. Use `bg-theme-*` and `text-theme-*` classes on surrounding `native:*` layout. See https://firstlightui.dev/docs/getting-started/theming.

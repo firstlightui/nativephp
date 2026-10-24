@@ -1,6 +1,6 @@
 ---
 title: Accessibility in Firstlight
-description: What VoiceOver, TalkBack, Dynamic Type, font scaling, contrast, motion, and right-to-left users get from Firstlight, what is tested, and what remains your app's job.
+description: What VoiceOver, TalkBack, Dynamic Type, font scaling, contrast, Reduce Motion, and right-to-left users get from Firstlight's real native controls, what is tested, what is not yet verified, and what remains your app's job.
 type: explanation
 audience: consumer
 sources:
@@ -24,19 +24,35 @@ sources:
   - tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/ListItemTest.kt
   - tests/android/src/test/kotlin/dev/firstlightui/plugins/firstlight_ui/ui/FeedbackCenterTest.kt
   - vendor/nativephp/mobile/src/Testing/TestableComponent.php
+  - CHANGELOG.md
 ---
 
 # Accessibility in Firstlight
 
-Every Firstlight control is a real SwiftUI or Jetpack Compose control, not a
-drawing that imitates one. That is the main reason Firstlight apps are
-accessible: VoiceOver, TalkBack, Dynamic Type, Android font scaling, dark
-appearance, Increased Contrast, Reduce Motion, and right-to-left layout reach
-each control the same way they reach the platform's own apps.
+Accessibility is a headline feature of Firstlight, and it starts with one
+decision: every control is a real SwiftUI or Jetpack Compose control, not a
+drawing that imitates one. VoiceOver, TalkBack, Dynamic Type, Android font
+scaling, dark appearance, Increased Contrast, Reduce Motion, and right-to-left
+layout reach each control the same way they reach the platform's own apps.
 
 Firstlight then adds the parts a native control alone does not decide: whether
 something has a name, how many focus stops a row has, how large a target is,
 and what a screen reader hears when a form fails.
+
+| Users who rely on | Get |
+| --- | --- |
+| VoiceOver and TalkBack | Required names on icon-only controls, development warnings for unnamed fields, one focus stop per row or field, and every swipe and context-menu action as a screen-reader action |
+| Spoken feedback on forms | Validation errors read aloud after a failed submit, with screen-reader focus on the first invalid field |
+| Larger text | Dynamic Type and Android font scaling, with labels that wrap instead of truncating |
+| Right-to-left languages | Mirrored native layout, with code kept left-to-right |
+| Reduce Motion | Platform motion settings, and Feedback that fades instead of moving on iOS |
+| Contrast and colour | Status named in words, and status colours below 4.5:1 corrected to black or white text |
+
+**Status.** Firstlight 1.0.0 is a release candidate. The behaviour on this page
+is covered by contract, XCTest, and Robolectric tests, and validation focus was
+observed with TalkBack on the Android emulator. Spoken VoiceOver and TalkBack
+output has not been checked on physical devices. See
+[Known gaps](#known-gaps).
 
 ## What you get from the platform
 
@@ -74,9 +90,14 @@ List Item rows, and Code Editor keys, are at least 44 points on iOS and 48 dp on
 Android.
 
 **Errors are spoken.** When a submit fails validation, VoiceOver and TalkBack
-read the errors and focus moves to the first invalid field. When a single
-field fails on blur, only that message is read and focus stays put. See
-[Validate fields](../how-to/validate-fields.md).
+read a summary of the errors once, for example "There are 2 errors. The name
+field is required. The email field is required.", and screen-reader focus
+moves to the first invalid field. On iOS the keyboard does not open. On
+Android, Text Field, Text Area, and Code Editor take input focus while TalkBack
+is on; other fields announce without moving focus. When a single field fails
+on blur, only that message is read and focus stays put. Form-level errors
+appear in a Callout with `error-for` or `error-summary`. See
+[Validate fields](../how-to/validate-fields.md#screen-reader-announcements).
 
 **Status is not colour alone.** Callout names its tone in the spoken text, for
 example "Warning: Your changes have not been submitted." Badge, Status Label,
@@ -89,7 +110,11 @@ fades instead of moving under Reduce Motion. On Android it uses the system's
 recommended accessibility timeout.
 
 **Text grows instead of shrinking.** Labels, rows, metrics, and messages wrap at
-large text sizes rather than truncating or shrinking. Code Editor keeps code
+large text sizes rather than truncating or shrinking. On iPhone the Date and
+Time picker sheets size to their content, so they grow with Dynamic Type.
+
+**Right-to-left layouts mirror.** Native layout mirrors automatically. The
+Android Stepper row mirrors with its label, and Code Editor keeps code
 left-to-right inside right-to-left layouts.
 
 Each component's reference page has an Accessibility section with its exact
@@ -111,11 +136,19 @@ behaviour.
 Documentation screenshots for every component are captured on both platforms in
 light and dark appearance.
 
+## Known gaps
+
 These are known gaps, stated plainly:
 
 - Spoken VoiceOver and TalkBack passes on physical devices have not been
   completed. VoiceOver does not run in the iOS Simulator, so iOS spoken output
-  is covered by tests of the accessibility tree, not by listening.
+  is covered by tests of the accessibility tree, not by listening. TalkBack
+  focus moving to the first invalid field was observed on the Android
+  emulator; spoken output was not captured on either platform.
+- The error summary reads messages in rule order, not screen order. Declare
+  rules in the order the fields appear.
+- The app recipes were checked on an iOS simulator and an Android emulator,
+  not with VoiceOver or TalkBack.
 - Right-to-left layout is automated for only the components listed above.
   Other controls rely on native layout, which mirrors automatically.
 - Text-scaling tests do not yet cover Activity Indicator, Badge, Bottom Sheet,

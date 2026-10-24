@@ -1,10 +1,34 @@
 # Firstlight UI
 
-Native controls for NativePHP, shaped for each platform. Firstlight exposes a shared EDGE API backed by genuine SwiftUI and Jetpack Compose controls, plus the Laravel contracts mobile screens need: validation, submission, authorization, pagination, and list deletion.
+The app-shell layer for NativePHP. `composer require firstlightui/nativephp` plus [Laravel Boost](https://laravel.com/docs/boost) gives you, or your coding agent, what a standard forms app needs: lists and detail, search, forms with Laravel validation, settings, sheets and dialogs, and feedback.
 
-[Documentation](https://firstlightui.dev) · [Components](https://firstlightui.dev/components) · [Source](https://github.com/firstlightui/nativephp) · [Email](mailto:team@firstlightui.dev)
+[Documentation](https://firstlightui.dev/docs) · [Recipes](docs/how-to/build-a-list-detail-flow.md) · [Components](https://firstlightui.dev/components) · [llms.txt](https://firstlightui.dev/llms.txt) · [Source](https://github.com/firstlightui/nativephp) · [Email](mailto:team@firstlightui.dev)
 
-> **Release candidate.** Firstlight is pending physical-device, soak/performance, and wider application qualification. It is not yet a production-readiness claim.
+> **Release candidate (`v1.0.0-RC6`).** Physical-device, spoken screen-reader, soak/performance, and wider application qualification are still outstanding. This is not yet a production-readiness claim.
+
+## What you get
+
+- **Genuine native controls.** Every control is SwiftUI on iOS and Jetpack Compose Material 3 on Android. Nothing is drawn to imitate a platform control. One Blade API becomes the right pattern on each platform: Tabs are a segmented control on iOS and Material 3 tabs on Android, and a Select becomes a searchable picker when its list is long.
+- **Laravel on native screens.** Validate with `$rules` or a Form Request, show each message in the field's native error slot, show form-level errors in a Callout, submit once, authorize with Gates and Policies, and paginate lists. Test screens with Pest and scaffold them with `make:firstlight-screen`.
+- **Accessibility from real controls.** VoiceOver and TalkBack labels and actions, spoken validation errors with focus on the first invalid field, Dynamic Type and font scaling, right-to-left layout, and Reduce Motion. See [Accessibility](#accessibility).
+- **Built for coding agents.** A Boost guideline and two skills, `firstlight-init` and `building-firstlight-screens`, steer agents to the recipes, and `llms.txt` and `llms-full.txt` carry the whole reference. See [Build with a coding agent](docs/getting-started/build-with-a-coding-agent.md).
+
+## What Firstlight is not
+
+- **Not navigation chrome.** Stacks, title bars, back navigation, and tab bars come from NativePHP's native chrome (`usesNativeChrome()`), and layout primitives come from NativePHP Mobile UI. Firstlight works inside them and does not replace them.
+- **Not a design system.** Controls take their colours and fonts from the NativePHP theme and keep each platform's own look.
+- **Not a catalogue of everything.** There are no charts, carousels, or custom-drawn controls. A control is added only when it has an equal native contract on iOS and Android.
+
+## Start with a recipe
+
+Each recipe is a complete screen. Each one runs unchanged in the [showcase app](https://github.com/firstlightui/showcase), whose Pest tests exercise it.
+
+| Recipe | What it builds |
+| --- | --- |
+| [List and detail flow](docs/how-to/build-a-list-detail-flow.md) | The app shell: native title bars and back navigation, a list, and a pushed detail screen |
+| [Searchable list](docs/how-to/build-a-searchable-list-screen.md) | Native search, a paginated List, pull-to-refresh, row navigation, and confirmed swipe deletion |
+| [Form screen](docs/how-to/build-a-form-screen.md) | A Form Request, native field errors, a form-level error, a loading Save button, and success Feedback |
+| [Settings screen](docs/how-to/build-a-settings-screen.md) | Grouped native sections with Switch and Select rows that save on change |
 
 ## Requirements
 
@@ -25,36 +49,54 @@ php artisan native:plugin:register
 php artisan native:install --force
 ```
 
+Then give your coding agent the Firstlight guideline and skills:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install
+```
+
 Run `php artisan native:install --force` again after every Firstlight update; renderer source is compiled into the host application.
 
 ## Example
 
-Screens extend `FirstlightUI\NativeComponent`:
+A form screen validates with a Form Request and saves once. The fields show their own errors:
 
 ```php
+use App\Http\Requests\StorePostRequest;
+use App\Models\Post;
 use FirstlightUI\NativeComponent;
 
-class ServerScreen extends NativeComponent
+class CreatePostScreen extends NativeComponent
 {
-    public ?string $tab = 'overview';
+    public string $title = '';
 
-    public array $tabs = [
-        'overview' => 'Overview',
-        'sites' => 'Sites',
-        'deploys' => 'Deployments',
-    ];
+    public string $body = '';
+
+    public function save(): void
+    {
+        $this->submit(
+            action: function (): void {
+                $this->validate(StorePostRequest::class);
+                Post::create(['title' => $this->title, 'body' => $this->body]);
+            },
+            successMessage: 'Post created',
+            validate: false,
+        );
+    }
 }
 ```
 
 ```blade
-<firstlight:tabs native:model="tab" :tabs="$tabs" label="Server sections" />
-
-@if ($tab === 'overview')
-    …
-@endif
+<firstlight:callout error-for="form" />
+<firstlight:text-field label="Title" native:model="title" required />
+<firstlight:text-area label="Body" native:model="body" required />
+<firstlight:button variant="primary" :loading="$submitting" @press="save">
+    Save post
+</firstlight:button>
 ```
 
-Selection is server-authoritative: a tap proposes a stable value, and the value PHP publishes decides what is shown. The same markup renders a native segmented control on iOS and Material 3 tabs on Android.
+On iOS each error appears under its field; on Android it is Material 3 supporting text in the error state. VoiceOver and TalkBack read the errors and move to the first invalid field. The [form recipe](docs/how-to/build-a-form-screen.md) has the complete screen.
 
 ## Components
 
@@ -68,17 +110,28 @@ Selection is server-authoritative: a tap proposes a stable value, and the value 
 | Overlays | [Alert Dialog](docs/components/alert-dialog.md), [Confirmation Dialog](docs/components/confirmation-dialog.md), [Modal](docs/components/modal.md), [Bottom Sheet](docs/components/bottom-sheet.md) |
 | Status and feedback | [Activity Indicator](docs/components/activity-indicator.md), [Progress](docs/components/progress.md), [Badge](docs/components/badge.md), [Status Label](docs/components/status-label.md), [Callout](docs/components/callout.md), [Transient Feedback](docs/components/transient-feedback.md) |
 
-Layout and navigation chrome, such as stacks, top bars, and bottom tab bars, stay in NativePHP Mobile UI.
+
+## Accessibility
+
+Every control is a real SwiftUI or Jetpack Compose control, so VoiceOver, TalkBack, Dynamic Type, Android font scaling, contrast settings, Reduce Motion, and right-to-left layout reach it as they reach the platform's own apps. Firstlight adds what a native control cannot decide alone:
+
+- Icon Button, Search Field, and Progress refuse to render without an accessible name, and fields warn in development without one.
+- Rows and fields are one focus stop, and swipe and context-menu actions are also VoiceOver and TalkBack actions.
+- A failed submit speaks its validation errors and moves screen-reader focus to the first invalid field.
+- Targets Firstlight owns are at least 44 pt on iOS and 48 dp on Android.
+
+This is covered by contract, XCTest, and Robolectric tests, not yet by listening on physical devices. See [Accessibility](docs/concepts/accessibility.md) for what is tested and the known gaps.
 
 ## Laravel extensions
 
-Concerns on `NativeComponent` connect Laravel to existing native controls:
+Concerns on `NativeComponent` connect Laravel to the native controls:
 
 - [`ValidatesFields`](docs/how-to/validate-fields.md): `validate()`, `validateOnly()`, and Form Requests, with messages on native field error slots.
 - [`SubmitsForms`](docs/how-to/submit-forms.md): validate, run an action once, and publish success Feedback.
 - [`AuthorizesActions`](docs/how-to/authorize-actions.md): hide, disable, or guard actions with Gates and Policies.
 - [`PaginatesLists`](docs/how-to/paginate-lists.md): bind Laravel paginators to List `@refresh` and `@endReached`.
 - [`DestroysListItems`](docs/how-to/destroy-list-items.md): authorized, confirmed deletion of List rows by stable key.
+- [`ScreenAssertions`](docs/how-to/test-screens.md): Pest checks for field errors, List rows, Confirmation Dialogs, and Feedback on NativePHP's `Native::test()` harness, plus `php artisan make:firstlight-screen` to scaffold a screen and its test.
 
 Firstlight-owned labels use Laravel's lang files, and Date and Time pickers inherit the application locale and timezone. See [Localize chrome](docs/how-to/localize.md).
 
@@ -90,13 +143,9 @@ Use `Feedback::fake()` to assert application feedback without native presentatio
 
 Firstlight stamps each complete screen response with a process-wide increasing revision, so an otherwise identical response still reaches the native renderers. Blade render paths are automatic. Hand-built Element roots must return `$this->response($element)`. Streaming is disabled. See the [response contract and limitations](docs/reference/compatibility.md#runtime-response-contract).
 
-## Accessibility
-
-Every control is a real SwiftUI or Jetpack Compose control, so VoiceOver, TalkBack, Dynamic Type, font scaling, contrast, Reduce Motion, and right-to-left layout work as they do in platform apps. Firstlight adds required accessible names, single focus stops, 44 pt / 48 dp targets, gesture-free alternatives for swipe and context-menu actions, and spoken validation errors. See [Accessibility](docs/concepts/accessibility.md) for what is covered, what is tested, and the known gaps.
-
 ## Documentation
 
-Start with the [documentation index](docs/index.md) or [firstlightui.dev](https://firstlightui.dev). Design rules live in the [Firstlight constitution](Constitution.md).
+Start with a [recipe](docs/how-to/build-a-list-detail-flow.md), the [documentation index](docs/index.md), or [firstlightui.dev](https://firstlightui.dev). Design rules live in the [Firstlight constitution](Constitution.md).
 
 ## Licence
 

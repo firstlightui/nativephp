@@ -45,7 +45,14 @@ function documentationFixture(): string
 
         # Documentation
 
+        Lead text for agents.
+
+        ## Get started
+
         - [Install](getting-started/install.md) — Install the package.
+
+        ## Components
+
         - [Segmented](components/segmented.md) — Use Segmented.
         MARKDOWN);
 
@@ -112,6 +119,7 @@ function documentationFixture(): string
     file_put_contents($root.'/spec/documentation.json', json_encode([
         'name' => 'Firstlight UI',
         'site_url' => 'https://firstlightui.dev',
+        'docs_url' => 'https://firstlightui.dev/docs',
         'repository_url' => 'https://github.com/firstlightui/nativephp',
         'package' => 'firstlightui/nativephp',
         'versioning' => 'current',
@@ -186,7 +194,8 @@ it('builds deterministic public artefacts in index order', function () {
             ->and(strpos($first['llms-full.txt'], '# Install'))
             ->toBeLessThan(strpos($first['llms-full.txt'], '# Segmented'))
             ->and($first['llms-full.txt'])->not->toContain('Internal architecture')
-            ->and($first['llms.txt'])->toContain('https://firstlightui.dev/getting-started/install')
+            ->and($first['llms.txt'])->toStartWith("# Firstlight UI\n\n> Public pages.\n\nLead text for agents.\n")
+            ->and($first['llms.txt'])->toContain("## Get started\n\n- [Install](https://firstlightui.dev/docs/getting-started/install): Install Firstlight.\n\n## Components\n\n- [Segmented](https://firstlightui.dev/docs/components/segmented)")
             ->and($first['llms.txt'])->toEndWith("\n")
             ->and($first['llms-full.txt'])->toEndWith("\n");
     } finally {

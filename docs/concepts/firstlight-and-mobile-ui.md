@@ -1,6 +1,6 @@
 ---
-title: How Firstlight complements NativePHP Mobile UI
-description: How Firstlight builds on NativePHP Mobile UI with a focused, opinionated form and control layer.
+title: What Firstlight is
+description: Firstlight is the app-shell layer for NativePHP. What it provides, what NativePHP and Mobile UI provide, and what Firstlight is not.
 type: explanation
 audience: consumer
 sources:
@@ -9,6 +9,8 @@ sources:
   - nativephp.json
   - vendor/nativephp/mobile-ui/nativephp.json
   - spec/architecture/package.md
+  - vendor/nativephp/mobile/src/Edge/Layouts/NativeLayout.php
+  - resources/boost/guidelines/core.blade.php
   - spec/components/badge.md
   - spec/components/button.md
   - spec/components/date-picker.md
@@ -35,22 +37,60 @@ sources:
   - spec/components/transient-feedback.md
 ---
 
-# How Firstlight Complements NativePHP Mobile UI
+# What Firstlight Is
 
-NativePHP Mobile UI is the broad native UI foundation for NativePHP applications. It supplies layout, navigation, lists, presentation, media, gestures, form controls, semantic theming, and the official SwiftUI and Jetpack Compose integration that Firstlight builds upon.
+Firstlight is the app-shell layer for NativePHP. It covers what a standard
+forms app needs (lists and detail, search, forms with Laravel validation,
+settings, sheets and dialogs, and feedback) with genuine SwiftUI controls on
+iOS and Jetpack Compose Material 3 controls on Android, from one Blade API.
 
-Firstlight is not a replacement for Mobile UI or an attempt to reproduce its catalogue. It depends on Mobile UI, follows its EDGE conventions, inherits its semantic theme, and uses the same SuperNative Element Tree and event lifecycle. Firstlight focuses on a smaller set of form and action controls that benefit from a more opinionated product-level contract.
+It is built for agentic coding. Four [recipes](../how-to/build-a-list-detail-flow.md)
+show each kind of screen end to end, and a Laravel Boost guideline and two
+skills point coding agents at them. See
+[Build with a coding agent](../getting-started/build-with-a-coding-agent.md).
 
-## The difference at a glance
+## Who provides what
 
-| NativePHP Mobile UI | Firstlight UI |
+Firstlight builds on two NativePHP packages and replaces neither.
+
+| Layer | Provides |
 | --- | --- |
-| A broad toolkit of native primitives and application building blocks | A curated layer of form, selection, display, and action controls |
-| Flexible primitives that can support many compositions | Purpose-specific components with narrower, consistent contracts |
-| The official native renderer, theme, and extension foundation | Stable values, strict validation, server-authoritative state, field semantics, and cross-component consistency |
-| Platform-native SwiftUI and Material 3 implementation | The same native-first approach, with paired renderers where a higher-level contract needs them |
+| NativePHP Mobile | EDGE, the Element Tree, the event lifecycle, and native navigation chrome: layouts that return `true` from `usesNativeChrome()` get SwiftUI `NavigationStack` and `TabView` on iOS and a Material 3 `Scaffold` and top app bar on Android |
+| NativePHP Mobile UI | Layout primitives such as columns, scroll views, and grouped lists, the semantic theme, and the native renderer foundation |
+| Firstlight UI | Form, list, selection, overlay, status, and feedback controls with one contract on both platforms; Laravel validation, submission, authorization, pagination, and deletion on screens; Pest screen assertions and a screen generator; recipes, a Boost guideline, skills, and `llms.txt` |
 
-Mobile UI makes Firstlight possible. Firstlight adds a design-system layer for teams that want common form behaviour to be decided once rather than assembled separately in every application.
+Firstlight depends on Mobile UI, follows its EDGE conventions, inherits its
+theme, and uses the same Element Tree and event lifecycle. Mobile UI is the
+broad native toolkit; Firstlight decides common form and list behaviour once so
+each application does not assemble it again.
+
+## One API, the right pattern on each platform
+
+A Firstlight tag means the same thing on both platforms, and each platform
+draws it its own way. Tabs are a segmented control on iOS and Material 3 tabs
+on Android. A Confirmation Dialog is a SwiftUI `confirmationDialog` on iOS
+and a Material 3 `AlertDialog` on Android. Date Picker opens the graphical
+SwiftUI `DatePicker` on iOS and the Material 3 `DatePickerDialog` on Android.
+Field errors
+appear under the field on iOS and as Material 3 supporting text in the error
+state on Android.
+
+Every control is a real platform control. Firstlight draws nothing to imitate
+one, and there is no WebView.
+
+## What Firstlight is not
+
+- **Not navigation chrome.** Stacks, title bars, back navigation, and tab bars
+  come from NativePHP's native chrome. Firstlight runs inside them. Do not use
+  the `custom` attribute on top bars or bottom navs to draw your own.
+- **Not a design system.** Firstlight does not define a visual style.
+  Controls take colours and fonts from the NativePHP theme and keep each
+  platform's geometry, motion, and materials.
+- **Not a catalogue of everything.** There are no charts, carousels, or other
+  custom-drawn controls. A new tag is added only for a semantic control with an
+  equal native contract on iOS and Android.
+- **Not a form builder.** Screens are ordinary Blade views with PHP state, not
+  schemas.
 
 ## Additional dedicated components
 
@@ -109,7 +149,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@endReached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Package locale chrome publishes Firstlight-owned chrome strings from one Laravel language file, and Date/Time pickers inherit omitted locale and timezone from the application. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), [Destroy list items](../how-to/destroy-list-items.md), and [Localize chrome](../how-to/localize.md).
 
-Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
+Layout, typography, and generic media stay in Mobile UI, and navigation chrome stays in NativePHP Mobile. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
 ### Custom tappable content and accessibility
 
@@ -138,6 +178,6 @@ Firstlight adds strict authoring boundaries, documentation, tests, and catalogue
 
 Firstlight components use ordinary NativePHP UI component extension points. They publish Element Tree data, receive standard semantic events, inherit Mobile UI theme tokens, and require no custom imperative bridge functions or WebView-backed control layer.
 
-The relationship is intentionally complementary: **Mobile UI provides the comprehensive native foundation; Firstlight provides a curated, evidence-backed form and control system on top of it.**
+The relationship is intentionally complementary: **NativePHP provides the native foundation and chrome; Firstlight provides the app-shell layer of controls, Laravel contracts, and recipes on top of it.**
 
 Review the current [compatibility requirements](../reference/compatibility.md) before releasing an application, particularly where server-authoritative controls depend on unchanged-tree publication acknowledgements from NativePHP Mobile.

@@ -1,6 +1,6 @@
 ---
 title: Install Firstlight UI
-description: Install Firstlight, register its NativePHP plugin, and rebuild the native projects.
+description: Install Firstlight and Laravel Boost, register the NativePHP plugin, and rebuild the native projects.
 type: how-to
 audience: consumer
 sources:
@@ -8,9 +8,15 @@ sources:
   - nativephp.json
   - src/FirstlightServiceProvider.php
   - docs/reference/compatibility.md
+  - resources/boost/guidelines/core.blade.php
 ---
 
 # Install Firstlight UI
+
+Firstlight is the app-shell layer for NativePHP. After these steps your app,
+and your coding agent, can build lists and detail, search, forms with Laravel
+validation, settings, sheets and dialogs, and feedback from genuine SwiftUI and
+Jetpack Compose controls.
 
 ## Requirements
 
@@ -50,6 +56,26 @@ php artisan native:install --force
 
 Build and run the application through your normal NativePHP workflow. Firstlight's `<firstlight:...>` tags are collected as native elements only in a native render; an ordinary web render leaves them unchanged.
 
+## Give your coding agent the Firstlight guideline
+
+Firstlight ships a Laravel Boost guideline and two skills. Install Boost so
+your coding agent builds screens from the Firstlight recipes:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install
+```
+
+If Boost is already installed, run `php artisan boost:update --discover`
+instead. See [Build with a coding agent](build-with-a-coding-agent.md) for what
+the agent receives.
+
 ## Next step
 
-Add [your first Firstlight component](first-component.md) to your application.
+Build the app shell with the
+[list and detail recipe](../how-to/build-a-list-detail-flow.md), then add the
+[searchable list](../how-to/build-a-searchable-list-screen.md),
+[form](../how-to/build-a-form-screen.md), and
+[settings](../how-to/build-a-settings-screen.md) screens your app needs. To
+learn one control at a time instead, add
+[your first Firstlight component](first-component.md).

@@ -20,6 +20,11 @@ validation through a Form Request, errors shown by each native field, an error
 for problems that belong to the whole form, a Save button with a loading state,
 and a return to the previous screen with success Feedback.
 
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`FormRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/FormRecipeTest.php)
+exercises it.
+
 Use it when several values are checked and saved together. Use the
 [settings recipe](build-a-settings-screen.md) when each value saves on its own.
 

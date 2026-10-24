@@ -21,6 +21,11 @@ This recipe builds the index screen most apps need: a search field above a
 list of records, with pull-to-refresh, infinite scrolling, a tap that opens
 the record, and a swipe action that deletes it after native confirmation.
 
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`SearchableListRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/SearchableListRecipeTest.php)
+exercises it.
+
 Use it when a screen shows many records of one model and the user needs to
 find, open, or remove one. Use [List](../components/list.md) without search for
 short, fixed collections, and a settings layout when rows change preferences

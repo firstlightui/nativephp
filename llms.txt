@@ -1,63 +1,95 @@
 # Firstlight UI
 
-> Current public documentation for firstlightui/nativephp.
+> Build a standard NativePHP forms app, by hand or with a coding agent, from genuine SwiftUI and Jetpack Compose controls, Laravel validation, and tested recipes.
+
+Firstlight is the app-shell layer for NativePHP. Install it with Laravel Boost,
+and you or your coding agent have what a standard forms app needs: lists and
+detail, search, forms with Laravel validation, settings, sheets and dialogs, and
+feedback.
+
+Every control is a genuine SwiftUI control on iOS and a Jetpack Compose
+Material 3 control on Android. One Blade API becomes the right pattern on each
+platform. Navigation chrome comes from NativePHP's own native chrome, and
+VoiceOver, TalkBack, larger text, right-to-left layout, and Reduce Motion reach
+every control the way they reach the platform's own apps.
+
+Firstlight 1.0.0 is a release candidate (`v1.0.0-RC6`). Physical-device,
+spoken screen-reader, soak/performance, and wider application checks are still
+outstanding.
 
 - Website: https://firstlightui.dev
+- Documentation: https://firstlightui.dev/docs
 - Repository: https://github.com/firstlightui/nativephp
 - Package: firstlightui/nativephp
 
-## Documentation
+## Start with a recipe
 
-- [Install Firstlight UI](https://firstlightui.dev/getting-started/installation): Install Firstlight, register its NativePHP plugin, and rebuild the native projects.
-- [Add your first Firstlight component](https://firstlightui.dev/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
-- [Build a list and detail flow](https://firstlightui.dev/how-to/build-a-list-detail-flow): Recipe for an app layout with native navigation chrome, a list screen that pushes a detail screen, and native back navigation on iOS and Android.
-- [Build a searchable list screen](https://firstlightui.dev/how-to/build-a-searchable-list-screen): Recipe for a complete screen with native search, a paginated List, pull-to-refresh, row navigation, and confirmed swipe deletion.
-- [Build a form screen](https://firstlightui.dev/how-to/build-a-form-screen): Recipe for a create form with a Form Request, native field errors, a form-level error, a loading Save button, success Feedback, and return navigation.
-- [Build a settings screen](https://firstlightui.dev/how-to/build-a-settings-screen): Recipe for a grouped settings screen with native section headers and footers, Switch and Select rows, and save-on-change.
-- [Validate Firstlight fields](https://firstlightui.dev/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate(), validateOnly(), and Form Requests.
-- [Submit Firstlight forms](https://firstlightui.dev/how-to/submit-forms): Validate Firstlight fields, run a PHP action once, and publish success Feedback.
-- [Authorize Firstlight actions](https://firstlightui.dev/how-to/authorize-actions): Apply Laravel Gate and Policy decisions to Firstlight actions with explicit hide, disable, and destructive confirmation patterns.
-- [Paginate Firstlight lists](https://firstlightui.dev/how-to/paginate-lists): Bind Laravel paginators to List pull-to-refresh and end-reached without a new Firstlight tag.
-- [Destroy Firstlight list items](https://firstlightui.dev/how-to/destroy-list-items): Authorize Confirmation Dialog deletion of List rows by stable keys, then Feedback and list republish.
-- [Test Firstlight screens](https://firstlightui.dev/how-to/test-screens): Scaffold a screen with make:firstlight-screen and test its fields, lists, dialogs, and Feedback with Native::test().
-- [Localize Firstlight chrome](https://firstlightui.dev/how-to/localize): Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
-- [Theme Firstlight components](https://firstlightui.dev/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
-- [SuperNative components](https://firstlightui.dev/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
-- [Server-authoritative state](https://firstlightui.dev/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
-- [Accessibility in Firstlight](https://firstlightui.dev/concepts/accessibility): What VoiceOver, TalkBack, Dynamic Type, font scaling, contrast, motion, and right-to-left users get from Firstlight, what is tested, and what remains your app's job.
-- [How Firstlight complements NativePHP Mobile UI](https://firstlightui.dev/concepts/firstlight-and-mobile-ui): How Firstlight builds on NativePHP Mobile UI with a focused, opinionated form and control layer.
-- [Activity Indicator](https://firstlightui.dev/components/activity-indicator): Indeterminate native activity, semantic sizes, conditional presence, accessibility announcements, validation, and platform behaviour.
-- [Button](https://firstlightui.dev/components/button): Public API, variants, states, accessibility, adapter behaviour, compatibility, and visual evidence for Firstlight Button.
-- [Callout](https://firstlightui.dev/components/callout): Persistent semantic messages, tones, optional actions, accessibility, validation, and native platform behaviour.
-- [Transient Feedback](https://firstlightui.dev/components/transient-feedback): Publish queued app-level outcomes with semantic tones, optional actions, automatic or held lifetime, and Laravel application events.
-- [Badge](https://firstlightui.dev/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
-- [Checkbox](https://firstlightui.dev/components/checkbox): Strict Boolean form and checklist state, field metadata, server-authoritative proposals, accessibility, and native platform behaviour.
-- [Choice Group](https://firstlightui.dev/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
-- [Media](https://firstlightui.dev/components/media): One image or document field with Storage-backed MediaValue, optional Firstlight crop, and ValidatesFields participation.
-- [Alert Dialog](https://firstlightui.dev/components/alert-dialog): Present one native acknowledgement with a single action and server-controlled visibility.
-- [Confirmation Dialog](https://firstlightui.dev/components/confirmation-dialog): Ask for one native confirmation with explicit cancellation and destructive action semantics.
-- [Modal](https://firstlightui.dev/components/modal): Full-screen native overlay for authored content with server-controlled visibility and dismissal.
-- [Bottom Sheet](https://firstlightui.dev/components/bottom-sheet): Native bottom sheet for authored content with server-controlled visibility and dismissal.
-- [Date Picker](https://firstlightui.dev/components/date-picker): Canonical nullable dates, inclusive bounds, native confirmation, localisation, and accessibility for Firstlight Date Picker.
-- [Time Picker](https://firstlightui.dev/components/time-picker): Choose a wall-clock time with a native, server-authoritative picker.
-- [Icon Button](https://firstlightui.dev/components/icon-button): Public API, variants, sizes, loading and disabled states, accessibility, and native platform behaviour for Firstlight Icon Button.
-- [List Item](https://firstlightui.dev/components/list-item): Application row content, actions, context menus, icon overrides, disabled behaviour, accessibility, and native platform expression.
-- [List](https://firstlightui.dev/components/list): Finite vertical collections of List Item rows with optional grouped sections, separators, and refresh or pagination hooks.
-- [List Section](https://firstlightui.dev/components/list-section): Grouped headers, footers, and List Item rows inside a parent List container.
-- [Pill Group](https://firstlightui.dev/components/pill-group): Public API, selection modes, state timing, accessibility, validation, and platform behaviour for Firstlight Pill Group.
-- [Progress](https://firstlightui.dev/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
-- [Segmented](https://firstlightui.dev/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
-- [Tabs](https://firstlightui.dev/components/tabs): Public API, state, badges, accessibility, validation, and platform behaviour for Firstlight Tabs.
-- [Search Field](https://firstlightui.dev/components/search-field): Public API, focused query synchronisation, native clear and submit behaviour, accessibility, and platform expression for Firstlight Search Field.
-- [Select](https://firstlightui.dev/components/select): Public API, stable values, searchable presentation, state timing, accessibility, and platform behaviour for Firstlight Select.
-- [Slider](https://firstlightui.dev/components/slider): Strict numeric grids, native draft synchronisation, accessibility, and paired platform behavior for Firstlight Slider.
-- [Stepper](https://firstlightui.dev/components/stepper): Move an exact integer or decimal value through a bounded native stepper.
-- [Status Label](https://firstlightui.dev/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
-- [Metric](https://firstlightui.dev/components/metric): Display one labelled value and optional detail as a single accessible native element.
-- [Text Field](https://firstlightui.dev/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
-- [Text Area](https://firstlightui.dev/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.
-- [Code Editor](https://firstlightui.dev/components/code-editor): Public API, language-aware indentation, key row, follow mode, synchronisation, accessibility, and native platform behaviour for Firstlight Code Editor.
-- [Switch](https://firstlightui.dev/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
-- [ValidatesFields](https://firstlightui.dev/reference/validates-fields): Public contract for Firstlight Laravel field validation, MessageBag binding, and validate() timing.
-- [Screen assertions](https://firstlightui.dev/reference/screen-assertions): Firstlight methods added to NativePHP's Native::test() harness, and the make:firstlight-screen options.
-- [Compatibility](https://firstlightui.dev/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.
+- [Build a list and detail flow](https://firstlightui.dev/docs/how-to/build-a-list-detail-flow): Recipe for an app layout with native navigation chrome, a list screen that pushes a detail screen, and native back navigation on iOS and Android.
+- [Build a searchable list screen](https://firstlightui.dev/docs/how-to/build-a-searchable-list-screen): Recipe for a complete screen with native search, a paginated List, pull-to-refresh, row navigation, and confirmed swipe deletion.
+- [Build a form screen](https://firstlightui.dev/docs/how-to/build-a-form-screen): Recipe for a create form with a Form Request, native field errors, a form-level error, a loading Save button, success Feedback, and return navigation.
+- [Build a settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen): Recipe for a grouped settings screen with native section headers and footers, Switch and Select rows, and save-on-change.
+
+## Get started
+
+- [Install Firstlight UI](https://firstlightui.dev/docs/getting-started/installation): Install Firstlight and Laravel Boost, register the NativePHP plugin, and rebuild the native projects.
+- [Build with a coding agent](https://firstlightui.dev/docs/getting-started/build-with-a-coding-agent): What the Boost guideline, the firstlight-init and building-firstlight-screens skills, and llms.txt give your coding agent, and how to set them up.
+- [Add your first Firstlight component](https://firstlightui.dev/docs/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
+- [Theme Firstlight components](https://firstlightui.dev/docs/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
+
+## Laravel on native screens
+
+- [Validate Firstlight fields](https://firstlightui.dev/docs/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate(), validateOnly(), and Form Requests.
+- [Submit Firstlight forms](https://firstlightui.dev/docs/how-to/submit-forms): Validate Firstlight fields, run a PHP action once, and publish success Feedback.
+- [Authorize Firstlight actions](https://firstlightui.dev/docs/how-to/authorize-actions): Apply Laravel Gate and Policy decisions to Firstlight actions with explicit hide, disable, and destructive confirmation patterns.
+- [Paginate Firstlight lists](https://firstlightui.dev/docs/how-to/paginate-lists): Bind Laravel paginators to List pull-to-refresh and end-reached without a new Firstlight tag.
+- [Destroy Firstlight list items](https://firstlightui.dev/docs/how-to/destroy-list-items): Authorize Confirmation Dialog deletion of List rows by stable keys, then Feedback and list republish.
+- [Test Firstlight screens](https://firstlightui.dev/docs/how-to/test-screens): Scaffold a screen with make:firstlight-screen and test its fields, lists, dialogs, and Feedback with Native::test().
+- [Localize Firstlight chrome](https://firstlightui.dev/docs/how-to/localize): Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
+
+## Understand Firstlight
+
+- [What Firstlight is](https://firstlightui.dev/docs/concepts/firstlight-and-mobile-ui): Firstlight is the app-shell layer for NativePHP. What it provides, what NativePHP and Mobile UI provide, and what Firstlight is not.
+- [Accessibility in Firstlight](https://firstlightui.dev/docs/concepts/accessibility): What VoiceOver, TalkBack, Dynamic Type, font scaling, contrast, Reduce Motion, and right-to-left users get from Firstlight's real native controls, what is tested, what is not yet verified, and what remains your app's job.
+- [SuperNative components](https://firstlightui.dev/docs/concepts/supernative-components): How Firstlight turns shared EDGE markup into genuine iOS and Android controls.
+- [Server-authoritative state](https://firstlightui.dev/docs/concepts/server-authoritative-state): How Firstlight reconciles immediate native interaction with values accepted and published by PHP.
+
+## Components
+
+- [Activity Indicator](https://firstlightui.dev/docs/components/activity-indicator): Indeterminate native activity, semantic sizes, conditional presence, accessibility announcements, validation, and platform behaviour.
+- [Button](https://firstlightui.dev/docs/components/button): Public API, variants, states, accessibility, adapter behaviour, compatibility, and visual evidence for Firstlight Button.
+- [Callout](https://firstlightui.dev/docs/components/callout): Persistent semantic messages, tones, optional actions, accessibility, validation, and native platform behaviour.
+- [Transient Feedback](https://firstlightui.dev/docs/components/transient-feedback): Publish queued app-level outcomes with semantic tones, optional actions, automatic or held lifetime, and Laravel application events.
+- [Badge](https://firstlightui.dev/docs/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
+- [Checkbox](https://firstlightui.dev/docs/components/checkbox): Strict Boolean form and checklist state, field metadata, server-authoritative proposals, accessibility, and native platform behaviour.
+- [Choice Group](https://firstlightui.dev/docs/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
+- [Media](https://firstlightui.dev/docs/components/media): One image or document field with Storage-backed MediaValue, optional Firstlight crop, and ValidatesFields participation.
+- [Alert Dialog](https://firstlightui.dev/docs/components/alert-dialog): Present one native acknowledgement with a single action and server-controlled visibility.
+- [Confirmation Dialog](https://firstlightui.dev/docs/components/confirmation-dialog): Ask for one native confirmation with explicit cancellation and destructive action semantics.
+- [Modal](https://firstlightui.dev/docs/components/modal): Full-screen native overlay for authored content with server-controlled visibility and dismissal.
+- [Bottom Sheet](https://firstlightui.dev/docs/components/bottom-sheet): Native bottom sheet for authored content with server-controlled visibility and dismissal.
+- [Date Picker](https://firstlightui.dev/docs/components/date-picker): Canonical nullable dates, inclusive bounds, native confirmation, localisation, and accessibility for Firstlight Date Picker.
+- [Time Picker](https://firstlightui.dev/docs/components/time-picker): Choose a wall-clock time with a native, server-authoritative picker.
+- [Icon Button](https://firstlightui.dev/docs/components/icon-button): Public API, variants, sizes, loading and disabled states, accessibility, and native platform behaviour for Firstlight Icon Button.
+- [List Item](https://firstlightui.dev/docs/components/list-item): Application row content, actions, context menus, icon overrides, disabled behaviour, accessibility, and native platform expression.
+- [List](https://firstlightui.dev/docs/components/list): Finite vertical collections of List Item rows with optional grouped sections, separators, and refresh or pagination hooks.
+- [List Section](https://firstlightui.dev/docs/components/list-section): Grouped headers, footers, and List Item rows inside a parent List container.
+- [Pill Group](https://firstlightui.dev/docs/components/pill-group): Public API, selection modes, state timing, accessibility, validation, and platform behaviour for Firstlight Pill Group.
+- [Progress](https://firstlightui.dev/docs/components/progress): Determinate and indeterminate work progress, values, accessibility, validation, adapter behaviour, and platform evidence.
+- [Segmented](https://firstlightui.dev/docs/components/segmented): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Segmented.
+- [Tabs](https://firstlightui.dev/docs/components/tabs): Public API, state, badges, accessibility, validation, and platform behaviour for Firstlight Tabs.
+- [Search Field](https://firstlightui.dev/docs/components/search-field): Public API, focused query synchronisation, native clear and submit behaviour, accessibility, and platform expression for Firstlight Search Field.
+- [Select](https://firstlightui.dev/docs/components/select): Public API, stable values, searchable presentation, state timing, accessibility, and platform behaviour for Firstlight Select.
+- [Slider](https://firstlightui.dev/docs/components/slider): Strict numeric grids, native draft synchronisation, accessibility, and paired platform behavior for Firstlight Slider.
+- [Stepper](https://firstlightui.dev/docs/components/stepper): Move an exact integer or decimal value through a bounded native stepper.
+- [Status Label](https://firstlightui.dev/docs/components/status-label): Public API, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Status Label.
+- [Metric](https://firstlightui.dev/docs/components/metric): Display one labelled value and optional detail as a single accessible native element.
+- [Text Field](https://firstlightui.dev/docs/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
+- [Text Area](https://firstlightui.dev/docs/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.
+- [Code Editor](https://firstlightui.dev/docs/components/code-editor): Public API, language-aware indentation, key row, follow mode, synchronisation, accessibility, and native platform behaviour for Firstlight Code Editor.
+- [Switch](https://firstlightui.dev/docs/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
+
+## Reference
+
+- [ValidatesFields](https://firstlightui.dev/docs/reference/validates-fields): Public contract for Firstlight Laravel field validation, MessageBag binding, and validate() timing.
+- [Screen assertions](https://firstlightui.dev/docs/reference/screen-assertions): Firstlight methods added to NativePHP's Native::test() harness, and the make:firstlight-screen options.
+- [Compatibility](https://firstlightui.dev/docs/reference/compatibility): Current language, framework, platform, and Swift package requirements for Firstlight UI.

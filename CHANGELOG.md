@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+- Documentation now presents Firstlight as the app-shell layer for NativePHP. The four recipes lead the documentation index, a new "Build with a coding agent" page covers the Boost guideline, skills, and `llms.txt`, the concept page states what Firstlight is not, and the accessibility page leads with what users get and its verification status.
+- `llms.txt` opens with the documentation index's description and lead text and groups pages under the index's sections. `llms-full.txt` opens with the same description.
+
+### Fixed
+
+- The Boost guideline, the `firstlight-init` and `building-firstlight-screens` skills, and `llms.txt` linked to `https://firstlightui.dev/how-to/...` and similar paths, which return 404. They now link to `https://firstlightui.dev/docs/...`.
+
 ## 1.0.0-RC6 - 2026-10-24
 
 ### Fixed

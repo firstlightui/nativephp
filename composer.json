@@ -1,6 +1,6 @@
 {
     "name": "firstlightui/nativephp",
-    "description": "Native controls for NativePHP, shaped for each platform.",
+    "description": "The app-shell layer for NativePHP: genuine SwiftUI and Jetpack Compose controls with Laravel validation, forms, lists, dialogs and feedback.",
     "type": "nativephp-ui-plugin",
     "license": "MIT",
     "homepage": "https://firstlightui.dev",

@@ -20,6 +20,11 @@ This recipe builds a standard settings screen: grouped sections with headers
 and footers, switches and pickers that save as soon as they change, and rows
 that open other screens.
 
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`SettingsRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/SettingsRecipeTest.php)
+exercises it.
+
 Use it for preferences the user changes one at a time. Use the
 [form recipe](build-a-form-screen.md) instead when several fields must be
 validated and saved together with a button.

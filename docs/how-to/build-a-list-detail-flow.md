@@ -16,6 +16,11 @@ This recipe gives an app its shell: a layout with the platform's own title bar
 and back navigation, a list screen, and a detail screen it pushes. Every other
 recipe runs inside this layout.
 
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`ListDetailRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/ListDetailRecipeTest.php)
+exercises it.
+
 Firstlight does not draw navigation. NativePHP Mobile renders it natively when
 a layout opts in with `usesNativeChrome()`:
 

@@ -1,21 +1,55 @@
 ---
 title: Firstlight UI documentation
-description: Current guides, concepts, and reference documentation for developers using Firstlight UI.
+description: Build a standard NativePHP forms app, by hand or with a coding agent, from genuine SwiftUI and Jetpack Compose controls, Laravel validation, and tested recipes.
 type: reference
 audience: consumer
 sources:
   - composer.json
   - nativephp.json
+  - resources/boost/guidelines/core.blade.php
+  - resources/boost/skills/building-firstlight-screens/SKILL.md
+  - resources/boost/skills/firstlight-init/SKILL.md
+  - CHANGELOG.md
 ---
 
 # Firstlight UI Documentation
 
-- [Installation](getting-started/installation.md) — Install Firstlight and make its native renderers available to a NativePHP application.
-- [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
+Firstlight is the app-shell layer for NativePHP. Install it with Laravel Boost,
+and you or your coding agent have what a standard forms app needs: lists and
+detail, search, forms with Laravel validation, settings, sheets and dialogs, and
+feedback.
+
+Every control is a genuine SwiftUI control on iOS and a Jetpack Compose
+Material 3 control on Android. One Blade API becomes the right pattern on each
+platform. Navigation chrome comes from NativePHP's own native chrome, and
+VoiceOver, TalkBack, larger text, right-to-left layout, and Reduce Motion reach
+every control the way they reach the platform's own apps.
+
+Firstlight 1.0.0 is a release candidate (`v1.0.0-RC6`). Physical-device,
+spoken screen-reader, soak/performance, and wider application checks are still
+outstanding.
+
+## Start with a recipe
+
+Each recipe is a complete screen you can copy. Each one runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), whose Pest tests
+exercise it. Build the list and detail flow first: it is the app shell the other
+recipes run inside.
+
 - [Build a list and detail flow](how-to/build-a-list-detail-flow.md) — Give the app a native navigation shell with a list screen that pushes a detail screen.
 - [Build a searchable list screen](how-to/build-a-searchable-list-screen.md) — Search, paginate, refresh, open, and delete records from one native List.
 - [Build a form screen](how-to/build-a-form-screen.md) — Validate with a Form Request, show field and form-level errors, and save with Feedback.
 - [Build a settings screen](how-to/build-a-settings-screen.md) — Group switches and pickers in native sections that save on change.
+
+## Get started
+
+- [Installation](getting-started/installation.md) — Install Firstlight and Laravel Boost, and make the native renderers available to a NativePHP application.
+- [Build with a coding agent](getting-started/build-with-a-coding-agent.md) — What the Boost guideline, the `firstlight-init` and `building-firstlight-screens` skills, and `llms.txt` give your agent.
+- [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
+- [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
+
+## Laravel on native screens
+
 - [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()`, `validateOnly()`, and Form Requests.
 - [Submit forms](how-to/submit-forms.md) — Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize actions](how-to/authorize-actions.md) — Hide, disable, or guard Firstlight actions with Laravel Gate and Policy decisions.
@@ -23,11 +57,16 @@ sources:
 - [Destroy list items](how-to/destroy-list-items.md) — Authorize Confirmation Dialog deletion of List rows by stable keys.
 - [Test screens](how-to/test-screens.md) — Scaffold a screen with `make:firstlight-screen` and test fields, lists, dialogs, and Feedback with `Native::test()`.
 - [Localize chrome](how-to/localize.md) — Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
-- [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
+
+## Understand Firstlight
+
+- [What Firstlight is](concepts/firstlight-and-mobile-ui.md) — The app-shell layer for NativePHP: what Firstlight provides, what NativePHP and Mobile UI provide, and what Firstlight is not.
+- [Accessibility](concepts/accessibility.md) — What VoiceOver, TalkBack, larger-text, right-to-left, and Reduce Motion users get, what is tested, what is still unverified, and what your app owns.
 - [SuperNative components](concepts/supernative-components.md) — Understand how an EDGE component becomes genuine platform UI.
 - [Server-authoritative state](concepts/server-authoritative-state.md) — Understand interaction, PHP acceptance, and native reconciliation.
-- [Accessibility](concepts/accessibility.md) — See what VoiceOver, TalkBack, larger-text, contrast, motion, and right-to-left users get, what is tested, and what your app still owns.
-- [Firstlight and NativePHP Mobile UI](concepts/firstlight-and-mobile-ui.md) — Understand how Firstlight complements Mobile UI with a focused form and control layer.
+
+## Components
+
 - [Activity Indicator](components/activity-indicator.md) — Communicate indeterminate native activity with semantic sizes and one polite appearance announcement.
 - [Button](components/button.md) — Look up labelled actions, semantic variants, loading and disabled states, accessibility, and adapter behaviour.
 - [Callout](components/callout.md) — Present persistent semantic messages with one optional labelled action.
@@ -60,6 +99,9 @@ sources:
 - [Text Area](components/text-area.md) — Configure native multiline editing, line bounds, validation, accessibility, and synchronisation.
 - [Code Editor](components/code-editor.md) — Edit JSON, YAML, env, and plain text with native indentation, a key row, and follow mode for live logs.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.
+
+## Reference
+
 - [ValidatesFields](reference/validates-fields.md) — Look up the public `validate()` contract, MessageBag binding, and current limitations.
 - [Screen assertions](reference/screen-assertions.md) — Look up the Firstlight `Native::test()` assertions and the `make:firstlight-screen` options.
 - [Compatibility](reference/compatibility.md) — Check the currently supported PHP, NativePHP, iOS, Android, and Swift versions.

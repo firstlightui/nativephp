@@ -1,119 +1,6 @@
 # Firstlight UI Documentation
 
---- Source: docs/getting-started/installation.md ---
-
-# Install Firstlight UI
-
-## Requirements
-
-Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
-
-Use NativePHP Mobile `^4.6` and Mobile UI `^0.8`. Firstlight screens must
-extend `FirstlightUI\NativeComponent` for the
-[response-revision contract](../reference/compatibility.md#runtime-response-contract).
-Firstlight 1.0.0 is a release candidate pending physical-device,
-soak/performance, and wider app qualification.
-
-## Install and register the plugin
-
-Install Firstlight as a normal Composer dependency. Until 1.0.0 is stable,
-allow release candidates in the constraint; Laravel's default minimum
-stability otherwise finds no installable version:
-
-```bash
-composer require "firstlightui/nativephp:^1.0@RC"
-```
-
-Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
-
-```bash
-php artisan native:plugin:register
-```
-
-The command discovers unregistered plugins. If your application disables Laravel package discovery, register `FirstlightUI\FirstlightServiceProvider` through the application's normal provider configuration as well.
-
-## Rebuild the native projects
-
-Native renderer source is compiled into the host application. Regenerate the native projects after installing or updating Firstlight:
-
-```bash
-php artisan native:install --force
-```
-
-Build and run the application through your normal NativePHP workflow. Firstlight's `<firstlight:...>` tags are collected as native elements only in a native render; an ordinary web render leaves them unchanged.
-
-## Next step
-
-Add [your first Firstlight component](first-component.md) to your application.
-
---- Source: docs/getting-started/first-component.md ---
-
-# Add Your First Firstlight Component
-
-This tutorial adds a native Segmented control for choosing a queue. The same EDGE markup renders as a platform-appropriate control on iOS and Android.
-
-## Define the state
-
-Extend Firstlight's base for your screen, rather than the upstream EDGE base:
-
-```php
-use FirstlightUI\NativeComponent;
-
-class QueueScreen extends NativeComponent
-{
-    // Add the state below; use your normal Blade view.
-}
-```
-
-Normal Blade renders (a global `View` returned from `render()`, `$this->view()`,
-or an inferred view) automatically receive normal chrome and a root response
-revision. For a hand-built Element root, return `$this->response($element)`
-from `render()` instead of returning the Element directly. Nested children are
-untouched and partials are unstamped. Streaming is disabled and cannot be opted
-into. See the [full contract and limits](../reference/compatibility.md#runtime-response-contract).
-
-Add the selected value and stable value-to-label options to your component:
-
-```php
-public string $queue = 'mine';
-
-public array $queueOptions = [
-    'mine' => 'Mine',
-    'all' => 'All',
-];
-```
-
-The array keys are the public values stored in `$queue`; the labels are display text.
-
-## Render the control
-
-Bind the property with `native:model`:
-
-```blade
-<firstlight:segmented
-    :options="$queueOptions"
-    native:model="queue"
-    label="Queue"
-    helper="Choose the active queue."
-/>
-```
-
-Run the application natively. A selection emits its stable value to PHP, and the published `$queue` value determines the visible selection.
-
-## Handle a selection explicitly
-
-Use `@change` when the selection should call a method instead of directly synchronising a property:
-
-```blade
-<firstlight:segmented
-    :options="$queueOptions"
-    :value="$queue"
-    @change="selectQueue"
-    label="Queue"
-/>
-```
-
-The method receives the selected string value. See the [Segmented reference](../components/segmented.md) for integer values, disabled choices, accessibility, and validation rules. When the screen should show Laravel messages on Firstlight fields, follow [Validate fields](../how-to/validate-fields.md).
+> Build a standard NativePHP forms app, by hand or with a coding agent, from genuine SwiftUI and Jetpack Compose controls, Laravel validation, and tested recipes.
 
 --- Source: docs/how-to/build-a-list-detail-flow.md ---
 
@@ -122,6 +9,11 @@ The method receives the selected string value. See the [Segmented reference](../
 This recipe gives an app its shell: a layout with the platform's own title bar
 and back navigation, a list screen, and a detail screen it pushes. Every other
 recipe runs inside this layout.
+
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`ListDetailRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/ListDetailRecipeTest.php)
+exercises it.
 
 Firstlight does not draw navigation. NativePHP Mobile renders it natively when
 a layout opts in with `usesNativeChrome()`:
@@ -266,6 +158,11 @@ Save the view as `resources/views/native/post.blade.php`:
 This recipe builds the index screen most apps need: a search field above a
 list of records, with pull-to-refresh, infinite scrolling, a tap that opens
 the record, and a swipe action that deletes it after native confirmation.
+
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`SearchableListRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/SearchableListRecipeTest.php)
+exercises it.
 
 Use it when a screen shows many records of one model and the user needs to
 find, open, or remove one. Use [List](../components/list.md) without search for
@@ -469,6 +366,11 @@ validation through a Form Request, errors shown by each native field, an error
 for problems that belong to the whole form, a Save button with a loading state,
 and a return to the previous screen with success Feedback.
 
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`FormRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/FormRecipeTest.php)
+exercises it.
+
 Use it when several values are checked and saved together. Use the
 [settings recipe](build-a-settings-screen.md) when each value saves on its own.
 
@@ -647,6 +549,11 @@ This recipe builds a standard settings screen: grouped sections with headers
 and footers, switches and pickers that save as soon as they change, and rows
 that open other screens.
 
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`SettingsRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/SettingsRecipeTest.php)
+exercises it.
+
 Use it for preferences the user changes one at a time. Use the
 [form recipe](build-a-form-screen.md) instead when several fields must be
 validated and saved together with a button.
@@ -802,6 +709,327 @@ Save this as `resources/views/native/settings.blade.php`:
 - Put the screen under a layout that uses native chrome, as described in
   [Build a list and detail flow](build-a-list-detail-flow.md), so the title and
   back navigation come from the platform.
+
+--- Source: docs/getting-started/installation.md ---
+
+# Install Firstlight UI
+
+Firstlight is the app-shell layer for NativePHP. After these steps your app,
+and your coding agent, can build lists and detail, search, forms with Laravel
+validation, settings, sheets and dialogs, and feedback from genuine SwiftUI and
+Jetpack Compose controls.
+
+## Requirements
+
+Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
+
+Use NativePHP Mobile `^4.6` and Mobile UI `^0.8`. Firstlight screens must
+extend `FirstlightUI\NativeComponent` for the
+[response-revision contract](../reference/compatibility.md#runtime-response-contract).
+Firstlight 1.0.0 is a release candidate pending physical-device,
+soak/performance, and wider app qualification.
+
+## Install and register the plugin
+
+Install Firstlight as a normal Composer dependency. Until 1.0.0 is stable,
+allow release candidates in the constraint; Laravel's default minimum
+stability otherwise finds no installable version:
+
+```bash
+composer require "firstlightui/nativephp:^1.0@RC"
+```
+
+Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
+
+```bash
+php artisan native:plugin:register
+```
+
+The command discovers unregistered plugins. If your application disables Laravel package discovery, register `FirstlightUI\FirstlightServiceProvider` through the application's normal provider configuration as well.
+
+## Rebuild the native projects
+
+Native renderer source is compiled into the host application. Regenerate the native projects after installing or updating Firstlight:
+
+```bash
+php artisan native:install --force
+```
+
+Build and run the application through your normal NativePHP workflow. Firstlight's `<firstlight:...>` tags are collected as native elements only in a native render; an ordinary web render leaves them unchanged.
+
+## Give your coding agent the Firstlight guideline
+
+Firstlight ships a Laravel Boost guideline and two skills. Install Boost so
+your coding agent builds screens from the Firstlight recipes:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install
+```
+
+If Boost is already installed, run `php artisan boost:update --discover`
+instead. See [Build with a coding agent](build-with-a-coding-agent.md) for what
+the agent receives.
+
+## Next step
+
+Build the app shell with the
+[list and detail recipe](../how-to/build-a-list-detail-flow.md), then add the
+[searchable list](../how-to/build-a-searchable-list-screen.md),
+[form](../how-to/build-a-form-screen.md), and
+[settings](../how-to/build-a-settings-screen.md) screens your app needs. To
+learn one control at a time instead, add
+[your first Firstlight component](first-component.md).
+
+--- Source: docs/getting-started/build-with-a-coding-agent.md ---
+
+# Build with a Coding Agent
+
+Firstlight is written to be built with by coding agents. The package ships a
+[Laravel Boost](https://laravel.com/docs/boost) guideline and two Boost skills,
+and its documentation is published as `llms.txt` and `llms-full.txt`. Together
+they tell an agent which screens to build from which recipe, which control to
+use for each value, and which mistakes to avoid.
+
+## Set up Boost
+
+Install Firstlight as described in [Installation](installation.md), then add
+Laravel Boost to the application and run its installer:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install
+```
+
+Boost finds the guideline and skills in Firstlight's `resources/boost`
+directory and writes them into your agent's files, such as `AGENTS.md`,
+`CLAUDE.md`, and its skills directory. If Boost is already installed, pick up
+Firstlight with:
+
+```bash
+php artisan boost:update --discover
+```
+
+Run `php artisan boost:update` after each Firstlight update so the guideline
+and skills match the installed version.
+
+## What your agent gets
+
+| Resource | When the agent reads it | What it contains |
+| --- | --- | --- |
+| Guideline | Always, as part of the agent's instructions | The rules every Firstlight screen follows, the four recipes, the screen generator, and a tested example |
+| `firstlight-init` skill | When asked to set up or scaffold a Firstlight app | An interview, an install check, the theme, the native-chrome layout, and the chosen recipe screens with tests |
+| `building-firstlight-screens` skill | When adding or changing a screen, form, list, or settings page | Which recipe to start from, which control fits each value, the workflow, and what never to do |
+| [`llms.txt`](https://firstlightui.dev/llms.txt) | When the agent needs a page | Every documentation page with a one-line summary |
+| [`llms-full.txt`](https://firstlightui.dev/llms-full.txt) | When the agent needs the whole reference | The full text of every documentation page in one file |
+
+The package also includes `llms-full.txt` at
+`vendor/firstlightui/nativephp/llms-full.txt`, so an agent can read the
+reference for the installed version without network access.
+
+### The guideline's rules
+
+The guideline keeps an agent on the same path as the recipes:
+
+- Screens extend `FirstlightUI\NativeComponent`.
+- Controls are `<firstlight:*>` tags, with one Blade view for both platforms.
+- Navigation chrome comes from NativePHP: layouts return `true` from
+  `usesNativeChrome()`. No custom-drawn tab bars, drawers, charts, or carousels.
+- Validation is Laravel validation, with `$rules` or a Form Request passed to
+  `$this->validate()`. Fields show their own errors.
+- Destructive actions open a Confirmation Dialog and authorize in PHP.
+- Colours come from the NativePHP theme, not from markup.
+
+## Ask for an app
+
+With Boost installed, describe the app rather than the controls. For example:
+
+> Set up this app with Firstlight. The main record is a job. I want a
+> searchable list of jobs, a form to create one, and a settings screen.
+
+The `firstlight-init` skill asks about the record, the recipes, brand colours,
+tabs, deletion rules, and locale one question at a time, and makes no change
+you have not agreed to. It then scaffolds each chosen
+[recipe](../how-to/build-a-list-detail-flow.md) with a Pest test and runs the
+test suite.
+
+For later screens, ask for the outcome, such as "add a screen to edit a job".
+The `building-firstlight-screens` skill picks the matching recipe, or starts
+from the generator:
+
+```bash
+php artisan make:firstlight-screen EditJob --form --test
+```
+
+## What still needs a person
+
+An agent can write screens and run their Pest tests. It cannot see the app on
+a device. Both skills end by asking you to run the app on an iOS simulator and
+an Android emulator and check navigation, field errors, and deletion on both.
+Check accessibility too. See [Accessibility](../concepts/accessibility.md) for
+what Firstlight covers and what your app still owns.
+
+--- Source: docs/getting-started/first-component.md ---
+
+# Add Your First Firstlight Component
+
+This tutorial adds a native Segmented control for choosing a queue. The same EDGE markup renders as a platform-appropriate control on iOS and Android.
+
+## Define the state
+
+Extend Firstlight's base for your screen, rather than the upstream EDGE base:
+
+```php
+use FirstlightUI\NativeComponent;
+
+class QueueScreen extends NativeComponent
+{
+    // Add the state below; use your normal Blade view.
+}
+```
+
+Normal Blade renders (a global `View` returned from `render()`, `$this->view()`,
+or an inferred view) automatically receive normal chrome and a root response
+revision. For a hand-built Element root, return `$this->response($element)`
+from `render()` instead of returning the Element directly. Nested children are
+untouched and partials are unstamped. Streaming is disabled and cannot be opted
+into. See the [full contract and limits](../reference/compatibility.md#runtime-response-contract).
+
+Add the selected value and stable value-to-label options to your component:
+
+```php
+public string $queue = 'mine';
+
+public array $queueOptions = [
+    'mine' => 'Mine',
+    'all' => 'All',
+];
+```
+
+The array keys are the public values stored in `$queue`; the labels are display text.
+
+## Render the control
+
+Bind the property with `native:model`:
+
+```blade
+<firstlight:segmented
+    :options="$queueOptions"
+    native:model="queue"
+    label="Queue"
+    helper="Choose the active queue."
+/>
+```
+
+Run the application natively. A selection emits its stable value to PHP, and the published `$queue` value determines the visible selection.
+
+## Handle a selection explicitly
+
+Use `@change` when the selection should call a method instead of directly synchronising a property:
+
+```blade
+<firstlight:segmented
+    :options="$queueOptions"
+    :value="$queue"
+    @change="selectQueue"
+    label="Queue"
+/>
+```
+
+The method receives the selected string value. See the [Segmented reference](../components/segmented.md) for integer values, disabled choices, accessibility, and validation rules. When the screen should show Laravel messages on Firstlight fields, follow [Validate fields](../how-to/validate-fields.md).
+
+--- Source: docs/getting-started/theming.md ---
+
+# Theme Firstlight Components
+
+Firstlight components inherit the semantic theme from `nativephp/mobile-ui`. There is no separate Firstlight theme file: configure the host application once, and the same tokens reach the native SwiftUI and Jetpack Compose renderers.
+
+The theme changes colour and typography while each platform retains its native geometry, motion, and interaction.
+
+## Publish the theme configuration
+
+Publish `config/native-ui.php` into the application:
+
+```shell
+php artisan vendor:publish --tag=native-ui-config
+```
+
+## Set the brand colour pairs
+
+Set both the background token and its `on-*` content token. This example uses the Firstlight showcase palette; replace the values with accessible pairs from your own brand:
+
+```php
+'theme' => [
+    'light' => [
+        'primary' => '#AE1515',
+        'on-primary' => '#FFF5EA',
+    ],
+    'dark' => [
+        'primary' => '#ED4E0C',
+        'on-primary' => '#110805',
+    ],
+],
+```
+
+The `primary` pair colours filled actions, selected states, and key accents. Surface, outline, destructive, success, accent, and disabled-state colours use their corresponding semantic tokens from the published configuration.
+
+Dark values are optional because NativePHP can derive them from the light theme. Define explicit dark overrides when brand perception or contrast needs a tuned pair. Keep text and icons at a contrast ratio of at least 4.5:1 against their background token.
+
+Theme colours accept CSS hex values, Tailwind palette names such as `violet-600`, and opacity modifiers such as `violet-600/15`.
+
+## Set warning colours
+
+Status Label, Badge, Callout, and Transient Feedback share the `warning` / `on-warning` pair on both platforms, independently of the brand `accent` pair. Add these keys to the same theme blocks:
+
+```php
+'light' => ['warning' => '#B45309', 'on-warning' => '#FFFFFF'],
+'dark' => ['warning' => '#FBBF24', 'on-warning' => '#1C1917'],
+```
+
+These are also the fallback pairs when the effective theme has no corresponding warning token. NativePHP can derive dark values from configured light values; explicit dark overrides keep the intended amber presentation. All four surfaces share contrast-safe black/white text correction for inaccessible authored pairs. List Item's `leading-icon-tone="warning"` and `trailing-icon-tone="warning"` use the same warning colour in the active appearance.
+
+Firstlight resolves these open-ended theme keys in PHP and publishes them with each component tree, because the native theme token structs do not retain custom keys. After a runtime `Theme::merge()`, republish the component tree to update warning colours. The light/dark pair already in that tree switches immediately with the native appearance.
+
+## Use theme tokens in surrounding native UI
+
+Firstlight controls consume the tokens automatically. Use the same tokens for surrounding `nativephp/mobile-ui` elements with theme-aware utility classes:
+
+```blade
+<native:column class="bg-theme-surface border border-theme-outline rounded-2xl p-4">
+    <native:text class="text-theme-on-surface text-lg font-bold">
+        Account
+    </native:text>
+
+    <firstlight:text-field
+        label="Email"
+        native:model="email"
+    />
+</native:column>
+```
+
+## Apply a runtime brand
+
+For tenant or user-specific branding, merge only the tokens that change from a service provider:
+
+```php
+use Native\Mobile\UI\Theme;
+
+public function boot(): void
+{
+    Theme::merge([
+        'light' => [
+            'primary' => '#AE1515',
+            'on-primary' => '#FFF5EA',
+        ],
+        'dark' => [
+            'primary' => '#ED4E0C',
+            'on-primary' => '#110805',
+        ],
+    ]);
+}
+```
+
+`Theme::merge()` deep-merges the new values, synchronises the effective Laravel configuration, and publishes the updated tokens to the native renderers.
 
 --- Source: docs/how-to/validate-fields.md ---
 
@@ -1807,289 +2035,62 @@ device calendar and clock are used; they do not throw. Authored malformed
 Authored field labels, helpers, errors, dialog titles, and Feedback messages
 are ordinary Blade strings; translate those with `__()` as you already would.
 
---- Source: docs/getting-started/theming.md ---
-
-# Theme Firstlight Components
-
-Firstlight components inherit the semantic theme from `nativephp/mobile-ui`. There is no separate Firstlight theme file: configure the host application once, and the same tokens reach the native SwiftUI and Jetpack Compose renderers.
-
-The theme changes colour and typography while each platform retains its native geometry, motion, and interaction.
-
-## Publish the theme configuration
-
-Publish `config/native-ui.php` into the application:
-
-```shell
-php artisan vendor:publish --tag=native-ui-config
-```
-
-## Set the brand colour pairs
-
-Set both the background token and its `on-*` content token. This example uses the Firstlight showcase palette; replace the values with accessible pairs from your own brand:
-
-```php
-'theme' => [
-    'light' => [
-        'primary' => '#AE1515',
-        'on-primary' => '#FFF5EA',
-    ],
-    'dark' => [
-        'primary' => '#ED4E0C',
-        'on-primary' => '#110805',
-    ],
-],
-```
-
-The `primary` pair colours filled actions, selected states, and key accents. Surface, outline, destructive, success, accent, and disabled-state colours use their corresponding semantic tokens from the published configuration.
-
-Dark values are optional because NativePHP can derive them from the light theme. Define explicit dark overrides when brand perception or contrast needs a tuned pair. Keep text and icons at a contrast ratio of at least 4.5:1 against their background token.
-
-Theme colours accept CSS hex values, Tailwind palette names such as `violet-600`, and opacity modifiers such as `violet-600/15`.
-
-## Set warning colours
-
-Status Label, Badge, Callout, and Transient Feedback share the `warning` / `on-warning` pair on both platforms, independently of the brand `accent` pair. Add these keys to the same theme blocks:
-
-```php
-'light' => ['warning' => '#B45309', 'on-warning' => '#FFFFFF'],
-'dark' => ['warning' => '#FBBF24', 'on-warning' => '#1C1917'],
-```
-
-These are also the fallback pairs when the effective theme has no corresponding warning token. NativePHP can derive dark values from configured light values; explicit dark overrides keep the intended amber presentation. All four surfaces share contrast-safe black/white text correction for inaccessible authored pairs. List Item's `leading-icon-tone="warning"` and `trailing-icon-tone="warning"` use the same warning colour in the active appearance.
-
-Firstlight resolves these open-ended theme keys in PHP and publishes them with each component tree, because the native theme token structs do not retain custom keys. After a runtime `Theme::merge()`, republish the component tree to update warning colours. The light/dark pair already in that tree switches immediately with the native appearance.
-
-## Use theme tokens in surrounding native UI
-
-Firstlight controls consume the tokens automatically. Use the same tokens for surrounding `nativephp/mobile-ui` elements with theme-aware utility classes:
-
-```blade
-<native:column class="bg-theme-surface border border-theme-outline rounded-2xl p-4">
-    <native:text class="text-theme-on-surface text-lg font-bold">
-        Account
-    </native:text>
-
-    <firstlight:text-field
-        label="Email"
-        native:model="email"
-    />
-</native:column>
-```
-
-## Apply a runtime brand
-
-For tenant or user-specific branding, merge only the tokens that change from a service provider:
-
-```php
-use Native\Mobile\UI\Theme;
-
-public function boot(): void
-{
-    Theme::merge([
-        'light' => [
-            'primary' => '#AE1515',
-            'on-primary' => '#FFF5EA',
-        ],
-        'dark' => [
-            'primary' => '#ED4E0C',
-            'on-primary' => '#110805',
-        ],
-    ]);
-}
-```
-
-`Theme::merge()` deep-merges the new values, synchronises the effective Laravel configuration, and publishes the updated tokens to the native renderers.
-
---- Source: docs/concepts/supernative-components.md ---
-
-# SuperNative Components
-
-Firstlight is a NativePHP SuperNative UI plugin. It participates in the same EDGE, Element Tree, native renderer, and wire-event lifecycle as NativePHP's own native UI components.
-
-## From EDGE to an Element Tree
-
-The Firstlight precompiler maps an authored tag such as `<firstlight:segmented>` to its Blade component during a native render. The component declares the `firstlight.segmented` element type. Its PHP element validates authored input, normalises options, and publishes a primitive Element Tree payload.
-
-The payload carries stable values, labels, enabled state, field metadata, accessibility text, and callback identifiers. It does not carry SwiftUI or Compose objects and does not introduce a separate JSON bridge.
-
-## Genuine platform renderers
-
-The plugin manifest maps the same element type to `SegmentedRenderer` on iOS and `dev.firstlightui.plugins.firstlight_ui.ui.SegmentedRenderer` on Android. The iOS renderer creates a native SwiftUI/UIKit control. The Android renderer creates a Material 3 Jetpack Compose control.
-
-The shared API guarantees the component's meaning and behaviour. Each platform retains its own geometry, materials, typography, state layers, motion, and accessibility conventions.
-
-## Semantic events and reconciliation
-
-A native interaction sends a semantic change event with the stable public value, not a renderer index or display label. PHP processes that event and publishes the next Element Tree. The renderer reconciles its control from the newly published value.
-
-That lifecycle keeps application decisions in PHP while ordinary native interaction and presentation remain on the platform UI thread. Read [server-authoritative state](server-authoritative-state.md) for the selection timing contract.
-
---- Source: docs/concepts/server-authoritative-state.md ---
-
-# Server-authoritative State
-
-Firstlight selection controls treat PHP's published value as authoritative. Native interaction is immediate, but it does not create an independent source of truth.
-
-## Interaction and acceptance
-
-When a person selects an enabled option, the native renderer immediately sends the option's stable value through the component callback. PHP may accept it by publishing that value, transform it according to application rules, or reject it by retaining the existing value.
-
-The renderer reconciles from every resulting Element Tree publication. An accepted value becomes selected. A rejected value returns to, or remains at, the last published selection. Reconciliation itself never emits another change event.
-
-## Repeated attempts and programmatic changes
-
-Each user attempt is semantic. If PHP rejects a choice, selecting that choice again sends another event rather than being suppressed as a duplicate of the rejected attempt.
-
-A programmatic PHP update changes the published selection without masquerading as a user interaction. It therefore updates the native control without firing `@change` back to PHP.
-
-## No selection
-
-`null` means no selection. It is distinct from an authored empty-string value. A same-typed value that is not present in the current options also renders with no selected segment; Firstlight never silently selects the first option.
-
-This timing is why Segmented accepts plain `native:model` and `native:model.live`, but rejects deferred `blur` and `debounce` sync modes.
-
---- Source: docs/concepts/accessibility.md ---
-
-# Accessibility in Firstlight
-
-Every Firstlight control is a real SwiftUI or Jetpack Compose control, not a
-drawing that imitates one. That is the main reason Firstlight apps are
-accessible: VoiceOver, TalkBack, Dynamic Type, Android font scaling, dark
-appearance, Increased Contrast, Reduce Motion, and right-to-left layout reach
-each control the same way they reach the platform's own apps.
-
-Firstlight then adds the parts a native control alone does not decide: whether
-something has a name, how many focus stops a row has, how large a target is,
-and what a screen reader hears when a form fails.
-
-## What you get from the platform
-
-Because the controls are native, these work without any Firstlight code:
-
-| Need | iOS | Android |
-| --- | --- | --- |
-| Screen reader | VoiceOver roles, values, and states | TalkBack roles, values, and states |
-| Larger text | Dynamic Type, including accessibility sizes | System font scale |
-| Appearance | Light, dark, and Increased Contrast | Light, dark, and high-contrast text |
-| Motion | Reduce Motion | Remove animations |
-| Reading direction | Right-to-left layout | Right-to-left layout |
-| Dialogs and sheets | System focus trapping and action order | System focus trapping and action order |
-
-## What Firstlight adds
-
-**Every control has a name.** Icon Button, Search Field, and Progress require
-`a11y-label` and fail before publishing without it. Fields, choices, and
-pickers warn during development when neither `label` nor `a11y-label` is set.
-An icon name is never accepted as a substitute for a name.
-
-**One thing, one focus stop.** A List Item row, a field with its label, helper,
-and error, or a Metric with its value and detail is one accessibility element.
-Decorative icons, avatars, monograms, checkmarks, and tone symbols are hidden,
-so screen-reader users do not hear the same thing twice.
-
-**Gestures have alternatives.** Swipe actions and context-menu items on List
-Item are also VoiceOver actions and TalkBack custom actions, so nobody has to
-perform a swipe or long press. The Media crop sheet has zoom buttons as well as
-pinch. Stepper exposes named increase and decrease actions.
-
-**Targets are large enough.** Actions Firstlight owns, such as icon buttons,
-field icon actions, the search clear button, Callout and Feedback actions,
-List Item rows, and Code Editor keys, are at least 44 points on iOS and 48 dp on
-Android.
-
-**Errors are spoken.** When a submit fails validation, VoiceOver and TalkBack
-read the errors and focus moves to the first invalid field. When a single
-field fails on blur, only that message is read and focus stays put. See
-[Validate fields](../how-to/validate-fields.md).
-
-**Status is not colour alone.** Callout names its tone in the spoken text, for
-example "Warning: Your changes have not been submitted." Badge, Status Label,
-Callout, and Feedback check theme colours as they render; a foreground and
-background pair below 4.5:1 contrast is corrected to black or white text.
-
-**Messages wait for the reader.** Transient Feedback announces each new message
-once. On iOS it stays twice as long while VoiceOver or Switch Control is on and
-fades instead of moving under Reduce Motion. On Android it uses the system's
-recommended accessibility timeout.
-
-**Text grows instead of shrinking.** Labels, rows, metrics, and messages wrap at
-large text sizes rather than truncating or shrinking. Code Editor keeps code
-left-to-right inside right-to-left layouts.
-
-Each component's reference page has an Accessibility section with its exact
-behaviour.
-
-## What is tested
-
-| Area | Automated evidence |
-| --- | --- |
-| Accessible names | Contract tests reject missing required labels; iOS and Android renderer tests check the published label |
-| Larger text | iOS snapshot tests at accessibility Dynamic Type sizes and Android tests at large font scales for most controls |
-| Dark appearance | iOS snapshots in both appearances for most controls; Android tests for List Item, Status Label, Date Picker, and Time Picker |
-| Target sizes | iOS and Android tests for the controls that own extra actions |
-| Gesture alternatives | List Item swipe and context-menu actions on both platforms |
-| Announcements | Activity Indicator, Feedback, Code Editor follow mode, and validation errors on both platforms |
-| Right-to-left | Pill Group on iOS; List Item and Feedback on Android |
-| Your screens | `assertAccessible()` in every showcase screen test |
-
-Documentation screenshots for every component are captured on both platforms in
-light and dark appearance.
-
-These are known gaps, stated plainly:
-
-- Spoken VoiceOver and TalkBack passes on physical devices have not been
-  completed. VoiceOver does not run in the iOS Simulator, so iOS spoken output
-  is covered by tests of the accessibility tree, not by listening.
-- Right-to-left layout is automated for only the components listed above.
-  Other controls rely on native layout, which mirrors automatically.
-- Text-scaling tests do not yet cover Activity Indicator, Badge, Bottom Sheet,
-  Date Picker, and Slider on either platform, nor the iOS dialogs and Time
-  Picker or Android Media and Search Field.
-- Android dark-appearance tests cover only the components listed above; the
-  documentation screenshots cover the rest.
-
-## What remains your app's job
-
-Firstlight makes each control accessible. Your app still decides what the
-screen says and in what order.
-
-- Write labels that name the thing, such as "Delete post", not "Button".
-- Give fields visible labels. Use `a11y-label` only when a visible label would
-  be wrong for the design.
-- Declare validation rules in the order the fields appear, so the error summary
-  reads in screen order.
-- Name the consequence in confirmation dialogs, such as "Delete" rather than
-  "OK".
-- Use the theme for colour, and keep each `on-*` pair at 4.5:1 or better. See
-  [Theme Firstlight components](../getting-started/theming.md).
-- Check your own screens in tests. `assertAccessible()` from NativePHP's test
-  harness fails when an interactive element or image has no accessible name:
-
-```php
-Native::visit('/posts')->assertAccessible();
-```
-
-See [Test screens](../how-to/test-screens.md) for the Firstlight checks that
-work alongside it.
-
 --- Source: docs/concepts/firstlight-and-mobile-ui.md ---
 
-# How Firstlight Complements NativePHP Mobile UI
+# What Firstlight Is
 
-NativePHP Mobile UI is the broad native UI foundation for NativePHP applications. It supplies layout, navigation, lists, presentation, media, gestures, form controls, semantic theming, and the official SwiftUI and Jetpack Compose integration that Firstlight builds upon.
+Firstlight is the app-shell layer for NativePHP. It covers what a standard
+forms app needs (lists and detail, search, forms with Laravel validation,
+settings, sheets and dialogs, and feedback) with genuine SwiftUI controls on
+iOS and Jetpack Compose Material 3 controls on Android, from one Blade API.
 
-Firstlight is not a replacement for Mobile UI or an attempt to reproduce its catalogue. It depends on Mobile UI, follows its EDGE conventions, inherits its semantic theme, and uses the same SuperNative Element Tree and event lifecycle. Firstlight focuses on a smaller set of form and action controls that benefit from a more opinionated product-level contract.
+It is built for agentic coding. Four [recipes](../how-to/build-a-list-detail-flow.md)
+show each kind of screen end to end, and a Laravel Boost guideline and two
+skills point coding agents at them. See
+[Build with a coding agent](../getting-started/build-with-a-coding-agent.md).
 
-## The difference at a glance
+## Who provides what
 
-| NativePHP Mobile UI | Firstlight UI |
+Firstlight builds on two NativePHP packages and replaces neither.
+
+| Layer | Provides |
 | --- | --- |
-| A broad toolkit of native primitives and application building blocks | A curated layer of form, selection, display, and action controls |
-| Flexible primitives that can support many compositions | Purpose-specific components with narrower, consistent contracts |
-| The official native renderer, theme, and extension foundation | Stable values, strict validation, server-authoritative state, field semantics, and cross-component consistency |
-| Platform-native SwiftUI and Material 3 implementation | The same native-first approach, with paired renderers where a higher-level contract needs them |
+| NativePHP Mobile | EDGE, the Element Tree, the event lifecycle, and native navigation chrome: layouts that return `true` from `usesNativeChrome()` get SwiftUI `NavigationStack` and `TabView` on iOS and a Material 3 `Scaffold` and top app bar on Android |
+| NativePHP Mobile UI | Layout primitives such as columns, scroll views, and grouped lists, the semantic theme, and the native renderer foundation |
+| Firstlight UI | Form, list, selection, overlay, status, and feedback controls with one contract on both platforms; Laravel validation, submission, authorization, pagination, and deletion on screens; Pest screen assertions and a screen generator; recipes, a Boost guideline, skills, and `llms.txt` |
 
-Mobile UI makes Firstlight possible. Firstlight adds a design-system layer for teams that want common form behaviour to be decided once rather than assembled separately in every application.
+Firstlight depends on Mobile UI, follows its EDGE conventions, inherits its
+theme, and uses the same Element Tree and event lifecycle. Mobile UI is the
+broad native toolkit; Firstlight decides common form and list behaviour once so
+each application does not assemble it again.
+
+## One API, the right pattern on each platform
+
+A Firstlight tag means the same thing on both platforms, and each platform
+draws it its own way. Tabs are a segmented control on iOS and Material 3 tabs
+on Android. A Confirmation Dialog is a SwiftUI `confirmationDialog` on iOS
+and a Material 3 `AlertDialog` on Android. Date Picker opens the graphical
+SwiftUI `DatePicker` on iOS and the Material 3 `DatePickerDialog` on Android.
+Field errors
+appear under the field on iOS and as Material 3 supporting text in the error
+state on Android.
+
+Every control is a real platform control. Firstlight draws nothing to imitate
+one, and there is no WebView.
+
+## What Firstlight is not
+
+- **Not navigation chrome.** Stacks, title bars, back navigation, and tab bars
+  come from NativePHP's native chrome. Firstlight runs inside them. Do not use
+  the `custom` attribute on top bars or bottom navs to draw your own.
+- **Not a design system.** Firstlight does not define a visual style.
+  Controls take colours and fonts from the NativePHP theme and keep each
+  platform's geometry, motion, and materials.
+- **Not a catalogue of everything.** There are no charts, carousels, or other
+  custom-drawn controls. A new tag is added only for a semantic control with an
+  equal native contract on iOS and Android.
+- **Not a form builder.** Screens are ordinary Blade views with PHP state, not
+  schemas.
 
 ## Additional dedicated components
 
@@ -2148,7 +2149,7 @@ Firstlight deliberately exposes fewer visual escape hatches and platform-only op
 
 Some Firstlight behaviour is not a new control. Field validation (`ValidatesFields`) runs Laravel's `Validator` in PHP and publishes the first `MessageBag` message into each field's existing `error` slot. Form submission (`SubmitsForms`) validates, runs a PHP callable once, and optionally sends success Feedback. Action authorization (`AuthorizesActions`) evaluates Laravel Gate/Policy decisions for hide, disable, and action-time guards. List pagination (`PaginatesLists`) binds Laravel paginators to List `@refresh` and `@endReached`. Destructive list actions (`DestroysListItems`) authorize Confirmation Dialog deletion by stable keys and republish `$listItems`. Package locale chrome publishes Firstlight-owned chrome strings from one Laravel language file, and Date/Time pickers inherit omitted locale and timezone from the application. Transient Feedback is an application-level outcome queue, not a Blade field. See [Validate fields](../how-to/validate-fields.md), [Submit forms](../how-to/submit-forms.md), [Authorize actions](../how-to/authorize-actions.md), [Paginate lists](../how-to/paginate-lists.md), [Destroy list items](../how-to/destroy-list-items.md), and [Localize chrome](../how-to/localize.md).
 
-Layout, typography, navigation chrome, and generic media stay in Mobile UI. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
+Layout, typography, and generic media stay in Mobile UI, and navigation chrome stays in NativePHP Mobile. Firstlight does not ship columns, bottom tabs, input masks, or a schema/form builder. Compose screens with Blade, Mobile UI layout, and Firstlight fields.
 
 ### Custom tappable content and accessibility
 
@@ -2177,9 +2178,213 @@ Firstlight adds strict authoring boundaries, documentation, tests, and catalogue
 
 Firstlight components use ordinary NativePHP UI component extension points. They publish Element Tree data, receive standard semantic events, inherit Mobile UI theme tokens, and require no custom imperative bridge functions or WebView-backed control layer.
 
-The relationship is intentionally complementary: **Mobile UI provides the comprehensive native foundation; Firstlight provides a curated, evidence-backed form and control system on top of it.**
+The relationship is intentionally complementary: **NativePHP provides the native foundation and chrome; Firstlight provides the app-shell layer of controls, Laravel contracts, and recipes on top of it.**
 
 Review the current [compatibility requirements](../reference/compatibility.md) before releasing an application, particularly where server-authoritative controls depend on unchanged-tree publication acknowledgements from NativePHP Mobile.
+
+--- Source: docs/concepts/accessibility.md ---
+
+# Accessibility in Firstlight
+
+Accessibility is a headline feature of Firstlight, and it starts with one
+decision: every control is a real SwiftUI or Jetpack Compose control, not a
+drawing that imitates one. VoiceOver, TalkBack, Dynamic Type, Android font
+scaling, dark appearance, Increased Contrast, Reduce Motion, and right-to-left
+layout reach each control the same way they reach the platform's own apps.
+
+Firstlight then adds the parts a native control alone does not decide: whether
+something has a name, how many focus stops a row has, how large a target is,
+and what a screen reader hears when a form fails.
+
+| Users who rely on | Get |
+| --- | --- |
+| VoiceOver and TalkBack | Required names on icon-only controls, development warnings for unnamed fields, one focus stop per row or field, and every swipe and context-menu action as a screen-reader action |
+| Spoken feedback on forms | Validation errors read aloud after a failed submit, with screen-reader focus on the first invalid field |
+| Larger text | Dynamic Type and Android font scaling, with labels that wrap instead of truncating |
+| Right-to-left languages | Mirrored native layout, with code kept left-to-right |
+| Reduce Motion | Platform motion settings, and Feedback that fades instead of moving on iOS |
+| Contrast and colour | Status named in words, and status colours below 4.5:1 corrected to black or white text |
+
+**Status.** Firstlight 1.0.0 is a release candidate. The behaviour on this page
+is covered by contract, XCTest, and Robolectric tests, and validation focus was
+observed with TalkBack on the Android emulator. Spoken VoiceOver and TalkBack
+output has not been checked on physical devices. See
+[Known gaps](#known-gaps).
+
+## What you get from the platform
+
+Because the controls are native, these work without any Firstlight code:
+
+| Need | iOS | Android |
+| --- | --- | --- |
+| Screen reader | VoiceOver roles, values, and states | TalkBack roles, values, and states |
+| Larger text | Dynamic Type, including accessibility sizes | System font scale |
+| Appearance | Light, dark, and Increased Contrast | Light, dark, and high-contrast text |
+| Motion | Reduce Motion | Remove animations |
+| Reading direction | Right-to-left layout | Right-to-left layout |
+| Dialogs and sheets | System focus trapping and action order | System focus trapping and action order |
+
+## What Firstlight adds
+
+**Every control has a name.** Icon Button, Search Field, and Progress require
+`a11y-label` and fail before publishing without it. Fields, choices, and
+pickers warn during development when neither `label` nor `a11y-label` is set.
+An icon name is never accepted as a substitute for a name.
+
+**One thing, one focus stop.** A List Item row, a field with its label, helper,
+and error, or a Metric with its value and detail is one accessibility element.
+Decorative icons, avatars, monograms, checkmarks, and tone symbols are hidden,
+so screen-reader users do not hear the same thing twice.
+
+**Gestures have alternatives.** Swipe actions and context-menu items on List
+Item are also VoiceOver actions and TalkBack custom actions, so nobody has to
+perform a swipe or long press. The Media crop sheet has zoom buttons as well as
+pinch. Stepper exposes named increase and decrease actions.
+
+**Targets are large enough.** Actions Firstlight owns, such as icon buttons,
+field icon actions, the search clear button, Callout and Feedback actions,
+List Item rows, and Code Editor keys, are at least 44 points on iOS and 48 dp on
+Android.
+
+**Errors are spoken.** When a submit fails validation, VoiceOver and TalkBack
+read a summary of the errors once, for example "There are 2 errors. The name
+field is required. The email field is required.", and screen-reader focus
+moves to the first invalid field. On iOS the keyboard does not open. On
+Android, Text Field, Text Area, and Code Editor take input focus while TalkBack
+is on; other fields announce without moving focus. When a single field fails
+on blur, only that message is read and focus stays put. Form-level errors
+appear in a Callout with `error-for` or `error-summary`. See
+[Validate fields](../how-to/validate-fields.md#screen-reader-announcements).
+
+**Status is not colour alone.** Callout names its tone in the spoken text, for
+example "Warning: Your changes have not been submitted." Badge, Status Label,
+Callout, and Feedback check theme colours as they render; a foreground and
+background pair below 4.5:1 contrast is corrected to black or white text.
+
+**Messages wait for the reader.** Transient Feedback announces each new message
+once. On iOS it stays twice as long while VoiceOver or Switch Control is on and
+fades instead of moving under Reduce Motion. On Android it uses the system's
+recommended accessibility timeout.
+
+**Text grows instead of shrinking.** Labels, rows, metrics, and messages wrap at
+large text sizes rather than truncating or shrinking. On iPhone the Date and
+Time picker sheets size to their content, so they grow with Dynamic Type.
+
+**Right-to-left layouts mirror.** Native layout mirrors automatically. The
+Android Stepper row mirrors with its label, and Code Editor keeps code
+left-to-right inside right-to-left layouts.
+
+Each component's reference page has an Accessibility section with its exact
+behaviour.
+
+## What is tested
+
+| Area | Automated evidence |
+| --- | --- |
+| Accessible names | Contract tests reject missing required labels; iOS and Android renderer tests check the published label |
+| Larger text | iOS snapshot tests at accessibility Dynamic Type sizes and Android tests at large font scales for most controls |
+| Dark appearance | iOS snapshots in both appearances for most controls; Android tests for List Item, Status Label, Date Picker, and Time Picker |
+| Target sizes | iOS and Android tests for the controls that own extra actions |
+| Gesture alternatives | List Item swipe and context-menu actions on both platforms |
+| Announcements | Activity Indicator, Feedback, Code Editor follow mode, and validation errors on both platforms |
+| Right-to-left | Pill Group on iOS; List Item and Feedback on Android |
+| Your screens | `assertAccessible()` in every showcase screen test |
+
+Documentation screenshots for every component are captured on both platforms in
+light and dark appearance.
+
+## Known gaps
+
+These are known gaps, stated plainly:
+
+- Spoken VoiceOver and TalkBack passes on physical devices have not been
+  completed. VoiceOver does not run in the iOS Simulator, so iOS spoken output
+  is covered by tests of the accessibility tree, not by listening. TalkBack
+  focus moving to the first invalid field was observed on the Android
+  emulator; spoken output was not captured on either platform.
+- The error summary reads messages in rule order, not screen order. Declare
+  rules in the order the fields appear.
+- The app recipes were checked on an iOS simulator and an Android emulator,
+  not with VoiceOver or TalkBack.
+- Right-to-left layout is automated for only the components listed above.
+  Other controls rely on native layout, which mirrors automatically.
+- Text-scaling tests do not yet cover Activity Indicator, Badge, Bottom Sheet,
+  Date Picker, and Slider on either platform, nor the iOS dialogs and Time
+  Picker or Android Media and Search Field.
+- Android dark-appearance tests cover only the components listed above; the
+  documentation screenshots cover the rest.
+
+## What remains your app's job
+
+Firstlight makes each control accessible. Your app still decides what the
+screen says and in what order.
+
+- Write labels that name the thing, such as "Delete post", not "Button".
+- Give fields visible labels. Use `a11y-label` only when a visible label would
+  be wrong for the design.
+- Declare validation rules in the order the fields appear, so the error summary
+  reads in screen order.
+- Name the consequence in confirmation dialogs, such as "Delete" rather than
+  "OK".
+- Use the theme for colour, and keep each `on-*` pair at 4.5:1 or better. See
+  [Theme Firstlight components](../getting-started/theming.md).
+- Check your own screens in tests. `assertAccessible()` from NativePHP's test
+  harness fails when an interactive element or image has no accessible name:
+
+```php
+Native::visit('/posts')->assertAccessible();
+```
+
+See [Test screens](../how-to/test-screens.md) for the Firstlight checks that
+work alongside it.
+
+--- Source: docs/concepts/supernative-components.md ---
+
+# SuperNative Components
+
+Firstlight is a NativePHP SuperNative UI plugin. It participates in the same EDGE, Element Tree, native renderer, and wire-event lifecycle as NativePHP's own native UI components.
+
+## From EDGE to an Element Tree
+
+The Firstlight precompiler maps an authored tag such as `<firstlight:segmented>` to its Blade component during a native render. The component declares the `firstlight.segmented` element type. Its PHP element validates authored input, normalises options, and publishes a primitive Element Tree payload.
+
+The payload carries stable values, labels, enabled state, field metadata, accessibility text, and callback identifiers. It does not carry SwiftUI or Compose objects and does not introduce a separate JSON bridge.
+
+## Genuine platform renderers
+
+The plugin manifest maps the same element type to `SegmentedRenderer` on iOS and `dev.firstlightui.plugins.firstlight_ui.ui.SegmentedRenderer` on Android. The iOS renderer creates a native SwiftUI/UIKit control. The Android renderer creates a Material 3 Jetpack Compose control.
+
+The shared API guarantees the component's meaning and behaviour. Each platform retains its own geometry, materials, typography, state layers, motion, and accessibility conventions.
+
+## Semantic events and reconciliation
+
+A native interaction sends a semantic change event with the stable public value, not a renderer index or display label. PHP processes that event and publishes the next Element Tree. The renderer reconciles its control from the newly published value.
+
+That lifecycle keeps application decisions in PHP while ordinary native interaction and presentation remain on the platform UI thread. Read [server-authoritative state](server-authoritative-state.md) for the selection timing contract.
+
+--- Source: docs/concepts/server-authoritative-state.md ---
+
+# Server-authoritative State
+
+Firstlight selection controls treat PHP's published value as authoritative. Native interaction is immediate, but it does not create an independent source of truth.
+
+## Interaction and acceptance
+
+When a person selects an enabled option, the native renderer immediately sends the option's stable value through the component callback. PHP may accept it by publishing that value, transform it according to application rules, or reject it by retaining the existing value.
+
+The renderer reconciles from every resulting Element Tree publication. An accepted value becomes selected. A rejected value returns to, or remains at, the last published selection. Reconciliation itself never emits another change event.
+
+## Repeated attempts and programmatic changes
+
+Each user attempt is semantic. If PHP rejects a choice, selecting that choice again sends another event rather than being suppressed as a duplicate of the rejected attempt.
+
+A programmatic PHP update changes the published selection without masquerading as a user interaction. It therefore updates the native control without firing `@change` back to PHP.
+
+## No selection
+
+`null` means no selection. It is distinct from an authored empty-string value. A same-typed value that is not present in the current options also renders with no selected segment; Firstlight never silently selects the first option.
+
+This timing is why Segmented accepts plain `native:model` and `native:model.live`, but rejects deferred `blur` and `debounce` sync modes.
 
 --- Source: docs/components/activity-indicator.md ---
 

@@ -17,25 +17,42 @@ final class DocumentationArtifactBuilder
         $configuration = $this->configuration();
         $pages = $this->repository->publicPages();
         $siteUrl = rtrim($configuration['site_url'], '/');
+        $docsUrl = rtrim($configuration['docs_url'] ?? $siteUrl, '/');
+        $index = DocumentationPage::fromFile($this->repository->root(), 'docs/index.md');
+        [$introduction, $headings] = $this->indexStructure($index);
 
         $summary = [
             '# '.$configuration['name'],
             '',
-            '> Current public documentation for '.$configuration['package'].'.',
-            '',
-            '- Website: '.$siteUrl,
-            '- Repository: '.$configuration['repository_url'],
-            '- Package: '.$configuration['package'],
-            '',
-            '## Documentation',
+            '> '.$index->description,
             '',
         ];
 
-        foreach ($pages as $page) {
-            $summary[] = '- ['.$page->title.']('.$this->publicUrl($siteUrl, $page->path).'): '.$page->description;
+        if ($introduction !== '') {
+            $summary[] = $introduction;
+            $summary[] = '';
         }
 
-        $full = ['# '.$configuration['name'].' Documentation', ''];
+        array_push(
+            $summary,
+            '- Website: '.$siteUrl,
+            '- Documentation: '.$docsUrl,
+            '- Repository: '.$configuration['repository_url'],
+            '- Package: '.$configuration['package'],
+        );
+
+        $currentHeading = null;
+        foreach ($pages as $page) {
+            $heading = $headings[$page->path] ?? 'Documentation';
+            if ($heading !== $currentHeading) {
+                array_push($summary, '', '## '.$heading, '');
+                $currentHeading = $heading;
+            }
+
+            $summary[] = '- ['.$page->title.']('.$this->publicUrl($docsUrl, $page->path).'): '.$page->description;
+        }
+
+        $full = ['# '.$configuration['name'].' Documentation', '', '> '.$index->description, ''];
         foreach ($pages as $page) {
             $full[] = '--- Source: '.$page->path.' ---';
             $full[] = '';
@@ -49,7 +66,43 @@ final class DocumentationArtifactBuilder
         ];
     }
 
-    /** @return array{name: string, site_url: string, repository_url: string, package: string, versioning: string} */
+    /**
+     * The index's lead text, and the second-level heading each indexed page is listed under.
+     *
+     * @return array{0: string, 1: array<string, string>}
+     */
+    private function indexStructure(DocumentationPage $index): array
+    {
+        $introduction = [];
+        $headings = [];
+        $heading = null;
+
+        foreach (explode("\n", $index->body) as $line) {
+            if (preg_match('/^##\s+(.+)$/', $line, $match) === 1) {
+                $heading = trim($match[1]);
+
+                continue;
+            }
+
+            if ($heading === null) {
+                if (! str_starts_with($line, '# ')) {
+                    $introduction[] = $line;
+                }
+
+                continue;
+            }
+
+            preg_match_all('/(?<!!)\[[^\]]+\]\(([^)#\s]+\.md)(?:#[^)]*)?\)/', $line, $matches);
+            foreach ($matches[1] as $target) {
+                $path = $this->repository->resolveRelativePath('docs', $target);
+                $headings[$path] ??= $heading;
+            }
+        }
+
+        return [trim(implode("\n", $introduction)), $headings];
+    }
+
+    /** @return array{name: string, site_url: string, docs_url?: string, repository_url: string, package: string, versioning: string} */
     private function configuration(): array
     {
         $path = $this->repository->root().'/spec/documentation.json';
