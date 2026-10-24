@@ -165,7 +165,8 @@ final class SwitchControlSnapshotTests: XCTestCase {
     }
 
     private func accessibilityElements(in controller: UIViewController) -> [NSObject] {
-        withPreparedWindow(for: controller) { window in
+        AccessibilityRuntime.enable()
+        return withPreparedWindow(for: controller) { window in
             return collectAccessibilityElements(from: window)
         }
     }
