@@ -170,7 +170,9 @@ object FirstlightSliderRenderer {
 }
 
 private fun NativeUINode.findSliderNode(id: Int): NativeUINode? {
-    if (this.id == id) return this
+    // Positional ids are reused by unrelated nodes when PHP publishes a different screen
+    // (such as the error screen), so only a slider node may reconfigure this renderer.
+    if (this.id == id) return takeIf { type == "firstlight.slider" }
     children.forEach { child -> child.findSliderNode(id)?.let { return it } }
     return null
 }

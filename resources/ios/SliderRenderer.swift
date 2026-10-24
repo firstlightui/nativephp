@@ -179,8 +179,10 @@ struct SliderRendererState {
         abs(lhs - rhs) <= max(abs(configuration.step) * 0.000001, 0.000001)
     }
 
+    // Positional ids are reused by unrelated nodes when PHP publishes a different screen
+    // (such as the error screen), so only a slider node may reconfigure this renderer.
     private static func findNode(id: Int, in node: NativeUINode) -> NativeUINode? {
-        if node.id == id { return node }
+        if node.id == id { return node.type == "firstlight.slider" ? node : nil }
         for child in node.children {
             if let found = findNode(id: id, in: child) { return found }
         }

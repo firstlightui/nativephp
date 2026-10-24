@@ -202,18 +202,25 @@ final class Slider extends Element
         if ($step <= 0) {
             throw new InvalidArgumentException('Slider `step` must be greater than zero.');
         }
-        if ($value < $min) {
-            throw new InvalidArgumentException('Slider `value` must not be below `min`.');
-        }
-        if ($value > $max) {
-            throw new InvalidArgumentException('Slider `value` must not be above `max`.');
-        }
         if ($this->debounceProvided && $this->inputProps['sync_mode'] !== 'debounce') {
             throw new InvalidArgumentException('Slider debounce-ms requires sync-mode debounce.');
         }
 
-        $this->inputProps['interval_count'] = FiniteNumber::gridIndex($max, $min, $step, 'Slider range');
-        FiniteNumber::gridIndex($value, $min, $step, 'Slider `value`');
+        $intervalCount = FiniteNumber::gridIndex($max, $min, $step, 'Slider range');
+
+        // The value usually round-trips through the renderer's 32-bit Float, so it may sit a few
+        // Float ulps off the authored double grid or bounds.
+        $quotient = ($value - $min) / $step;
+        $tolerance = FiniteNumber::nativeGridTolerance($value, $min, $step);
+        if ($quotient < -$tolerance) {
+            throw new InvalidArgumentException('Slider `value` must not be below `min`.');
+        }
+        if ($quotient > $intervalCount + $tolerance) {
+            throw new InvalidArgumentException('Slider `value` must not be above `max`.');
+        }
+
+        $this->inputProps['interval_count'] = $intervalCount;
+        FiniteNumber::gridIndex($value, $min, $step, 'Slider `value`', fromNativeFloat: true);
         $this->warnWhenUnlabelled();
 
         $props = $this->inputProps;

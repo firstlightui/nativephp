@@ -33,7 +33,10 @@ final class FiniteNumber
         return $number;
     }
 
-    public static function gridIndex(float $value, float $origin, float $step, string $context): int
+    /** Round-trip error budget, in Float epsilons, for values computed by a native renderer. */
+    private const NATIVE_FLOAT_EPSILONS = 4 * 1.1920928955078125E-7;
+
+    public static function gridIndex(float $value, float $origin, float $step, string $context, bool $fromNativeFloat = false): int
     {
         $quotient = ($value - $origin) / $step;
         if (! is_finite($quotient)) {
@@ -41,7 +44,8 @@ final class FiniteNumber
         }
 
         $nearest = round($quotient);
-        if (abs($quotient - $nearest) > self::GRID_EPSILON) {
+        $tolerance = $fromNativeFloat ? self::nativeGridTolerance($value, $origin, $step) : self::GRID_EPSILON;
+        if (abs($quotient - $nearest) > $tolerance) {
             throw new InvalidArgumentException("{$context} must lie on the step grid.");
         }
 
@@ -50,6 +54,15 @@ final class FiniteNumber
         }
 
         return (int) $nearest;
+    }
+
+    /**
+     * Grid-quotient tolerance for a value a native renderer computed in 32-bit Float
+     * (for example 0.3f arrives as 0.30000001192...), which the strict epsilon rejects.
+     */
+    public static function nativeGridTolerance(float $value, float $origin, float $step): float
+    {
+        return self::GRID_EPSILON + self::NATIVE_FLOAT_EPSILONS * (abs($value) + abs($origin)) / $step;
     }
 
     private static function invalidNumber(string $context): InvalidArgumentException

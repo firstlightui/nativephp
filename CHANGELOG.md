@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Slider: a fractional step such as `0.1` no longer breaks the screen after a drag. The renderer sends its value back as a 32-bit Float (0.3 arrives as 0.30000001192…), which the strict step-grid and bounds checks rejected on the next render, so PHP showed the error screen. The iOS slider could then take props from an unrelated error-screen node with the same id, which is the likely cause of a reported TestFlight crash. Values from the renderer now get Float round-trip tolerance, authored off-grid values are still rejected, and on both platforms a slider takes new props only from a `firstlight.slider` node.
+
 ## 1.0.0-RC5 - 2026-10-24
 
 ### Changed

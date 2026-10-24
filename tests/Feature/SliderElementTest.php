@@ -119,6 +119,24 @@ it('accepts binary floating noise within the documented grid epsilon', function 
     ]))['props']['interval_count'])->toBe(10);
 });
 
+it('accepts values returned through the renderer 32-bit Float', function (float $min, float $max, float $step, int $index) {
+    // Renderers snap to min + index * step in Float and send that Float back to PHP.
+    $float = fn (float $number): float => unpack('g', pack('g', $number))[1];
+    $value = $float($float($min) + $float($float($index) * $float($step)));
+
+    expect(collectFirstlightSlider(sliderAttributes([
+        'value' => $value,
+        'min' => $min,
+        'max' => $max,
+        'step' => $step,
+    ]))['props']['value'])->toBe($value);
+})->with([
+    'tenth inside the grid' => [0.0, 1.0, 0.1, 3],
+    'tenth at max' => [0.0, 1.1, 0.1, 11],
+    'tenth at negative min' => [-1.1, 1.0, 0.1, 0],
+    'hundredth far from the origin' => [100.0, 200.0, 0.01, 7_777],
+]);
+
 it('requires the accepted value to remain inside inclusive bounds', function (int|float $value, string $message) {
     expect(fn () => collectFirstlightSlider(sliderAttributes(['value' => $value])))
         ->toThrow(InvalidArgumentException::class, $message);
