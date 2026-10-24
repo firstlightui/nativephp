@@ -34,9 +34,9 @@ sources:
 | Component | `Slider` / `<firstlight:slider>` |
 | State class | Continuous; native-thread gesture with live/blur/debounce publication |
 | Implementation | Paired Firstlight SwiftUI and Material 3 renderers |
-| Package revision captured | `19d12ff9d48baeddd312a6ef5d1a749bdba585e8` (`v1.0.0-RC6`), clean |
-| Package revision tested | `461335df2bcb51e87d092bbdf3a90e6b2a4e7114` on `release/component-reviews`, clean; later commits on the branch change only reviews and documentation |
-| Showcase revision | `c7ed28ef489e1caae305fc84961af9f549eb409d` (`firstlightui/showcase` `main`), clean; its lock installs `firstlightui/nativephp` at `19d12ff9d48baeddd312a6ef5d1a749bdba585e8` |
+| Package revision captured | `e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` on `release/component-reviews`, clean (recaptured after the fixes on this branch) |
+| Package revision tested | `42e875a91949981b324cd20854e591a292b9475f` on `release/component-reviews`, clean; later commits on the branch change only reviews and documentation |
+| Showcase revision | `37669c2e077d3100550de4f5c4822ecb112f1d26` (local branch `release/component-review-fixtures` on `c7ed28ef489e1caae305fc84961af9f549eb409d`), clean; its lock installs `firstlightui/nativephp` at `e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` |
 | iOS simulator | Firstlight iPhone 17 Pro iOS 26.5 (`758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC`); XCTest also on Firstlight iPhone 17 Pro iOS 27.0 (`731CC3F2-1651-4522-A5A3-A781710EE166`) |
 | Android emulator | `emulator-5554`, AVD Medium_Phone, Android 17 (API 37), `google_apis_playstore_ps16k` (not a Pixel 9 Pro) |
 | Visual reviewer | Pending maintainer approval (row below) |
@@ -46,9 +46,9 @@ sources:
 
 | Result | Command and evidence |
 | --- | --- |
-| PASS | `bin/capture-doc-screenshot-batch Segmented Tabs SearchField Select Slider --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 07:09:59 AEDT (batch 4, attempt 2; attempt 1 stopped before publishing because the Android showcase was not foregrounded after an upstream host crash on cold launch, and published nothing). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/slider` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
-| PASS | The orchestrator reported `Package: 19d12ff9d48baeddd312a6ef5d1a749bdba585e8` and `Showcase: c7ed28ef489e1caae305fc84961af9f549eb409d` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. Published images were moved out of the tree between batches so that each batch started clean, and were committed unchanged. |
-| PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. Fixture issue: Temperature offset and Dose with error have no model or callback, so they render with non-interactive styling on both platforms. |
+| PASS | `bin/capture-doc-screenshot-batch TimePicker Slider Stepper ListSection --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 08:02:39 AEDT (recapture batch 2). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/slider` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
+| PASS | The orchestrator reported `Package: e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` and `Showcase: 37669c2e077d3100550de4f5c4822ecb112f1d26` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. Published images were moved out of the tree between batches so that each batch started clean, and were committed unchanged. |
+| PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. Temperature offset and Dose with error are now bound and render with the theme primary; only Disabled dose is dimmed. No defects seen. |
 | BLOCKED | Maintainer visual approval of this release matrix is not yet recorded. |
 
 | Platform | Light | Dark |
@@ -56,19 +56,19 @@ sources:
 | iOS | `docs/screenshots/slider/ios-light.png` | `docs/screenshots/slider/ios-dark.png` |
 | Android | `docs/screenshots/slider/android-light.png` | `docs/screenshots/slider/android-dark.png` |
 
-Thirty matrices were captured with `bin/capture-doc-screenshot-batch` in six five-component batches rather than 31 separate `bin/capture-doc-screenshots` runs. Release mode requires both repositories to be clean before launch, and each single-component run publishes into the package tree. The batch entrypoint uses the same `DocumentationScreenshotCapture` guards.
+Thirty matrices were captured with `bin/capture-doc-screenshot-batch` in six five-component batches rather than 31 separate `bin/capture-doc-screenshots` runs. Release mode requires both repositories to be clean before launch, and each single-component run publishes into the package tree. The batch entrypoint uses the same `DocumentationScreenshotCapture` guards. This matrix was recaptured after the component and fixture fixes on this branch, from clean package and showcase trees, using the same guarded batch entrypoint. The showcase fixes are on the local branch `release/component-review-fixtures`, which is not yet pushed.
 
 ## Automated and consumer evidence
 
 | Result | Command and evidence |
 | --- | --- |
-| PASS | `vendor/bin/pest --log-junit ../evidence/pest.xml` at `461335df2bcb51e87d092bbdf3a90e6b2a4e7114` — 1465 passed, 5 skipped, 1 deprecation, 4 warnings, exit 0 (49.7 s). |
-| PASS | `xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC' -resultBundlePath ../evidence/ios26.xcresult test` (iPhone 17 Pro, iOS 26.5) — TEST SUCCEEDED: 304 tests, 298 passed, 0 failed, 6 skipped. |
+| PASS | `vendor/bin/pest` at `42e875a91949981b324cd20854e591a292b9475f` — 1470 passed, 5 skipped, 1 deprecation, 4 warnings, exit 0 (48.4 s). |
+| PASS | `xcodebuild -scheme FirstlightIOSControls -destination 'platform=iOS Simulator,id=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC' -resultBundlePath ../evidence/run2/ios26.xcresult test` (iPhone 17 Pro, iOS 26.5) — TEST SUCCEEDED: 304 tests, 298 passed, 0 failed, 6 skipped. |
 | PASS | Same command on `id=731CC3F2-1651-4522-A5A3-A781710EE166` (iPhone 17 Pro, iOS 27.0) — TEST SUCCEEDED: 304 tests, 298 passed, 0 failed, 6 skipped. |
-| PASS | `JAVA_HOME=<jdk-21> tests/android/gradlew -p tests/android testDebugUnitTest verifyPaparazziDebug` — BUILD SUCCESSFUL; 309 tests in 87 classes, 0 failures, 0 errors. |
+| PASS | `JAVA_HOME=<jdk-21> tests/android/gradlew -p tests/android testDebugUnitTest verifyPaparazziDebug --rerun-tasks` — BUILD SUCCESSFUL, 35 tasks executed; 309 tests in 87 classes, 0 failures, 0 errors. |
 | PASS | `bin/check-docs --development` — "Documentation checks passed.", exit 0. |
 | PASS | `bin/check-component <Name> --development` for all 31 manifest components — exit 0 each. |
-| PASS | Showcase `php artisan test` at `c7ed28e` — 205 passed (4194 assertions). |
+| PASS | Showcase `php artisan test` at `acc4dc1` (local branch `release/component-review-fixtures` on `c7ed28e`) — 206 passed (4206 assertions). |
 | PASS | Showcase `php artisan native:plugin:validate ../nativephp` — exit 0, with one warning: "No bridge_functions defined in manifest". |
 
 Component-specific tests within those runs:
@@ -95,7 +95,6 @@ Gaps (listed, not invented):
 
 - A slider named only by `a11y-label` is not demonstrated.
 - A programmatic publication during an active drag (must replace the draft) is not instrumented.
-- Capture fixture: in `captures/slider.blade.php`, Temperature offset and Dose with error set `:value` with no model or callback. `isInteractive` is therefore false, so the release images show the fractional and error states with non-interactive styling: dimmed on iOS and a grey track on Android. This is the same showcase fixture issue as Date Picker and Time Picker.
 
 ## Constitution review
 
@@ -114,12 +113,12 @@ Gaps (listed, not invented):
 Article XII is not applicable.
 ## Release checklist
 
-- [x] Clean `--release` capture from `19d12ff9d48baeddd312a6ef5d1a749bdba585e8` and `c7ed28ef489e1caae305fc84961af9f549eb409d` published the four-image matrix (2026-10-25).
-- [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component Slider --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `461335df2bcb51e87d092bbdf3a90e6b2a4e7114`.
+- [x] Clean `--release` capture from `e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` and `37669c2e077d3100550de4f5c4822ecb112f1d26` published the four-image matrix (2026-10-25).
+- [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component Slider --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `42e875a91949981b324cd20854e591a292b9475f`.
 - [x] Showcase demo audited against every documented state; gaps listed above.
 - [ ] BLOCKED — Maintainer visual approval of the four release images listed above (record reviewer, date and verdict per image).
 - [ ] BLOCKED — Physical iOS device row:
-  - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `461335df2bcb51e87d092bbdf3a90e6b2a4e7114` or later and open **Slider** from the showcase home (`/components/slider`).
+  - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `42e875a91949981b324cd20854e591a292b9475f` or later and open **Slider** from the showcase home (`/components/slider`).
   - [ ] Live dose updates PHP on each whole step while dragging; blur only on release; debounce after 500 ms quiet or on release.
   - [ ] Thumb snaps to the authored grid, including fractional steps.
   - [ ] Disabled dose stays at 7.
@@ -132,7 +131,7 @@ Article XII is not applicable.
   - [ ] Right-to-left (device language Arabic or Hebrew, or the Right-to-Left pseudolanguage): minimum is on the right; dragging left increases the value.
   - [ ] Light and dark appearance both match the approved captures; airplane mode on: the screen still loads and every interaction round-trips locally.
 - [ ] BLOCKED — Physical Android device row:
-  - [ ] Device: record model, Android version, date and tester. Install the showcase built from `461335df2bcb51e87d092bbdf3a90e6b2a4e7114` or later and open **Slider** from the showcase home.
+  - [ ] Device: record model, Android version, date and tester. Install the showcase built from `42e875a91949981b324cd20854e591a292b9475f` or later and open **Slider** from the showcase home.
   - [ ] Live dose updates PHP on each whole step while dragging; blur only on release; debounce after 500 ms quiet or on release.
   - [ ] Thumb snaps to the authored grid, including fractional steps.
   - [ ] Disabled dose stays at 7.
