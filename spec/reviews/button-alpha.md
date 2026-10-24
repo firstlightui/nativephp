@@ -115,7 +115,7 @@ This section supersedes the capture and release-readiness statements above. Earl
 | Showcase revision | `37669c2e077d3100550de4f5c4822ecb112f1d26` (local branch `release/component-review-fixtures` on `c7ed28ef489e1caae305fc84961af9f549eb409d`), clean; its lock installs `firstlightui/nativephp` at `e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` |
 | iOS simulator | Firstlight iPhone 17 Pro iOS 26.5 (`758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC`); XCTest also on Firstlight iPhone 17 Pro iOS 27.0 (`731CC3F2-1651-4522-A5A3-A781710EE166`) |
 | Android emulator | `emulator-5554`, AVD Medium_Phone, Android 17 (API 37), `google_apis_playstore_ps16k` (not a Pixel 9 Pro) |
-| Visual reviewer | Pending maintainer approval (row below) |
+| Visual reviewer | Wojt Janowski (maintainer), 2026-10-24 |
 | Physical devices | None used; both device rows remain BLOCKED |
 
 ### Release capture
@@ -125,7 +125,7 @@ This section supersedes the capture and release-readiness statements above. Earl
 | PASS | `bin/capture-doc-screenshot-batch Button Media ConfirmationDialog DatePicker --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 08:00:36 AEDT (recapture batch 1). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/button` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
 | PASS | The orchestrator reported `Package: e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` and `Showcase: 37669c2e077d3100550de4f5c4822ecb112f1d26` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. Published images were moved out of the tree between batches so that each batch started clean, and were committed unchanged. |
 | PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. The iOS Continue button now shows its trailing chevron: the fixture uses `icon-trailing-ios="chevron.right"`, which Button accepts since this branch. Shared `chevron-right` alone still resolves to no glyph through NativePHP's iOS icon helper (upstream). No other defects seen. |
-| BLOCKED | Maintainer visual approval of this release matrix is not yet recorded. |
+| PASS | The maintainer approved all four images of this release matrix on 2026-10-24. |
 
 | Platform | Light | Dark |
 | --- | --- | --- |
@@ -179,7 +179,7 @@ Gaps (listed, not invented):
 - **Article VI — BLOCKED.** Automated accessibility semantics pass, but live VoiceOver/TalkBack, Dynamic Type/font scale, Reduce Motion, increased contrast and RTL on physical devices are not yet recorded.
 - **Article VII — PASS.** Semantic theme tokens only; no style-bag or platform escape props (contract tests).
 - **Article VIII — PASS.** Unchanged from the development review.
-- **Article IX — BLOCKED.** PHP, iOS (26.5 and 27.0), Android, showcase, documentation and release captures pass; physical-device checks (IX.4) and maintainer visual approval are outstanding.
+- **Article IX — BLOCKED.** PHP, iOS (26.5 and 27.0), Android, showcase, documentation and release captures pass; physical-device checks (IX.4) are outstanding; maintainer visual approval is recorded.
 - **Article X — BLOCKED for catalogue readiness.** A component review does not complete the catalogue.
 - **Article XI — PASS.** The review skill, structural gate and documentation gate were applied; missing evidence is recorded as BLOCKED.
 
@@ -190,7 +190,7 @@ Article XII is not applicable.
 - [x] Clean `--release` capture from `e6ab75fa82a27b32ab8163b2f94d166a8429d9f1` and `37669c2e077d3100550de4f5c4822ecb112f1d26` published the four-image matrix (2026-10-25).
 - [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component Button --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02`.
 - [x] Showcase demo audited against every documented state; gaps listed above.
-- [ ] BLOCKED — Maintainer visual approval of the four release images listed above (record reviewer, date and verdict per image).
+- [x] PASS — Maintainer visual approval: Wojt Janowski approved all four release images listed above on 2026-10-24.
 - [ ] BLOCKED — Physical iOS device row:
   - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` or later and open **Button** from the showcase home (`/components/button`).
   - [ ] Tap each enabled variant, size and icon button; the count rises by exactly one per press.
@@ -217,5 +217,5 @@ Article XII is not applicable.
 ### Verdicts — 2026-10-25
 
 - **Automated, consumer and simulator/emulator evidence: PASS.**
-- **Component-release readiness: BLOCKED.** Only the maintainer visual approval and the two physical-device rows remain; simulator evidence does not substitute for them.
+- **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.

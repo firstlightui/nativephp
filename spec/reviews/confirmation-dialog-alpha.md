@@ -39,7 +39,7 @@ sources:
 | Showcase revision | `acc4dc114b5baee71702e27b6d2f8d51f1efd73c` (local branch `release/component-review-fixtures` on `c7ed28ef489e1caae305fc84961af9f549eb409d`), clean; its lock installs `firstlightui/nativephp` at `14e3ac0b718a7be67c0c7eb276e5c47f10c2b706` |
 | iOS simulator | Firstlight iPhone 17 Pro iOS 26.5 (`758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC`); XCTest also on Firstlight iPhone 17 Pro iOS 27.0 (`731CC3F2-1651-4522-A5A3-A781710EE166`) |
 | Android emulator | `emulator-5554`, AVD Medium_Phone, Android 17 (API 37), `google_apis_playstore_ps16k` (not a Pixel 9 Pro) |
-| Visual reviewer | Pending maintainer approval (row below) |
+| Visual reviewer | Wojt Janowski (maintainer), 2026-10-24 |
 | Physical devices | None used; both device rows remain BLOCKED |
 
 ## Release capture
@@ -49,7 +49,7 @@ sources:
 | PASS | `bin/capture-doc-screenshot-batch ConfirmationDialog --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 08:05:58 AEDT (single-component recapture after the anchor fix). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/confirmation-dialog` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
 | PASS | The orchestrator reported `Package: 14e3ac0b718a7be67c0c7eb276e5c47f10c2b706` and `Showcase: acc4dc114b5baee71702e27b6d2f8d51f1efd73c` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. Published images were moved out of the tree between batches so that each batch started clean, and were committed unchanged. |
 | PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. iOS 26.5 now shows both actions, Delete appointment (destructive) and Keep appointment (cancel), on the system's centred action-sheet card. It is not the bottom sheet of the image approved at 8a0d7c6: iOS 26 renders an unanchored iPhone action sheet this way. The maintainer should confirm this presentation on device. Android is unchanged and correct. |
-| BLOCKED | Maintainer visual approval of this release matrix is not yet recorded. |
+| PASS | The maintainer approved all four images of this release matrix on 2026-10-24. |
 
 | Platform | Light | Dark |
 | --- | --- | --- |
@@ -105,7 +105,7 @@ Gaps (listed, not invented):
 - **Article VI — BLOCKED.** Automated accessibility semantics pass, but live VoiceOver/TalkBack, Dynamic Type/font scale, Reduce Motion, increased contrast and RTL on physical devices are not yet recorded.
 - **Article VII — PASS.** Semantic theme tokens only; no style-bag or platform escape props (contract tests).
 - **Article VIII — PASS.** Unchanged from the development review.
-- **Article IX — BLOCKED.** PHP, iOS (26.5 and 27.0), Android, showcase, documentation and release captures pass; physical-device checks (IX.4) and maintainer visual approval are outstanding.
+- **Article IX — BLOCKED.** PHP, iOS (26.5 and 27.0), Android, showcase, documentation and release captures pass; physical-device checks (IX.4) are outstanding; maintainer visual approval is recorded.
 - **Article X — BLOCKED for catalogue readiness.** A component review does not complete the catalogue.
 - **Article XI — PASS.** The review skill, structural gate and documentation gate were applied; missing evidence is recorded as BLOCKED.
 
@@ -115,7 +115,7 @@ Article XII is not applicable.
 - [x] Clean `--release` capture from `14e3ac0b718a7be67c0c7eb276e5c47f10c2b706` and `acc4dc114b5baee71702e27b6d2f8d51f1efd73c` published the four-image matrix (2026-10-25).
 - [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component ConfirmationDialog --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02`.
 - [x] Showcase demo audited against every documented state; gaps listed above.
-- [ ] BLOCKED — Maintainer visual approval of the four release images listed above (record reviewer, date and verdict per image).
+- [x] PASS — Maintainer visual approval: Wojt Janowski approved all four release images listed above on 2026-10-24, including the iOS 26 centred action-sheet card; its presentation is still to be confirmed in the physical iOS row.
 - [ ] BLOCKED — Physical iOS device row:
   - [ ] Presentation: the dialog shows the title, message, the destructive confirm action and the cancel action together, as the system action sheet. Record whether it is the centred card seen on the iOS 26.5 simulator or a bottom sheet. On an iPad, if available, it is centred with no arrow.
   - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` or later and open **Confirmation Dialog** from the showcase home (`/components/confirmation-dialog`).
@@ -147,5 +147,5 @@ Article XII is not applicable.
 ## Verdicts
 
 - **Automated, consumer and simulator/emulator evidence: PASS.**
-- **Component-release readiness: BLOCKED.** Only the maintainer visual approval and the two physical-device rows remain; simulator evidence does not substitute for them.
+- **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.

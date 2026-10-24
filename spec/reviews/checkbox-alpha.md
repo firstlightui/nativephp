@@ -39,7 +39,7 @@ sources:
 | Showcase revision | `f48dbb7ea0c1666984a3b500241d46488ae24ccf` (`firstlightui/showcase` branch `release/component-review-fixtures`, on `c7ed28e`), clean; its lock installs `firstlightui/nativephp` at `8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` |
 | iOS simulator | Firstlight iPhone 17 Pro iOS 26.5 (`758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC`); XCTest also on Firstlight iPhone 17 Pro iOS 27.0 (`731CC3F2-1651-4522-A5A3-A781710EE166`) |
 | Android emulator | `emulator-5554`, AVD Medium_Phone, Android 17 (API 37), `google_apis_playstore_ps16k` (not a Pixel 9 Pro) |
-| Visual reviewer | Pending maintainer approval (row below) |
+| Visual reviewer | Wojt Janowski (maintainer), 2026-10-24 |
 | Physical devices | None used; both device rows remain BLOCKED |
 
 ## Release capture
@@ -49,7 +49,7 @@ sources:
 | PASS | `bin/capture-doc-screenshot-batch Modal BottomSheet Checkbox Progress SearchField --showcase=../showcase --ios=758B55C3-34B0-49D6-B78B-3C9DFE8FCFBC --android=emulator-5554 --release` — exit 0 at 2026-10-25 09:04:53 AEDT (recapture after the heading, Checkbox, Progress and Search Field fixes; attempt 1). The batch built and launched each host once, ran the focused showcase capture tests, cold-launched `/captures/checkbox` per appearance, waited for stable frames, rejected identical light/dark pairs and published the matrix. It then restored the showcase `.env`, both appearances, iOS Reduce Motion and the Android animator scale. |
 | PASS | The orchestrator reported `Package: 8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` and `Showcase: f48dbb7ea0c1666984a3b500241d46488ae24ccf` with no `(dirty)` marker. It also verified that the showcase's installed `firstlightui/nativephp` reference equals the package `HEAD`. The published images were committed unchanged. |
 | PASS | The agent inspected the four images below for documented states, theme, crop, labels, truncation, system chrome and accidental data. Fixed: Android disabled labels and helpers are now dimmed (onSurface at 0.38 alpha), matching iOS. |
-| BLOCKED | Maintainer visual approval of this release matrix is not yet recorded. |
+| PASS | The maintainer approved all four images of this release matrix on 2026-10-24. |
 
 | Platform | Light | Dark |
 | --- | --- | --- |
@@ -106,7 +106,7 @@ Gaps (listed, not invented):
 - **Article VI — BLOCKED.** Automated accessibility semantics pass, but live VoiceOver/TalkBack, Dynamic Type/font scale, Reduce Motion, increased contrast and RTL on physical devices are not yet recorded.
 - **Article VII — PASS.** Semantic theme tokens only; no style-bag or platform escape props (contract tests).
 - **Article VIII — PASS.** Unchanged from the development review.
-- **Article IX — BLOCKED.** PHP, iOS (26.5 and 27.0), Android, showcase, documentation and release captures pass; physical-device checks (IX.4) and maintainer visual approval are outstanding.
+- **Article IX — BLOCKED.** PHP, iOS (26.5 and 27.0), Android, showcase, documentation and release captures pass; physical-device checks (IX.4) are outstanding; maintainer visual approval is recorded.
 - **Article X — BLOCKED for catalogue readiness.** A component review does not complete the catalogue.
 - **Article XI — PASS.** The review skill, structural gate and documentation gate were applied; missing evidence is recorded as BLOCKED.
 
@@ -116,7 +116,7 @@ Article XII is not applicable.
 - [x] Clean `--release` capture from `8008f508f62eaf1ff92fbb5fc720eac0f3f6cb88` and `f48dbb7ea0c1666984a3b500241d46488ae24ccf` published the four-image matrix (2026-10-25, recaptured after fixes).
 - [x] Full package suites (Pest, iOS 26.5 and 27.0 XCTest, Android unit/Paparazzi), `bin/check-component Checkbox --development`, `bin/check-docs --development`, showcase suite and plugin validation pass at `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02`.
 - [x] Showcase demo audited against every documented state; gaps listed above.
-- [ ] BLOCKED — Maintainer visual approval of the four release images listed above (record reviewer, date and verdict per image).
+- [x] PASS — Maintainer visual approval: Wojt Janowski approved all four release images listed above on 2026-10-24.
 - [ ] BLOCKED — Physical iOS device row:
   - [ ] Device: record model, iOS version, date and tester. Install the showcase built from `822ddeb1afa93cd1171bdd6eab46e45a7f38cb02` or later and open **Checkbox** from the showcase home (`/components/checkbox`).
   - [ ] Toggle each enabled checkbox; PHP state line matches.
@@ -147,5 +147,5 @@ Article XII is not applicable.
 ## Verdicts
 
 - **Automated, consumer and simulator/emulator evidence: PASS.**
-- **Component-release readiness: BLOCKED.** Only the maintainer visual approval and the two physical-device rows remain; simulator evidence does not substitute for them.
+- **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
