@@ -106,10 +106,14 @@ a timeout, client arithmetic, or a second callback.
 ## Platform expression and accessibility
 
 iOS uses SwiftUI `Stepper(label:onIncrement:onDecrement:)` with platform
-increment and decrement affordances. Android uses a Material 3 row of 48 dp
-icon buttons around the accepted value because Material supplies no Stepper
-primitive. The internal minus and plus affordances are semantic and are not
-publicly replaceable.
+increment and decrement affordances. Android places the label and controls on
+one row, as iOS does: the label leads, and Material 3 `OutlinedIconButton`
+Remove and Add actions sit at the trailing end around the centred accepted
+value, because Material supplies no Stepper primitive. Each action is a
+semantic Button with a 48 dp target; its 24 dp icon does not grow with font
+scale, while the label and value do. The row mirrors in right-to-left layouts.
+Helper or error text sits below the row. The internal minus and plus
+affordances are semantic and are not publicly replaceable.
 
 The control exposes its visible or explicit label, accepted display value,
 hint, helper/error, disabled state, and the individual decrease/increase action
@@ -121,7 +125,7 @@ direction; component disablement and a pending proposal disable both.
 This is a paired-renderer component. The installed `nativephp/mobile-ui`
 package has no Stepper element or native renderer to adapt. SwiftUI provides a
 genuine Stepper with custom increment/decrement closures; Material 3 provides
-documented `IconButton(enabled:)` primitives but no Stepper. Firstlight uses
+documented `OutlinedIconButton(enabled:)` primitives but no Stepper. Firstlight uses
 those official platform seams and NativePHP's ordinary Element Tree, callback
 registry, press transport, and current-tree publication.
 

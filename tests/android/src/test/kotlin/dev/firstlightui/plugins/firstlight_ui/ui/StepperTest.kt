@@ -6,6 +6,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
@@ -19,9 +33,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 class StepperRendererContractTest {
     @Test fun `configuration decodes accepted display and metadata`() {
@@ -93,37 +108,84 @@ class StepperRendererContractTest {
     }
 }
 
+@OptIn(ExperimentalTestApi::class)
+@RunWith(RobolectricTestRunner::class)
+class StepperControlSemanticsTest {
+    @Test fun `direction actions are named buttons that follow bounds and layout direction`() {
+        for (direction in listOf(LayoutDirection.Ltr, LayoutDirection.Rtl)) {
+            runComposeUiTest {
+                var increments = 0
+                setContent {
+                    CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                        MaterialTheme {
+                            FirstlightStepperControl(
+                                state = StepperRendererState(stepperNode(canDecrement = false)),
+                                tokens = NativeUITheme.light,
+                                onDecrement = {},
+                                onIncrement = { increments++ },
+                            )
+                        }
+                    }
+                }
+
+                val decrease = onNodeWithContentDescription("Decrease Medication quantity")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                    .assertIsNotEnabled()
+                val increase = onNodeWithContentDescription("Increase Medication quantity")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                    .assertIsEnabled()
+                increase.performClick()
+                assertEquals(1, increments)
+
+                val decreaseLeft = decrease.getUnclippedBoundsInRoot().left
+                val increaseLeft = increase.getUnclippedBoundsInRoot().left
+                assertEquals(direction == LayoutDirection.Ltr, decreaseLeft < increaseLeft)
+                onNode(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "5")).assertExists()
+            }
+        }
+    }
+}
+
 class StepperControlScreenshotTest {
     @get:Rule val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5)
 
-    @Test fun `light dark error and disabled evidence is controller gated`() {
-        assumeTrue(System.getenv("FIRSTLIGHT_VERIFY_STEPPER_SNAPSHOTS") == "1")
-        snapshot(dark = false)
-        snapshot(dark = true)
-        snapshot(dark = false, error = "Quantity is unavailable")
-        snapshot(dark = false, disabled = true)
+    @Test fun light() = paparazzi.snapshot { stepperScreenshotContent(dark = false) }
+
+    @Test fun dark() = paparazzi.snapshot { stepperScreenshotContent(dark = true) }
+
+    @Test fun errorAtMinimum() = paparazzi.snapshot {
+        stepperScreenshotContent(dark = false, error = "Quantity is unavailable", canDecrement = false)
     }
 
-    private fun snapshot(dark: Boolean, error: String = "", disabled: Boolean = false) {
-        paparazzi.snapshot { stepperScreenshotContent(dark, error, disabled) }
+    @Test fun disabled() = paparazzi.snapshot { stepperScreenshotContent(dark = true, disabled = true) }
+
+    @Test fun rtl() = paparazzi.snapshot {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            stepperScreenshotContent(dark = false)
+        }
     }
 }
 
 class StepperControlLargeTextScreenshotTest {
     @get:Rule val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5.copy(fontScale = 2f))
 
-    @Test fun `large text evidence is controller gated`() {
-        assumeTrue(System.getenv("FIRSTLIGHT_VERIFY_STEPPER_SNAPSHOTS") == "1")
-        paparazzi.snapshot { stepperScreenshotContent(dark = false) }
-    }
+    @Test fun fontScaleTwo() = paparazzi.snapshot { stepperScreenshotContent(dark = false, displayValue = "1,250") }
 }
 
 @androidx.compose.runtime.Composable
-private fun stepperScreenshotContent(dark: Boolean, error: String = "", disabled: Boolean = false) {
+private fun stepperScreenshotContent(
+    dark: Boolean,
+    error: String = "",
+    disabled: Boolean = false,
+    canDecrement: Boolean = true,
+    displayValue: String = "5",
+) {
     MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
-        Surface(modifier = Modifier.fillMaxSize()) {
+        Surface(modifier = Modifier.fillMaxSize(), color = if (dark) NativeUITheme.dark.background else NativeUITheme.light.background) {
             FirstlightStepperControl(
-                state = StepperRendererState(stepperNode(disabled = disabled, error = error)),
+                state = StepperRendererState(
+                    stepperNode(displayValue = displayValue, disabled = disabled, error = error, canDecrement = canDecrement),
+                ),
                 tokens = if (dark) NativeUITheme.dark else NativeUITheme.light,
                 onDecrement = {},
                 onIncrement = {},

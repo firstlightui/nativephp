@@ -5175,8 +5175,9 @@ receive the accepted value, hint, helper or error, disabled state, and named
 decrease/increase actions. At a boundary, only the unavailable direction is
 disabled.
 
-iOS uses the genuine SwiftUI Stepper. Android uses Material 3 icon buttons in
-the idiomatic minus/value/plus arrangement. Stepper deliberately has no custom
+iOS uses the genuine SwiftUI Stepper. Android uses Material 3 outlined icon
+buttons with the label on the same row and the minus/value/plus controls at its
+trailing end. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press
 acceleration, required state, size, variant, colour, or style escape props.
 

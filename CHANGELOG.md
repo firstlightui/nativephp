@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Android Stepper: the decrease and increase actions are now Material 3 outlined icon buttons with Remove and Add icons, instead of bare `−` and `+` text with no container. The value is centred between them, and the label shares their row with the controls at the trailing end, as on iOS. The row mirrors in right-to-left layouts, icons stay 24 dp at large font scales, and a disabled Stepper dims its label and helper. The public API, accessibility semantics, and min/max/disabled behaviour are unchanged.
 - iOS XCTest: rendered-accessibility tests for List Item context-menu actions and Switch semantics now enable system accessibility themselves, so they no longer see an empty accessibility tree on simulators where accessibility was never switched on. The Feedback Center hit-target snapshot pins dark appearance. Assertions and reference images are unchanged.
 
 ### Known limitations
