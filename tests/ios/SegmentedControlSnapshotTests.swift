@@ -90,6 +90,31 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         XCTAssertEqual(changes, [])
     }
 
+    func testServerSelectionChangeCommitsItsSlideBeforeAnEnclosingNonAnimatedLayout() {
+        var representable = makeRepresentable(onSelection: { _ in })
+        let control = representable.makeControl()
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 200))
+        window.rootViewController = UIViewController()
+        window.rootViewController?.view.addSubview(control)
+        window.isHidden = false
+        defer { window.isHidden = true }
+        window.layoutIfNeeded()
+
+        // A SwiftUI List re-sizes its rows inside performWithoutAnimation.
+        // The selection's layout pass must already have run with animations
+        // enabled, or that pass turns the slide into a jump.
+        representable.selectedIndex = 1
+        representable.updateControl(control)
+
+        XCTAssertEqual(control.selectedSegmentIndex, 1)
+        XCTAssertFalse(control.layer.needsLayout())
+
+        // Unchanged publishes leave layout alone.
+        control.setNeedsLayout()
+        representable.updateControl(control)
+        XCTAssertTrue(control.layer.needsLayout())
+    }
+
     func testCoordinatorRejectsRepeatedAndDisabledControlEvents() {
         var changes: [Int] = []
         let representable = makeRepresentable(onSelection: { changes.append($0) })

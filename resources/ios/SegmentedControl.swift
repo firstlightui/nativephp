@@ -326,10 +326,19 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
             control.setEnabled(enabled, forSegmentAt: index)
         }
 
-        if let selectedIndex, labels.indices.contains(selectedIndex) {
-            control.selectedSegmentIndex = selectedIndex
-        } else {
-            control.selectedSegmentIndex = UISegmentedControl.noSegment
+        let targetIndex = selectedIndex.flatMap {
+            labels.indices.contains($0) ? $0 : nil
+        } ?? UISegmentedControl.noSegment
+        if control.selectedSegmentIndex != targetIndex {
+            control.selectedSegmentIndex = targetIndex
+            // UISegmentedControl animates a selection change in its next
+            // layout pass. Inside a SwiftUI List that pass runs while the
+            // List re-sizes the row with animations disabled, so the pill
+            // jumped instead of sliding. Commit the layout now, while UIKit
+            // animations are still enabled.
+            if control.window != nil {
+                control.layoutIfNeeded()
+            }
         }
 
         control.isEnabled = !disabled && !labels.isEmpty
