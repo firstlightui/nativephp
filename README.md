@@ -90,6 +90,10 @@ Use `Feedback::fake()` to assert application feedback without native presentatio
 
 Firstlight stamps each complete screen response with a process-wide increasing revision, so an otherwise identical response still reaches the native renderers. Blade render paths are automatic. Hand-built Element roots must return `$this->response($element)`. Streaming is disabled. See the [response contract and limitations](docs/reference/compatibility.md#runtime-response-contract).
 
+## Accessibility
+
+Every control is a real SwiftUI or Jetpack Compose control, so VoiceOver, TalkBack, Dynamic Type, font scaling, contrast, Reduce Motion, and right-to-left layout work as they do in platform apps. Firstlight adds required accessible names, single focus stops, 44 pt / 48 dp targets, gesture-free alternatives for swipe and context-menu actions, and spoken validation errors. See [Accessibility](docs/concepts/accessibility.md) for what is covered, what is tested, and the known gaps.
+
 ## Documentation
 
 Start with the [documentation index](docs/index.md) or [firstlightui.dev](https://firstlightui.dev). Design rules live in the [Firstlight constitution](Constitution.md).
