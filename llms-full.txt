@@ -560,8 +560,6 @@ it('opens the detail screen for the pressed row', function () {
 - Pass model keys, not `$index`, into `@press` and other callbacks.
 - Virtual lists have no sections, separators, pull-to-refresh, or
   end-reached event. Use [List](../components/list.md) when you need those.
-- Returning from the detail screen rebuilds the list at the top. NativePHP
-  navigation does not restore scroll position, for a virtual list or a List.
 
 ## Adapt the recipe
 
