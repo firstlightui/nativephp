@@ -28,7 +28,7 @@ struct FirstlightCodeEditorField: View {
             )
             .firstlightValidationFocusTarget()
             .background(
-                Color(uiColor: .secondarySystemBackground)
+                tokens.surfaceVariant
             )
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {

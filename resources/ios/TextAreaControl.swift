@@ -47,7 +47,7 @@ struct FirstlightTextAreaControl: View {
             }
             .frame(minHeight: minimumHeight, maxHeight: maximumHeight, alignment: .topLeading)
             .padding(.horizontal, 7)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(tokens.surfaceVariant)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)

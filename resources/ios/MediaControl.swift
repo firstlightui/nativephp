@@ -401,7 +401,7 @@ struct FirstlightMediaControl: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(tokens.surfaceVariant)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             if !configuration.supportingText.isEmpty {
