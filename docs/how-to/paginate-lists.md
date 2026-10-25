@@ -19,6 +19,11 @@ Firstlight paginates lists in PHP. List already exposes `@refresh` and
 
 There is no `<firstlight:empty>` tag and no second scroll-event API.
 
+Paginate when rows come from a remote API with cursors or no known total.
+Every loaded page stays in the published tree, so for thousands of local
+records use a virtual list instead; see
+[Build a large list screen](build-a-large-list-screen.md).
+
 ## Declare the screen
 
 Extend `FirstlightUI\NativeComponent` (or `use PaginatesLists`):

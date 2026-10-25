@@ -60,6 +60,14 @@ final class FirstlightTagPrecompiler
             $expanded = substr($expanded, strlen(self::COMPILED_MARKER));
         }
 
+        // An authored @change (Media's commit handler) compiles to a second
+        // `_change` that replaces native:model's sync callback, which is
+        // where FieldErrorBinder finds the field name. Keep the name.
+        if (preg_match('~_change="__syncProperty\(\'([^\']+)\'\)"~', $expanded, $model) === 1
+            && substr_count($expanded, '_change="') > 1) {
+            $expanded = preg_replace('~(?=\s_change="__syncProperty\()~', ' _model="'.$model[1].'"', $expanded, 1) ?? $expanded;
+        }
+
         $expanded = preg_replace(
             '~^<\s*firstlight\s*:\s*'.preg_quote($tag, '~').'(?=\s|/?>)~',
             '<x-native-firstlight-'.$tag,

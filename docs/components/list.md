@@ -62,7 +62,9 @@ see [Destroy list items](../how-to/destroy-list-items.md).
 - Group related rows with `firstlight:list-section`. Sections require at least
   one List Item child.
 - Horizontal lists, virtualized windows, selectable collections, and arbitrary
-  child components are outside the Firstlight List contract.
+  child components are outside the Firstlight List contract. For thousands of
+  rows, render List Items in Mobile UI's `native:virtual-list`; see
+  [Build a large list screen](../how-to/build-a-large-list-screen.md).
 
 ## Platform expression
 

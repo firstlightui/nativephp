@@ -303,6 +303,18 @@ it('compiles the public Blade tag', function () {
         ->and($result['tree']['props']['label'])->toBe('Profile photo');
 });
 
+it('binds FieldErrorBag by native:model when @change commits the pick', function () {
+    $result = FieldErrorBag::using(new MessageBag([
+        'cover' => ['The cover field must be an image.'],
+    ]), fn () => compileFirstlightMediaView(
+        '<firstlight:media mode="image" label="Cover" native:model="cover" @change="coverChosen" @clear="coverCleared" />',
+        ['cover' => null],
+    ));
+
+    expect($result['tree']['props']['error'])->toBe('The cover field must be an image.')
+        ->and($result['registry']->resolve($result['tree']['props']['on_change'])['method'])->toBe('coverChosen');
+});
+
 it('publishes package chrome crop and clear labels', function () {
     expect(collectFirstlightMedia([
         'mode' => 'image',
