@@ -221,7 +221,7 @@ it('declares the mobile ui adapter mapping with the Firstlight iOS ghost rendere
         'type' => 'firstlight.button',
         'element' => 'FirstlightUI\\Elements\\Button',
         'blade' => 'FirstlightUI\\Components\\Button',
-        'android_renderer' => 'com.nativephp.plugins.native_ui.ui.ButtonRenderer',
+        'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightButtonRenderer',
         'ios_renderer' => 'FirstlightButtonRenderer',
         'self_closing' => true,
         'adapter' => [

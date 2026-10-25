@@ -13,6 +13,7 @@ sources:
   - vendor/nativephp/mobile-ui/src/Elements/Button.php
   - resources/ios/ButtonRenderer.swift
   - resources/ios/ButtonControl.swift
+  - resources/android/ButtonRenderer.kt
   - vendor/nativephp/mobile-ui/resources/ios/NativeUIButtonRenderer.swift
   - vendor/nativephp/mobile-ui/resources/android/ButtonRenderer.kt
 ---
@@ -75,7 +76,7 @@ The visible label is the default accessible name. `a11y-label` replaces it and `
 
 ## Adapter decision and exit criteria
 
-On iOS, `ghost` is the one exception. Mobile UI renders it with `.buttonStyle(.plain)`, so only the label's glyphs respond to taps, which measured about 19 points tall on iOS 26 and missed the 44-point target. Firstlight's `FirstlightButtonRenderer` draws ghost itself with the same plain, tinted look and a 44-point minimum target. It delegates every other variant to `NativeUIButtonRenderer`. Android's Material 3 `TextButton` already enforces a 48 dp touch target. The fix belongs upstream in Mobile UI; when it lands, the manifest can point iOS back at `NativeUIButtonRenderer`.
+On iOS, `ghost` is the one exception. Mobile UI renders it with `.buttonStyle(.plain)`, so only the label's glyphs respond to taps, which measured about 19 points tall on iOS 26 and missed the 44-point target. Firstlight's `FirstlightButtonRenderer` draws ghost itself with the same plain, tinted look and a 44-point minimum target. It delegates every other variant to `NativeUIButtonRenderer`. Android's Material 3 `TextButton` already enforces a 48 dp touch target. On Android, `FirstlightButtonRenderer` keeps Mobile UI's Material 3 drawing and touch handling but replaces the semantics on the modifier NativePHP passes in, as List Item does: NativePHP chains a role-less clickable for `@press`, so without this TalkBack focused a plain View with the name on a child. The iOS fix belongs upstream in Mobile UI; when it lands, the manifest can point iOS back at `NativeUIButtonRenderer`.
 
 The official primitive expresses every current Firstlight prop, event, state, diagnostic boundary, and accessibility semantic, so Button uses the adapter path declared in `nativephp.json`. The public Element Tree type remains `firstlight.button`; consumers do not author `<native:button>` as a second Firstlight API.
 
