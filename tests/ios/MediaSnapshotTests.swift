@@ -51,6 +51,28 @@ final class MediaSnapshotTests: XCTestCase {
         XCTAssertEqual(configuration.cropPolicy, .requiredAspect("1:1"))
     }
 
+    func testThumbnailDecodesStoredImageWithinPreviewSize() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("firstlight-cover-\(UUID().uuidString).png")
+        let source = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 300), format: {
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            return format
+        }()).image { context in
+            UIColor.red.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 400, height: 300))
+        }
+        try XCTUnwrap(source.pngData()).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let configuration = MediaRendererConfiguration(node: node(mode: "image", hasValue: true, previewPath: url.path))
+        XCTAssertEqual(configuration.previewPath, url.path)
+
+        let thumbnail = try XCTUnwrap(FirstlightMediaThumbnail<EmptyView>.decode(path: url.path, maxPixelSize: 216))
+        XCTAssertEqual(thumbnail.size.width * thumbnail.scale, 216, accuracy: 1)
+        XCTAssertEqual(thumbnail.size.height * thumbnail.scale, 162, accuracy: 1)
+        XCTAssertNil(FirstlightMediaThumbnail<EmptyView>.decode(path: url.path + ".missing", maxPixelSize: 216))
+    }
+
     func testCropPolicyComposition() {
         XCTAssertEqual(
             MediaCropPolicy.resolve(mode: .image, aspect: "", crop: nil),
@@ -212,7 +234,8 @@ final class MediaSnapshotTests: XCTestCase {
         error: String = "",
         accessibilityLabel: String = "Profile photo",
         changeCallback: Int = 41,
-        clearCallback: Int = 42
+        clearCallback: Int = 42,
+        previewPath: String = ""
     ) -> NativeUINode {
         var props: [String: Any] = [
             "mode": mode,
@@ -229,7 +252,7 @@ final class MediaSnapshotTests: XCTestCase {
             "path": path,
             "mime": mime,
             "size": size,
-            "preview_url": "",
+            "preview_path": previewPath,
             "a11y_label": accessibilityLabel,
             "a11y_hint": "Opens the media picker",
             "on_change": changeCallback,

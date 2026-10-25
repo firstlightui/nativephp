@@ -61,6 +61,29 @@ class MediaTest {
     }
 
     @Test
+    fun `configuration decodes the preview path`() {
+        val configuration = MediaRendererConfiguration(node(mode = "image", hasValue = true, previewPath = "/data/covers/a.jpg"))
+
+        assertEquals("/data/covers/a.jpg", configuration.previewPath)
+    }
+
+    @Test
+    fun `thumbnail decodes the stored image subsampled to the preview size`() {
+        val file = java.io.File.createTempFile("firstlight-cover", ".png")
+        val source = android.graphics.Bitmap.createBitmap(400, 300, android.graphics.Bitmap.Config.ARGB_8888)
+        source.eraseColor(android.graphics.Color.RED)
+        file.outputStream().use { source.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+
+        val thumbnail = decodeMediaThumbnail(file.path, sizePx = 72)
+
+        // 300 / 4 = 75 is the smallest power-of-two sample still at least 72.
+        assertEquals(100, thumbnail?.width)
+        assertEquals(75, thumbnail?.height)
+        assertNull(decodeMediaThumbnail(file.path + ".missing", sizePx = 72))
+        file.delete()
+    }
+
+    @Test
     fun `crop policy composition matches design`() {
         assertEquals(MediaCropPolicy.None, MediaCropPolicy.resolve(MediaMode.Image, "", null))
         assertEquals(
@@ -183,6 +206,7 @@ class MediaTest {
         error: String = "",
         changeCallback: Int = 41,
         clearCallback: Int = 42,
+        previewPath: String = "",
     ): NativeUINode {
         val props = mutableMapOf<String, Any>(
             "mode" to mode,
@@ -199,7 +223,7 @@ class MediaTest {
             "path" to path,
             "mime" to mime,
             "size" to size,
-            "preview_url" to "",
+            "preview_path" to previewPath,
             "a11y_label" to "Profile photo",
             "a11y_hint" to "Opens the media picker",
             "on_change" to changeCallback,

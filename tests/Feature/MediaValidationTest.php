@@ -239,3 +239,20 @@ it('ValidatesFields required fails when MediaValue property is null', function (
     expect(fn () => $screen->save())->toThrow(ValidationException::class);
     expect($screen->hasError('avatar'))->toBeTrue();
 });
+
+it('publishes the stored image file path for the native thumbnail', function () {
+    $image = MediaStorage::commit(createTinyPngFile(), 'mobile_public', 'covers');
+    $document = new MediaValue('mobile_public', $image->path, 'application/pdf', $image->size);
+    $missing = new MediaValue('mobile_public', 'covers/gone.png', 'image/png', 10);
+
+    $publish = function (string $mode, MediaValue $value): string {
+        $element = FirstlightUI\Elements\Media::make()->value($value)->mode($mode)->label('Cover');
+
+        return $element->toArray(new Native\Mobile\Edge\CallbackRegistry)['props']['preview_path'];
+    };
+
+    expect($publish('image', $image))->toBe(Storage::disk('mobile_public')->path($image->path))
+        ->and(is_file($publish('image', $image)))->toBeTrue()
+        ->and($publish('document', $document))->toBe('')
+        ->and($publish('image', $missing))->toBe('');
+});

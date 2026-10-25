@@ -162,7 +162,7 @@ it('publishes the empty image field contract', function () {
             'crop' => 'required',
             'has_value' => false,
             'path' => '',
-            'preview_url' => '',
+            'preview_path' => '',
         ]);
 });
 
