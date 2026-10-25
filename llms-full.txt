@@ -2494,8 +2494,12 @@ language file. Authored labels on Confirmation Dialog and Alert Dialog still
 win. Date Picker and Time Picker keep rejecting Blade `confirm-label` and
 `cancel-label`; their sheet buttons are package chrome only.
 
-The package ships English. There is no translation UI. Applications add other
-locales through Laravel vendor language publishing.
+The package ships English, German (`de`), Spanish (`es`), French (`fr`),
+Italian (`it`), Japanese (`ja`), Dutch (`nl`), Polish (`pl`), Brazilian
+Portuguese (`pt_BR`) and Simplified Chinese (`zh_CN`). Laravel picks the
+strings for the application locale, so no setup is needed for those. There is
+no translation UI. To change a packaged string or add another locale, publish
+the language files.
 
 ## Publish the language files
 
@@ -2503,36 +2507,29 @@ locales through Laravel vendor language publishing.
 php artisan vendor:publish --tag=firstlight-lang
 ```
 
-Laravel copies the files to `lang/vendor/firstlight`. `validation.php` holds
-the pluralised error summary heading (`'summary' => 'There is :count
-error.|There are :count errors.'`) used by `error-summary` Callouts and
-screen-reader announcements. Add a locale next to
-English, for example `lang/vendor/firstlight/fr/chrome.php`, and keep the same
+Laravel copies every packaged locale to `lang/vendor/firstlight`. Edit a
+published file to change a packaged string; your copy wins over the package.
+`validation.php` holds the pluralised error summary heading (`'summary' =>
+'There is :count error.|There are :count errors.'`) used by `error-summary`
+Callouts and screen-reader announcements. Keep its `:count` placeholder and
+one plural form per rule of the language, as Polish does with three.
+
+To add a locale Firstlight does not ship, create its directory next to the
+others, for example `lang/vendor/firstlight/sv/chrome.php`, and keep the same
 keys:
 
 ```php
 <?php
 
 return [
-    'confirm' => 'Confirmer',
-    'cancel' => 'Annuler',
+    'confirm' => 'Bekräfta',
+    'cancel' => 'Avbryt',
     'ok' => 'OK',
-    'dismiss' => 'Fermer',
-    'dismiss_feedback' => 'Fermer le message',
-    'clear' => 'Effacer',
-    'clear_search' => 'Effacer la recherche',
-    'clear_text' => 'Effacer le texte',
-    'skip' => 'Ignorer',
-    'done' => 'OK',
-    'crop' => 'Recadrer',
-    'zoom_in' => 'Zoom avant',
-    'zoom_out' => 'Zoom arrière',
-    'choose_media' => 'Choisir un média',
-    'photo_library' => 'Photothèque',
-    'camera' => 'Appareil photo',
-    'browse_files' => 'Parcourir les fichiers',
-    'show_password' => 'Afficher le mot de passe',
-    'hide_password' => 'Masquer le mot de passe',
+    'dismiss' => 'Stäng',
+    'clear_search' => 'Rensa sökning',
+    'show_password' => 'Visa lösenord',
+    'hide_password' => 'Dölj lösenord',
+    // ...the remaining keys from lang/vendor/firstlight/en/chrome.php
 ];
 ```
 
