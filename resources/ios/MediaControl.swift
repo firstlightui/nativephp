@@ -1,3 +1,4 @@
+import ImageIO
 import SwiftUI
 import UIKit
 
@@ -29,7 +30,7 @@ struct MediaRendererConfiguration: Equatable {
     let size: Int
     let width: Int?
     let height: Int?
-    let previewURL: String
+    let previewPath: String
     let accessibilityLabel: String
     let accessibilityHint: String
     let confirmLabel: String
@@ -68,7 +69,7 @@ struct MediaRendererConfiguration: Equatable {
         width = widthValue > 0 ? widthValue : nil
         let heightValue = props.getInt("height")
         height = heightValue > 0 ? heightValue : nil
-        previewURL = props.getString("preview_url")
+        previewPath = props.getString("preview_path")
         let explicitLabel = props.getString("a11y_label")
         accessibilityLabel = explicitLabel.isEmpty ? label : explicitLabel
         accessibilityHint = props.getString("a11y_hint")
@@ -350,7 +351,16 @@ struct FirstlightMediaControl: View {
     }
 
     @ViewBuilder private var preview: some View {
-        if configuration.hasValue {
+        if configuration.hasValue, configuration.mode == .image, !configuration.previewPath.isEmpty {
+            FirstlightMediaThumbnail(path: configuration.previewPath) {
+                ZStack {
+                    tokens.surfaceVariant
+                    Image(systemName: "photo")
+                        .font(.title2)
+                        .foregroundStyle(tokens.onSurfaceVariant)
+                }
+            }
+        } else if configuration.hasValue {
             ZStack {
                 tokens.surfaceVariant
                 Image(systemName: configuration.mode == .document ? "doc.fill" : "photo")
@@ -375,6 +385,57 @@ struct FirstlightMediaControl: View {
                     .foregroundStyle(tokens.onSurfaceVariant)
             }
         }
+    }
+}
+
+/// Shows the stored image at `path`, decoded off the main thread as a
+/// thumbnail about 72 pt on its short side. `placeholder` shows while it
+/// loads or when the file cannot be decoded.
+struct FirstlightMediaThumbnail<Placeholder: View>: View {
+    let path: String
+    @ViewBuilder let placeholder: () -> Placeholder
+
+    @Environment(\.displayScale) private var displayScale
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                placeholder()
+            }
+        }
+        .task(id: path) {
+            let pixels = 72 * displayScale
+            image = await Task.detached(priority: .userInitiated) {
+                FirstlightMediaThumbnail.decode(path: path, shortSide: pixels)
+            }.value
+        }
+    }
+
+    /// ImageIO thumbnail: reads only what it needs and applies EXIF
+    /// orientation, so a 12 MP photo never decodes at full size. ImageIO
+    /// caps the long side, so scale the cap until the short side reaches
+    /// `shortSide`; the square preview then fills without upscaling.
+    nonisolated static func decode(path: String, shortSide: CGFloat) -> UIImage? {
+        guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil) else { return nil }
+        var maxPixelSize = shortSide
+        if let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+           let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue,
+           let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue,
+           width > 0, height > 0 {
+            maxPixelSize = (shortSide * max(width, height) / min(width, height)).rounded(.up)
+        }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+        ]
+        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return UIImage(cgImage: thumbnail)
     }
 }
 

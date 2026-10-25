@@ -37,8 +37,10 @@ final class Media extends Element
         'path' => '',
         'mime' => '',
         'size' => 0,
-        'preview_url' => '',
+        'preview_path' => '',
     ];
+
+    private ?MediaValue $value = null;
 
     private ?string $changeCallback = null;
 
@@ -147,7 +149,7 @@ final class Media extends Element
             $this->fieldProps['mime'] = '';
             $this->fieldProps['size'] = 0;
             unset($this->fieldProps['width'], $this->fieldProps['height']);
-            $this->fieldProps['preview_url'] = '';
+            $this->value = null;
 
             return $this;
         }
@@ -176,7 +178,7 @@ final class Media extends Element
             unset($this->fieldProps['height']);
         }
 
-        $this->fieldProps['preview_url'] = $this->resolvePreviewUrl($value);
+        $this->value = $value;
 
         return $this;
     }
@@ -297,6 +299,7 @@ final class Media extends Element
         $this->warnWhenUnlabelled();
 
         $props = $this->fieldProps;
+        $props['preview_path'] = $this->resolvePreviewPath();
         $props['confirm_label'] = Chrome::string('confirm');
         $props['cancel_label'] = Chrome::string('cancel');
         $props['clear_label'] = Chrome::string('clear');
@@ -355,13 +358,27 @@ final class Media extends Element
         }
     }
 
-    private function resolvePreviewUrl(MediaValue $value): string
+    /**
+     * The stored image's absolute local path, for the native thumbnail.
+     * Storage::url() is no use here: on mobile_public it is an `_assets`
+     * URL that only the WebView scheme handler serves, so SwiftUI and
+     * Compose cannot load it. Non-local disks publish no preview.
+     */
+    private function resolvePreviewPath(): string
     {
+        $value = $this->value;
+
+        if ($value === null || $this->fieldProps['mode'] !== 'image' || ! str_starts_with($value->mime, 'image/')) {
+            return '';
+        }
+
         try {
-            return (string) Storage::disk($value->disk)->url($value->path);
+            $path = Storage::disk($value->disk)->path($value->path);
         } catch (Throwable) {
             return '';
         }
+
+        return is_file($path) && is_readable($path) ? $path : '';
     }
 
     private function strictString(string $attribute, mixed $value): string

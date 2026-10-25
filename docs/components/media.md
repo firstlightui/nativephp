@@ -150,7 +150,14 @@ new MediaValue(
 );
 ```
 
-Display with `Storage::disk($value->disk)->url($value->path)`.
+In image mode the field shows a thumbnail of the stored file. It is decoded
+from the file's local path, so it appears only for disks with a local driver,
+such as the default `mobile_public`; other disks show a photo icon. Document
+mode always shows a document icon and the file name.
+
+To show the image elsewhere in a native view, use the file's local path,
+`Storage::disk($value->disk)->path($value->path)`. The disk's `url()` is
+served only to WebViews.
 
 ## Validation
 

@@ -7,7 +7,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
+import android.graphics.BitmapFactory
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.background
@@ -39,6 +46,36 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
+
+internal const val MEDIA_THUMBNAIL_TAG = "firstlight-media-thumbnail"
+
+/**
+ * Decodes the stored image at [path] off the main thread, subsampled to
+ * roughly [sizePx] on its short side. Returns null while loading, for a
+ * blank path, or when the file cannot be decoded, so the icon shows.
+ */
+@Composable
+internal fun rememberMediaThumbnail(path: String?, sizePx: Int): ImageBitmap? {
+    val state = produceState<ImageBitmap?>(initialValue = null, path, sizePx) {
+        value = if (path.isNullOrEmpty()) null else withContext(Dispatchers.IO) { decodeMediaThumbnail(path, sizePx) }
+    }
+    return state.value
+}
+
+internal fun decodeMediaThumbnail(path: String, sizePx: Int): ImageBitmap? {
+    val file = java.io.File(path)
+    if (!file.canRead()) return null
+
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    file.inputStream().use { BitmapFactory.decodeStream(it, null, bounds) }
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+    var sample = 1
+    while (minOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= sizePx) sample *= 2
+
+    val options = BitmapFactory.Options().apply { inSampleSize = sample }
+    return file.inputStream().use { BitmapFactory.decodeStream(it, null, options) }?.asImageBitmap()
+}
 
 @Composable
 internal fun FirstlightMediaControl(
@@ -96,15 +133,28 @@ internal fun FirstlightMediaControl(
                     .background(tokens.surface),
                 contentAlignment = Alignment.Center,
             ) {
-                MaterialIcon(
-                    name = when {
-                        configuration.hasValue && configuration.mode == MediaMode.Document -> "description"
-                        configuration.hasValue -> "image"
-                        configuration.mode == MediaMode.Document -> "upload_file"
-                        else -> "add_a_photo"
-                    },
-                    contentDescription = null,
+                val thumbnail = rememberMediaThumbnail(
+                    path = configuration.previewPath.takeIf { configuration.hasValue && configuration.mode == MediaMode.Image },
+                    sizePx = with(LocalDensity.current) { 72.dp.roundToPx() },
                 )
+                if (thumbnail != null) {
+                    Image(
+                        bitmap = thumbnail,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.matchParentSize().testTag(MEDIA_THUMBNAIL_TAG),
+                    )
+                } else {
+                    MaterialIcon(
+                        name = when {
+                            configuration.hasValue && configuration.mode == MediaMode.Document -> "description"
+                            configuration.hasValue -> "image"
+                            configuration.mode == MediaMode.Document -> "upload_file"
+                            else -> "add_a_photo"
+                        },
+                        contentDescription = null,
+                    )
+                }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
