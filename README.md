@@ -37,7 +37,7 @@ Each recipe is a complete screen. Each one runs unchanged in the [showcase app](
 | Dependency | Requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.6` |
+| NativePHP Mobile | `^4.6.1` |
 | NativePHP Mobile UI | `^0.8` |
 | iOS / Android targets | iOS 18+ / API 29+ |
 
