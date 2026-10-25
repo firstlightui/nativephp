@@ -142,7 +142,7 @@ from page one for each search. Keys passed to `openPost()` and
 Save this as `resources/views/native/posts.blade.php`:
 
 ```blade
-<native:column class="w-full flex-1">
+<native:column class="w-full flex-1 bg-theme-background">
     <firstlight:search-field
         placeholder="Search posts"
         a11y-label="Search posts"
@@ -158,7 +158,7 @@ Save this as `resources/views/native/posts.blade.php`:
         />
     @endif
 
-    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1">
+    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1 bg-theme-background">
         @foreach ($listItems as $post)
             <firstlight:list-item
                 :headline="$post->title"

@@ -127,7 +127,7 @@ No `mount()` is needed.
 Save the view as `resources/views/native/post.blade.php`:
 
 ```blade
-<native:scroll-view class="w-full flex-1">
+<native:scroll-view class="w-full flex-1 bg-theme-background">
     <native:column class="w-full p-4 gap-3">
         <native:text class="text-sm text-theme-on-surface-variant">{{ $post->created_at->diffForHumans() }}</native:text>
         <native:text class="text-base text-theme-on-surface">{{ $post->body }}</native:text>
@@ -280,7 +280,7 @@ from page one for each search. Keys passed to `openPost()` and
 Save this as `resources/views/native/posts.blade.php`:
 
 ```blade
-<native:column class="w-full flex-1">
+<native:column class="w-full flex-1 bg-theme-background">
     <firstlight:search-field
         placeholder="Search posts"
         a11y-label="Search posts"
@@ -296,7 +296,7 @@ Save this as `resources/views/native/posts.blade.php`:
         />
     @endif
 
-    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1">
+    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1 bg-theme-background">
         @foreach ($listItems as $post)
             <firstlight:list-item
                 :headline="$post->title"
@@ -693,7 +693,7 @@ screen and `submit()` returns `false`.
 Save this as `resources/views/native/create-post.blade.php`:
 
 ```blade
-<native:scroll-view class="w-full flex-1">
+<native:scroll-view class="w-full flex-1 bg-theme-background">
     <native:column class="w-full p-4 gap-4">
         <firstlight:callout error-for="form" />
 
@@ -865,7 +865,7 @@ class SettingsScreen extends NativeComponent
 Save this as `resources/views/native/settings.blade.php`:
 
 ```blade
-<native:list class="w-full flex-1" separator>
+<native:list class="w-full flex-1 bg-theme-background" separator>
     <native:list-section header="Notifications" footer="Alerts for replies and mentions.">
         <native:column class="w-full px-4 py-3 bg-theme-surface">
             <firstlight:switch label="Push notifications" native:model="notifications" />
@@ -1083,7 +1083,7 @@ field and saving.
 ## 4. Write the view
 
 ```blade
-<native:scroll-view class="w-full flex-1">
+<native:scroll-view class="w-full flex-1 bg-theme-background">
     <native:column class="w-full p-4 gap-4">
         <firstlight:media
             mode="image"
@@ -1520,6 +1520,18 @@ Firstlight controls consume the tokens automatically. Use the same tokens for su
         native:model="email"
     />
 </native:column>
+```
+
+Give each screen's root element, and every `firstlight:list` and
+`native:list`, the screen's background class, usually `bg-theme-background`.
+On iOS a root `native:column`, `native:scroll-view` or list without one paints
+the system background, which is pure black in dark mode, so that screen would
+not match screens that use the theme background:
+
+```blade
+<firstlight:list class="w-full flex-1 bg-theme-background">
+    ...
+</firstlight:list>
 ```
 
 ## Apply a runtime brand

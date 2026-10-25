@@ -79,6 +79,18 @@ Firstlight controls consume the tokens automatically. Use the same tokens for su
 </native:column>
 ```
 
+Give each screen's root element, and every `firstlight:list` and
+`native:list`, the screen's background class, usually `bg-theme-background`.
+On iOS a root `native:column`, `native:scroll-view` or list without one paints
+the system background, which is pure black in dark mode, so that screen would
+not match screens that use the theme background:
+
+```blade
+<firstlight:list class="w-full flex-1 bg-theme-background">
+    ...
+</firstlight:list>
+```
+
 ## Apply a runtime brand
 
 For tenant or user-specific branding, merge only the tokens that change from a service provider:
