@@ -104,8 +104,12 @@ optional dimensions, `preview_url`, and optional `on_change` / `on_clear`.
   host FileProvider) and document picker (`OpenDocument`), and a crop dialog
   with explicit zoom controls (48dp targets). Picks are copied to the cache
   directory and emitted through the same change channel.
-- Both platforms commit the previewed region: the largest centred rectangle
-  at the locked (or image) aspect divided by zoom. Image mode stores JPEG.
+- Both platforms commit the previewed region: the largest rectangle at the
+  locked (or image) aspect divided by zoom, moved from the centre by the pan
+  offset and clamped inside the image. Drag pans, pinch and the buttons zoom
+  (1×–4×), and accessible Move crop left/right/up/down actions pan by a tenth
+  of the region. A new pick resets to centred; zooming re-clamps the pan.
+  Image mode stores JPEG.
 - The plugin manifest declares a default iOS `NSCameraUsageDescription`;
   application `permissions` entries override it.
 

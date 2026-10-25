@@ -26,7 +26,7 @@ sources:
 # Localize Firstlight Chrome
 
 Firstlight-owned chrome (Confirm, Cancel, OK, dismiss, clear, skip, Done,
-crop, zoom, media source chooser, and password reveal) comes from one Laravel
+crop, zoom, crop move, media source chooser, and password reveal) comes from one Laravel
 language file. Authored labels on Confirmation Dialog and Alert Dialog still
 win. Date Picker and Time Picker keep rejecting Blade `confirm-label` and
 `cancel-label`; their sheet buttons are package chrome only.

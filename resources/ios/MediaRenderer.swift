@@ -60,18 +60,26 @@ struct MediaRenderer: View {
                 FirstlightMediaCropSheet(
                     image: image,
                     policy: state.configuration.cropPolicy,
-                    zoom: cropZoomBinding,
+                    zoom: state.cropZoom,
+                    offset: state.cropOffset,
                     onConfirm: { confirmCrop(image) },
                     onCancel: { state.dismissSheet() },
                     onSkip: { skipCrop(image) },
                     onZoomIn: { state.zoomIn() },
                     onZoomOut: { state.zoomOut() },
+                    onZoom: { state.setCropZoom($0) },
+                    onPan: { state.panCrop(by: $0) },
+                    onMove: { state.moveCrop($0) },
                     confirmLabel: state.configuration.confirmLabel,
                     cancelLabel: state.configuration.cancelLabel,
                     skipLabel: state.configuration.skipLabel,
                     cropLabel: state.configuration.cropLabel,
                     zoomInLabel: state.configuration.zoomInLabel,
-                    zoomOutLabel: state.configuration.zoomOutLabel
+                    zoomOutLabel: state.configuration.zoomOutLabel,
+                    moveCropLeftLabel: state.configuration.moveCropLeftLabel,
+                    moveCropRightLabel: state.configuration.moveCropRightLabel,
+                    moveCropUpLabel: state.configuration.moveCropUpLabel,
+                    moveCropDownLabel: state.configuration.moveCropDownLabel
                 )
                 .tint(tokens.primary)
             }
@@ -124,13 +132,6 @@ struct MediaRenderer: View {
         )
     }
 
-    private var cropZoomBinding: Binding<CGFloat> {
-        Binding(
-            get: { state.cropZoom },
-            set: { state.cropZoom = $0 }
-        )
-    }
-
     private func handlePick() {
         guard state.configuration.isInteractive else { return }
         if state.configuration.mode == .document {
@@ -161,7 +162,7 @@ struct MediaRenderer: View {
     }
 
     private func confirmCrop(_ image: UIImage) {
-        emitImage(state.configuration.cropPolicy.crop(image, zoom: state.cropZoom))
+        emitImage(state.configuration.cropPolicy.crop(image, zoom: state.cropZoom, offset: state.cropOffset))
         state.dismissSheet()
     }
 

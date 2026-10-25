@@ -40,6 +40,10 @@ struct MediaRendererConfiguration: Equatable {
     let cropLabel: String
     let zoomInLabel: String
     let zoomOutLabel: String
+    let moveCropLeftLabel: String
+    let moveCropRightLabel: String
+    let moveCropUpLabel: String
+    let moveCropDownLabel: String
     let chooseMediaLabel: String
     let photoLibraryLabel: String
     let cameraLabel: String
@@ -80,6 +84,10 @@ struct MediaRendererConfiguration: Equatable {
         cropLabel = props.getString("crop_label", default: "Crop")
         zoomInLabel = props.getString("zoom_in_label", default: "Zoom in")
         zoomOutLabel = props.getString("zoom_out_label", default: "Zoom out")
+        moveCropLeftLabel = props.getString("move_crop_left_label", default: "Move crop left")
+        moveCropRightLabel = props.getString("move_crop_right_label", default: "Move crop right")
+        moveCropUpLabel = props.getString("move_crop_up_label", default: "Move crop up")
+        moveCropDownLabel = props.getString("move_crop_down_label", default: "Move crop down")
         chooseMediaLabel = props.getString("choose_media_label", default: "Choose media")
         photoLibraryLabel = props.getString("photo_library_label", default: "Photo Library")
         cameraLabel = props.getString("camera_label", default: "Camera")
@@ -152,10 +160,10 @@ enum MediaCropPolicy: Equatable {
         return nil
     }
 
-    /// The committed region: the largest centred rectangle with the policy's
-    /// aspect (or the image's own aspect when freeform), divided by zoom.
-    /// The crop sheet previews exactly this region.
-    func cropRect(imageSize: CGSize, zoom: CGFloat) -> CGRect {
+    /// The size of the committed region: the largest rectangle with the
+    /// policy's aspect (or the image's own aspect when freeform), divided by
+    /// zoom.
+    func cropSize(imageSize: CGSize, zoom: CGFloat) -> CGSize {
         let ratio = aspectRatio ?? imageSize.width / imageSize.height
         var width = imageSize.width
         var height = width / ratio
@@ -164,25 +172,50 @@ enum MediaCropPolicy: Equatable {
             width = height * ratio
         }
         let scale = min(max(zoom, 1), 4)
-        let cropWidth = min(max((width / scale).rounded(), 1), imageSize.width)
-        let cropHeight = min(max((height / scale).rounded(), 1), imageSize.height)
+        return CGSize(
+            width: min(max((width / scale).rounded(), 1), imageSize.width),
+            height: min(max((height / scale).rounded(), 1), imageSize.height)
+        )
+    }
+
+    /// Limits a pan offset (image points from the centred position) so the
+    /// region never leaves the image at this zoom.
+    func clampedOffset(_ offset: CGPoint, imageSize: CGSize, zoom: CGFloat) -> CGPoint {
+        let size = cropSize(imageSize: imageSize, zoom: zoom)
+        let maxX = max((imageSize.width - size.width) / 2, 0)
+        let maxY = max((imageSize.height - size.height) / 2, 0)
+        return CGPoint(x: min(max(offset.x, -maxX), maxX), y: min(max(offset.y, -maxY), maxY))
+    }
+
+    /// The committed region: `cropSize` centred in the image, moved by
+    /// `offset` and kept inside the image. The crop sheet previews exactly
+    /// this region.
+    func cropRect(imageSize: CGSize, zoom: CGFloat, offset: CGPoint = .zero) -> CGRect {
+        let size = cropSize(imageSize: imageSize, zoom: zoom)
+        let maxX = imageSize.width - size.width
+        let maxY = imageSize.height - size.height
         return CGRect(
-            x: ((imageSize.width - cropWidth) / 2).rounded(.down),
-            y: ((imageSize.height - cropHeight) / 2).rounded(.down),
-            width: cropWidth,
-            height: cropHeight
+            x: min(max((maxX / 2 + offset.x).rounded(.down), 0), maxX),
+            y: min(max((maxY / 2 + offset.y).rounded(.down), 0), maxY),
+            width: size.width,
+            height: size.height
         )
     }
 
     /// Draws the region in orientation-corrected image coordinates.
-    func crop(_ image: UIImage, zoom: CGFloat) -> UIImage {
-        let rect = cropRect(imageSize: image.size, zoom: zoom)
+    func crop(_ image: UIImage, zoom: CGFloat, offset: CGPoint = .zero) -> UIImage {
+        let rect = cropRect(imageSize: image.size, zoom: zoom, offset: offset)
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = image.scale
         return UIGraphicsImageRenderer(size: rect.size, format: format).image { _ in
             image.draw(at: CGPoint(x: -rect.minX, y: -rect.minY))
         }
     }
+}
+
+/// A direction for the accessible move actions on the crop region.
+enum MediaCropDirection: CaseIterable {
+    case left, right, up, down
 }
 
 enum MediaRendererEvent: Equatable {
@@ -219,6 +252,8 @@ struct MediaRendererState {
     var configuration: MediaRendererConfiguration
     var sheet: Sheet?
     var cropZoom: CGFloat = 1
+    /// Image points from the centred region; always clamped to the image.
+    var cropOffset: CGPoint = .zero
     var pendingTempPath: String?
 
     init(node: NativeUINode) {
@@ -243,19 +278,55 @@ struct MediaRendererState {
     mutating func dismissSheet() {
         sheet = nil
         cropZoom = 1
+        cropOffset = .zero
     }
 
     mutating func beginCrop(with image: UIImage) {
         cropZoom = 1
+        cropOffset = .zero
         sheet = .crop(image)
     }
 
     mutating func zoomIn() {
-        cropZoom = min(4, cropZoom + 0.25)
+        setCropZoom(cropZoom + 0.25)
     }
 
     mutating func zoomOut() {
-        cropZoom = max(1, cropZoom - 0.25)
+        setCropZoom(cropZoom - 0.25)
+    }
+
+    /// Sets zoom within 1...4 (buttons and pinch) and re-clamps the pan, so
+    /// zooming out pulls the region back inside the image.
+    mutating func setCropZoom(_ zoom: CGFloat) {
+        cropZoom = min(4, max(1, zoom))
+        cropOffset = clamped(cropOffset)
+    }
+
+    /// Moves the region by `delta` image points, stopping at the image edges.
+    mutating func panCrop(by delta: CGPoint) {
+        cropOffset = clamped(CGPoint(x: cropOffset.x + delta.x, y: cropOffset.y + delta.y))
+    }
+
+    /// Accessible move: a tenth of the region on that axis.
+    mutating func moveCrop(_ direction: MediaCropDirection) {
+        guard let size = cropImageSize else { return }
+        let region = configuration.cropPolicy.cropSize(imageSize: size, zoom: cropZoom)
+        switch direction {
+        case .left: panCrop(by: CGPoint(x: -region.width / 10, y: 0))
+        case .right: panCrop(by: CGPoint(x: region.width / 10, y: 0))
+        case .up: panCrop(by: CGPoint(x: 0, y: -region.height / 10))
+        case .down: panCrop(by: CGPoint(x: 0, y: region.height / 10))
+        }
+    }
+
+    private var cropImageSize: CGSize? {
+        guard case let .crop(image) = sheet, image.size.width > 0, image.size.height > 0 else { return nil }
+        return image.size
+    }
+
+    private func clamped(_ offset: CGPoint) -> CGPoint {
+        guard let size = cropImageSize else { return .zero }
+        return configuration.cropPolicy.clampedOffset(offset, imageSize: size, zoom: cropZoom)
     }
 
     func commitChange(tempPath: String) -> MediaRendererEvent? {
@@ -442,18 +513,31 @@ struct FirstlightMediaThumbnail<Placeholder: View>: View {
 struct FirstlightMediaCropSheet: View {
     let image: UIImage
     let policy: MediaCropPolicy
-    @Binding var zoom: CGFloat
+    let zoom: CGFloat
+    var offset: CGPoint = .zero
     let onConfirm: () -> Void
     let onCancel: () -> Void
     let onSkip: () -> Void
     let onZoomIn: () -> Void
     let onZoomOut: () -> Void
+    /// Sets an absolute zoom from pinch; the state clamps it to 1...4.
+    var onZoom: (CGFloat) -> Void = { _ in }
+    /// Moves the region by a delta in image points; the state clamps it.
+    var onPan: (CGPoint) -> Void = { _ in }
+    var onMove: (MediaCropDirection) -> Void = { _ in }
     var confirmLabel: String = "Confirm"
     var cancelLabel: String = "Cancel"
     var skipLabel: String = "Skip"
     var cropLabel: String = "Crop"
     var zoomInLabel: String = "Zoom in"
     var zoomOutLabel: String = "Zoom out"
+    var moveCropLeftLabel: String = "Move crop left"
+    var moveCropRightLabel: String = "Move crop right"
+    var moveCropUpLabel: String = "Move crop up"
+    var moveCropDownLabel: String = "Move crop down"
+
+    @State private var lastDrag: CGSize = .zero
+    @State private var pinchBase: CGFloat?
 
     private var previewAspect: CGFloat {
         if let aspect = policy.aspectRatio { return aspect }
@@ -464,17 +548,21 @@ struct FirstlightMediaCropSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                // The frame shows exactly the region Confirm commits: a centred
-                // crop at the policy (or image) aspect, magnified by zoom.
+                // The frame shows exactly the region Confirm commits: the same
+                // cropRect, scaled to the frame width.
                 Color.clear
                     .aspectRatio(previewAspect, contentMode: .fit)
-                    .overlay {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .scaleEffect(zoom)
-                    }
+                    .overlay { region }
                     .clipped()
+                    .accessibilityElement()
+                    .accessibilityLabel(cropLabel)
+                    .accessibilityAddTraits(.isImage)
+                    // SwiftUI lists the last-applied action first, so this
+                    // reads Left, Right, Up, Down in the actions rotor.
+                    .accessibilityAction(named: moveCropDownLabel) { onMove(.down) }
+                    .accessibilityAction(named: moveCropUpLabel) { onMove(.up) }
+                    .accessibilityAction(named: moveCropRightLabel) { onMove(.right) }
+                    .accessibilityAction(named: moveCropLeftLabel) { onMove(.left) }
                     .padding(24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
@@ -510,6 +598,41 @@ struct FirstlightMediaCropSheet: View {
             }
             .navigationTitle(cropLabel)
             .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    @ViewBuilder private var region: some View {
+        GeometryReader { geometry in
+            if image.size.width > 0, image.size.height > 0, geometry.size.width > 0 {
+                let rect = policy.cropRect(imageSize: image.size, zoom: zoom, offset: offset)
+                let scale = geometry.size.width / rect.width
+                Image(uiImage: image)
+                    .resizable()
+                    .frame(width: image.size.width * scale, height: image.size.height * scale)
+                    .offset(x: -rect.minX * scale, y: -rect.minY * scale)
+                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        SimultaneousGesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    // Dragging the photo right moves the region left.
+                                    let dx = value.translation.width - lastDrag.width
+                                    let dy = value.translation.height - lastDrag.height
+                                    lastDrag = value.translation
+                                    onPan(CGPoint(x: -dx / scale, y: -dy / scale))
+                                }
+                                .onEnded { _ in lastDrag = .zero },
+                            MagnifyGesture()
+                                .onChanged { value in
+                                    let base = pinchBase ?? zoom
+                                    pinchBase = base
+                                    onZoom(base * value.magnification)
+                                }
+                                .onEnded { _ in pinchBase = nil }
+                        )
+                    )
+            }
         }
     }
 }

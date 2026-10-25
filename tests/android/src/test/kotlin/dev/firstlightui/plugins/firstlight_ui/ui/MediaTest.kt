@@ -125,6 +125,58 @@ class MediaTest {
     }
 
     @Test
+    fun `crop rect pans and clamps at zoom on a non-square image`() {
+        // 16:9 on 4000x3000 at zoom 2 is 2000x1125, centred at (1000, 937).
+        val wide = MediaCropPolicy.RequiredAspect("16:9")
+        assertEquals(MediaCropRect(1000, 937, 2000, 1125), wide.cropRect(4000, 3000, 2f))
+
+        // A corner pan lands on the bottom-left corner, not the centre.
+        assertEquals(MediaCropRect(0, 1875, 2000, 1125), wide.cropRect(4000, 3000, 2f, MediaCropOffset(-5000f, 5000f)))
+        // Just inside and just past each edge.
+        assertEquals(MediaCropRect(1, 1874, 2000, 1125), wide.cropRect(4000, 3000, 2f, MediaCropOffset(-999f, 937f)))
+        assertEquals(MediaCropRect(0, 1875, 2000, 1125), wide.cropRect(4000, 3000, 2f, MediaCropOffset(-1000f, 937.5f)))
+        assertEquals(MediaCropRect(0, 1875, 2000, 1125), wide.cropRect(4000, 3000, 2f, MediaCropOffset(-1001f, 938f)))
+        assertEquals(MediaCropRect(2000, 0, 2000, 1125), wide.cropRect(4000, 3000, 2f, MediaCropOffset(1001f, -938f)))
+        assertEquals(MediaCropOffset(-1000f, 937.5f), wide.clampedOffset(MediaCropOffset(-1001f, 938f), 4000, 3000, 2f))
+        assertEquals(MediaCropOffset(999f, -937f), wide.clampedOffset(MediaCropOffset(999f, -937f), 4000, 3000, 2f))
+    }
+
+    @Test
+    fun `pan state clamps, resets and moves accessibly`() {
+        val state = MediaRendererState(node(aspect = "1:1"))
+        state.beginCrop(400, 300)
+
+        // Zoom 2: a 150 square with 125 of slack each side horizontally, 75 vertically.
+        state.zoomCropTo(2f)
+        state.panCrop(1000f, -1000f)
+        assertEquals(MediaCropOffset(125f, -75f), state.cropOffset)
+
+        state.moveCrop(MediaCropDirection.Left)
+        assertEquals(MediaCropOffset(110f, -75f), state.cropOffset)
+        state.moveCrop(MediaCropDirection.Down)
+        assertEquals(MediaCropOffset(110f, -60f), state.cropOffset)
+
+        // Back at zoom 1 the square has no vertical slack, so it re-centres
+        // there and keeps the horizontal choice inside the 50 that remains.
+        state.zoomCropTo(1f)
+        assertEquals(MediaCropOffset(50f, 0f), state.cropOffset)
+        state.zoomCropTo(9f)
+        assertEquals(4f, state.cropZoom)
+
+        state.beginCrop(400, 300)
+        assertEquals(MediaCropOffset(), state.cropOffset)
+        assertEquals(1f, state.cropZoom)
+
+        // Freeform at zoom 1 is the whole photo, so any pan stays centred.
+        val freeform = MediaRendererState(node(crop = "optional"))
+        freeform.beginCrop(400, 300)
+        freeform.zoomCropTo(2f)
+        freeform.panCrop(80f, 40f)
+        freeform.zoomCropTo(1f)
+        assertEquals(MediaCropOffset(), freeform.cropOffset)
+    }
+
+    @Test
     fun `clear and change events`() {
         val state = MediaRendererState(node(hasValue = true))
         assertEquals(MediaRendererEvent.Clear(42, 7), state.clear())
@@ -143,7 +195,7 @@ class MediaTest {
     @Test
     fun `zoom stays within bounds`() {
         val state = MediaRendererState(node())
-        state.beginCrop()
+        state.beginCrop(400, 300)
         state.zoomOut()
         assertEquals(1f, state.cropZoom)
         repeat(20) { state.zoomIn() }

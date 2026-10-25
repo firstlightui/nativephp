@@ -121,11 +121,17 @@ Document mode rejects `crop` and `aspect`. Unsupported attributes such as
 - `crop="optional"` without aspect → freeform crop; Skip is allowed.
 - `crop="required"` without aspect → freeform crop; Confirm is required.
 
-Confirm stores the region the crop sheet shows: the largest centred rectangle
-at the locked aspect (or the photo's own aspect when freeform), narrowed by the
-zoom controls. Skip stores the whole photo. Image mode always stores a JPEG.
+Confirm stores the region the crop sheet shows: the largest rectangle at the
+locked aspect (or the photo's own aspect when freeform), narrowed by zoom and
+placed where the person moved it. The region starts centred. Drag the photo to
+move it and pinch or use the zoom buttons to zoom from 1× to 4×. The region
+never leaves the photo: it stops at the edges, and zooming out pulls it back
+inside. With a locked aspect that differs from the photo's, the region can move
+along the longer side even at 1×; freeform at 1× is the whole photo. A new pick
+starts centred again. Skip stores the whole photo. Image mode always stores a
+JPEG.
 
-Clear, Skip, Confirm, Cancel, Crop, zoom, and source-chooser copy are package
+Clear, Skip, Confirm, Cancel, Crop, zoom, crop-move, and source-chooser copy are package
 chrome; see [Localize chrome](../how-to/localize.md).
 
 ## Events
@@ -170,7 +176,10 @@ Media participates in [Validate fields](../how-to/validate-fields.md). Public
 
 The field exposes a labelled control with helper or error text. Crop sheets
 include Confirm, Cancel, optional Skip, and explicit zoom in/out controls
-meeting 44-point (iOS) and 48-dp (Android) minima. Zoom is not pinch-only.
+meeting 44-point (iOS) and 48-dp (Android) minima. Zoom is not pinch-only, and
+moving the region is not drag-only: the crop region is one labelled element
+with Move crop left, right, up, and down actions (VoiceOver actions rotor,
+TalkBack actions menu). Each action moves a tenth of the region.
 
 ## Platform behaviour
 
