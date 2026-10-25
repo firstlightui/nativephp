@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Security
+
+- Firstlight now requires `nativephp/mobile` `^4.6.1`, the release that fixes NativePHP's October 2026 advisories (async task bridge code injection, object instantiation through `/_native/api/events`, unconfined `File.Move`/`File.Copy`, unauthenticated async payloads, `/_assets` path traversal, and Android cookie logging) and ships PHP runtimes patched for CVE-2026-109618 and CVE-2026-109619. Firstlight itself calls none of the affected bridge functions, and its Feedback events are dispatched in PHP, not through the events endpoint. Apps must still run `php artisan native:install --force`, rebuild and ship a new store release; see [NativePHP's post](https://nativephp.com/blog/our-first-security-advisories-and-this-weeks-php-cves).
+
 ### Added
 
 - Packaged translations of the chrome and validation-summary strings for German, Spanish, French, Italian, Japanese, Dutch, Polish, Brazilian Portuguese and Simplified Chinese. Apps whose locale matches one of these get translated Confirm/Cancel, clear, password-reveal, Media and Code Editor labels and error summaries without publishing anything. The translations were machine-drafted and still need native-speaker review.

@@ -19,7 +19,7 @@ sources:
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.6` |
+| NativePHP Mobile | `^4.6.1` |
 | NativePHP Mobile UI | `^0.8` |
 | iOS application target | iOS 18.0 or later |
 | Android application target | API 29 or later |
