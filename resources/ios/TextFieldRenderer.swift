@@ -40,6 +40,7 @@ struct TextFieldRendererConfiguration {
     let disabled: Bool
     let readOnly: Bool
     let secure: Bool
+    let mask: FirstlightTextMask?
     let keyboard: String
     let contentType: String
     let autocapitalize: String
@@ -73,6 +74,7 @@ struct TextFieldRendererConfiguration {
         disabled = props.getBool("disabled")
         readOnly = props.getBool("read_only")
         secure = props.getBool("secure")
+        mask = FirstlightTextMask(pattern: props.getString("mask"))
         keyboard = props.getString("keyboard", default: "text")
         contentType = props.getString("content_type")
         autocapitalize = props.getString("autocapitalize")
@@ -99,7 +101,10 @@ struct TextFieldRendererConfiguration {
 
 struct TextFieldRendererState {
     var configuration: TextFieldRendererConfiguration
-    var draft: String
+    /// The value PHP receives. With a mask it holds only slot characters.
+    var draft: String { didSet { if draft != oldValue { syncDisplay() } } }
+    /// The text shown in the native field: `draft` formatted by the mask, or `draft` itself.
+    var display: String
     var lastCommitted: String
     var pendingServerValue: String?
     var isFocused = false
@@ -107,9 +112,27 @@ struct TextFieldRendererState {
 
     init(node: NativeUINode) {
         configuration = TextFieldRendererConfiguration(node: node)
-        draft = configuration.value
-        lastCommitted = configuration.value
+        let value = configuration.mask?.conform(configuration.value) ?? configuration.value
+        draft = value
+        display = configuration.mask?.format(value) ?? value
+        lastCommitted = value
         pendingServerValue = nil
+    }
+
+    /// Applies a native replacement of a range of the masked display text and returns the event
+    /// and the display caret. Rejected characters leave the draft unchanged.
+    mutating func maskedEdit(range: Range<Int>, with inserted: String) -> (event: TextFieldRendererEvent?, caret: Int?) {
+        guard let mask = configuration.mask, !configuration.disabled, !configuration.readOnly else { return (nil, nil) }
+        let result = mask.edit(raw: draft, displayRange: range, inserted: inserted)
+        return (userChanged(result.raw), result.caret)
+    }
+
+    /// Conforms text the native field changed without reporting a range, such as committed
+    /// marked text or dictation.
+    mutating func maskedTextReplaced(_ text: String) -> TextFieldRendererEvent? {
+        defer { syncDisplay() }
+        guard let mask = configuration.mask, !configuration.disabled, !configuration.readOnly else { return nil }
+        return userChanged(mask.conform(text))
     }
 
     mutating func userChanged(_ value: String) -> TextFieldRendererEvent? {
@@ -146,15 +169,25 @@ struct TextFieldRendererState {
     mutating func serverPublished(_ tree: NativeUITree) {
         guard let node = Self.findNode(id: configuration.nodeID, in: tree.root) else { return }
         let published = TextFieldRendererConfiguration(node: node)
+        let maskChanged = published.mask != configuration.mask
         configuration = published
+        // A value that does not fit the mask is shown conformed; the conformed value is
+        // published only with the person's next edit.
+        let value = published.mask?.conform(published.value) ?? published.value
         if isFocused {
-            if published.value == lastCommitted { pendingServerValue = nil }
-            else { pendingServerValue = published.value }
+            if value == lastCommitted { pendingServerValue = nil }
+            else { pendingServerValue = value }
+            if maskChanged { draft = published.mask?.conform(draft) ?? draft; syncDisplay() }
         } else {
-            draft = published.value
-            lastCommitted = published.value
+            draft = value
+            lastCommitted = value
             pendingServerValue = nil
+            syncDisplay()
         }
+    }
+
+    private mutating func syncDisplay() {
+        display = configuration.mask?.format(draft) ?? draft
     }
 
     private mutating func commitIfNeeded() -> TextFieldRendererEvent? {
@@ -181,6 +214,7 @@ struct TextFieldRenderer: View {
     @FocusState private var focused: Bool
     @State private var state: TextFieldRendererState
     @State private var focusToken = UUID()
+    @State private var maskedRefocus = 0
     private let events: TextFieldRendererEvents
 
     init(node: NativeUINode, events: TextFieldRendererEvents = .native) {
@@ -193,11 +227,14 @@ struct TextFieldRenderer: View {
         FirstlightTextFieldControl(
             configuration: state.configuration,
             text: $state.draft,
+            maskedText: state.display,
+            maskedRefocus: maskedRefocus,
             revealed: $state.isRevealed,
             isFocused: $focused,
             tokens: themeStore.resolve(for: colorScheme),
             onClear: {
                 if let event = state.clear() { events.send(event) }
+                if state.configuration.mask != nil { maskedRefocus += 1 }
             },
             onTrailingPress: {
                 let configuration = state.configuration
@@ -207,17 +244,22 @@ struct TextFieldRenderer: View {
             },
             onSubmit: {
                 for event in state.submit() { events.send(event) }
-            }
+            },
+            onMaskedEdit: { range, inserted in
+                let result = state.maskedEdit(range: range, with: inserted)
+                if let event = result.event { events.send(event) }
+                return (state.display, result.caret)
+            },
+            onMaskedTextReplaced: { text in
+                if let event = state.maskedTextReplaced(text) { events.send(event) }
+                return state.display
+            },
+            onMaskedFocusChanged: focusChanged
         )
         .onChange(of: state.draft) { _, value in
             if let event = state.userChanged(value) { events.send(event) }
         }
-        .onChange(of: focused) { _, value in
-            KeyboardFocusPolicy.firstlightFieldFocusChanged(value, token: focusToken) {
-                if let event = state.flush() { events.send(event) }
-            }
-            if let event = state.focusChanged(value) { events.send(event) }
-        }
+        .onChange(of: focused) { _, value in focusChanged(value) }
         .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
@@ -228,5 +270,12 @@ struct TextFieldRenderer: View {
             try? await Task.sleep(for: .milliseconds(state.configuration.debounceMilliseconds))
             if !Task.isCancelled, let event = state.flush() { events.send(event) }
         }
+    }
+
+    private func focusChanged(_ value: Bool) {
+        KeyboardFocusPolicy.firstlightFieldFocusChanged(value, token: focusToken) {
+            if let event = state.flush() { events.send(event) }
+        }
+        if let event = state.focusChanged(value) { events.send(event) }
     }
 }
