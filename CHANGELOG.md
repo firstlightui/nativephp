@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Docs: the searchable list and settings recipes give their list `bg-theme-background`, and the theming page explains why. On iOS a list without a background class paints the system background, pure black in dark mode, so recipe screens did not match the theme.
+- Docs: every recipe gives its screen root and its lists `bg-theme-background`, and the theming page explains why. On iOS a root column, scroll view or list without a background class paints the system background, pure black in dark mode, so recipe screens did not match the theme.
 - Media: image mode now shows a thumbnail of the chosen photo instead of a generic photo icon. The renderers were given `Storage::url()`, which on `mobile_public` is an `_assets` URL that only the WebView serves, and never loaded it. The field now publishes the file's local path, and iOS (ImageIO) and Android (`BitmapFactory`) decode a subsampled thumbnail off the main thread. Disks without a local driver keep the icon.
 - Media: a validation error for the field's `native:model` property now shows under the field. Media requires `@change`, whose callback replaced the model-sync callback that the error binder read the field name from, so errors appeared only with an explicit `error-for`. Any Firstlight field with both `native:model` and `@change` is fixed the same way.
 - iOS Button: a `ghost` button now has a 44-point minimum touch target. Mobile UI's plain ghost style only responded to taps on its text, about 19 points tall. Other variants and Android are unchanged.

@@ -138,7 +138,7 @@ screen and `submit()` returns `false`.
 Save this as `resources/views/native/create-post.blade.php`:
 
 ```blade
-<native:scroll-view class="w-full flex-1">
+<native:scroll-view class="w-full flex-1 bg-theme-background">
     <native:column class="w-full p-4 gap-4">
         <firstlight:callout error-for="form" />
 

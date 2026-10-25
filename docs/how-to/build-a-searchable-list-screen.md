@@ -142,7 +142,7 @@ from page one for each search. Keys passed to `openPost()` and
 Save this as `resources/views/native/posts.blade.php`:
 
 ```blade
-<native:column class="w-full flex-1">
+<native:column class="w-full flex-1 bg-theme-background">
     <firstlight:search-field
         placeholder="Search posts"
         a11y-label="Search posts"
