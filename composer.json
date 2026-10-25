@@ -27,7 +27,7 @@
         "illuminate/filesystem": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/translation": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/validation": "^10.0|^11.0|^12.0|^13.0",
-        "nativephp/mobile": "^4.6",
+        "nativephp/mobile": "^4.6.1",
         "nativephp/mobile-ui": "^0.8",
         "ramsey/uuid": "^4.7"
     },
