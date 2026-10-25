@@ -126,7 +126,7 @@ The screen view is one self-closing tag. `item` names the row view.
     :to="$virtualWindowTo"
     item="native.rows.contact"
     on-window-change="setVirtualWindow"
-    estimated-row-height="72"
+    :estimated-row-height="\Native\Mobile\Platform::isIos() ? 64 : 72"
 />
 ```
 
@@ -203,13 +203,17 @@ it('opens the detail screen for the pressed row', function () {
 
 - One virtual list per screen. This is a NativePHP limit.
 - Rows outside the window are fixed-height placeholders sized by
-  `estimated-row-height`. Set it close to the real row height (72 for a List
-  Item with supporting text) so the scroll bar does not jump.
+  `estimated-row-height`. Set it close to the real row height so the scroll
+  bar does not jump. A List Item with supporting text is 64 points on iOS and
+  72 dp on Android at the default text size, so the example picks the value
+  per platform.
 - Order by a unique column last (`orderBy('id')`) so a window always holds the
   same rows.
 - Pass model keys, not `$index`, into `@press` and other callbacks.
 - Virtual lists have no sections, separators, pull-to-refresh, or
   end-reached event. Use [List](../components/list.md) when you need those.
+- Returning from the detail screen rebuilds the list at the top. NativePHP
+  navigation does not restore scroll position, for a virtual list or a List.
 
 ## Adapt the recipe
 
