@@ -70,6 +70,50 @@ it('loads English chrome strings from the package lang file', function () {
     }
 });
 
+it('ships every packaged locale with the same files and keys as English', function () {
+    $path = dirname(__DIR__, 3).'/lang';
+    $files = fn (string $locale): array => array_map('basename', glob("{$path}/{$locale}/*.php"));
+    $locales = array_values(array_diff(array_map('basename', glob("{$path}/*", GLOB_ONLYDIR)), ['en']));
+
+    expect($locales)->toEqualCanonicalizing(['de', 'es', 'fr', 'it', 'ja', 'nl', 'pl', 'pt_BR', 'zh_CN']);
+
+    foreach ($locales as $locale) {
+        expect($files($locale))->toEqualCanonicalizing($files('en'));
+
+        foreach ($files('en') as $file) {
+            $english = require "{$path}/en/{$file}";
+            $translated = require "{$path}/{$locale}/{$file}";
+
+            expect(array_keys($translated))->toEqualCanonicalizing(array_keys($english), "{$locale}/{$file}");
+
+            foreach ($translated as $key => $value) {
+                expect($value)->toBeString()->not->toBe('', "{$locale}/{$file}: {$key}");
+
+                preg_match_all('/:[a-z_]+/', $english[$key], $placeholders);
+                foreach ($placeholders[0] as $placeholder) {
+                    expect($value)->toContain($placeholder);
+                }
+            }
+        }
+    }
+});
+
+it('selects the right plural form for packaged validation summaries', function (string $locale, int $count, string $expected) {
+    $path = dirname(__DIR__, 3).'/lang';
+    $translator = new Translator(new FileLoader(new Filesystem, $path), $locale);
+    $translator->addNamespace('firstlight', $path);
+
+    expect($translator->choice('firstlight::validation.summary', $count))->toBe($expected);
+})->with([
+    ['fr', 1, 'Il y a 1 erreur.'],
+    ['fr', 3, 'Il y a 3 erreurs.'],
+    ['pl', 1, 'Występuje 1 błąd.'],
+    ['pl', 3, 'Występują 3 błędy.'],
+    ['pl', 5, 'Występuje 5 błędów.'],
+    ['pl', 22, 'Występują 22 błędy.'],
+    ['ja', 4, '4 件のエラーがあります。'],
+]);
+
 it('maps Laravel application locales onto BCP-47 tags', function (string $laravelLocale, string $expected) {
     $translator = new Translator(new ArrayLoader, $laravelLocale);
     Container::getInstance()->instance('translator', $translator);

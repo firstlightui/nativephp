@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Packaged translations of the chrome and validation-summary strings for German, Spanish, French, Italian, Japanese, Dutch, Polish, Brazilian Portuguese and Simplified Chinese. Apps whose locale matches one of these get translated Confirm/Cancel, clear, password-reveal, Media and Code Editor labels and error summaries without publishing anything. The translations were machine-drafted and still need native-speaker review.
+
 ## 1.0.0-RC7 - 2026-10-24
 
 ### Added
