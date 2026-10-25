@@ -54,6 +54,11 @@ final class FieldErrorBinder
             }
         }
 
+        $model = $attrs['_model'] ?? null;
+        if (is_string($model) && $model !== '') {
+            return $model;
+        }
+
         $change = $attrs['_change'] ?? null;
         if (is_string($change) && preg_match("/^__syncProperty\\('([^']+)'\\)$/", $change, $matches) === 1) {
             return $matches[1];
