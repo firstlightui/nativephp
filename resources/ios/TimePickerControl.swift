@@ -30,7 +30,7 @@ struct FirstlightTimePickerControl: View {
                 }
                 .padding(.horizontal, 12)
                 .frame(minHeight: 44)
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(tokens.surfaceVariant)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)

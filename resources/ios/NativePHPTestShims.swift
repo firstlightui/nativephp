@@ -197,6 +197,7 @@ struct NativeUITokens: Equatable {
         onPrimary: Color(uiColor: .white),
         surface: Color(uiColor: .systemBackground),
         onSurface: Color(uiColor: .label),
+        surfaceVariant: Color(uiColor: .secondarySystemBackground),
         onSurfaceVariant: Color(uiColor: .secondaryLabel),
         destructive: Color(uiColor: .systemRed)
     )
