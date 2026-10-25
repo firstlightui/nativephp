@@ -411,15 +411,24 @@ struct FirstlightMediaThumbnail<Placeholder: View>: View {
         .task(id: path) {
             let pixels = 72 * displayScale
             image = await Task.detached(priority: .userInitiated) {
-                FirstlightMediaThumbnail.decode(path: path, maxPixelSize: pixels)
+                FirstlightMediaThumbnail.decode(path: path, shortSide: pixels)
             }.value
         }
     }
 
     /// ImageIO thumbnail: reads only what it needs and applies EXIF
-    /// orientation, so a 12 MP photo never decodes at full size.
-    nonisolated static func decode(path: String, maxPixelSize: CGFloat) -> UIImage? {
+    /// orientation, so a 12 MP photo never decodes at full size. ImageIO
+    /// caps the long side, so scale the cap until the short side reaches
+    /// `shortSide`; the square preview then fills without upscaling.
+    nonisolated static func decode(path: String, shortSide: CGFloat) -> UIImage? {
         guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil) else { return nil }
+        var maxPixelSize = shortSide
+        if let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+           let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue,
+           let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue,
+           width > 0, height > 0 {
+            maxPixelSize = (shortSide * max(width, height) / min(width, height)).rounded(.up)
+        }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true,

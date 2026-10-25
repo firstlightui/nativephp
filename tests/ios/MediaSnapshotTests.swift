@@ -64,13 +64,14 @@ final class MediaSnapshotTests: XCTestCase {
         try XCTUnwrap(source.pngData()).write(to: url)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let configuration = MediaRendererConfiguration(node: node(mode: "image", hasValue: true, previewPath: url.path))
+        let configuration = MediaRendererConfiguration(node: makeNode(mode: "image", hasValue: true, previewPath: url.path))
         XCTAssertEqual(configuration.previewPath, url.path)
 
-        let thumbnail = try XCTUnwrap(FirstlightMediaThumbnail<EmptyView>.decode(path: url.path, maxPixelSize: 216))
-        XCTAssertEqual(thumbnail.size.width * thumbnail.scale, 216, accuracy: 1)
-        XCTAssertEqual(thumbnail.size.height * thumbnail.scale, 162, accuracy: 1)
-        XCTAssertNil(FirstlightMediaThumbnail<EmptyView>.decode(path: url.path + ".missing", maxPixelSize: 216))
+        // The short side reaches the requested size so a square fill never upscales.
+        let thumbnail = try XCTUnwrap(FirstlightMediaThumbnail<EmptyView>.decode(path: url.path, shortSide: 150))
+        XCTAssertEqual(thumbnail.size.width * thumbnail.scale, 200, accuracy: 1)
+        XCTAssertEqual(thumbnail.size.height * thumbnail.scale, 150, accuracy: 1)
+        XCTAssertNil(FirstlightMediaThumbnail<EmptyView>.decode(path: url.path + ".missing", shortSide: 150))
     }
 
     func testCropPolicyComposition() {
