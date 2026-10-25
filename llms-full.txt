@@ -296,7 +296,7 @@ Save this as `resources/views/native/posts.blade.php`:
         />
     @endif
 
-    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1">
+    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1 bg-theme-background">
         @foreach ($listItems as $post)
             <firstlight:list-item
                 :headline="$post->title"
@@ -865,7 +865,7 @@ class SettingsScreen extends NativeComponent
 Save this as `resources/views/native/settings.blade.php`:
 
 ```blade
-<native:list class="w-full flex-1" separator>
+<native:list class="w-full flex-1 bg-theme-background" separator>
     <native:list-section header="Notifications" footer="Alerts for replies and mentions.">
         <native:column class="w-full px-4 py-3 bg-theme-surface">
             <firstlight:switch label="Push notifications" native:model="notifications" />
@@ -1520,6 +1520,17 @@ Firstlight controls consume the tokens automatically. Use the same tokens for su
         native:model="email"
     />
 </native:column>
+```
+
+Give every `firstlight:list` and `native:list` the screen's background class,
+usually `bg-theme-background`. On iOS a list otherwise paints the system
+background, which is pure black in dark mode, so a list screen would not match
+screens that use the theme background:
+
+```blade
+<firstlight:list class="w-full flex-1 bg-theme-background">
+    ...
+</firstlight:list>
 ```
 
 ## Apply a runtime brand

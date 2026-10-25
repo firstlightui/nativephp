@@ -127,7 +127,7 @@ class SettingsScreen extends NativeComponent
 Save this as `resources/views/native/settings.blade.php`:
 
 ```blade
-<native:list class="w-full flex-1" separator>
+<native:list class="w-full flex-1 bg-theme-background" separator>
     <native:list-section header="Notifications" footer="Alerts for replies and mentions.">
         <native:column class="w-full px-4 py-3 bg-theme-surface">
             <firstlight:switch label="Push notifications" native:model="notifications" />

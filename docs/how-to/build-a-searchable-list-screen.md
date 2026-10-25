@@ -158,7 +158,7 @@ Save this as `resources/views/native/posts.blade.php`:
         />
     @endif
 
-    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1">
+    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1 bg-theme-background">
         @foreach ($listItems as $post)
             <firstlight:list-item
                 :headline="$post->title"
