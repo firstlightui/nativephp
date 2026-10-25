@@ -26,8 +26,10 @@ outstanding.
 
 - [Build a list and detail flow](https://firstlightui.dev/docs/how-to/build-a-list-detail-flow): Recipe for an app layout with native navigation chrome, a list screen that pushes a detail screen, and native back navigation on iOS and Android.
 - [Build a searchable list screen](https://firstlightui.dev/docs/how-to/build-a-searchable-list-screen): Recipe for a complete screen with native search, a paginated List, pull-to-refresh, row navigation, and confirmed swipe deletion.
+- [Build a large list screen](https://firstlightui.dev/docs/how-to/build-a-large-list-screen): Recipe for a list of thousands of local records with native:virtual-list, Firstlight List Item rows, and one query per visible window.
 - [Build a form screen](https://firstlightui.dev/docs/how-to/build-a-form-screen): Recipe for a create form with a Form Request, native field errors, a form-level error, a loading Save button, success Feedback, and return navigation.
 - [Build a settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen): Recipe for a grouped settings screen with native section headers and footers, Switch and Select rows, and save-on-change.
+- [Build a photo upload screen](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen): Recipe for a Media field that crops a photo, validates it with Laravel rules, and saves it to a model only when the user taps Save.
 
 ## Get started
 

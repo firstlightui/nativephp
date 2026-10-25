@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Recipes for a large list screen (`native:virtual-list` with Firstlight List Item rows and one query per visible window) and a photo upload screen (a cropped Media field validated with Laravel rules and saved to a model on Save). Each runs unchanged in the showcase app with tests. The paginate-lists and List pages now recommend a virtual list for thousands of local records and pagination for remote data.
+
+### Fixed
+
+- Media: a validation error for the field's `native:model` property now shows under the field. Media requires `@change`, whose callback replaced the model-sync callback that the error binder read the field name from, so errors appeared only with an explicit `error-for`. Any Firstlight field with both `native:model` and `@change` is fixed the same way.
+
 ## 1.0.0-RC7 - 2026-10-24
 
 ### Added

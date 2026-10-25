@@ -46,7 +46,7 @@ and skills match the installed version.
 
 | Resource | When the agent reads it | What it contains |
 | --- | --- | --- |
-| Guideline | Always, as part of the agent's instructions | The rules every Firstlight screen follows, the four recipes, the screen generator, and a tested example |
+| Guideline | Always, as part of the agent's instructions | The rules every Firstlight screen follows, the six recipes, the screen generator, and a tested example |
 | `firstlight-init` skill | When asked to set up or scaffold a Firstlight app | An interview, an install check, the theme, the native-chrome layout, and the chosen recipe screens with tests |
 | `building-firstlight-screens` skill | When adding or changing a screen, form, list, or settings page | Which recipe to start from, which control fits each value, the workflow, and what never to do |
 | [`llms.txt`](https://firstlightui.dev/llms.txt) | When the agent needs a page | Every documentation page with a one-line summary |

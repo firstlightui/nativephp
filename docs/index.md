@@ -38,8 +38,10 @@ recipes run inside.
 
 - [Build a list and detail flow](how-to/build-a-list-detail-flow.md) — Give the app a native navigation shell with a list screen that pushes a detail screen.
 - [Build a searchable list screen](how-to/build-a-searchable-list-screen.md) — Search, paginate, refresh, open, and delete records from one native List.
+- [Build a large list screen](how-to/build-a-large-list-screen.md) — Scroll thousands of local records with a virtual list that builds only the visible rows.
 - [Build a form screen](how-to/build-a-form-screen.md) — Validate with a Form Request, show field and form-level errors, and save with Feedback.
 - [Build a settings screen](how-to/build-a-settings-screen.md) — Group switches and pickers in native sections that save on change.
+- [Build a photo upload screen](how-to/build-a-photo-upload-screen.md) — Crop, validate, and save a photo to a model only when the user taps Save.
 
 ## Get started
 

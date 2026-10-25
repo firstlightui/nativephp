@@ -27,8 +27,10 @@ Each recipe is a complete screen. Each one runs unchanged in the [showcase app](
 | --- | --- |
 | [List and detail flow](docs/how-to/build-a-list-detail-flow.md) | The app shell: native title bars and back navigation, a list, and a pushed detail screen |
 | [Searchable list](docs/how-to/build-a-searchable-list-screen.md) | Native search, a paginated List, pull-to-refresh, row navigation, and confirmed swipe deletion |
+| [Large list](docs/how-to/build-a-large-list-screen.md) | Thousands of local records in a virtual list that builds only the visible List Item rows |
 | [Form screen](docs/how-to/build-a-form-screen.md) | A Form Request, native field errors, a form-level error, a loading Save button, and success Feedback |
 | [Settings screen](docs/how-to/build-a-settings-screen.md) | Grouped native sections with Switch and Select rows that save on change |
+| [Photo upload](docs/how-to/build-a-photo-upload-screen.md) | A cropped Media field validated with Laravel rules and saved to a model on Save |
 
 ## Requirements
 

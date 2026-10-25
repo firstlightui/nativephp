@@ -10,8 +10,10 @@ Build new screens from these recipes rather than from scratch:
 
 - List and detail flow (app layout with native chrome): https://firstlightui.dev/docs/how-to/build-a-list-detail-flow
 - Searchable list screen: https://firstlightui.dev/docs/how-to/build-a-searchable-list-screen
+- Large list screen (thousands of local records): https://firstlightui.dev/docs/how-to/build-a-large-list-screen
 - Form screen: https://firstlightui.dev/docs/how-to/build-a-form-screen
 - Settings screen: https://firstlightui.dev/docs/how-to/build-a-settings-screen
+- Photo upload screen: https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen
 
 Scaffold a screen with `php artisan make:firstlight-screen Name --form|--list|--destroy --test`.
 

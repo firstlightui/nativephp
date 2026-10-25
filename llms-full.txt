@@ -357,6 +357,213 @@ swipe gesture.
   in [Paginate lists](paginate-lists.md#cursor-pagination).
 - **Search on submit instead of while typing:** bind `native:model.lazy="query"`.
 
+--- Source: docs/how-to/build-a-large-list-screen.md ---
+
+# Build a Large List Screen
+
+This recipe shows thousands of records in one scrolling list without building
+them all. Native renders the full scroll extent, PHP builds only the rows near
+the visible window, and the next slice is built as the user scrolls.
+
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`LargeListRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/LargeListRecipeTest.php)
+exercises it against 5,000 contacts.
+
+## Virtualise or paginate?
+
+| The data… | Use |
+| --- | --- |
+| Is local (SQLite on the device) or has a cheap count and offset query | This recipe: `native:virtual-list` |
+| Comes from a remote API with cursors or no known total | [Paginate lists](paginate-lists.md) with `@endReached` |
+| Is short and fixed, or needs sections and pull-to-refresh | [List](../components/list.md) |
+
+Prefer virtualisation for large local collections. A paginated List keeps
+every loaded row in the published tree, so a long scroll keeps growing what
+PHP renders and sends. A virtual list stays at about 80 rows however far the
+user scrolls, and its scroll bar reflects the whole collection.
+
+## 1. Register the routes
+
+```php
+use App\NativeComponents\ContactScreen;
+use App\NativeComponents\ContactsScreen;
+use App\NativeComponents\Layouts\AppLayout;
+use Illuminate\Support\Facades\Route;
+
+Route::native('/contacts', ContactsScreen::class)
+    ->name('recipes.contacts')
+    ->layout(AppLayout::class);
+
+Route::native('/contacts/{contact}', ContactScreen::class)
+    ->name('recipes.contact')
+    ->layout(AppLayout::class);
+```
+
+`AppLayout` is defined in [Build a list and detail flow](build-a-list-detail-flow.md).
+
+## 2. Write the screen
+
+NativePHP's `HasVirtualListWindow` trait holds the window
+(`$virtualWindowFrom`, `$virtualWindowTo`, rows 0–79 at first) and its
+`setVirtualWindow()` handler. The screen loads the window's rows with one
+query and shares them, keyed by absolute index, with the row view.
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\Contact;
+use FirstlightUI\NativeComponent;
+use Illuminate\Support\Facades\View as ViewFactory;
+use Illuminate\View\View;
+use Native\Mobile\Edge\Concerns\HasVirtualListWindow;
+
+class ContactsScreen extends NativeComponent
+{
+    use HasVirtualListWindow;
+
+    public function openContact(int $id): void
+    {
+        $this->navigate('/contacts/'.$id);
+    }
+
+    public function navTitle(): string
+    {
+        return 'Contacts';
+    }
+
+    public function render(): View
+    {
+        // One query for the rows in the current window, keyed by their
+        // absolute index so each row view can find its own contact.
+        $from = $this->virtualWindowFrom;
+
+        $window = Contact::query()
+            ->orderBy('name')
+            ->orderBy('id')
+            ->skip($from)
+            ->take($this->virtualWindowTo - $from + 1)
+            ->get()
+            ->values()
+            ->keyBy(fn (Contact $contact, int $offset) => $from + $offset);
+
+        ViewFactory::share('contactWindow', $window);
+
+        return view('native.contacts', [
+            'total' => Contact::query()->count(),
+        ]);
+    }
+}
+```
+
+Do not query inside the row view. The row view renders once per index, so a
+query there runs about 80 times for every window change.
+
+## 3. Write the views
+
+The screen view is one self-closing tag. `item` names the row view.
+
+```blade
+{{-- resources/views/native/contacts.blade.php --}}
+<native:virtual-list
+    class="w-full flex-1"
+    :count="$total"
+    :from="$virtualWindowFrom"
+    :to="$virtualWindowTo"
+    item="native.rows.contact"
+    on-window-change="setVirtualWindow"
+    estimated-row-height="72"
+/>
+```
+
+The row view receives `$index` and renders one ordinary List Item:
+
+```blade
+{{-- resources/views/native/rows/contact.blade.php --}}
+@php($contact = $contactWindow[$index])
+
+<firstlight:list-item
+    :headline="$contact->name"
+    :supporting="$contact->email"
+    trailing-icon="chevron-right"
+    trailing-icon-ios="chevron.right"
+    trailing-icon-android="chevron_right"
+    @press="openContact({{ $contact->id }})"
+/>
+```
+
+The detail screen is the same as in the
+[list and detail flow](build-a-list-detail-flow.md), with
+`public Contact $contact` bound from the route.
+
+## 4. Test it
+
+`setVirtualWindow()` is a public method, so a test moves the window the way
+native does:
+
+```php
+<?php
+
+use App\Models\Contact;
+use FirstlightUI\Testing\ScreenAssertions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Native\Mobile\Testing\Native;
+
+uses(RefreshDatabase::class);
+
+beforeEach(fn () => ScreenAssertions::register());
+
+it('builds only the rows in the first window', function () {
+    Native::visit('/contacts')
+        ->assertListItemCount(80)
+        ->assertListItem('Contact 0001')
+        ->assertListItem('Contact 0080')
+        ->assertMissingListItem('Contact 0081');
+});
+
+it('builds the new slice when the native window moves', function () {
+    Native::visit('/contacts')
+        ->call('setVirtualWindow', 4000, 4079)
+        ->assertListItemCount(80)
+        ->assertListItem('Contact 4001')
+        ->assertListItem('Contact 4080')
+        ->assertMissingListItem('Contact 0001');
+});
+
+it('clips the last window to the end of the collection', function () {
+    Native::visit('/contacts')
+        ->call('setVirtualWindow', 4960, 5039)
+        ->assertListItemCount(40)
+        ->assertListItem('Contact 5000');
+});
+
+it('opens the detail screen for the pressed row', function () {
+    Native::visit('/contacts')
+        ->call('setVirtualWindow', 2000, 2079)
+        ->pressListItem('Contact 2042')
+        ->assertNavigatedTo('/contacts/'.Contact::where('name', 'Contact 2042')->value('id'));
+});
+```
+
+## Rules to keep
+
+- One virtual list per screen. This is a NativePHP limit.
+- Rows outside the window are fixed-height placeholders sized by
+  `estimated-row-height`. Set it close to the real row height (72 for a List
+  Item with supporting text) so the scroll bar does not jump.
+- Order by a unique column last (`orderBy('id')`) so a window always holds the
+  same rows.
+- Pass model keys, not `$index`, into `@press` and other callbacks.
+- Virtual lists have no sections, separators, pull-to-refresh, or
+  end-reached event. Use [List](../components/list.md) when you need those.
+
+## Adapt the recipe
+
+- **Swipe and context-menu actions:** add `trailing-actions` or `context-menu`
+  to the row's List Item exactly as on a List row.
+
 --- Source: docs/how-to/build-a-form-screen.md ---
 
 # Build a Form Screen
@@ -710,6 +917,312 @@ Save this as `resources/views/native/settings.blade.php`:
   [Build a list and detail flow](build-a-list-detail-flow.md), so the title and
   back navigation come from the platform.
 
+--- Source: docs/how-to/build-a-photo-upload-screen.md ---
+
+# Build a Photo Upload Screen
+
+This recipe adds a cover photo to a post: the user picks or takes a photo,
+crops it to 16:9, and taps Save. Laravel validation checks the file, the post
+stores where it lives, and replaced files are deleted.
+
+This recipe runs unchanged in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`MediaUploadRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/MediaUploadRecipeTest.php)
+exercises it.
+
+## How the pieces fit
+
+[Media](../components/media.md) copies a picked file to Storage as soon as the
+user confirms it and binds a `MediaValue`. Until Save, that file is a draft:
+
+- Picking again or clearing deletes the draft, never the saved cover.
+- Save stores the new `MediaValue` on the post, then deletes the old cover.
+
+So leaving without saving, or replacing a photo twice, never loses the saved
+cover.
+
+## 1. Store the value
+
+`MediaValue` is a small readonly object. Store its fields as JSON:
+
+```php
+Schema::table('posts', function (Blueprint $table) {
+    $table->json('cover')->nullable();
+});
+```
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    protected $fillable = ['title', 'excerpt', 'body', 'cover'];
+
+    protected function casts(): array
+    {
+        return [
+            'cover' => 'array',
+        ];
+    }
+}
+```
+
+## 2. Register the route
+
+```php
+use App\NativeComponents\Layouts\AppLayout;
+use App\NativeComponents\PostCoverScreen;
+use Illuminate\Support\Facades\Route;
+
+Route::native('/posts/{post}/cover', PostCoverScreen::class)
+    ->name('recipes.post.cover')
+    ->layout(AppLayout::class);
+```
+
+Register it before `/posts/{post}`.
+
+## 3. Write the screen
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\Post;
+use FirstlightUI\Media\MediaStorage;
+use FirstlightUI\Media\MediaValue;
+use FirstlightUI\NativeComponent;
+use Illuminate\View\View;
+
+class PostCoverScreen extends NativeComponent
+{
+    public Post $post;
+
+    public ?MediaValue $cover = null;
+
+    /** @var array<string, string> */
+    protected array $rules = [
+        'cover' => 'nullable|image|max:4096',
+    ];
+
+    public function mount(): void
+    {
+        $this->cover = $this->savedCover();
+    }
+
+    public function coverChosen(string $tempPath): void
+    {
+        $this->discardDraft();
+        $this->cover = MediaStorage::commit($tempPath, 'mobile_public', 'covers');
+    }
+
+    public function coverCleared(): void
+    {
+        $this->discardDraft();
+        $this->cover = null;
+    }
+
+    public function save(): void
+    {
+        $saved = $this->submit(
+            action: function (): void {
+                $previous = $this->savedCover();
+
+                $this->post->update([
+                    'cover' => $this->cover === null ? null : get_object_vars($this->cover),
+                ]);
+
+                if ($previous !== null && $previous->path !== $this->cover?->path) {
+                    MediaStorage::delete($previous);
+                }
+            },
+            successMessage: 'Cover saved',
+        );
+
+        if ($saved) {
+            $this->back();
+        }
+    }
+
+    public function navTitle(): string
+    {
+        return 'Cover photo';
+    }
+
+    public function render(): View
+    {
+        return view('native.post-cover');
+    }
+
+    private function savedCover(): ?MediaValue
+    {
+        return $this->post->cover === null ? null : new MediaValue(...$this->post->cover);
+    }
+
+    /** Deletes the picked file only while it is an unsaved draft. */
+    private function discardDraft(): void
+    {
+        if ($this->cover !== null && $this->cover->path !== $this->savedCover()?->path) {
+            MediaStorage::delete($this->cover);
+        }
+    }
+}
+```
+
+`submit()` validates `$rules` first. Media adapts the `MediaValue` to an
+`UploadedFile`, so `image`, `mimes`, `max`, and `dimensions` work as they do
+for web uploads. `nullable` lets the user remove the cover by clearing the
+field and saving.
+
+## 4. Write the view
+
+```blade
+<native:scroll-view class="w-full flex-1">
+    <native:column class="w-full p-4 gap-4">
+        <firstlight:media
+            mode="image"
+            label="Cover photo"
+            helper="Cropped to 16:9. Saved when you tap Save cover."
+            aspect="16:9"
+            directory="covers"
+            native:model="cover"
+            @change="coverChosen"
+            @clear="coverCleared"
+        />
+
+        <firstlight:button variant="primary" :loading="$submitting" @press="save">
+            Save cover
+        </firstlight:button>
+    </native:column>
+</native:scroll-view>
+```
+
+`aspect="16:9"` makes the crop required and locked to that ratio. A failed
+rule shows under the field, as on every Firstlight field.
+
+## 5. Test it
+
+`coverChosen()` receives the path native hands over after the pick, so a test
+calls it with a fake upload:
+
+```php
+<?php
+
+use App\Models\Post;
+use FirstlightUI\Facades\Feedback;
+use FirstlightUI\Testing\ScreenAssertions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Native\Mobile\Testing\Native;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    ScreenAssertions::register();
+    Storage::fake('mobile_public');
+    $this->post = Post::where('title', 'Sample post 1')->firstOrFail();
+});
+
+it('saves a picked cover to the post and goes back', function () {
+    Feedback::fake();
+    $photo = UploadedFile::fake()->image('beach.jpg', 1600, 900);
+
+    $screen = Native::visit("/posts/{$this->post->id}/cover")
+        ->call('coverChosen', $photo->getPathname())
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertFeedbackSent('Cover saved')
+        ->assertWentBack();
+
+    $cover = $this->post->fresh()->cover;
+    expect($cover['path'])->toStartWith('covers/')
+        ->and($cover['width'])->toBe(1600)
+        ->and($cover['height'])->toBe(900);
+    Storage::disk('mobile_public')->assertExists($cover['path']);
+});
+
+it('rejects a file that is not an image and saves nothing', function () {
+    $notes = UploadedFile::fake()->createWithContent('notes.txt', 'Not an image');
+
+    Native::visit("/posts/{$this->post->id}/cover")
+        ->call('coverChosen', $notes->getPathname())
+        ->call('save')
+        ->assertHasErrors(['cover' => 'The cover field must be an image.'])
+        ->assertElement('firstlight.media', fn (array $node) => $node['props']['error'] === 'The cover field must be an image.');
+
+    expect($this->post->fresh()->cover)->toBeNull();
+});
+
+it('deletes a replaced draft but keeps the saved cover until Save', function () {
+    $first = UploadedFile::fake()->image('first.jpg', 1600, 900);
+    $draft = UploadedFile::fake()->image('draft.jpg', 1600, 900);
+    $final = UploadedFile::fake()->image('final.jpg', 1600, 900);
+
+    Native::visit("/posts/{$this->post->id}/cover")
+        ->call('coverChosen', $first->getPathname())
+        ->call('save');
+    $saved = $this->post->fresh()->cover['path'];
+
+    $screen = Native::visit("/posts/{$this->post->id}/cover")
+        ->call('coverChosen', $draft->getPathname());
+    $draftPath = $screen->get('cover')->path;
+
+    $screen->call('coverChosen', $final->getPathname());
+    $finalPath = $screen->get('cover')->path;
+
+    $disk = Storage::disk('mobile_public');
+    $disk->assertMissing($draftPath);
+    $disk->assertExists($saved);
+
+    $screen->call('save');
+    $disk->assertMissing($saved);
+    $disk->assertExists($finalPath);
+    expect($this->post->fresh()->cover['path'])->toBe($finalPath);
+});
+
+it('removes the cover only when the cleared field is saved', function () {
+    $photo = UploadedFile::fake()->image('beach.jpg', 1600, 900);
+
+    Native::visit("/posts/{$this->post->id}/cover")
+        ->call('coverChosen', $photo->getPathname())
+        ->call('save');
+    $saved = $this->post->fresh()->cover['path'];
+
+    $screen = Native::visit("/posts/{$this->post->id}/cover")
+        ->assertSet('cover.path', $saved)
+        ->call('coverCleared');
+    Storage::disk('mobile_public')->assertExists($saved);
+
+    $screen->call('save');
+    Storage::disk('mobile_public')->assertMissing($saved);
+    expect($this->post->fresh()->cover)->toBeNull();
+});
+```
+
+## Rules to keep
+
+- Commit picks with `MediaStorage::commit()` in `@change`; never keep the
+  temporary path.
+- Delete only drafts in `@change` and `@clear`. Delete the old saved file
+  after the model is updated.
+- On iOS, set a camera usage description written for your app; see
+  [Media host application setup](../components/media.md#host-application-setup).
+
+## Adapt the recipe
+
+- **Profile photo:** use `aspect="1:1"` and store the value on the user.
+- **Documents:** use `mode="document"` and a `mimes:pdf` rule. Document mode
+  has no crop.
+- **Upload to a server:** in the `submit()` action, send
+  `Storage::disk($this->cover->disk)->path($this->cover->path)` to your API
+  before updating the model, and throw
+  `ValidationException::withMessages(['cover' => ...])` if it fails.
+
 --- Source: docs/getting-started/installation.md ---
 
 # Install Firstlight UI
@@ -817,7 +1330,7 @@ and skills match the installed version.
 
 | Resource | When the agent reads it | What it contains |
 | --- | --- | --- |
-| Guideline | Always, as part of the agent's instructions | The rules every Firstlight screen follows, the four recipes, the screen generator, and a tested example |
+| Guideline | Always, as part of the agent's instructions | The rules every Firstlight screen follows, the six recipes, the screen generator, and a tested example |
 | `firstlight-init` skill | When asked to set up or scaffold a Firstlight app | An interview, an install check, the theme, the native-chrome layout, and the chosen recipe screens with tests |
 | `building-firstlight-screens` skill | When adding or changing a screen, form, list, or settings page | Which recipe to start from, which control fits each value, the workflow, and what never to do |
 | [`llms.txt`](https://firstlightui.dev/llms.txt) | When the agent needs a page | Every documentation page with a one-line summary |
@@ -1638,6 +2151,11 @@ Firstlight paginates lists in PHP. List already exposes `@refresh` and
 `$this->listItems` so Blade can render ordinary List Item rows.
 
 There is no `<firstlight:empty>` tag and no second scroll-event API.
+
+Paginate when rows come from a remote API with cursors or no known total.
+Every loaded page stays in the published tree, so for thousands of local
+records use a virtual list instead; see
+[Build a large list screen](build-a-large-list-screen.md).
 
 ## Declare the screen
 
@@ -4376,7 +4894,9 @@ see [Destroy list items](../how-to/destroy-list-items.md).
 - Group related rows with `firstlight:list-section`. Sections require at least
   one List Item child.
 - Horizontal lists, virtualized windows, selectable collections, and arbitrary
-  child components are outside the Firstlight List contract.
+  child components are outside the Firstlight List contract. For thousands of
+  rows, render List Items in Mobile UI's `native:virtual-list`; see
+  [Build a large list screen](../how-to/build-a-large-list-screen.md).
 
 ## Platform expression
 

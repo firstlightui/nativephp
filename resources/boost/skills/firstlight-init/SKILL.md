@@ -20,7 +20,7 @@ Confirm, and fix with the developer's agreement:
 Ask these one at a time, offering choices where you can:
 
 1. What does the app do, and what is the main record (for example posts, jobs, patients)? Use it to name models and routes.
-2. Which recipes should be scaffolded? Offer: list and detail flow (always included, it is the app shell), searchable list, form screen, settings screen.
+2. Which recipes should be scaffolded? Offer: list and detail flow (always included, it is the app shell), searchable list, large list, form screen, settings screen, photo upload.
 3. Brand colours: a primary colour, and whether to tune dark mode or let NativePHP derive it.
 4. Does the first screen need tabs? If so, which (two to five)?
 5. Should deletion be allowed from lists, and who may delete (Policy rule)?
