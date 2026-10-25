@@ -59,7 +59,7 @@ Record commit, path decision, tests, consumer builds, screenshots, accessibility
 - Scaffolding before auditing the official primitive.
 - Inventing `ios-icon` or `android-icon` instead of applying `spec/reference/icons.md`.
 - Replacing showcase chrome/start route or concurrent fixtures.
-- Adding layout primitives, navigation chrome, input masks, or a Filament-style schema builder to the Firstlight catalogue.
+- Adding layout primitives, navigation chrome, new input formatters or masked-input tags, or a Filament-style schema builder to the Firstlight catalogue.
 - Making validation, authorization, or pagination native widgets instead of PHP extensions over existing `error`, `loading`, list, confirmation, and Feedback APIs.
 
 ## Stop Conditions

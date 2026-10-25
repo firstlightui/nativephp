@@ -4,12 +4,20 @@ import UIKit
 struct FirstlightTextFieldControl: View {
     let configuration: TextFieldRendererConfiguration
     @Binding var text: String
+    /// The formatted text of a masked field, which the renderer owns.
+    let maskedText: String
+    /// Changes when a masked field should keep the focus it had before a SwiftUI action, such as clear.
+    var maskedRefocus = 0
     @Binding var revealed: Bool
     let isFocused: FocusState<Bool>.Binding
     let tokens: NativeUITokens
     let onClear: () -> Void
     let onTrailingPress: () -> Void
     let onSubmit: () -> Void
+    /// Applies a masked edit of a display character range and returns the new display and caret.
+    let onMaskedEdit: (Range<Int>, String) -> (text: String, caret: Int?)
+    let onMaskedTextReplaced: (String) -> String
+    let onMaskedFocusChanged: (Bool) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -27,7 +35,6 @@ struct FirstlightTextFieldControl: View {
                 }
 
                 input
-                    .focused(isFocused)
                     .disabled(configuration.disabled)
                     .accessibilityLabel(Text(configuration.accessibilityLabel))
                     .accessibilityHint(Text(configuration.accessibilityHint))
@@ -56,7 +63,19 @@ struct FirstlightTextFieldControl: View {
     }
 
     @ViewBuilder private var input: some View {
-        if configuration.secure && !revealed {
+        if configuration.mask != nil {
+            // UIKit reports each edit's exact range before applying it, so the renderer can
+            // insert literals, drop rejected characters, and place the caret in one step.
+            FirstlightMaskedTextInput(
+                configuration: configuration,
+                text: maskedText,
+                refocus: maskedRefocus,
+                onEdit: onMaskedEdit,
+                onTextReplaced: onMaskedTextReplaced,
+                onFocusChanged: onMaskedFocusChanged,
+                onSubmit: onSubmit
+            )
+        } else if configuration.secure && !revealed {
             SecureField(
                 configuration.placeholder,
                 text: configuration.readOnly ? .constant(text) : $text
@@ -67,6 +86,7 @@ struct FirstlightTextFieldControl: View {
                 .autocorrectionDisabled(configuration.autocorrectPolicy == "disabled")
                 .submitLabel(resolveSubmitLabel(configuration.submitLabel))
                 .onSubmit(onSubmit)
+                .focused(isFocused)
         } else {
             TextField(
                 configuration.placeholder,
@@ -78,6 +98,7 @@ struct FirstlightTextFieldControl: View {
                 .autocorrectionDisabled(configuration.autocorrectPolicy == "disabled")
                 .submitLabel(resolveSubmitLabel(configuration.submitLabel))
                 .onSubmit(onSubmit)
+                .focused(isFocused)
         }
     }
 
@@ -112,6 +133,120 @@ struct FirstlightTextFieldControl: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Text(label))
         .disabled(configuration.disabled)
+    }
+}
+
+struct FirstlightMaskedTextInput: UIViewRepresentable {
+    let configuration: TextFieldRendererConfiguration
+    let text: String
+    let refocus: Int
+    let onEdit: (Range<Int>, String) -> (text: String, caret: Int?)
+    let onTextReplaced: (String) -> String
+    let onFocusChanged: (Bool) -> Void
+    let onSubmit: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> UITextField {
+        let field = UITextField()
+        field.font = .preferredFont(forTextStyle: .body)
+        field.adjustsFontForContentSizeCategory = true
+        field.borderStyle = .none
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        field.delegate = context.coordinator
+        field.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
+        return field
+    }
+
+    func updateUIView(_ field: UITextField, context: Context) {
+        context.coordinator.input = self
+        if context.coordinator.refocus != refocus {
+            context.coordinator.refocus = refocus
+            // SwiftUI does not track UIKit focus, so its button tap can resign the field just
+            // before the action runs. Take focus back only when it was lost that moment.
+            if !field.isFirstResponder, let ended = context.coordinator.endedEditing, Date().timeIntervalSince(ended) < 0.5 {
+                DispatchQueue.main.async { field.becomeFirstResponder() }
+            }
+        }
+        if field.text != text, field.markedTextRange == nil { field.text = text }
+        field.placeholder = configuration.placeholder
+        field.isEnabled = !configuration.disabled
+        field.keyboardType = resolveKeyboard(configuration.keyboard)
+        field.textContentType = resolveContentType(configuration.contentType)
+        field.autocapitalizationType = switch configuration.autocapitalize {
+        case "none": .none
+        case "words": .words
+        case "characters": .allCharacters
+        default: .sentences
+        }
+        field.autocorrectionType = switch configuration.autocorrectPolicy {
+        case "enabled": .yes
+        case "disabled": .no
+        default: .default
+        }
+        field.returnKeyType = switch configuration.submitLabel {
+        case "done": .done
+        case "go": .go
+        case "next": .next
+        case "search": .search
+        case "send": .send
+        default: .default
+        }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextField, context: Context) -> CGSize? {
+        CGSize(width: proposal.width ?? uiView.intrinsicContentSize.width, height: uiView.intrinsicContentSize.height)
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var input: FirstlightMaskedTextInput?
+        var refocus = 0
+        var endedEditing: Date?
+
+        func textField(_ field: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+            // Marked text is composed natively and conformed when it is committed.
+            guard let input, field.markedTextRange == nil,
+                  let current = field.text, let bounds = Range(range, in: current)
+            else { return true }
+            let lower = current.distance(from: current.startIndex, to: bounds.lowerBound)
+            let upper = current.distance(from: current.startIndex, to: bounds.upperBound)
+            let result = input.onEdit(lower..<upper, string)
+            field.text = result.text
+            place(caret: result.caret ?? result.text.count, in: field)
+            return false
+        }
+
+        @objc func editingChanged(_ field: UITextField) {
+            guard let input, field.markedTextRange == nil, let text = field.text else { return }
+            let display = input.onTextReplaced(text)
+            if display != text {
+                field.text = display
+                place(caret: display.count, in: field)
+            }
+        }
+
+        func textFieldDidBeginEditing(_ field: UITextField) { input?.onFocusChanged(true) }
+
+        func textFieldDidEndEditing(_ field: UITextField) {
+            endedEditing = Date()
+            input?.onFocusChanged(false)
+        }
+
+        func textFieldShouldReturn(_ field: UITextField) -> Bool {
+            input?.onSubmit()
+            field.resignFirstResponder()
+            return false
+        }
+
+        private func place(caret: Int, in field: UITextField) {
+            let text = field.text ?? ""
+            let index = text.index(text.startIndex, offsetBy: min(caret, text.count))
+            let offset = text.utf16.distance(from: text.utf16.startIndex, to: index)
+            if let position = field.position(from: field.beginningOfDocument, offset: offset) {
+                field.selectedTextRange = field.textRange(from: position, to: position)
+            }
+        }
     }
 }
 

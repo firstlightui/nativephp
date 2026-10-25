@@ -76,12 +76,16 @@ private struct TextFieldSnapshotHost: View {
         FirstlightTextFieldControl(
             configuration: configuration,
             text: $text,
+            maskedText: text,
             revealed: $revealed,
             isFocused: $focused,
             tokens: .fallback,
             onClear: { text = "" },
             onTrailingPress: {},
-            onSubmit: {}
+            onSubmit: {},
+            onMaskedEdit: { _, _ in (text, nil) },
+            onMaskedTextReplaced: { $0 },
+            onMaskedFocusChanged: { _ in }
         )
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

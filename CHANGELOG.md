@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Text Field `mask`: a display-only input pattern such as `mask="#### #### #### ####"`. `#` is a digit, `A` a letter and `*` either; other characters are literals inserted as the person types. The bound value, `@change` and `@submit` receive only the slot characters, for example `4111111111111111`. Characters that fit no slot are dropped, input stops when the pattern is full, and paste accepts raw or formatted text. The mask never changes the keyboard, and it cannot be combined with `secure`. See the [input masks addendum](spec/designs/2026-10-25-firstlight-text-field-masks-design.md).
+
 ## 1.0.0-RC7 - 2026-10-24
 
 ### Added

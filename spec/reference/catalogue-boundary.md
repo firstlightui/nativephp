@@ -50,7 +50,7 @@ Do not scaffold, adapt, or document these as Firstlight components:
 
 - **Layout primitives** — columns, rows, stacks, spacers, generic text, unconstrained style bags. Mobile UI already owns layout and typography.
 - **Navigation chrome** — bottom tabs, top bars, navigation stacks, FABs, route shells. Mobile UI owns application chrome. Laravel `route()` and middleware stay in the application. [Tabs](../components/tabs.md) is in the catalogue because it is a selection control for sections of one object: it owns no route, pane, pager, or bar, and pinning it under a top bar remains layout.
-- **Input masks and formatters** — client-side mask engines, currency widgets, or parallel formatted-value props on Text Field. Prefer `keyboard` / `content-type` plus PHP `prepareForValidation()`.
+- **Input formatters beyond Text Field `mask`** — currency or number widgets, mask presets, separate masked-input tags, or parallel formatted-value props. Text Field's display-only `mask` pattern ([addendum](../designs/2026-10-25-firstlight-text-field-masks-design.md)) is the only formatter; it binds the raw slot characters. Otherwise prefer `keyboard` / `content-type` plus PHP `prepareForValidation()`.
 - **Schema / form builders** — Filament- or JSON-schema-driven field factories, `->visible()` DSLs, or a public `<firstlight:form>` layout container. Blade `@if`, server-authoritative republish, Button `loading`, and `ValidatesFields` already compose screens.
 - **Auth and onboarding kits** — login, register, or settings frameworks. Compose List, Switch, Text Field, and Button in the application.
 - **Client-side validation** — Swift/Kotlin rule engines, HTML forms, or Livewire `@error` clones that bypass the field `error` slot.
@@ -63,6 +63,6 @@ Before adding a public control, answer:
 
 1. Is this a user-facing control with a semantic contract Mobile UI cannot already meet?
 2. Can a PHP service plus existing Firstlight fields, Feedback, Button, List, or Confirmation Dialog express it?
-3. Would shipping it require layout, navigation, masks, or a schema builder?
+3. Would shipping it require layout, navigation, a new formatter, or a schema builder?
 
 If (2) is yes or (3) is yes, it is not a catalogue component. Implement or defer it as a PHP extension, or leave it to Mobile UI.

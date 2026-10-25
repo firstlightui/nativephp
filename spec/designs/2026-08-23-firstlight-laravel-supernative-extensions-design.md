@@ -154,7 +154,7 @@ Shipped as `Chrome` plus `lang/en/chrome.php`. See [Package locale chrome](../re
 
 ## Explicitly deferred
 
-- Text Field masks and formatters (already deferred in the Text Field design).
+- Text Field formatters beyond the `mask` pattern (Text Field masks were later added by the [input masks addendum](2026-10-25-firstlight-text-field-masks-design.md)).
 - Dependent-field schema APIs; Blade `@if` plus server republish is sufficient.
 - Skeleton/shimmer primitives while Button `loading` and Activity Indicator exist.
 - Settings page kits, auth/onboarding screens, and navigation shells.

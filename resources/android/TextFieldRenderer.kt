@@ -15,6 +15,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
@@ -54,6 +55,7 @@ data class TextFieldRendererConfiguration(
     val disabled: Boolean,
     val readOnly: Boolean,
     val secure: Boolean,
+    val mask: FirstlightTextMask?,
     val keyboard: String,
     val contentType: String,
     val autocapitalize: String,
@@ -88,6 +90,7 @@ data class TextFieldRendererConfiguration(
         disabled = node.props.getBool("disabled"),
         readOnly = node.props.getBool("read_only"),
         secure = node.props.getBool("secure"),
+        mask = FirstlightTextMask.of(node.props.getString("mask")),
         keyboard = node.props.getString("keyboard", "text"),
         contentType = node.props.getString("content_type"),
         autocapitalize = node.props.getString("autocapitalize"),
@@ -115,8 +118,9 @@ data class TextFieldRendererConfiguration(
 
 class TextFieldRendererState(node: NativeUINode) {
     var configuration by mutableStateOf(TextFieldRendererConfiguration(node)); private set
-    var draft by mutableStateOf(TextFieldValue(configuration.value)); private set
-    var lastCommitted = configuration.value; private set
+    /** The value PHP receives. With a mask it holds only slot characters; Compose displays it formatted. */
+    var draft by mutableStateOf(TextFieldValue(configuration.conformedValue())); private set
+    var lastCommitted = draft.text; private set
     var pendingServerValue: String? = null; private set
     var focused = false; private set
     var revealed by mutableStateOf(false); private set
@@ -124,7 +128,12 @@ class TextFieldRendererState(node: NativeUINode) {
     fun userChanged(value: String): TextFieldRendererEvent? = userChanged(draft.copy(text = value))
     fun userChanged(value: TextFieldValue): TextFieldRendererEvent? {
         if (configuration.disabled || configuration.readOnly) return null
-        draft = value
+        draft = configuration.mask?.let { mask ->
+            val (raw, caret) = mask.edit(draft.text, value.text, value.selection.end)
+            // An accepted edit keeps Compose's selection and composition; otherwise the buffer
+            // is rewritten, dropping characters that fit no slot or exceed the last slot.
+            if (raw == value.text) value else TextFieldValue(raw, TextRange(caret))
+        } ?: value
         return if (configuration.syncMode == "live") commit() else null
     }
     fun focusChanged(value: Boolean): TextFieldRendererEvent? { focused = value; return if (value) null else commit() }
@@ -141,11 +150,16 @@ class TextFieldRendererState(node: NativeUINode) {
     fun toggleReveal() { if (configuration.revealable) revealed = !revealed }
     fun serverPublished(tree: NativeUITree) {
         val published = tree.root.findNode(configuration.nodeId)?.let(::TextFieldRendererConfiguration) ?: return
+        val maskChanged = published.mask != configuration.mask
         configuration = published
+        // A value that does not fit the mask is shown conformed; the conformed value is
+        // published only with the person's next edit.
+        val value = published.conformedValue()
         if (focused) {
-            pendingServerValue = published.value.takeUnless { it == lastCommitted }
+            pendingServerValue = value.takeUnless { it == lastCommitted }
+            if (maskChanged) published.mask?.let { draft = TextFieldValue(it.conform(draft.text)) }
         } else {
-            draft = TextFieldValue(published.value); lastCommitted = published.value; pendingServerValue = null
+            draft = TextFieldValue(value); lastCommitted = value; pendingServerValue = null
         }
     }
     private fun commit(): TextFieldRendererEvent? {
@@ -203,6 +217,8 @@ internal fun textFieldKeyboardOptions(configuration: TextFieldRendererConfigurat
 internal fun textFieldKeyboardActions(configuration: TextFieldRendererConfiguration, submit: () -> Unit) = KeyboardActions(
     onDone = { submit() }, onGo = { submit() }, onNext = { submit() }, onSearch = { submit() }, onSend = { submit() },
 )
+
+private fun TextFieldRendererConfiguration.conformedValue() = mask?.conform(value) ?: value
 
 private fun NativeUINode.findNode(id: Int): NativeUINode? {
     if (this.id == id) return this

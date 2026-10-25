@@ -338,3 +338,50 @@ it('publishes the package chrome clear and password-reveal accessibility labels'
         'hide_password_a11y_label' => 'Hide password',
     ]);
 });
+
+it('publishes an authored input mask pattern without changing the bound value or keyboard', function () {
+    $tree = collectTextField([
+        'label' => 'Card number',
+        'value' => '4111111111111111',
+        'mask' => '#### #### #### ####',
+    ]);
+    $fluent = TextField::make()->label('Postcode')->mask('A#A #A#')->toArray(new CallbackRegistry);
+
+    expect($tree['props'])->toMatchArray([
+        'mask' => '#### #### #### ####',
+        'value' => '4111111111111111',
+    ])
+        ->and($tree['props'])->not->toHaveKey('keyboard')
+        ->and($fluent['props']['mask'])->toBe('A#A #A#')
+        ->and(collectTextField(['label' => 'Name'])['props'])->not->toHaveKey('mask')
+        ->and(collectTextField(['label' => 'Name', 'mask' => ''])['props'])->not->toHaveKey('mask');
+});
+
+it('combines an input mask with clearable and the selected sync policy', function () {
+    $result = compileFirstlightTextFieldView(
+        '<firstlight:text-field native:model.blur="card" label="Card number" mask="#### #### #### ####" keyboard="number" clearable />',
+        ['card' => '4111111111111111'],
+    );
+
+    expect($result['tree']['props'])->toMatchArray([
+        'value' => '4111111111111111',
+        'mask' => '#### #### #### ####',
+        'keyboard' => 'number',
+        'clearable' => true,
+        'sync_mode' => 'blur',
+    ]);
+});
+
+it('rejects malformed input masks and masked secure entry', function (array $attributes, string $message) {
+    try {
+        collectTextField(['label' => 'Field', ...$attributes]);
+    } catch (InvalidArgumentException $exception) {
+        expect($exception->getMessage())->toContain($message);
+        throw $exception;
+    }
+})->with([
+    'non-string mask' => [['mask' => 1234], 'mask must be a string'],
+    'mask without slots' => [['mask' => '(---) ---'], 'must contain at least one slot'],
+    'mask with secure' => [['mask' => '####', 'secure' => true], 'mask cannot be combined with secure'],
+    'mask with reveal' => [['mask' => '####', 'secure' => true, 'revealable' => true], 'mask cannot be combined with secure'],
+])->throws(InvalidArgumentException::class);

@@ -23,6 +23,9 @@ Date: 2026-08-04
 
 Status: approved for implementation
 
+Amended 2026-10-25: [Text Field input masks](2026-10-25-firstlight-text-field-masks-design.md)
+supersedes the masked-formatter exclusion and the formatting-masks non-goal.
+
 ## Purpose
 
 `<firstlight:text-field>` enters and edits one line of text. It provides a
@@ -30,7 +33,8 @@ native editing buffer, semantic keyboard and autofill hints, familiar field
 metadata, and standard NativePHP change and submit events.
 
 Text Field is not a multiline editor, search control, rich-text editor,
-masked formatter, picker, or validation engine. Multiline entry belongs to
+picker, or validation engine. Display-only pattern masks are specified in the
+[input masks addendum](2026-10-25-firstlight-text-field-masks-design.md). Multiline entry belongs to
 `text-area`; native search and clear behaviour belong to `search-field`.
 
 ## Public API
@@ -308,7 +312,8 @@ it does not satisfy the complete alpha catalogue gate.
 ## Non-goals
 
 Text Field does not expose multiline editing, search semantics, arbitrary
-built-in trailing behaviours beyond clear/reveal, formatting masks, arbitrary
+built-in trailing behaviours beyond clear/reveal, formatting beyond the
+`mask` pattern in the input masks addendum, arbitrary
 decorations, custom typography, platform escape hatches, programmatic focus
 control, optimistic server ownership, or form validation. Those require their
 own semantic contracts and evidence.

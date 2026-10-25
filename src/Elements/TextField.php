@@ -44,7 +44,7 @@ class TextField extends Element
 
     public function applyAttributes(array $attrs): void
     {
-        foreach (['value', 'label', 'placeholder', 'helper', 'error'] as $prop) {
+        foreach (['value', 'label', 'placeholder', 'helper', 'error', 'mask'] as $prop) {
             if (array_key_exists($prop, $attrs)) {
                 $this->{$this->methodName($prop)}($this->strictString($prop, $attrs[$prop]));
             }
@@ -138,6 +138,26 @@ class TextField extends Element
     public function error(string $value): static
     {
         $this->inputProps['error'] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Formats the displayed text with `#` (digit), `A` (letter) and `*` (letter or digit)
+     * slots; every other character is a literal. The bound value keeps only slot characters.
+     */
+    public function mask(string $value): static
+    {
+        if ($value === '') {
+            unset($this->inputProps['mask']);
+
+            return $this;
+        }
+        if (strpbrk($value, '#A*') === false) {
+            throw new InvalidArgumentException('Text Field mask must contain at least one slot: # (digit), A (letter) or * (letter or digit).');
+        }
+
+        $this->inputProps['mask'] = $value;
 
         return $this;
     }
@@ -375,6 +395,9 @@ class TextField extends Element
         $hasTrailingLabel = trim((string) ($this->inputProps['trailing_a11y_label'] ?? '')) !== '';
         $hasPress = $this->pressMethod !== null;
 
+        if (isset($this->inputProps['mask']) && $this->inputProps['secure']) {
+            throw new InvalidArgumentException('Text Field mask cannot be combined with secure.');
+        }
         if ($revealable && ! $this->inputProps['secure']) {
             throw new InvalidArgumentException('Text Field revealable requires secure.');
         }

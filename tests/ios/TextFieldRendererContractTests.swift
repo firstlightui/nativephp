@@ -91,6 +91,69 @@ final class TextFieldRendererContractTests: XCTestCase {
         XCTAssertNil(readOnly.clear())
     }
 
+    func testMaskedFieldPublishesOnlySlotCharactersAndKeepsLiteralsLocal() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(value: "", clearable: true, mask: "#### ####"))
+        _ = state.focusChanged(true)
+
+        XCTAssertEqual(state.maskedEdit(range: 0..<0, with: "4111").event, .change(callbackId: 41, nodeId: 7, value: "4111"))
+        let typed = state.maskedEdit(range: 4..<4, with: "2")
+        XCTAssertEqual(typed.event, .change(callbackId: 41, nodeId: 7, value: "41112"))
+        XCTAssertEqual(state.display, "4111 2")
+        XCTAssertEqual(typed.caret, 6)
+
+        let rejected = state.maskedEdit(range: 6..<6, with: "x")
+        XCTAssertNil(rejected.event, "a character that fits no slot is dropped without an event")
+        XCTAssertEqual(state.display, "4111 2")
+        XCTAssertEqual(rejected.caret, 6)
+
+        XCTAssertNil(state.maskedTextReplaced("4111 2a"), "committed text that conforms to the draft is not a change")
+        XCTAssertEqual(state.display, "4111 2")
+
+        XCTAssertEqual(state.clear(), .change(callbackId: 41, nodeId: 7, value: ""))
+        XCTAssertEqual(state.display, "")
+    }
+
+    func testMaskedBlurPublishesTheRawValueOnFocusLoss() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(value: "", syncMode: "blur", mask: "(###) ###-####"))
+        _ = state.focusChanged(true)
+
+        XCTAssertNil(state.maskedEdit(range: 0..<0, with: "(415) 555-0123").event)
+        XCTAssertEqual(state.display, "(415) 555-0123")
+        XCTAssertEqual(state.focusChanged(false), .change(callbackId: 41, nodeId: 7, value: "4155550123"))
+    }
+
+    func testValueThatDoesNotFitTheMaskIsShownConformedWithoutAnEvent() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(value: "4111-1111-99", syncMode: "blur", mask: "#### ####"))
+
+        XCTAssertEqual(state.draft, "41111111")
+        XCTAssertEqual(state.display, "4111 1111")
+        _ = state.focusChanged(true)
+        XCTAssertNil(state.focusChanged(false), "conforming a programmatic value is not a user change")
+
+        state.serverPublished(tree(root: makeTextFieldNode(value: "1234 56", mask: "#### ####")))
+        XCTAssertEqual(state.draft, "123456")
+        XCTAssertEqual(state.display, "1234 56")
+        XCTAssertNil(state.flush())
+    }
+
+    func testFocusedMaskedAcknowledgementComparesConformedValues() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(value: "", mask: "#### ####"))
+        _ = state.focusChanged(true)
+        _ = state.maskedEdit(range: 0..<0, with: "41112")
+
+        state.serverPublished(tree(root: makeTextFieldNode(value: "4111 2", mask: "#### ####")))
+        XCTAssertNil(state.pendingServerValue)
+        XCTAssertEqual(state.display, "4111 2")
+    }
+
+    func testReadOnlyMaskedFieldRestoresTheFormattedDisplay() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(value: "41111111", readOnly: true, mask: "#### ####"))
+
+        XCTAssertNil(state.maskedEdit(range: 9..<9, with: "2").event)
+        XCTAssertEqual(state.draft, "41111111")
+        XCTAssertEqual(state.display, "4111 1111")
+    }
+
     func testRendererCompilesAgainstNativePHPContractShims() {
         let renderer = TextFieldRenderer(
             node: makeTextFieldNode(),
@@ -108,6 +171,7 @@ final class TextFieldRendererContractTests: XCTestCase {
         readOnly: Bool = false,
         clearable: Bool = false,
         revealable: Bool = false,
+        mask: String = "",
         accessibilityLabel: String = "",
         accessibilityHint: String = ""
     ) -> NativeUINode {
@@ -139,6 +203,7 @@ final class TextFieldRendererContractTests: XCTestCase {
                 "read_only": readOnly,
                 "clearable": clearable,
                 "revealable": revealable,
+                "mask": mask,
                 "on_change": 41,
                 "on_submit": 42,
             ]),

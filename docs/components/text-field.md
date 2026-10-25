@@ -11,6 +11,8 @@ sources:
   - resources/ios/TextFieldRenderer.swift
   - resources/android/TextFieldControl.kt
   - resources/android/TextFieldRenderer.kt
+  - resources/ios/FirstlightTextMask.swift
+  - resources/android/TextFieldMask.kt
   - tests/Feature/TextFieldElementTest.php
   - docs/how-to/localize.md
   - src/Support/Chrome.php
@@ -52,6 +54,7 @@ autofill, selection, and accessibility behaviour of each platform.
 | `keyboard` | enum string | `text`, `email`, `phone`, `url`, `number`, or `decimal`. |
 | `content-type` | enum string | `name`, `username`, `email`, `password`, `new-password`, or `one-time-code`. |
 | `secure` | `bool` | Masks display without changing the stored string. |
+| `mask` | `string` | Formats the display as the person types: `#` is a digit, `A` a letter, `*` either, and every other character a literal. The bound value keeps only slot characters. See [Input masks](#input-masks). |
 | `autocapitalize` | enum string | `none`, `sentences`, `words`, or `characters`; omission keeps platform policy. |
 | `autocorrect` | `bool` | Explicitly enables or disables platform autocorrection. |
 | `submit-label` | enum string | `done`, `go`, `next`, `search`, or `send`; omission keeps the platform default. |
@@ -89,6 +92,40 @@ before a button press, so for forms submitted by a separate button use
 field's `@submit` event; for keyboard submission, the field's own `@submit`
 handler receives the current string directly.
 
+## Input masks
+
+```blade
+<firstlight:text-field
+    label="Card number"
+    mask="#### #### #### ####"
+    keyboard="number"
+    clearable
+    native:model="cardNumber"
+/>
+```
+
+The field inserts literals while the person types, drops characters that do
+not fit the next slot, and stops accepting input when every slot is filled.
+Literals appear only once the slot after them is filled, so an empty field
+shows its placeholder. Paste accepts raw or formatted text: `(415) 555-0123`
+and `4155550123` both fill `(###) ###-####`. Backspacing over a literal on its
+own deletes the slot character before it. The caret stays beside the edit.
+
+PHP, `@change`, and `@submit` receive only slot characters, for example
+`4111111111111111`, under every `native:model` modifier. A keystroke that is
+rejected publishes nothing. Digit slots accept any Unicode decimal digit and
+store it as ASCII; letter slots accept `a`–`z` and `A`–`Z` and keep their case.
+
+There are no presets: write the pattern for your market. The mask never
+changes the keyboard, capitalization, or autocorrection, so set `keyboard`,
+`autocapitalize`, and `autocorrect` yourself. A published value that does not
+fit the pattern is displayed conformed without an event; PHP keeps the
+original until the person next edits. `mask` cannot be combined with `secure`
+or `revealable`. `mask=""` turns masking off.
+
+VoiceOver and TalkBack read the formatted text that is on screen. Describe
+the expected format with `placeholder`, `helper`, or `a11y-hint`.
+
 ## Icons and trailing actions
 
 The shared icon is the fallback; the active platform override wins. Blade uses
@@ -108,7 +145,8 @@ publishes the password value.
 ## Validation and accessibility
 
 Contract exceptions still reject invalid types, unsupported enums, incomplete
-trailing actions, and conflicting affordances before publication. User
+trailing actions, conflicting affordances, masks without a slot, and masked
+secure fields before publication. User
 validation is separate: screens that `use ValidatesFields` auto-bind the first
 MessageBag message for the field's `native:model` or `error-for` name. An
 authored `error` wins. `required` is display metadata and does not run Laravel

@@ -1,11 +1,11 @@
 <?php
 
 // Source-wiring guard, not a replacement for native accessibility-tree tests.
-it('labels both iOS text field variants through their shared editable input', function () {
+it('labels every iOS text field variant through their shared editable input', function () {
     $source = file_get_contents(__DIR__.'/../../resources/ios/TextFieldControl.swift');
 
-    expect($source)->toMatch('/input\s+\.focused\(isFocused\)\s+\.disabled\(configuration.disabled\)\s+\.accessibilityLabel\(Text\(configuration.accessibilityLabel\)\)\s+\.accessibilityHint\(Text\(configuration.accessibilityHint\)\)/');
-    expect($source)->toContain('SecureField(', 'TextField(');
+    expect($source)->toMatch('/input\s+\.disabled\(configuration.disabled\)\s+\.accessibilityLabel\(Text\(configuration.accessibilityLabel\)\)\s+\.accessibilityHint\(Text\(configuration.accessibilityHint\)\)/');
+    expect($source)->toContain('SecureField(', 'TextField(', 'FirstlightMaskedTextInput(');
 });
 
 it('keeps text area and search accessibility names attached to their iOS editors', function () {

@@ -77,10 +77,10 @@ internal fun FirstlightTextFieldControl(
                 onReveal = onReveal,
                 onTrailingPress = onTrailingPress,
             ),
-            visualTransformation = if (configuration.secure && !revealed) {
-                PasswordVisualTransformation()
-            } else {
-                VisualTransformation.None
+            visualTransformation = when {
+                configuration.secure && !revealed -> PasswordVisualTransformation()
+                configuration.mask != null -> configuration.mask.visualTransformation
+                else -> VisualTransformation.None
             },
             keyboardOptions = textFieldKeyboardOptions(configuration),
             keyboardActions = textFieldKeyboardActions(configuration, onSubmit),
