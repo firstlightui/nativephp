@@ -213,6 +213,22 @@ final class NativeUITheme: ObservableObject {
     }
 }
 
+// Mobile UI's Button renderer and width helper, which the Button adapter's
+// non-ghost variants delegate to inside consumer builds.
+struct NativeUIButtonRenderer: View {
+    let node: NativeUINode
+
+    var body: some View {
+        EmptyView()
+    }
+}
+
+extension View {
+    func fillWidthIfRequested(_ node: NativeUINode) -> some View {
+        self
+    }
+}
+
 // SwiftPM does not compile NativePHP's host-owned IconHelper.swift. Package
 // tests use canonical SF Symbol names, so preserve them here; consumer builds
 // omit this branch and continue through NativePHP's real icon resolver.

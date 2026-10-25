@@ -214,7 +214,7 @@ it('precompiles paired and self-closing public tags through the NativePHP Blade 
         ->not->toContain('<firstlight:button');
 });
 
-it('declares an exact nativephp mobile ui adapter mapping', function () {
+it('declares the mobile ui adapter mapping with the Firstlight iOS ghost renderer', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest['components'])->toContain([
@@ -222,7 +222,7 @@ it('declares an exact nativephp mobile ui adapter mapping', function () {
         'element' => 'FirstlightUI\\Elements\\Button',
         'blade' => 'FirstlightUI\\Components\\Button',
         'android_renderer' => 'com.nativephp.plugins.native_ui.ui.ButtonRenderer',
-        'ios_renderer' => 'NativeUIButtonRenderer',
+        'ios_renderer' => 'FirstlightButtonRenderer',
         'self_closing' => true,
         'adapter' => [
             'package' => 'nativephp/mobile-ui',

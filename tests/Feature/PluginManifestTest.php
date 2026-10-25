@@ -107,7 +107,7 @@ it('registers the production component catalogue with canonical renderers', func
             'element' => 'FirstlightUI\\Elements\\Button',
             'blade' => 'FirstlightUI\\Components\\Button',
             'android_renderer' => 'com.nativephp.plugins.native_ui.ui.ButtonRenderer',
-            'ios_renderer' => 'NativeUIButtonRenderer',
+            'ios_renderer' => 'FirstlightButtonRenderer',
             'self_closing' => true,
             'adapter' => [
                 'package' => 'nativephp/mobile-ui',

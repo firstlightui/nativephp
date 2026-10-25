@@ -10,6 +10,8 @@ sources:
   - tests/Feature/ButtonElementTest.php
   - vendor/nativephp/mobile-ui/src/Components/Button.php
   - vendor/nativephp/mobile-ui/src/Elements/Button.php
+  - resources/ios/ButtonRenderer.swift
+  - resources/ios/ButtonControl.swift
   - vendor/nativephp/mobile-ui/resources/ios/NativeUIButtonRenderer.swift
   - vendor/nativephp/mobile-ui/resources/android/ButtonRenderer.kt
 ---
@@ -77,7 +79,7 @@ The visible text is the accessible name by default. `a11y-label` replaces it, an
 
 ## Platform behaviour
 
-iOS uses the official Mobile UI SwiftUI `Button` renderer with native button styles, control sizes, progress presentation, icon layout, VoiceOver metadata, and semantic theme tokens. Android uses the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer with native state layers, progress presentation, icon layout, TalkBack metadata, and semantic theme tokens.
+iOS uses the official Mobile UI SwiftUI `Button` renderer for every variant except `ghost`, with native button styles, control sizes, progress presentation, icon layout, VoiceOver metadata, and semantic theme tokens. On iOS, `ghost` uses a Firstlight renderer: the same plain, tinted SwiftUI `Button`, with at least a 44-point touch target. Mobile UI's plain ghost button only responds to taps on its text. Android uses the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer with native state layers, progress presentation, icon layout, TalkBack metadata, and semantic theme tokens.
 
 The shared variants express the same intent without forcing pixel parity. `destructive` is currently a semantic visual variant; Firstlight does not expose an Apple-only action-role prop.
 
