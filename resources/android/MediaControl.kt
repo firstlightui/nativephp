@@ -1,6 +1,16 @@
 package dev.firstlightui.plugins.firstlight_ui.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.heightIn
@@ -39,7 +49,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
@@ -48,6 +57,7 @@ import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
 
 internal const val MEDIA_THUMBNAIL_TAG = "firstlight-media-thumbnail"
+internal const val MEDIA_CROP_REGION_TAG = "firstlight-media-crop-region"
 
 /**
  * Decodes the stored image at [path] off the main thread, subsampled to
@@ -190,6 +200,7 @@ internal fun FirstlightMediaControl(
 internal fun FirstlightMediaCropSheet(
     policy: MediaCropPolicy,
     zoom: Float,
+    offset: MediaCropOffset = MediaCropOffset(),
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
     onSkip: () -> Unit,
@@ -202,7 +213,20 @@ internal fun FirstlightMediaCropSheet(
     cropLabel: String = "Crop",
     zoomInLabel: String = "Zoom in",
     zoomOutLabel: String = "Zoom out",
+    moveCropLeftLabel: String = "Move crop left",
+    moveCropRightLabel: String = "Move crop right",
+    moveCropUpLabel: String = "Move crop up",
+    moveCropDownLabel: String = "Move crop down",
+    /** Multiplies zoom by a pinch factor; the state applies it to its current zoom and clamps to 1..4. */
+    onZoomBy: (Float) -> Unit = {},
+    /** Moves the region by a delta in image pixels; the state clamps it. */
+    onPan: (Float, Float) -> Unit = { _, _ -> },
+    onMove: (MediaCropDirection) -> Unit = {},
 ) {
+    val rect = image?.let { policy.cropRect(it.width, it.height, zoom, offset) }
+    val currentRect by rememberUpdatedState(rect)
+    val currentOnPan by rememberUpdatedState(onPan)
+    val currentOnZoomBy by rememberUpdatedState(onZoomBy)
     AlertDialog(
         onDismissRequest = onCancel,
         title = { Text(cropLabel) },
@@ -212,8 +236,8 @@ internal fun FirstlightMediaCropSheet(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // The frame shows exactly the region Confirm commits: a centred
-                // crop at the policy (or image) aspect, magnified by zoom.
+                // The frame shows exactly the region Confirm commits: the same
+                // cropRect, drawn to fill the frame.
                 val ratio = policy.aspectRatio
                     ?: image?.let { it.width.toFloat() / it.height }
                     ?: 1f
@@ -223,20 +247,41 @@ internal fun FirstlightMediaCropSheet(
                         .heightIn(max = 320.dp)
                         .aspectRatio(ratio, matchHeightConstraintsFirst = ratio < 1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .testTag(MEDIA_CROP_REGION_TAG)
+                        .semantics {
+                            contentDescription = cropLabel
+                            customActions = listOf(
+                                CustomAccessibilityAction(moveCropLeftLabel) { onMove(MediaCropDirection.Left); true },
+                                CustomAccessibilityAction(moveCropRightLabel) { onMove(MediaCropDirection.Right); true },
+                                CustomAccessibilityAction(moveCropUpLabel) { onMove(MediaCropDirection.Up); true },
+                                CustomAccessibilityAction(moveCropDownLabel) { onMove(MediaCropDirection.Down); true },
+                            )
+                        }
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, zoomChange, _ ->
+                                val region = currentRect ?: return@detectTransformGestures
+                                // Events can arrive faster than recomposition, so the
+                                // state multiplies its own current zoom.
+                                if (zoomChange != 1f) currentOnZoomBy(zoomChange)
+                                // Dragging the photo right moves the region left.
+                                val pixelsPerPx = region.width / size.width.toFloat()
+                                currentOnPan(-pan.x * pixelsPerPx, -pan.y * pixelsPerPx)
+                            }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (image != null) {
-                        Image(
-                            bitmap = image,
-                            contentDescription = cropLabel,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .graphicsLayer(scaleX = zoom, scaleY = zoom),
-                        )
+                    if (image != null && rect != null) {
+                        Canvas(modifier = Modifier.matchParentSize()) {
+                            drawImage(
+                                image = image,
+                                srcOffset = IntOffset(rect.left, rect.top),
+                                srcSize = IntSize(rect.width, rect.height),
+                                dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                            )
+                        }
                     } else {
-                        MaterialIcon(name = "image", contentDescription = cropLabel)
+                        MaterialIcon(name = "image", contentDescription = null)
                     }
                 }
 

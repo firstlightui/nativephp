@@ -120,6 +120,103 @@ final class MediaSnapshotTests: XCTestCase {
         XCTAssertEqual(square.crop(image, zoom: 1).size, CGSize(width: 30, height: 30))
     }
 
+    func testCropRectPansAndClampsAtZoomOnNonSquareImage() {
+        // 16:9 on 4000x3000 at zoom 2 is 2000x1125, centred at (1000, 937).
+        let wide = MediaCropPolicy.requiredAspect("16:9")
+        let size = CGSize(width: 4000, height: 3000)
+        XCTAssertEqual(wide.cropRect(imageSize: size, zoom: 2), CGRect(x: 1000, y: 937, width: 2000, height: 1125))
+
+        // A corner pan lands on the bottom-left corner, not the centre.
+        XCTAssertEqual(
+            wide.cropRect(imageSize: size, zoom: 2, offset: CGPoint(x: -5000, y: 5000)),
+            CGRect(x: 0, y: 1875, width: 2000, height: 1125)
+        )
+        // Just inside and just past each edge.
+        XCTAssertEqual(wide.cropRect(imageSize: size, zoom: 2, offset: CGPoint(x: -999, y: 937)).origin, CGPoint(x: 1, y: 1874))
+        XCTAssertEqual(wide.cropRect(imageSize: size, zoom: 2, offset: CGPoint(x: -1000, y: 937.5)).origin, CGPoint(x: 0, y: 1875))
+        XCTAssertEqual(wide.cropRect(imageSize: size, zoom: 2, offset: CGPoint(x: -1001, y: 938)).origin, CGPoint(x: 0, y: 1875))
+        XCTAssertEqual(wide.cropRect(imageSize: size, zoom: 2, offset: CGPoint(x: 1001, y: -938)).origin, CGPoint(x: 2000, y: 0))
+        XCTAssertEqual(
+            wide.clampedOffset(CGPoint(x: -1001, y: 938), imageSize: size, zoom: 2),
+            CGPoint(x: -1000, y: 937.5)
+        )
+        XCTAssertEqual(
+            wide.clampedOffset(CGPoint(x: 999, y: -937), imageSize: size, zoom: 2),
+            CGPoint(x: 999, y: -937)
+        )
+    }
+
+    func testConfirmStoresThePannedRegion() throws {
+        // Columns 0..<5 are red, the rest blue. A square crop is 30 wide, so
+        // only a full pan left includes the red strip.
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 40, height: 30), format: format).image { context in
+            UIColor.blue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 40, height: 30))
+            UIColor.red.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 5, height: 30))
+        }
+        let square = MediaCropPolicy.requiredAspect("1:1")
+
+        let centred = square.crop(image, zoom: 1)
+        let panned = square.crop(image, zoom: 1, offset: CGPoint(x: -100, y: 0))
+        XCTAssertEqual(panned.size, CGSize(width: 30, height: 30))
+        let centredPixel = try topLeftPixel(of: centred)
+        let pannedPixel = try topLeftPixel(of: panned)
+        XCTAssertTrue(centredPixel[2] > 200 && centredPixel[0] < 60, "centred crop starts in the blue area: \(centredPixel)")
+        XCTAssertTrue(pannedPixel[0] > 200 && pannedPixel[2] < 60, "panned crop starts on the red strip: \(pannedPixel)")
+    }
+
+    func testPanStateClampsResetsAndMovesAccessibly() {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 300), format: format).image { _ in }
+        var state = MediaRendererState(node: makeNode(aspect: "1:1"))
+        state.beginCrop(with: image)
+
+        // Zoom 2: a 150 square with 125 of slack each side horizontally, 75 vertically.
+        state.setCropZoom(2)
+        state.panCrop(by: CGPoint(x: 1000, y: -1000))
+        XCTAssertEqual(state.cropOffset, CGPoint(x: 125, y: -75))
+
+        state.moveCrop(.left)
+        XCTAssertEqual(state.cropOffset, CGPoint(x: 110, y: -75))
+        state.moveCrop(.down)
+        XCTAssertEqual(state.cropOffset, CGPoint(x: 110, y: -60))
+
+        // Back at zoom 1 the square has no vertical slack, so it re-centres
+        // there and keeps the horizontal choice inside the 50 that remains.
+        state.setCropZoom(1)
+        XCTAssertEqual(state.cropOffset, CGPoint(x: 50, y: 0))
+        state.setCropZoom(9)
+        XCTAssertEqual(state.cropZoom, 4)
+
+        state.beginCrop(with: image)
+        XCTAssertEqual(state.cropOffset, .zero)
+        XCTAssertEqual(state.cropZoom, 1)
+
+        // Freeform at zoom 1 is the whole photo, so any pan stays centred.
+        var freeform = MediaRendererState(node: makeNode(crop: "optional"))
+        freeform.beginCrop(with: image)
+        freeform.setCropZoom(2)
+        freeform.panCrop(by: CGPoint(x: 80, y: 40))
+        freeform.setCropZoom(1)
+        XCTAssertEqual(freeform.cropOffset, .zero)
+    }
+
+    private func topLeftPixel(of image: UIImage) throws -> [UInt8] {
+        let cgImage = try XCTUnwrap(image.cgImage)
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let context = try XCTUnwrap(CGContext(
+            data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        context.draw(cgImage, in: CGRect(x: 0, y: 1 - CGFloat(cgImage.height), width: CGFloat(cgImage.width), height: CGFloat(cgImage.height)))
+        return Array(pixel[0..<3])
+    }
+
     func testEmptyAndDisabledFieldDoNotClear() {
         let empty = MediaRendererState(node: makeNode(hasValue: false))
         let disabled = MediaRendererState(node: makeNode(hasValue: true, disabled: true))
@@ -159,7 +256,7 @@ final class MediaSnapshotTests: XCTestCase {
         let view = FirstlightMediaCropSheet(
             image: UIImage(),
             policy: .optionalFreeform,
-            zoom: .constant(1),
+            zoom: 1,
             onConfirm: {},
             onCancel: {},
             onSkip: {},

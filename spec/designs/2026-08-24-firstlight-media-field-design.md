@@ -151,6 +151,7 @@ Media participates in `ValidatesFields`.
 - Field: labelled control; helper and error follow existing field patterns; preview is decorative unless `a11y-label` replaces the name.
 - Crop sheet: accessible name; Confirm / Cancel / Skip as buttons meeting 44pt / 48dp minima; focus containment while presented.
 - Zoom must not be pinch-only: v1 ships explicit zoom in/out controls so VoiceOver/TalkBack users can complete a required crop.
+- Panning (addendum, 2026-10-25): the crop region starts centred and the person can drag the photo to choose which part to keep, and pinch to zoom alongside the buttons. Panning must not be drag-only: the region exposes Move crop left/right/up/down accessibility actions (package chrome) that move it by a tenth of its size. The region is clamped inside the image at every zoom; zooming re-clamps it, so freeform at 1× is always centred while a locked aspect keeps its position along the axis with slack. A new pick resets the pan. The sheet draws the same crop rectangle that Confirm stores. This supersedes "the largest centred rectangle" wherever the crop region is described.
 - Reduced Motion: no ornamental crop animation.
 
 ## Platform expression

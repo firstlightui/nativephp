@@ -307,6 +307,10 @@ final class Media extends Element
         $props['crop_label'] = Chrome::string('crop');
         $props['zoom_in_label'] = Chrome::string('zoom_in');
         $props['zoom_out_label'] = Chrome::string('zoom_out');
+        $props['move_crop_left_label'] = Chrome::string('move_crop_left');
+        $props['move_crop_right_label'] = Chrome::string('move_crop_right');
+        $props['move_crop_up_label'] = Chrome::string('move_crop_up');
+        $props['move_crop_down_label'] = Chrome::string('move_crop_down');
         $props['choose_media_label'] = Chrome::string('choose_media');
         $props['photo_library_label'] = Chrome::string('photo_library');
         $props['camera_label'] = Chrome::string('camera');

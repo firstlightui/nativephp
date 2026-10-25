@@ -29,6 +29,7 @@ import com.nativephp.mobile.ui.nativerender.NativeUITree
 import com.nativephp.plugins.native_ui.NativeUITheme
 import java.io.File
 import java.util.UUID
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,11 +73,11 @@ sealed interface MediaCropPolicy {
         }
 
     /**
-     * The committed region: the largest centred rectangle with the policy's
-     * aspect (or the image's own aspect when freeform), divided by zoom.
-     * The crop sheet previews exactly this region.
+     * The size of the committed region: the largest rectangle with the
+     * policy's aspect (or the image's own aspect when freeform), divided by
+     * zoom.
      */
-    fun cropRect(imageWidth: Int, imageHeight: Int, zoom: Float): MediaCropRect {
+    fun cropSize(imageWidth: Int, imageHeight: Int, zoom: Float): Pair<Int, Int> {
         val ratio = aspectRatio ?: (imageWidth.toFloat() / imageHeight)
         var width = imageWidth.toFloat()
         var height = width / ratio
@@ -85,11 +86,31 @@ sealed interface MediaCropPolicy {
             width = height * ratio
         }
         val scale = zoom.coerceIn(1f, 4f)
-        val cropWidth = (width / scale).roundToInt().coerceIn(1, imageWidth)
-        val cropHeight = (height / scale).roundToInt().coerceIn(1, imageHeight)
+        return (width / scale).roundToInt().coerceIn(1, imageWidth) to
+            (height / scale).roundToInt().coerceIn(1, imageHeight)
+    }
+
+    /** Limits a pan offset (image pixels from the centred position) so the region never leaves the image. */
+    fun clampedOffset(offset: MediaCropOffset, imageWidth: Int, imageHeight: Int, zoom: Float): MediaCropOffset {
+        val (cropWidth, cropHeight) = cropSize(imageWidth, imageHeight, zoom)
+        val maxX = ((imageWidth - cropWidth) / 2f).coerceAtLeast(0f)
+        val maxY = ((imageHeight - cropHeight) / 2f).coerceAtLeast(0f)
+        // + 0f turns a clamped -0f into 0f so a centred axis compares equal.
+        return MediaCropOffset(offset.x.coerceIn(-maxX, maxX) + 0f, offset.y.coerceIn(-maxY, maxY) + 0f)
+    }
+
+    /**
+     * The committed region: [cropSize] centred in the image, moved by
+     * [offset] and kept inside the image. The crop sheet previews exactly
+     * this region.
+     */
+    fun cropRect(imageWidth: Int, imageHeight: Int, zoom: Float, offset: MediaCropOffset = MediaCropOffset()): MediaCropRect {
+        val (cropWidth, cropHeight) = cropSize(imageWidth, imageHeight, zoom)
+        val maxX = imageWidth - cropWidth
+        val maxY = imageHeight - cropHeight
         return MediaCropRect(
-            left = (imageWidth - cropWidth) / 2,
-            top = (imageHeight - cropHeight) / 2,
+            left = floor(maxX / 2f + offset.x).toInt().coerceIn(0, maxX),
+            top = floor(maxY / 2f + offset.y).toInt().coerceIn(0, maxY),
             width = cropWidth,
             height = cropHeight,
         )
@@ -109,6 +130,12 @@ sealed interface MediaCropPolicy {
 }
 
 data class MediaCropRect(val left: Int, val top: Int, val width: Int, val height: Int)
+
+/** Image pixels from the centred crop region; positive moves it right and down. */
+data class MediaCropOffset(val x: Float = 0f, val y: Float = 0f)
+
+/** A direction for the accessible move actions on the crop region. */
+enum class MediaCropDirection { Left, Right, Up, Down }
 
 sealed interface MediaRendererEvent {
     val wireName: String
@@ -170,6 +197,10 @@ data class MediaRendererConfiguration(
     val cropLabel: String,
     val zoomInLabel: String,
     val zoomOutLabel: String,
+    val moveCropLeftLabel: String,
+    val moveCropRightLabel: String,
+    val moveCropUpLabel: String,
+    val moveCropDownLabel: String,
     val chooseMediaLabel: String,
     val photoLibraryLabel: String,
     val cameraLabel: String,
@@ -212,6 +243,10 @@ data class MediaRendererConfiguration(
         cropLabel = node.props.getString("crop_label").ifEmpty { "Crop" },
         zoomInLabel = node.props.getString("zoom_in_label").ifEmpty { "Zoom in" },
         zoomOutLabel = node.props.getString("zoom_out_label").ifEmpty { "Zoom out" },
+        moveCropLeftLabel = node.props.getString("move_crop_left_label").ifEmpty { "Move crop left" },
+        moveCropRightLabel = node.props.getString("move_crop_right_label").ifEmpty { "Move crop right" },
+        moveCropUpLabel = node.props.getString("move_crop_up_label").ifEmpty { "Move crop up" },
+        moveCropDownLabel = node.props.getString("move_crop_down_label").ifEmpty { "Move crop down" },
         chooseMediaLabel = node.props.getString("choose_media_label").ifEmpty { "Choose media" },
         photoLibraryLabel = node.props.getString("photo_library_label").ifEmpty { "Photo Library" },
         cameraLabel = node.props.getString("camera_label").ifEmpty { "Camera" },
@@ -245,6 +280,10 @@ class MediaRendererState(node: NativeUINode) {
         private set
     var cropZoom by mutableFloatStateOf(1f)
         private set
+    var cropOffset by mutableStateOf(MediaCropOffset())
+        private set
+    private var cropImageWidth = 0
+    private var cropImageHeight = 0
     var pendingTempPath by mutableStateOf<String?>(null)
         private set
 
@@ -269,19 +308,50 @@ class MediaRendererState(node: NativeUINode) {
     fun dismissSheet() {
         sheet = null
         cropZoom = 1f
+        cropOffset = MediaCropOffset()
     }
 
-    fun beginCrop() {
+    fun beginCrop(imageWidth: Int, imageHeight: Int) {
+        cropImageWidth = imageWidth
+        cropImageHeight = imageHeight
         cropZoom = 1f
+        cropOffset = MediaCropOffset()
         sheet = MediaSheet.Crop
     }
 
-    fun zoomIn() {
-        cropZoom = (cropZoom + 0.25f).coerceAtMost(4f)
+    fun zoomIn() = zoomCropTo(cropZoom + 0.25f)
+
+    fun zoomOut() = zoomCropTo(cropZoom - 0.25f)
+
+    /** Sets zoom within 1..4 (buttons and pinch) and re-clamps the pan, so zooming out pulls the region back inside the image. */
+    fun zoomCropTo(zoom: Float) {
+        cropZoom = zoom.coerceIn(1f, 4f)
+        cropOffset = clamped(cropOffset)
     }
 
-    fun zoomOut() {
-        cropZoom = (cropZoom - 0.25f).coerceAtLeast(1f)
+    /** Pinch: multiplies the current zoom by [factor]. */
+    fun zoomCropBy(factor: Float) = zoomCropTo(cropZoom * factor)
+
+    /** Moves the region by a delta in image pixels, stopping at the image edges. */
+    fun panCrop(dx: Float, dy: Float) {
+        cropOffset = clamped(MediaCropOffset(cropOffset.x + dx, cropOffset.y + dy))
+    }
+
+    /** Accessible move: a tenth of the region on that axis. */
+    fun moveCrop(direction: MediaCropDirection) {
+        if (cropImageWidth <= 0 || cropImageHeight <= 0) return
+        val (width, height) = configuration.cropPolicy.cropSize(cropImageWidth, cropImageHeight, cropZoom)
+        when (direction) {
+            MediaCropDirection.Left -> panCrop(-width / 10f, 0f)
+            MediaCropDirection.Right -> panCrop(width / 10f, 0f)
+            MediaCropDirection.Up -> panCrop(0f, -height / 10f)
+            MediaCropDirection.Down -> panCrop(0f, height / 10f)
+        }
+    }
+
+    private fun clamped(offset: MediaCropOffset): MediaCropOffset {
+        if (cropImageWidth <= 0 || cropImageHeight <= 0) return MediaCropOffset()
+        return configuration.cropPolicy.clampedOffset(offset, cropImageWidth, cropImageHeight, cropZoom)
     }
 
     fun commitChange(tempPath: String): MediaRendererEvent.Change? {
@@ -331,7 +401,7 @@ object MediaRenderer {
                 val image = withContext(Dispatchers.IO) { runCatching(load).getOrNull() } ?: return@launch
                 if (state.configuration.cropPolicy.requiresCropSheet) {
                     cropImage = image
-                    state.beginCrop()
+                    state.beginCrop(image.width, image.height)
                 } else {
                     commit(withContext(Dispatchers.IO) { MediaTempFiles.writeJpeg(context, image) })
                 }
@@ -340,8 +410,7 @@ object MediaRenderer {
 
         fun commitCrop(crop: Boolean) {
             val image = cropImage ?: return
-            val zoom = state.cropZoom
-            val rect = state.configuration.cropPolicy.cropRect(image.width, image.height, zoom)
+            val rect = state.configuration.cropPolicy.cropRect(image.width, image.height, state.cropZoom, state.cropOffset)
             cropImage = null
             state.dismissSheet()
             scope.launch {
@@ -425,6 +494,7 @@ object MediaRenderer {
             FirstlightMediaCropSheet(
                 policy = state.configuration.cropPolicy,
                 zoom = state.cropZoom,
+                offset = state.cropOffset,
                 image = image.asImageBitmap(),
                 confirmLabel = state.configuration.confirmLabel,
                 cancelLabel = state.configuration.cancelLabel,
@@ -432,6 +502,10 @@ object MediaRenderer {
                 cropLabel = state.configuration.cropLabel,
                 zoomInLabel = state.configuration.zoomInLabel,
                 zoomOutLabel = state.configuration.zoomOutLabel,
+                moveCropLeftLabel = state.configuration.moveCropLeftLabel,
+                moveCropRightLabel = state.configuration.moveCropRightLabel,
+                moveCropUpLabel = state.configuration.moveCropUpLabel,
+                moveCropDownLabel = state.configuration.moveCropDownLabel,
                 onConfirm = { commitCrop(crop = true) },
                 onCancel = {
                     cropImage = null
@@ -442,6 +516,9 @@ object MediaRenderer {
                 },
                 onZoomIn = state::zoomIn,
                 onZoomOut = state::zoomOut,
+                onZoomBy = state::zoomCropBy,
+                onPan = state::panCrop,
+                onMove = state::moveCrop,
             )
         }
     }
