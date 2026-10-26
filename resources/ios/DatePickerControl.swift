@@ -119,6 +119,7 @@ struct FirstlightDatePickerControl: View {
             }
             .padding()
         }
+        .tint(tokens.primary)
         .id(state.presentationVersion)
         .environment(\.calendar, DatePickerCalendar.calendar(timezone: configuration.timezone))
         .environment(\.timeZone, TimeZone(identifier: configuration.timezone) ?? .current)

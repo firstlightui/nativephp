@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.nativephp.mobile.ui.nativerender.KeyboardFocusPolicy
 import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 import com.nativephp.mobile.ui.nativerender.NativeUITree
@@ -85,6 +86,7 @@ object IconButtonRenderer {
             tokens = tokens,
             onPress = {
                 configuration.pressEvent()?.let { event ->
+                    KeyboardFocusPolicy.dismissForInteractiveTap()
                     NativeUIBridge.sendPressEvent(event.callbackId, event.nodeId)
                 }
             },

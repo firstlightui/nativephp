@@ -118,11 +118,19 @@ internal fun firstlightListItemDescription(
     accessibilityLabel: String,
     accessibilityHint: String,
 ): String {
-    val label = accessibilityLabel.ifEmpty {
-        listOf(headline, supporting).filter(String::isNotEmpty).joinToString(". ")
+    val parts = if (accessibilityLabel.isNotBlank()) {
+        listOf(accessibilityLabel, accessibilityHint)
+    } else {
+        listOf(headline, supporting, accessibilityHint)
     }
 
-    return listOf(label, accessibilityHint).filter(String::isNotEmpty).joinToString(". ")
+    return parts.map(String::trim).filter(String::isNotEmpty).fold("") { description, part ->
+        when {
+            description.isEmpty() -> part
+            description.last() in ".!?…。！？" -> "$description $part"
+            else -> "$description. $part"
+        }
+    }
 }
 
 @Composable

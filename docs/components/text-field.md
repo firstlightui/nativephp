@@ -83,14 +83,19 @@ period and flushes on blur or submit; durations below 50 ms are rejected.
 Native typing, selection, cursor position, and marked-text composition remain
 local while focused so PHP acknowledgements do not cause keyboard jumps.
 
-On iOS, pressing a `<firstlight:button>` while the field is focused publishes
-its pending `.blur` or `.debounce` change before the press, so the handler reads
-the current value. Icon Button and List Item presses do not flush the field
-first. On Android, blur/debounce changes are not yet guaranteed to reach PHP
-before a button press, so for forms submitted by a separate button use
+On iOS, pressing a `<firstlight:button>` or `<firstlight:icon-button>` while
+the field is focused publishes its pending `.blur` or `.debounce` change before
+the press, so the handler reads the current value. List Item presses do not
+flush the field first. On Android, blur/debounce changes are not yet guaranteed
+to reach PHP before a button press, so for forms submitted by a separate button use
 `native:model.live="email"` (or plain `native:model`). A button press is not the
 field's `@submit` event; for keyboard submission, the field's own `@submit`
 handler receives the current string directly.
+
+On iOS, `number`, `decimal`, and `phone` keyboards have a package-localized Done
+accessory because those system keyboards have no return key. Done flushes the
+pending change, emits `@submit`, and dismisses the keyboard, including when a
+mask is active. It does not press a separate submit button.
 
 ## Input masks
 

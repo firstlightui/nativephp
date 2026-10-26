@@ -198,6 +198,26 @@ class ListItemContractTest {
                 accessibilityHint = "",
             ),
         )
+        for (ending in listOf(".", "!", "?", "…", "。", "！", "？")) {
+            assertEquals(
+                "Target$ending Supporting$ending Shows the full notification",
+                firstlightListItemDescription(
+                    headline = "Target$ending ",
+                    supporting = " Supporting$ending ",
+                    accessibilityLabel = "",
+                    accessibilityHint = "Shows the full notification",
+                ),
+            )
+            assertEquals(
+                "Explicit$ending Shows the full notification",
+                firstlightListItemDescription(
+                    headline = "Ignored headline",
+                    supporting = "Ignored supporting text",
+                    accessibilityLabel = "Explicit$ending",
+                    accessibilityHint = "Shows the full notification",
+                ),
+            )
+        }
     }
 
     @Test
@@ -245,6 +265,26 @@ class ListItemContractTest {
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ListItemSwipeInteractionTest {
+    @Test
+    fun `row semantics preserve authored sentence stops without adding duplicates`() = runComposeUiTest {
+        setContent {
+            MaterialTheme {
+                FirstlightListItemControl(
+                    configuration = ListItemRendererConfiguration(screenshotNode()).copy(
+                        headline = "Target.",
+                        supporting = "Notification delivered.",
+                        accessibilityHint = "Shows the full notification",
+                    ),
+                    tokens = NativeUITheme.light,
+                    onPress = {},
+                )
+            }
+        }
+
+        onNodeWithContentDescription("Target. Notification delivered. Shows the full notification")
+            .assertIsDisplayed()
+    }
+
     @Test
     fun `swipes reveal logical edges but only a button tap invokes an action`() {
         for ((direction, scale) in listOf(LayoutDirection.Ltr to 1f, LayoutDirection.Rtl to 1f, LayoutDirection.Ltr to 2f)) {

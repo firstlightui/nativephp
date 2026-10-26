@@ -41,11 +41,11 @@ internal fun FirstlightTextFieldControl(
         .filter(String::isNotEmpty)
         .joinToString(". ")
 
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         OutlinedTextField(
             value = draft,
             onValueChange = onValueChange,
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 48.dp)
                 .firstlightContentType(configuration.contentType)

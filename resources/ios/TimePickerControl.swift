@@ -106,6 +106,7 @@ struct FirstlightTimePickerControl: View {
             }
             .padding()
         }
+        .tint(tokens.primary)
         .id(state.presentationVersion)
         .environment(\.calendar, TimePickerClock.calendar(timezone: configuration.timezone))
         .environment(\.timeZone, TimeZone(identifier: configuration.timezone) ?? .current)

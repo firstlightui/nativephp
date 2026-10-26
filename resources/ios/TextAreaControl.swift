@@ -47,7 +47,14 @@ struct FirstlightTextAreaControl: View {
             }
             .frame(minHeight: minimumHeight, maxHeight: maximumHeight, alignment: .topLeading)
             .padding(.horizontal, 7)
-            .background(tokens.surfaceVariant)
+            .background {
+                tokens.surfaceVariant
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard !configuration.disabled else { return }
+                        isFocused.wrappedValue = true
+                    }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)

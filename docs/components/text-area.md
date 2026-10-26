@@ -65,10 +65,10 @@ Plain `native:model` and `.live` publish while editing. `.blur` and `.lazy`
 publish on focus loss. `.debounce.500ms` publishes after the quiet period and
 flushes on blur. Durations below 50 milliseconds are rejected.
 
-On iOS, pressing a `<firstlight:button>` while the editor is focused publishes
-its pending `.blur` or `.debounce` change before the press, so the handler reads
-the current value. Icon Button and List Item presses do not flush the editor
-first. On Android, blur/debounce changes are not yet guaranteed to reach PHP
+On iOS, pressing a `<firstlight:button>` or `<firstlight:icon-button>` while
+the editor is focused publishes its pending `.blur` or `.debounce` change before
+the press, so the handler reads the current value. List Item presses do not
+flush the editor first. On Android, blur/debounce changes are not yet guaranteed to reach PHP
 before a button press, so for forms submitted by a separate button use
 `native:model.live="notes"` (or plain `native:model`). Keyboard dismissal alone
 is not an ordering guarantee there.

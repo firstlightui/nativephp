@@ -128,15 +128,28 @@ class TextFieldRendererState(node: NativeUINode) {
     fun userChanged(value: String): TextFieldRendererEvent? = userChanged(draft.copy(text = value))
     fun userChanged(value: TextFieldValue): TextFieldRendererEvent? {
         if (configuration.disabled || configuration.readOnly) return null
+        val previous = draft.text
         draft = configuration.mask?.let { mask ->
             val (raw, caret) = mask.edit(draft.text, value.text, value.selection.end)
             // An accepted edit keeps Compose's selection and composition; otherwise the buffer
             // is rewritten, dropping characters that fit no slot or exceed the last slot.
             if (raw == value.text) value else TextFieldValue(raw, TextRange(caret))
         } ?: value
+        if (draft.text != previous) pendingServerValue = null
         return if (configuration.syncMode == "live") commit() else null
     }
-    fun focusChanged(value: Boolean): TextFieldRendererEvent? { focused = value; return if (value) null else commit() }
+    fun focusChanged(value: Boolean): TextFieldRendererEvent? {
+        focused = value
+        if (value) return null
+        val edited = draft.text != lastCommitted
+        val event = commit()
+        if (!edited) pendingServerValue?.let { pending ->
+            draft = TextFieldValue(pending)
+            lastCommitted = pending
+        }
+        pendingServerValue = null
+        return event
+    }
     fun flush() = commit()
     fun submit(): List<TextFieldRendererEvent> = buildList {
         commit()?.let(::add)
@@ -144,6 +157,7 @@ class TextFieldRendererState(node: NativeUINode) {
     }
     fun clear(): TextFieldRendererEvent? {
         if (!configuration.clearable || configuration.disabled || configuration.readOnly) return null
+        pendingServerValue = null
         draft = TextFieldValue("")
         return commit()
     }

@@ -89,7 +89,9 @@ struct IconButtonRenderer: View {
                     return
                 }
 
-                NativeUIBridge.sendPressEvent(callbackID, nodeId: nodeID)
+                KeyboardFocusPolicy.dispatchPress {
+                    NativeUIBridge.sendPressEvent(callbackID, nodeId: nodeID)
+                }
             }
         )
         .onReceive(NativeUIBridge.shared.$currentTree.compactMap { $0 }) { tree in

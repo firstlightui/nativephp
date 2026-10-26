@@ -5,7 +5,51 @@ import SwiftUI
 // the package renderers. NativePHP copies plugin sources into its Xcode target,
 // where SWIFT_PACKAGE is not defined and the real framework APIs are used.
 
-struct NodeLayout: Equatable {}
+enum SizeMode {
+    static let fixed = 0
+    static let wrap = 1
+    static let fill = 2
+    static let percent = 3
+}
+
+// The width-facing subset of Mobile 4.6's NodeLayout. Retain the full delta
+// dictionary so tests can check that renderer adaptation preserves unrelated
+// host constraints, without pretending to implement the host's layout engine.
+struct NodeLayout: Equatable {
+    private var values: [String: Any] = [:]
+
+    static var empty: NodeLayout { NodeLayout() }
+
+    var widthMode: Int {
+        if values["width"] is NSNumber { return SizeMode.fixed }
+        switch values["width"] as? String {
+        case "fill": return SizeMode.fill
+        case let value? where value.hasSuffix("%"): return SizeMode.percent
+        default: return SizeMode.wrap
+        }
+    }
+
+    var width: Float {
+        if let number = values["width"] as? NSNumber { return number.floatValue }
+        if let value = values["width"] as? String, value.hasSuffix("%") {
+            return Float(value.dropLast()) ?? 0
+        }
+        return 0
+    }
+
+    var flexGrow: Float { (values["flex_grow"] as? NSNumber)?.floatValue ?? 0 }
+    var minWidth: Float { (values["min_width"] as? NSNumber)?.floatValue ?? 0 }
+
+    func applying(_ delta: [String: Any]) -> NodeLayout {
+        var copy = self
+        copy.values.merge(delta) { _, value in value }
+        return copy
+    }
+
+    static func == (lhs: NodeLayout, rhs: NodeLayout) -> Bool {
+        NSDictionary(dictionary: lhs.values).isEqual(to: rhs.values)
+    }
+}
 struct NodeStyle: Equatable {}
 
 final class GenericProps: Equatable {
@@ -48,6 +92,13 @@ struct NativeUITree {
     let root: NativeUINode
 }
 
+struct NodeVariant {
+    let minWidth: CGFloat
+    let layout: NodeLayout?
+    let style: NodeStyle?
+    let props: GenericProps
+}
+
 final class NativeUINode: Identifiable, Equatable {
     let id: Int
     let type: String
@@ -57,6 +108,7 @@ final class NativeUINode: Identifiable, Equatable {
     let onPress: Int
     let onLongPress: Int
     let children: [NativeUINode]
+    let variants: [NodeVariant]
 
     init(
         id: Int,
@@ -66,7 +118,8 @@ final class NativeUINode: Identifiable, Equatable {
         props: GenericProps,
         onPress: Int,
         onLongPress: Int,
-        children: [NativeUINode]
+        children: [NativeUINode],
+        variants: [NodeVariant] = []
     ) {
         self.id = id
         self.type = type
@@ -76,6 +129,7 @@ final class NativeUINode: Identifiable, Equatable {
         self.onPress = onPress
         self.onLongPress = onLongPress
         self.children = children
+        self.variants = variants
     }
 
     static func == (lhs: NativeUINode, rhs: NativeUINode) -> Bool {
@@ -214,19 +268,31 @@ final class NativeUITheme: ObservableObject {
     }
 }
 
-// Mobile UI's Button renderer and width helper, which the Button adapter's
-// non-ghost variants delegate to inside consumer builds.
+// Width-contract double, NOT Mobile UI's production renderer. This deliberately
+// keeps its relevant seam identical: a native Button with fillWidthIfRequested
+// INSIDE the label. Package host-layout tests exercise Firstlight's adaptation;
+// Mobile UI styling, loading, menus and press dispatch still need consumer tests.
 struct NativeUIButtonRenderer: View {
     let node: NativeUINode
 
     var body: some View {
-        EmptyView()
+        Button {} label: {
+            Text(node.props.getString("label"))
+                .fillWidthIfRequested(node)
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(node.props.getBool("disabled") || node.props.getBool("loading"))
     }
 }
 
 extension View {
+    @ViewBuilder
     func fillWidthIfRequested(_ node: NativeUINode) -> some View {
-        self
+        if node.layout?.widthMode == SizeMode.fill {
+            frame(maxWidth: .infinity)
+        } else {
+            self
+        }
     }
 }
 
@@ -235,5 +301,17 @@ extension View {
 // omit this branch and continue through NativePHP's real icon resolver.
 func getIconForName(_ iconName: String) -> String {
     iconName
+}
+
+// Mobile UI 0.8 supplies the enclosing scroll proxy to descendant inputs.
+struct NativeUIScrollProxyKey: EnvironmentKey {
+    static var defaultValue: ScrollViewProxy? { nil }
+}
+
+extension EnvironmentValues {
+    var nativeUIScrollProxy: ScrollViewProxy? {
+        get { self[NativeUIScrollProxyKey.self] }
+        set { self[NativeUIScrollProxyKey.self] = newValue }
+    }
 }
 #endif

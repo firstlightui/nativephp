@@ -20,6 +20,14 @@ data class NativeUINode(
     val children: List<NativeUINode> = emptyList(),
 )
 
+// The default-focus policy seam used by interactive controls. The real host
+// registers this hook in NativeUIContent and also supports native inputs that
+// opt into keeping focus; this test double covers the default dismissal path.
+object KeyboardFocusPolicy {
+    var clearFocus: (() -> Unit)? = null
+    fun dismissForInteractiveTap() { clearFocus?.invoke() }
+}
+
 object NativeElementBridge {
     fun sendPressEvent(callbackId: Int, nodeId: Int, x: Float, y: Float) = Unit
     fun sendLongPressEvent(callbackId: Int, nodeId: Int, x: Float, y: Float) = Unit

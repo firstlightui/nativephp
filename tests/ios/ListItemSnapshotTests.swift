@@ -7,6 +7,71 @@ import XCTest
 
 @MainActor
 final class ListItemSnapshotTests: XCTestCase {
+    func test402PointRowUsesAllWidthRemainingAfterItsIconSlots() {
+        // 402 - horizontal padding (32) - leading (40) - two gaps (32)
+        // - trailing icon (24) = 274, not a forced 170-point text column.
+        assertRowTextAllocation(trailingType: "icon", trailingValue: "chevron.right", trailingWidth: 24)
+    }
+
+    func test402PointRowReservesTrailingMetadataWithoutDiscardingFreeSpace() {
+        for contentSize in [DynamicTypeSize.large, .accessibility5] {
+            let metadata = "Admin"
+            let metadataWidth = fittedSize(
+                Text(metadata).font(.subheadline).fixedSize(),
+                width: 402, contentSize: contentSize
+            ).width
+            assertRowTextAllocation(
+                trailingType: "text", trailingValue: metadata,
+                trailingWidth: metadataWidth, contentSize: contentSize
+            )
+        }
+    }
+
+    private func assertRowTextAllocation(
+        trailingType: String, trailingValue: String, trailingWidth: CGFloat,
+        contentSize: DynamicTypeSize = .large,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let headline = "Account"
+        let supporting = "Manage your profile and security settings, contact details and preferences."
+        let textWidth: CGFloat = 402 - 32 - 40 - 32 - trailingWidth
+        let row = FirstlightListItemControl(
+            configuration: ListItemRendererConfiguration(node: makeNode(
+                headline: headline, supporting: supporting,
+                trailingType: trailingType, trailingValue: trailingValue
+            )),
+            tokens: .listItemTest,
+            onPress: {}
+        )
+        let textColumn = VStack(alignment: .leading, spacing: 2) {
+            Text(headline).font(.body)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(supporting).font(.subheadline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        let expected = fittedSize(textColumn, width: textWidth, contentSize: contentSize)
+        let artificiallyNarrow = fittedSize(textColumn, width: textWidth * 0.6, contentSize: contentSize)
+        let actual = fittedSize(row, width: 402, contentSize: contentSize)
+
+        XCTAssertGreaterThan(
+            artificiallyNarrow.height, expected.height,
+            "fixture must distinguish unused space from legitimate multiline wrapping", file: file, line: line
+        )
+        XCTAssertEqual(actual.width, 402, accuracy: 1, file: file, line: line)
+        XCTAssertEqual(
+            actual.height, max(44, max(40, expected.height) + 24), accuracy: 1,
+            "headline/supporting should receive the complete \(textWidth)-point slot; trailing metadata stays reserved",
+            file: file, line: line
+        )
+    }
+
+    private func fittedSize<Content: View>(
+        _ view: Content, width: CGFloat, contentSize: DynamicTypeSize
+    ) -> CGSize {
+        let host = UIHostingController(rootView: view.environment(\.dynamicTypeSize, contentSize))
+        return host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
+    }
+
     func testIconTonesAndExplicitColourPrecedence() {
         let tokens = NativeUITokens.listItemTest
         let warning = FirstlightWarningColors()

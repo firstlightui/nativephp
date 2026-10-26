@@ -18,6 +18,7 @@ struct FirstlightTextFieldControl: View {
     let onMaskedEdit: (Range<Int>, String) -> (text: String, caret: Int?)
     let onMaskedTextReplaced: (String) -> String
     let onMaskedFocusChanged: (Bool) -> Void
+    @State private var maskedFocusRequest = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -38,13 +39,22 @@ struct FirstlightTextFieldControl: View {
                     .disabled(configuration.disabled)
                     .accessibilityLabel(Text(configuration.accessibilityLabel))
                     .accessibilityHint(Text(configuration.accessibilityHint))
+                    .frame(minHeight: 44)
                     .firstlightValidationFocusTarget()
 
                 trailing
             }
             .padding(.horizontal, 12)
             .frame(minHeight: 44)
-            .background(tokens.surfaceVariant)
+            .background {
+                tokens.surfaceVariant
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard !configuration.disabled else { return }
+                        if configuration.mask != nil { maskedFocusRequest += 1 }
+                        else { isFocused.wrappedValue = true }
+                    }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -60,6 +70,18 @@ struct FirstlightTextFieldControl: View {
             }
         }
         .opacity(configuration.disabled ? 0.6 : 1)
+        .toolbar {
+            if configuration.mask == nil && isFocused.wrappedValue && needsDoneAccessory(configuration.keyboard) {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(configuration.doneLabel) {
+                        onSubmit()
+                        isFocused.wrappedValue = false
+                    }
+                    .disabled(configuration.disabled)
+                }
+            }
+        }
     }
 
     @ViewBuilder private var input: some View {
@@ -70,6 +92,7 @@ struct FirstlightTextFieldControl: View {
                 configuration: configuration,
                 text: maskedText,
                 refocus: maskedRefocus,
+                focusRequest: maskedFocusRequest,
                 onEdit: onMaskedEdit,
                 onTextReplaced: onMaskedTextReplaced,
                 onFocusChanged: onMaskedFocusChanged,
@@ -140,6 +163,7 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
     let configuration: TextFieldRendererConfiguration
     let text: String
     let refocus: Int
+    var focusRequest = 0
     let onEdit: (Range<Int>, String) -> (text: String, caret: Int?)
     let onTextReplaced: (String) -> String
     let onFocusChanged: (Bool) -> Void
@@ -147,8 +171,8 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    func makeUIView(context: Context) -> UITextField {
-        let field = UITextField()
+    func makeUIView(context: Context) -> FirstlightMaskedUITextField {
+        let field = FirstlightMaskedUITextField()
         field.font = .preferredFont(forTextStyle: .body)
         field.adjustsFontForContentSizeCategory = true
         field.borderStyle = .none
@@ -159,8 +183,12 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
         return field
     }
 
-    func updateUIView(_ field: UITextField, context: Context) {
+    func updateUIView(_ field: FirstlightMaskedUITextField, context: Context) {
         context.coordinator.input = self
+        if context.coordinator.focusRequest != focusRequest {
+            context.coordinator.focusRequest = focusRequest
+            DispatchQueue.main.async { field.becomeFirstResponder() }
+        }
         if context.coordinator.refocus != refocus {
             context.coordinator.refocus = refocus
             // SwiftUI does not track UIKit focus, so its button tap can resign the field just
@@ -174,6 +202,20 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
         field.isEnabled = !configuration.disabled
         field.keyboardType = resolveKeyboard(configuration.keyboard)
         field.textContentType = resolveContentType(configuration.contentType)
+        if needsDoneAccessory(configuration.keyboard) {
+            if field.doneAccessory == nil {
+                let toolbar = UIToolbar()
+                toolbar.items = [
+                    UIBarButtonItem(systemItem: .flexibleSpace),
+                    UIBarButtonItem(title: configuration.doneLabel, style: .done, target: context.coordinator, action: #selector(Coordinator.done)),
+                ]
+                toolbar.sizeToFit()
+                field.doneAccessory = toolbar
+            }
+            field.doneAccessory?.items?.last?.title = configuration.doneLabel
+        } else {
+            field.doneAccessory = nil
+        }
         field.autocapitalizationType = switch configuration.autocapitalize {
         case "none": .none
         case "words": .words
@@ -195,14 +237,16 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
         }
     }
 
-    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextField, context: Context) -> CGSize? {
-        CGSize(width: proposal.width ?? uiView.intrinsicContentSize.width, height: uiView.intrinsicContentSize.height)
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: FirstlightMaskedUITextField, context: Context) -> CGSize? {
+        CGSize(width: proposal.width ?? uiView.intrinsicContentSize.width, height: max(44, uiView.intrinsicContentSize.height))
     }
 
     final class Coordinator: NSObject, UITextFieldDelegate {
         var input: FirstlightMaskedTextInput?
         var refocus = 0
+        var focusRequest = 0
         var endedEditing: Date?
+        private weak var field: UITextField?
 
         func textField(_ field: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
             // Marked text is composed natively and conformed when it is committed.
@@ -226,11 +270,20 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
             }
         }
 
-        func textFieldDidBeginEditing(_ field: UITextField) { input?.onFocusChanged(true) }
+        func textFieldDidBeginEditing(_ field: UITextField) {
+            self.field = field
+            input?.onFocusChanged(true)
+        }
 
         func textFieldDidEndEditing(_ field: UITextField) {
             endedEditing = Date()
             input?.onFocusChanged(false)
+        }
+
+        @objc func done() {
+            guard let input, !input.configuration.disabled else { return }
+            input.onSubmit()
+            field?.resignFirstResponder()
         }
 
         func textFieldShouldReturn(_ field: UITextField) -> Bool {
@@ -248,6 +301,42 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
             }
         }
     }
+}
+
+/// Keep the masked field's accessory within its UIKit editing session.
+final class FirstlightMaskedUITextField: UITextField {
+    var doneAccessory: UIToolbar?
+    private var isInEditingSession = false
+
+    override var inputAccessoryView: UIView? {
+        get { isInEditingSession ? doneAccessory : nil }
+        set {}
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        isInEditingSession = true
+        let became = super.becomeFirstResponder()
+        if !became { isInEditingSession = false }
+        return became
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let wasEditing = isInEditingSession
+        isInEditingSession = false
+        // Refresh while this field still owns the keyboard. Clearing only after
+        // resignation leaves the next SwiftUI keyboard inset short by the accessory height.
+        if isFirstResponder { reloadInputViews() }
+        let resigned = super.resignFirstResponder()
+        if !resigned {
+            isInEditingSession = wasEditing
+            if isFirstResponder { reloadInputViews() }
+        }
+        return resigned
+    }
+}
+
+private func needsDoneAccessory(_ keyboard: String) -> Bool {
+    ["number", "decimal", "phone"].contains(keyboard)
 }
 
 private func resolveKeyboard(_ value: String) -> UIKeyboardType {
@@ -285,6 +374,7 @@ private func resolveCapitalization(_ value: String) -> TextInputAutocapitalizati
 
 private func resolveSubmitLabel(_ value: String) -> SubmitLabel {
     switch value {
+    case "done": .done
     case "go": .go
     case "next": .next
     case "search": .search

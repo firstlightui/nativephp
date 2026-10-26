@@ -329,10 +329,11 @@ it('leaves the authored Text Field tag untouched through real web compilation', 
         ->and($result['tree'])->toBeNull();
 });
 
-it('publishes the package chrome clear and password-reveal accessibility labels', function () {
+it('publishes the package chrome keyboard, clear and password-reveal labels', function () {
     expect(collectTextField([
         'label' => 'Email',
     ])['props'])->toMatchArray([
+        'done_label' => 'Done',
         'clear_a11y_label' => 'Clear text',
         'show_password_a11y_label' => 'Show password',
         'hide_password_a11y_label' => 'Hide password',

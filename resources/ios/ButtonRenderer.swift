@@ -10,8 +10,9 @@ struct FirstlightButtonRenderer: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        let labelNode = firstlightButtonLabelNode(node)
         if node.props.getString("variant") == "ghost" {
-            let configuration = ButtonGhostConfiguration(node: node)
+            let configuration = ButtonGhostConfiguration(node: labelNode)
             FirstlightGhostButtonControl(
                 configuration: configuration,
                 tokens: themeStore.resolve(for: colorScheme),
@@ -24,9 +25,34 @@ struct FirstlightButtonRenderer: View {
                     }
                 }
             )
-            .fillWidthIfRequested(node)
         } else {
-            NativeUIButtonRenderer(node: node)
+            NativeUIButtonRenderer(node: labelNode)
         }
     }
+}
+
+/// Mobile UI expands its Button label only for `widthMode == fill`. The
+/// host also allocates width for flex growth and explicit fixed/percent widths.
+/// Adapt ONLY the renderer's private input: NodeView/FlexContainer must keep
+/// the original width, constraints, padding and margins when allocating space.
+func firstlightButtonLabelNode(_ node: NativeUINode) -> NativeUINode {
+    guard let layout = node.layout,
+          layout.widthMode != SizeMode.fill,
+          layout.flexGrow > 0 || (
+              (layout.widthMode == SizeMode.fixed || layout.widthMode == SizeMode.percent)
+                  && layout.width > 0
+          )
+    else { return node }
+
+    return NativeUINode(
+        id: node.id,
+        type: node.type,
+        layout: layout.applying(["width": "fill"]),
+        style: node.style,
+        props: node.props,
+        onPress: node.onPress,
+        onLongPress: node.onLongPress,
+        children: node.children,
+        variants: node.variants
+    )
 }

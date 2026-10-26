@@ -292,6 +292,7 @@ class TextField extends Element
         $this->validateContract();
         $this->warnWhenUnlabelled();
         $props = $this->inputProps;
+        $props['done_label'] = Chrome::string('done');
         $props['clear_a11y_label'] = Chrome::string('clear_text');
         $props['show_password_a11y_label'] = Chrome::string('show_password');
         $props['hide_password_a11y_label'] = Chrome::string('hide_password');

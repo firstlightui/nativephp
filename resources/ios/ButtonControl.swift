@@ -10,6 +10,7 @@ struct ButtonGhostConfiguration: Equatable {
     let size: String
     let disabled: Bool
     let loading: Bool
+    let fillsAllocatedWidth: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
     let callbackID: Int
@@ -23,6 +24,7 @@ struct ButtonGhostConfiguration: Equatable {
         size = props.getString("size", default: "md")
         disabled = props.getBool("disabled")
         loading = props.getBool("loading")
+        fillsAllocatedWidth = node.layout?.widthMode == SizeMode.fill
         accessibilityLabel = props.getString("a11y_label")
         accessibilityHint = props.getString("a11y_hint")
         let explicit = props.getCallbackId("on_press")
@@ -77,7 +79,10 @@ struct FirstlightGhostButtonControl: View {
                         .accessibilityHidden(true)
                 }
             }
-            .frame(minHeight: Self.minimumTarget)
+            .frame(
+                maxWidth: configuration.fillsAllocatedWidth ? .infinity : nil,
+                minHeight: Self.minimumTarget
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

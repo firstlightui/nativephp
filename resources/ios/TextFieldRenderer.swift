@@ -46,6 +46,7 @@ struct TextFieldRendererConfiguration {
     let autocapitalize: String
     let autocorrectPolicy: String
     let submitLabel: String
+    let doneLabel: String
     let leadingIcon: String
     let trailingIcon: String
     let trailingAccessibilityLabel: String
@@ -80,6 +81,7 @@ struct TextFieldRendererConfiguration {
         autocapitalize = props.getString("autocapitalize")
         autocorrectPolicy = props.getString("autocorrect_policy", default: "default")
         submitLabel = props.getString("submit_label")
+        doneLabel = props.getString("done_label", default: "Done")
         leadingIcon = props.getString("leading_icon")
         trailingIcon = props.getString("trailing_icon")
         trailingAccessibilityLabel = props.getString("trailing_a11y_label")
@@ -137,6 +139,7 @@ struct TextFieldRendererState {
 
     mutating func userChanged(_ value: String) -> TextFieldRendererEvent? {
         guard !configuration.disabled, !configuration.readOnly else { return nil }
+        if value != draft { pendingServerValue = nil }
         draft = value
         guard configuration.syncMode == "live" else { return nil }
         return commitIfNeeded()
@@ -144,7 +147,16 @@ struct TextFieldRendererState {
 
     mutating func focusChanged(_ focused: Bool) -> TextFieldRendererEvent? {
         isFocused = focused
-        return focused ? nil : commitIfNeeded()
+        guard !focused else { return nil }
+        let edited = draft != lastCommitted
+        let event = commitIfNeeded()
+        if !edited, let pendingServerValue {
+            draft = pendingServerValue
+            lastCommitted = pendingServerValue
+            syncDisplay()
+        }
+        pendingServerValue = nil
+        return event
     }
 
     mutating func flush() -> TextFieldRendererEvent? { commitIfNeeded() }
@@ -160,6 +172,7 @@ struct TextFieldRendererState {
 
     mutating func clear() -> TextFieldRendererEvent? {
         guard configuration.clearable, !configuration.disabled, !configuration.readOnly else { return nil }
+        pendingServerValue = nil
         draft = ""
         return commitIfNeeded()
     }
@@ -226,7 +239,12 @@ struct TextFieldRenderer: View {
     var body: some View {
         FirstlightTextFieldControl(
             configuration: state.configuration,
-            text: $state.draft,
+            text: Binding(
+                get: { state.draft },
+                set: { value in
+                    if let event = state.userChanged(value) { events.send(event) }
+                }
+            ),
             maskedText: state.display,
             maskedRefocus: maskedRefocus,
             revealed: $state.isRevealed,
@@ -256,9 +274,7 @@ struct TextFieldRenderer: View {
             },
             onMaskedFocusChanged: focusChanged
         )
-        .onChange(of: state.draft) { _, value in
-            if let event = state.userChanged(value) { events.send(event) }
-        }
+        .modifier(FirstlightFocusedFieldScroll(nodeID: validationNodeID, focused: state.isFocused))
         .onChange(of: focused) { _, value in focusChanged(value) }
         .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .firstlightValidationAlert(nodeID: validationNodeID)

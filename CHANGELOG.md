@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.0-RC8 - 2026-10-26
+
 ### Security
 
 - Firstlight now requires `nativephp/mobile` `^4.6.1`, the release that fixes NativePHP's October 2026 advisories (async task bridge code injection, object instantiation through `/_native/api/events`, unconfined `File.Move`/`File.Copy`, unauthenticated async payloads, `/_assets` path traversal, and Android cookie logging) and ships PHP runtimes patched for CVE-2026-109618 and CVE-2026-109619. Firstlight itself calls none of the affected bridge functions, and its Feedback events are dispatched in PHP, not through the events endpoint. Apps must still run `php artisan native:install --force`, rebuild and ship a new store release; see [NativePHP's post](https://nativephp.com/blog/our-first-security-advisories-and-this-weeks-php-cves).
@@ -17,6 +19,13 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Android Text Field: external width and flex utilities apply to the complete field, so a `flex-1` field shares a row with a trailing Icon Button instead of consuming its space. Text Field on both platforms also applies a pending PHP value on blur without echoing it, while a newer local edit supersedes the pending value; a PHP-cleared draft no longer reappears after send.
+- Icon Button: presses dismiss the focused input through NativePHP's keyboard policy. On iOS this flushes pending Firstlight `.blur` and `.debounce` edits before dispatching the press; Android applications should continue using live models for separately submitted fields.
+- iOS Text Field and Text Area: padding participates in the input's focus target. Text Field number, decimal and phone keyboards include a localized Done accessory that commits, submits and dismisses, including for masked input.
+- iOS Text Field: focus uses the enclosing Mobile UI scroll proxy after keyboard presentation. Masked numeric input retires its Done accessory before resignation, preventing the next field's keyboard inset from losing the accessory height.
+- iOS Button: flex growth and fixed or percentage widths expand the native button label into the host's allocation without changing the outer layout constraints.
+- iOS Date Picker and Time Picker: the presented native picker uses the theme primary tint instead of the system blue.
+- Android List Item: the combined accessibility description preserves existing sentence-ending punctuation instead of adding a second full stop between the headline, supporting text and hint. Explicit labels follow the same rule; iOS already separates its label and hint without this duplication.
 - iOS Text Field, Text Area, Code Editor, Media, Date Picker and Time Picker fill with the theme's `surface-variant` instead of the system `secondarySystemBackground`. In dark mode the system grey sat darker than a navy theme background and did not match Android, which already uses theme colours.
 - Docs: every recipe gives its screen root and its lists `bg-theme-background`, and the theming page explains why. On iOS a root column, scroll view or list without a background class paints the system background, pure black in dark mode, so recipe screens did not match the theme.
 - Media: image mode now shows a thumbnail of the chosen photo instead of a generic photo icon. The renderers were given `Storage::url()`, which on `mobile_public` is an `_assets` URL that only the WebView serves, and never loaded it. The field now publishes the file's local path, and iOS (ImageIO) and Android (`BitmapFactory`) decode a subsampled thumbnail off the main thread. Disks without a local driver keep the icon.

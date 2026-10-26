@@ -39,6 +39,40 @@ class TextFieldRendererContractTest {
         state.serverPublished(tree(node(value = "corrected")))
         assertEquals("local", state.draft.text)
         assertEquals("corrected", state.pendingServerValue)
+
+        assertNull(state.focusChanged(false))
+        assertEquals("corrected", state.draft.text)
+        assertNull(state.pendingServerValue)
+        assertNull(state.flush())
+    }
+
+    @Test
+    fun `a server clear after sending applies on blur without echoing an edit`() {
+        val state = TextFieldRendererState(node(value = ""))
+        state.focusChanged(true)
+        state.userChanged("sent note")
+        state.serverPublished(tree(node(value = "")))
+
+        assertNull(state.focusChanged(false))
+        assertEquals("", state.draft.text)
+        assertNull(state.pendingServerValue)
+        assertNull(state.flush())
+    }
+
+    @Test
+    fun `newer typing wins over a buffered server correction for live and blur inputs`() {
+        for (syncMode in listOf("live", "blur")) {
+            val state = TextFieldRendererState(node(syncMode = syncMode))
+            state.focusChanged(true)
+            state.serverPublished(tree(node(value = "old correction", syncMode = syncMode)))
+            state.userChanged("newer local text")
+            val event = state.focusChanged(false)
+
+            assertEquals("newer local text", state.draft.text)
+            assertNull(state.pendingServerValue)
+            if (syncMode == "live") assertNull(event)
+            else assertEquals(TextFieldRendererEvent.Change(41, 7, "newer local text"), event)
+        }
     }
 
     @Test
@@ -50,9 +84,12 @@ class TextFieldRendererContractTest {
 
         val clear = TextFieldRendererState(node(value = "query", clearable = true))
         clear.focusChanged(true)
+        clear.serverPublished(tree(node(value = "old correction", clearable = true)))
         assertEquals(TextFieldRendererEvent.Change(41, 7, ""), clear.clear())
         assertEquals("", clear.draft.text)
         assertTrue(clear.focused)
+        assertNull(clear.focusChanged(false))
+        assertEquals("", clear.draft.text)
 
         val reveal = TextFieldRendererState(node(secure = true, revealable = true))
         assertFalse(reveal.revealed)

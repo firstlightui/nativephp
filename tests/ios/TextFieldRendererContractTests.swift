@@ -54,6 +54,49 @@ final class TextFieldRendererContractTests: XCTestCase {
         state.serverPublished(tree(root: makeTextFieldNode(value: "corrected")))
         XCTAssertEqual(state.draft, "local")
         XCTAssertEqual(state.pendingServerValue, "corrected")
+
+        XCTAssertNil(state.focusChanged(false))
+        XCTAssertEqual(state.draft, "corrected")
+        XCTAssertNil(state.pendingServerValue)
+        XCTAssertNil(state.flush())
+    }
+
+    func testServerClearAfterSendingAppliesOnBlurWithoutEcho() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(value: ""))
+        _ = state.focusChanged(true)
+        _ = state.userChanged("sent note")
+        state.serverPublished(tree(root: makeTextFieldNode(value: "")))
+
+        XCTAssertNil(state.focusChanged(false))
+        XCTAssertEqual(state.draft, "")
+        XCTAssertNil(state.pendingServerValue)
+        XCTAssertNil(state.flush())
+    }
+
+    func testNewerTypingWinsOverBufferedServerCorrection() {
+        for syncMode in ["live", "blur"] {
+            var state = TextFieldRendererState(node: makeTextFieldNode(syncMode: syncMode))
+            _ = state.focusChanged(true)
+            state.serverPublished(tree(root: makeTextFieldNode(value: "old correction", syncMode: syncMode)))
+            _ = state.userChanged("newer local text")
+            let event = state.focusChanged(false)
+
+            XCTAssertEqual(state.draft, "newer local text")
+            XCTAssertNil(state.pendingServerValue)
+            XCTAssertEqual(event, syncMode == "live" ? nil : .change(callbackId: 41, nodeId: 7, value: "newer local text"))
+        }
+    }
+
+    func testRevertingAnUnsubmittedEditSupersedesAnOlderServerCorrection() {
+        var state = TextFieldRendererState(node: makeTextFieldNode(syncMode: "blur"))
+        _ = state.focusChanged(true)
+        _ = state.userChanged("unsubmitted edit")
+        state.serverPublished(tree(root: makeTextFieldNode(value: "old correction", syncMode: "blur")))
+        _ = state.userChanged("draft")
+
+        XCTAssertNil(state.focusChanged(false))
+        XCTAssertEqual(state.draft, "draft")
+        XCTAssertNil(state.flush())
     }
 
     func testBlurAndSubmitFlushBeforeSubmitting() {
@@ -68,11 +111,14 @@ final class TextFieldRendererContractTests: XCTestCase {
     func testClearCommitsImmediatelyAndRevealNeverPublishesText() {
         var clear = TextFieldRendererState(node: makeTextFieldNode(value: "query", clearable: true))
         _ = clear.focusChanged(true)
+        clear.serverPublished(tree(root: makeTextFieldNode(value: "old correction", clearable: true)))
         let event = clear.clear()
 
         XCTAssertEqual(clear.draft, "")
         XCTAssertEqual(event, .change(callbackId: 41, nodeId: 7, value: ""))
         XCTAssertTrue(clear.isFocused)
+        XCTAssertNil(clear.focusChanged(false))
+        XCTAssertEqual(clear.draft, "")
 
         var reveal = TextFieldRendererState(node: makeTextFieldNode(secure: true, revealable: true))
         XCTAssertFalse(reveal.isRevealed)
