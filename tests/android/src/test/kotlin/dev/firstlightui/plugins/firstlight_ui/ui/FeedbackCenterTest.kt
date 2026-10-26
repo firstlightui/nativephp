@@ -533,7 +533,11 @@ class FeedbackCenterSemanticsTest {
         }
 
         onNodeWithText("Undo").assertIsDisplayed()
-        onNodeWithContentDescription("Dismiss feedback").assertDoesNotExist()
+        onNodeWithContentDescription("Dismiss feedback")
+            .assertIsDisplayed()
+            .assertHasClickAction()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
         runOnIdle {
             center = centerNode(
                 feedbackNode(id = "automatic", nodeId = 13, timeout = 173, manual = 163),
@@ -541,7 +545,7 @@ class FeedbackCenterSemanticsTest {
                 feedbackNode(id = "held", nodeId = 5, hold = true, timeout = 0, manual = 65),
             )
         }
-        onNode(dismiss).performSemanticsAction(SemanticsActions.Dismiss)
+        onNodeWithContentDescription("Dismiss feedback").performClick()
         waitForIdle()
         onAllNodes(dismiss).assertCountEquals(1)
         onAllNodes(liveRegion).assertCountEquals(1)

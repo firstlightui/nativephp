@@ -74,7 +74,7 @@ final class FeedbackCenterTests: XCTestCase {
         XCTAssertNil(state.visible)
     }
 
-    func testHeldAndAutomaticItemsUseOnlyTheirEligibleDismissal() {
+    func testHeldAndAutomaticItemsUseTheirOwnDismissalCallbacks() {
         var held = FeedbackCenterQueueState(now: 0)
         held.reconcile([item(id: "held", hold: true, timeout: 0, manual: 71)], now: 0)
         XCTAssertNil(held.advance(by: 100, feedbackID: "held"))
@@ -85,9 +85,23 @@ final class FeedbackCenterTests: XCTestCase {
         )
         XCTAssertNil(held.manualDismiss(feedbackID: "held", now: 100))
 
+        var actionable = FeedbackCenterQueueState(now: 0)
+        actionable.reconcile([
+            item(id: "undo", action: 81, timeout: 82, manual: 83),
+            item(id: "next"),
+        ], now: 0)
+        actionable.advance(by: 1, feedbackID: "undo")
+        XCTAssertEqual(
+            actionable.manualDismiss(feedbackID: "undo", now: 1),
+            .press(callbackID: 83, nodeID: 1)
+        )
+        XCTAssertNil(actionable.manualDismiss(feedbackID: "undo", now: 1))
+        XCTAssertNil(actionable.timeout(feedbackID: "undo", now: 100))
+        XCTAssertEqual(actionable.visible?.feedbackID, "next")
+        XCTAssertEqual(actionable.elapsed, 0)
+
         var automatic = FeedbackCenterQueueState(now: 0)
         automatic.reconcile([item(id: "automatic", timeout: 72)], now: 0)
-        XCTAssertNil(automatic.manualDismiss(feedbackID: "automatic", now: 0))
         XCTAssertEqual(
             automatic.advance(by: automatic.remaining, feedbackID: "automatic"),
             .press(callbackID: 72, nodeID: 1)

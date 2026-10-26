@@ -179,7 +179,7 @@ fun FirstlightFeedbackCenterControl(
                     }
                 }
             } else null,
-            dismissAction = if (configuration.hold && configuration.manualCallback != null) {
+            dismissAction = if ((configuration.hold || configuration.hasAction) && configuration.manualCallback != null) {
                 {
                     IconButton(
                         onClick = onDismiss,

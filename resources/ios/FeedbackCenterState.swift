@@ -270,9 +270,7 @@ struct FeedbackCenterQueueState {
     ) -> FeedbackCenterWireEvent? {
         guard visible?.feedbackID == feedbackID else { return nil }
         synchronize(to: now)
-        guard let visible, visible.hold, let callbackID = visible.manualCallback else {
-            return nil
-        }
+        guard let visible, let callbackID = visible.manualCallback else { return nil }
         return complete(
             feedbackID: visible.feedbackID,
             event: .press(callbackID: callbackID, nodeID: visible.nodeID),

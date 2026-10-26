@@ -91,7 +91,8 @@ struct FeedbackCenterRenderingPolicy: Equatable {
             action = nil
         }
 
-        if configuration.hold, configuration.manualCallback != nil {
+        if configuration.hold || configuration.actionCallback != nil,
+           configuration.manualCallback != nil {
             dismiss = FeedbackCenterActionRenderingPolicy(
                 visibleLabel: configuration.dismissLabel,
                 accessibilityLabel: configuration.dismissA11yLabel,

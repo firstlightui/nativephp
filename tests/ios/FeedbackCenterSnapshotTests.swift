@@ -39,6 +39,24 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
             CGSize(width: 44, height: 44)
         )
 
+        let timedUndo = makeControl(configuration: configuration(
+            message: "Resolved BACKEND-1A",
+            tone: .success,
+            actionLabel: "Undo",
+            actionCallback: 41,
+            manualCallback: 42
+        ))
+        XCTAssertEqual(timedUndo.renderingPolicy.action?.visibleLabel, "Undo")
+        XCTAssertEqual(timedUndo.renderingPolicy.dismiss?.visibleLabel, "Dismiss")
+        XCTAssertEqual(timedUndo.renderingPolicy.dismiss?.accessibilityLabel, "Dismiss feedback")
+        XCTAssertEqual(timedUndo.renderingPolicy.dismiss?.symbol?.systemName, "xmark")
+
+        let passive = makeControl(configuration: configuration(
+            message: "Saved",
+            manualCallback: 43
+        ))
+        XCTAssertNil(passive.renderingPolicy.dismiss)
+
         let held = makeControl(configuration: configuration(
             message: "Connection lost",
             tone: .warning,

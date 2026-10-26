@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.0-RC9 - 2026-10-26
+
+### Changed
+
+- Transient Feedback: timed feedback with an action, such as `Feedback::success('Resolved')->action('Undo', 'undo')->send()`, now shows the same dismiss control as held feedback (× with the package chrome labels `Dismiss` / `Dismiss feedback`) beside its action on iOS and Android. Before, such a notice covered the bottom action bar and tab bar until it timed out. The timeout still applies. Pressing the control dispatches `FeedbackDismissed` with `FeedbackDismissReason::Manual`, as held feedback already does. Timed feedback without an action is unchanged, and there is still no swipe-to-dismiss or duration option.
+
 ## 1.0.0-RC8 - 2026-10-26
 
 ### Security

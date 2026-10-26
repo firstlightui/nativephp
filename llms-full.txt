@@ -3393,11 +3393,13 @@ Use a stable authored ID when later code must update or remove an item. Use the 
 
 ## Lifetime and dismissal
 
-Automatic feedback starts with a four-second minimum. Longer text may increase message time up to ten seconds, and an action adds two seconds. Platform accessibility policy may extend that duration. Automatic feedback has no visible dismiss control.
+Automatic feedback starts with a four-second minimum. Longer text may increase message time up to ten seconds, and an action adds two seconds. Platform accessibility policy may extend that duration.
 
-`hold()` disables automatic timeout. A held item presents an explicit native dismiss control with the accessible label `Dismiss feedback`; its optional application action remains available. Either user action advances the queue. `Feedback::dismiss()` removes held and automatic items alike without an application event.
+Automatic feedback with an action, such as Undo, also presents a native dismiss control next to the action, so the person can clear it before it times out instead of waiting for it to stop covering the bottom of the screen. Its timeout still applies. Pressing the dismiss control dispatches only `FeedbackDismissed` with `FeedbackDismissReason::Manual`. Automatic feedback without an action has no visible dismiss control.
 
-There is no public duration, position, animation, swipe, close-label, or stacking option.
+`hold()` disables automatic timeout. A held item always presents the dismiss control; its optional application action remains available. Either user action advances the queue. `Feedback::dismiss()` removes held and automatic items alike without an application event.
+
+The dismiss control shows the package chrome label `Dismiss` with an × symbol on iOS and an × icon on Android, and both platforms expose the accessible label `Dismiss feedback`. There is no swipe-to-dismiss gesture. There is no public duration, position, animation, close-label, or stacking option.
 
 ## Navigation, background, and process lifecycle
 
@@ -3411,7 +3413,7 @@ The store is process-local memory. Process termination clears the queue; Transie
 
 Each newly visible semantic ID is announced once. Updating the same ID changes the visible content without repeating the announcement. Tone symbols are hidden from VoiceOver and TalkBack, while message text and labelled actions retain native semantics.
 
-Actions meet the platform baseline of at least 44 points on iOS and 48 dp on Android. Long text wraps, controls reflow under constrained width or large text, and both platforms preserve dark mode, contrast, and right-to-left layout. Automatic timing pauses while an action owns accessibility focus.
+Actions and the dismiss control meet the platform baseline of at least 44 points on iOS and 48 dp on Android. Long text wraps, controls reflow under constrained width or large text, and both platforms preserve dark mode, contrast, and right-to-left layout. Automatic timing pauses while an action or the dismiss control owns accessibility focus.
 
 iOS doubles the automatic duration while VoiceOver or Switch Control is active and uses an opacity-only transition with Reduce Motion. Android passes the content type and base duration to `AccessibilityManager.getRecommendedTimeoutMillis`, available at the package's API 29 floor, and retains Material snackbar accessibility semantics.
 
@@ -3427,7 +3429,7 @@ Disabled, loading, model binding, rich content, multiple actions, icons, per-pla
 
 iOS presents a bottom SwiftUI material notice with semantic SF Symbols, native buttons, safe-area spacing, Dynamic Type, and a reduced-motion-aware transition. Android presents a bottom Material 3 `Snackbar` with semantic tone treatment, navigation-bar and IME padding, responsive action layout, and TalkBack live-region behaviour.
 
-Both platforms own one visible item and the same FIFO/event contract. Native expression differs by platform; Firstlight guarantees behavioural parity rather than identical geometry. Held items expose a dismiss control whose visible and accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md).
+Both platforms own one visible item and the same FIFO/event contract. Native expression differs by platform; Firstlight guarantees behavioural parity rather than identical geometry. Held and actionable items expose a dismiss control whose visible and accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md).
 
 ## Compatibility
 
