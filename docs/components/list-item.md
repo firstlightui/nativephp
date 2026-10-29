@@ -58,10 +58,15 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `leading-icon-color`, `trailing-icon-color` | hex `string` | Explicit icon colour overrides tone on both platforms; accepts `#RGB`, `#RRGGBB`, `#AARRGGBB`. |
 | `leading-avatar` | non-empty `string` | Optional image source representing the row subject. |
 | `leading-monogram` | one or two characters | Optional short identity marker such as `WJ`. |
+| `leading-label` | non-empty `string` | Text identity such as `4B-12`, without the monogram length limit. |
 | `trailing-icon` | non-empty `string` | Optional shared decorative affordance icon. |
 | `trailing-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `trailing-icon`. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `trailing-icon`; typed variants are preserved on the wire. |
 | `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
+| `trailing-status` | non-empty `string` | Display-only Status Label inside the row's single target. |
+| `trailing-status-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Status meaning; defaults to `neutral` and requires `trailing-status`. |
+| `state` | `normal`, `provisional`, `pending-removal` | Normal (default), subdued provisional text, or struck-through headline/supporting text. Does not disable actions. |
+| `state-label` | non-empty `string` | Required spoken meaning for a nonnormal state. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
 | `trailing-actions` | `array` of action descriptors | Optional actions revealed from the logical trailing edge inside List. |
 | `context-menu` | `array` of menu item descriptors | Optional native context menu opened by long press, with matching screen-reader actions. |
@@ -70,14 +75,70 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `a11y-hint` | non-empty `string` | Optional supplementary VoiceOver or TalkBack guidance. |
 | `class` | `string` | External EDGE layout utilities. |
 
-Choose at most one leading source: icon, avatar, or monogram. Choose at most
-one trailing affordance: icon or text. Supporting text and both edges may be
+Choose at most one leading source: icon, avatar, monogram, or label. Choose at most
+one trailing affordance: icon, text, or status. Supporting text and both edges may be
 omitted for a headline-only row.
 
 Blade examples use kebab-case names. The equivalent `leadingIcon`,
 `leadingIconIos`, `leadingIconAndroid`, `leadingAvatar`, `leadingMonogram`,
 `trailingIcon`, `trailingIconIos`, `trailingIconAndroid`, and `trailingText`
 aliases are also accepted for parity with NativePHP authoring.
+
+The new attributes also accept matching camelCase aliases and fluent setters:
+`leadingLabel()`, `trailingStatus()`, `trailingStatusTone()`, `state()` and
+`stateLabel()`.
+
+## Status and pending state
+
+```blade
+<firstlight:list-item
+    headline="Alex Morgan"
+    supporting="Discharge"
+    leading-label="4B-12"
+    trailing-status="Waiting to sync"
+    trailing-status-tone="warning"
+    state="pending-removal"
+    state-label="Discharge waiting to sync"
+    @press="openPatient(42)"
+/>
+```
+
+`provisional` subdues text with a readable secondary foreground rather than
+making the row disabled. `pending-removal` strikes through the headline and
+supporting text but keeps the row until PHP publishes its removal. Neither
+state starts a job, retries sync, or changes action availability. Use `disabled`
+separately when actions must be unavailable.
+
+The leading label and trailing status join the default spoken row name.
+An explicit `a11y-label` replaces that name; `state-label` is still announced
+as state. The status is not a nested action or separate accessibility stop.
+At accessibility text sizes it moves below the headline/supporting text so
+the headline remains readable.
+
+## Read-only summaries and comparisons
+
+Use Mobile UI text/columns for read-only key-value content, not a List Item
+with a fake press handler. For a comparison, PHP decides match, mismatch or
+unknown; Status Label communicates the result with words as well as a mark:
+
+```blade
+<native:column class="w-full gap-2">
+    <native:text class="text-theme-on-surface">Patient: {{ $patientName }}</native:text>
+    <native:text class="text-theme-on-surface">Date of birth: {{ $formattedDob }}</native:text>
+    <native:text class="text-theme-on-surface">Label identifier: {{ $labelIdentifier }}</native:text>
+    <native:text class="text-theme-on-surface">On file: {{ $fileIdentifier }}</native:text>
+    @if ($comparison === 'match')
+        <firstlight:status-label label="Matches" tone="success" icon="check" icon-ios="checkmark" />
+    @elseif ($comparison === 'mismatch')
+        <firstlight:status-label label="Does not match" tone="warning" />
+    @else
+        <firstlight:status-label label="Not compared" tone="neutral" />
+    @endif
+</native:column>
+```
+
+The app supplies the display values and comparison result. This is ordinary
+native composition, not a new catalogue layout or validation engine.
 
 ## Swipe actions
 

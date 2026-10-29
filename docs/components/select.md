@@ -50,6 +50,7 @@ public array $priorityOptions = [
 | `options` | `array` | Simple strings, a value-to-label map, or rich option arrays. Labels must contain visible text. |
 | `value` / `native:model` | `string`, `int`, or `null` | Stable selection. Every non-null value must exactly match one option by type and value. |
 | `searchable` | `bool` | Forces search for a collection with 12 or fewer options. Collections with 13 or more are always searchable. |
+| `variant` | `field` or `chip` | Full field (default) or compact native trigger; chooser and selection semantics are unchanged. |
 | `label` | `string` | Visible field label. |
 | `placeholder` | `string` | Trigger text when the published value is `null`; it is not the accessible name. |
 | `helper` | `string` | Supporting text shown when there is no error. |
@@ -86,6 +87,25 @@ Rich options accept only `value`, `label`, and optional `disabled` fields:
 Values in one collection must be unique and all strings or all integers. Matching is strict: integer `10` does not match string `'10'`. `null` means no selection and displays the placeholder. Empty options accept only `null` and produce an inert trigger.
 
 ## Compact and searchable presentation
+
+Set `variant="chip"` for an intrinsic-width picker trigger with the label and
+accepted value inline, for example a hospital or provider selector. The
+default is `variant="field"`. iOS uses a native bordered capsule trigger;
+Android uses a Material 3 AssistChip. This changes the closed trigger only:
+menus, search threshold, stable values, required/error/disabled metadata and
+state timing remain unchanged. Chips retain 44-point iOS / 48-dp Android
+targets rather than shrinking the touch area to the text.
+
+```blade
+<firstlight:select
+    variant="chip"
+    :options="['north' => 'North', 'south' => 'South']"
+    native:model="hospital"
+    label="Hospital"
+/>
+```
+
+Declare `public ?string $hospital = 'north';` on the screen.
 
 Select chooses its platform presentation from the option count. Up to 12 options use a compact menu or dropdown. Thirteen or more options use a searchable presentation automatically. Set `searchable` to force search for a smaller collection.
 

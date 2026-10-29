@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.0-RC10 - 2026-10-29
+
+### Added
+
+- List Item: `leading-label` for identifiers such as bed numbers, `trailing-status` with semantic tones, and `provisional` / `pending-removal` states. Nonnormal states require an authored `state-label` for assistive technology and do not disable row actions.
+- Choice Group: `variant="tiles"` with optional option `prefix` and `supporting` text for rich single- or multi-select grids. Stable values and server-authoritative selection are unchanged.
+- Select and Date Picker: `variant="chip"` for compact native triggers. Date Picker also accepts `display-text` for an accepted chip date without replacing its canonical value or spoken date.
+- Bottom Sheet: `pinned-footer` keeps the final direct child visible while the preceding content scrolls. At least two direct children are required.
+- Text Field: `helper-tone="success|warning|neutral"` for supporting guidance; validation errors still take precedence.
+- Documentation and showcase examples for the new variants and for comparison/read-only summaries composed from existing native text and Status Label controls.
+
+### Fixed
+
+- Android Bottom Sheet: content taller than the screen scrolls instead of being clipped, including sheets without a pinned footer.
+- List Item: trailing statuses stack below the headline and supporting text at accessibility text sizes instead of squeezing the row text.
+- Package tests: the manifest version assertion matches the release, the iOS test theme supplies its success colour, and iOS 27 Date Picker references include RC8's intentional theme-primary picker tint.
+
+### Qualification
+
+- This remains a prerelease, not a completed catalogue/alpha qualification. Full NativePHP consumer-host builds, new-state native documentation capture matrices, touch/swipe and spoken screen-reader checks, physical-device checks, and wider soak/performance evidence remain outstanding. Existing test-host diagnostics and the largest-text Date Picker Confirm wrapping remain unchanged.
+
 ## 1.0.0-RC9 - 2026-10-26
 
 ### Changed

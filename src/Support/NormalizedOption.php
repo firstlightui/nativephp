@@ -8,6 +8,8 @@ final readonly class NormalizedOption
         public string|int $value,
         public string $label,
         public bool $disabled,
+        public string $prefix = '',
+        public string $supporting = '',
     ) {}
 
     public function wireValue(): string

@@ -58,6 +58,7 @@ data class SelectRendererConfiguration(
     val required: Boolean,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val variant: String = "field",
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -78,6 +79,7 @@ data class SelectRendererConfiguration(
             node.props.getString("label")
         },
         accessibilityHint = node.props.getString("a11y_hint"),
+        variant = node.props.getString("variant", "field"),
     )
 }
 

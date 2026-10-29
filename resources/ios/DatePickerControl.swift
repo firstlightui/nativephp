@@ -10,7 +10,7 @@ struct FirstlightDatePickerControl: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if !configuration.label.isEmpty {
+            if !configuration.label.isEmpty && configuration.variant != "chip" {
                 Text(configuration.required ? "\(configuration.label) *" : configuration.label)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(tokens.onSurface)
@@ -20,17 +20,21 @@ struct FirstlightDatePickerControl: View {
                 state.open()
             } label: {
                 HStack(spacing: 8) {
+                    if configuration.variant == "chip" && !configuration.label.isEmpty {
+                        Text(configuration.required ? "\(configuration.label) *" : configuration.label)
+                            .foregroundStyle(tokens.onSurfaceVariant)
+                    }
                     Text(triggerText)
                         .foregroundStyle(configuration.acceptedValue == nil ? tokens.onSurfaceVariant : tokens.onSurface)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: configuration.variant == "chip" ? nil : .infinity, alignment: .leading)
 
                     Image(systemName: "calendar")
                         .foregroundStyle(tokens.onSurfaceVariant)
                         .accessibilityHidden(true)
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, configuration.variant == "chip" ? 0 : 12)
                 .frame(minHeight: 44)
-                .background(tokens.surfaceVariant)
+                .background(configuration.variant == "chip" ? Color.clear : tokens.surfaceVariant)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -38,7 +42,7 @@ struct FirstlightDatePickerControl: View {
                 }
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .modifier(FirstlightPickerTriggerStyle(compact: configuration.variant == "chip"))
             .disabled(!configuration.isInteractive)
             .accessibilityLabel(Text(
                 configuration.required
@@ -74,7 +78,10 @@ struct FirstlightDatePickerControl: View {
     }
 
     private var triggerText: String {
-        configuration.acceptedValue.map {
+        if configuration.variant == "chip", configuration.acceptedValue != nil, !configuration.displayText.isEmpty {
+            return configuration.displayText
+        }
+        return configuration.acceptedValue.map {
             DatePickerCalendar.display($0, locale: configuration.locale, timezone: configuration.timezone)
         } ?? configuration.placeholder
     }

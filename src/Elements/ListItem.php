@@ -141,6 +141,15 @@ final class ListItem extends Element
         $this->applyTrailingAttributes($attrs);
         $this->applyAccessibilityAttributes($attrs);
 
+        foreach (['state' => 'state', 'state-label' => 'stateLabel', 'stateLabel' => 'stateLabel', 'trailing-status-tone' => 'trailingStatusTone', 'trailingStatusTone' => 'trailingStatusTone'] as $attribute => $method) {
+            if (array_key_exists($attribute, $attrs)) {
+                if (! is_string($attrs[$attribute])) {
+                    throw new InvalidArgumentException("Firstlight List Item `{$attribute}` must be a string.");
+                }
+                $this->{$method}($attrs[$attribute]);
+            }
+        }
+
         foreach (['leading', 'trailing'] as $edge) {
             foreach (['tone', 'color'] as $kind) {
                 $names = ["{$edge}-icon-{$kind}", $edge.'Icon'.ucfirst($kind)];
@@ -325,6 +334,58 @@ final class ListItem extends Element
         return $this;
     }
 
+    public function leadingLabel(string $value): static
+    {
+        if (trim($value) === '') {
+            throw new InvalidArgumentException('Firstlight List Item `leading-label` must be non-empty.');
+        }
+        $this->listItemProps['leading_type'] = 'label';
+        $this->listItemProps['leading_value'] = $value;
+
+        return $this;
+    }
+
+    public function state(string $value): static
+    {
+        if (! in_array($value, ['normal', 'provisional', 'pending-removal'], true)) {
+            throw new InvalidArgumentException('Firstlight List Item `state` must be normal, provisional, or pending-removal.');
+        }
+        $this->listItemProps['state'] = $value;
+
+        return $this;
+    }
+
+    public function stateLabel(string $value): static
+    {
+        if (trim($value) === '') {
+            throw new InvalidArgumentException('Firstlight List Item `state-label` must be non-empty.');
+        }
+        $this->listItemProps['state_label'] = $value;
+
+        return $this;
+    }
+
+    public function trailingStatus(string $value): static
+    {
+        if (trim($value) === '') {
+            throw new InvalidArgumentException('Firstlight List Item `trailing-status` must be non-empty.');
+        }
+        $this->listItemProps['trailing_type'] = 'status';
+        $this->listItemProps['trailing_value'] = $value;
+
+        return $this;
+    }
+
+    public function trailingStatusTone(string $value): static
+    {
+        if (! in_array($value, ['neutral', 'info', 'success', 'warning', 'danger'], true)) {
+            throw new InvalidArgumentException('Firstlight List Item `trailing-status-tone` must be neutral, info, success, warning, or danger.');
+        }
+        $this->listItemProps['trailing_status_tone'] = $value;
+
+        return $this;
+    }
+
     public function trailingIcon(
         ?string $name = null,
         IosSymbol|string|null $ios = null,
@@ -438,6 +499,12 @@ final class ListItem extends Element
 
     protected function resolveProps(CallbackRegistry $registry): array
     {
+        if (($this->listItemProps['state'] ?? 'normal') !== 'normal' && ! isset($this->listItemProps['state_label'])) {
+            throw new InvalidArgumentException('Firstlight List Item nonnormal `state` requires a meaningful `state-label`.');
+        }
+        if (isset($this->listItemProps['trailing_status_tone']) && ($this->listItemProps['trailing_type'] ?? '') !== 'status') {
+            throw new InvalidArgumentException('Firstlight List Item `trailing-status-tone` requires `trailing-status`.');
+        }
         $headline = $this->listItemProps['headline'] ?? null;
         if (! is_string($headline) || trim($headline) === '') {
             throw new InvalidArgumentException('Firstlight List Item requires a non-empty `headline`.');
@@ -448,7 +515,7 @@ final class ListItem extends Element
         }
 
         $props = $this->listItemProps;
-        if (in_array('warning', [$props['leading_icon_tone'] ?? null, $props['trailing_icon_tone'] ?? null], true)) {
+        if (in_array('warning', [$props['leading_icon_tone'] ?? null, $props['trailing_icon_tone'] ?? null, $props['trailing_status_tone'] ?? null], true)) {
             $props = array_merge($props, WarningColors::props());
         }
         foreach ($this->swipeActions as $edge => $actions) {
@@ -510,11 +577,20 @@ final class ListItem extends Element
         ]);
         $avatarAuthored = $this->hasAny($attrs, ['leading-avatar', 'leadingAvatar']);
         $monogramAuthored = $this->hasAny($attrs, ['leading-monogram', 'leadingMonogram']);
+        $labelAuthored = $this->hasAny($attrs, ['leading-label', 'leadingLabel']);
 
-        if (count(array_filter([$iconAuthored, $avatarAuthored, $monogramAuthored])) > 1) {
+        if (count(array_filter([$iconAuthored, $avatarAuthored, $monogramAuthored, $labelAuthored])) > 1) {
             throw new InvalidArgumentException(
-                'Firstlight List Item accepts exactly one leading icon, avatar, or monogram.'
+                'Firstlight List Item accepts exactly one leading icon, avatar, monogram, or label.'
             );
+        }
+
+        if ($labelAuthored) {
+            $label = $this->firstValue($attrs, ['leading-label', 'leadingLabel']);
+            if (! is_string($label)) {
+                throw new InvalidArgumentException('Firstlight List Item `leading-label` must be a string.');
+            }
+            $this->leadingLabel($label);
         }
 
         if ($iconAuthored) {
@@ -568,11 +644,20 @@ final class ListItem extends Element
         ]);
         $text = $this->firstValue($attrs, ['trailing-text', 'trailingText']);
         $textAuthored = $text !== null && (! is_string($text) || trim($text) !== '');
+        $statusAuthored = $this->hasAny($attrs, ['trailing-status', 'trailingStatus']);
 
-        if ($iconAuthored && $textAuthored) {
+        if (count(array_filter([$iconAuthored, $textAuthored, $statusAuthored])) > 1) {
             throw new InvalidArgumentException(
-                'Firstlight List Item accepts exactly one trailing icon or text affordance.'
+                'Firstlight List Item accepts exactly one trailing icon, text, or status affordance.'
             );
+        }
+
+        if ($statusAuthored) {
+            $status = $this->firstValue($attrs, ['trailing-status', 'trailingStatus']);
+            if (! is_string($status)) {
+                throw new InvalidArgumentException('Firstlight List Item `trailing-status` must be a string.');
+            }
+            $this->trailingStatus($status);
         }
 
         if ($iconAuthored) {

@@ -1,10 +1,12 @@
 import SwiftUI
+import UIKit
 
 enum FirstlightListItemLeadingType: String {
     case none = ""
     case icon
     case avatar
     case monogram
+    case label
 
     init(wireValue: String) {
         self = Self(rawValue: wireValue) ?? .none
@@ -15,6 +17,7 @@ enum FirstlightListItemTrailingType: String {
     case none = ""
     case icon
     case text
+    case status
 
     init(wireValue: String) {
         self = Self(rawValue: wireValue) ?? .none
@@ -39,6 +42,11 @@ struct FirstlightListItemControl: View {
     let onPress: () -> Void
     var onAction: (Int) -> Void = { _ in }
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var stackedStatus: Bool {
+        configuration.trailingType == .status && dynamicTypeSize.isAccessibilitySize
+    }
 
     let leadingContentIsDecorative = true
     let trailingContentIsDecorative = true
@@ -52,20 +60,25 @@ struct FirstlightListItemControl: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(configuration.headline)
                         .font(.body)
-                        .foregroundStyle(tokens.onSurface)
+                        .foregroundStyle(configuration.state == "provisional" ? tokens.onSurfaceVariant : tokens.onSurface)
+                        .strikethrough(configuration.state == "pending-removal")
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     if !configuration.supporting.isEmpty {
                         Text(configuration.supporting)
                             .font(.subheadline)
+                            .strikethrough(configuration.state == "pending-removal")
                             .foregroundStyle(tokens.onSurfaceVariant)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    if stackedStatus {
+                        trailingContent.padding(.top, 4)
+                    }
                 }
 
-                trailingContent
+                if !stackedStatus { trailingContent }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -77,6 +90,7 @@ struct FirstlightListItemControl: View {
         .opacity(configuration.disabled ? 0.5 : 1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(configuration.resolvedAccessibilityLabel))
+        .accessibilityValue(Text(configuration.state == "normal" ? "" : configuration.stateLabel))
         .accessibilityHint(Text(configuration.accessibilityHint))
         .modifier(FirstlightListItemContextMenu(
             items: configuration.hasContextMenu ? configuration.contextMenu : [],
@@ -120,6 +134,12 @@ struct FirstlightListItemControl: View {
         switch configuration.leadingType {
         case .none:
             EmptyView()
+        case .label:
+            Text(configuration.leadingValue)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(tokens.onSurfaceVariant)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
         case .icon:
             Image(systemName: getIconForName(configuration.leadingValue))
                 .font(.title3.weight(.medium))
@@ -158,6 +178,16 @@ struct FirstlightListItemControl: View {
         switch configuration.trailingType {
         case .none:
             EmptyView()
+        case .status:
+            FirstlightStatusLabelControl(
+                label: configuration.trailingValue,
+                tokens: .from(theme: tokens, tone: configuration.statusTone,
+                    traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light),
+                    warningColors: configuration.warningColors),
+                accessibilityLabel: configuration.trailingValue,
+                accessibilityHint: ""
+            )
+            .accessibilityHidden(true)
         case .icon:
             Image(systemName: getIconForName(configuration.trailingValue))
                 .font(.body.weight(.semibold))

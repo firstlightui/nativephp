@@ -253,7 +253,10 @@ struct NativeUITokens: Equatable {
         onSurface: Color(uiColor: .label),
         surfaceVariant: Color(uiColor: .secondarySystemBackground),
         onSurfaceVariant: Color(uiColor: .secondaryLabel),
-        destructive: Color(uiColor: .systemRed)
+        destructive: Color(uiColor: .systemRed),
+        // Mobile UI's production fallback defines success as #15803D, not clear.
+        success: Color(red: 21 / 255.0, green: 128 / 255.0, blue: 61 / 255.0),
+        onSuccess: .white
     )
 }
 

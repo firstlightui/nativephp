@@ -35,6 +35,7 @@ sources:
 | `options` | Shared simple strings, homogeneous value-to-label maps, or rich arrays with `value`, nonblank `label`, and optional `disabled`. |
 | `value` / `native:model` | A stable `string`, `int`, or `null`. Every non-null value must match one option exactly by type and value. |
 | `searchable` | Forces the searchable native presentation for fewer than 13 options. Thirteen or more options always use search. |
+| `variant` | `field` (default) or `chip`. Chip changes only the closed trigger to a native compact affordance with inline label and accepted value. |
 | `label` | Visible field label. |
 | `placeholder` | Trigger text when the published value is `null`; never the accessible name. |
 | `helper` | Supporting guidance shown when there is no error. |
@@ -45,7 +46,7 @@ sources:
 | `a11y-hint` | Supplementary VoiceOver and TalkBack guidance. |
 | `class` | External EDGE layout only. |
 
-Select has no public mode, style, multiple, clearable, tone, variant, icon, loading, press, or submit prop.
+Select has no public mode, style, multiple, clearable, tone, icon, loading, press, or submit prop.
 
 ## Options, values, and presentation policy
 
@@ -75,6 +76,10 @@ During development, a blank visible label and blank `a11y-label` emit an actiona
 - Android uses Material 3 `ExposedDropdownMenuBox` for compact collections. Searchable collections open a Material dialog with a search field and radio option rows.
 
 Both renderers inherit NativePHP semantic theme tokens and share the same stable value, disabled-option, threshold, event, and reconciliation semantics.
+
+The chip trigger is a bordered capsule Menu/Button on iOS and an AssistChip
+on Android, with the same native chooser and platform-minimum target. Chips
+do not become toggles and do not change search or publication policy.
 
 ## Official primitive decision
 

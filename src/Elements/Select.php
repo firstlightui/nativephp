@@ -28,7 +28,6 @@ class Select extends Element
         'selected',
         'loading',
         'tone',
-        'variant',
         'icon',
         'icon-ios',
         'icon-android',
@@ -63,6 +62,13 @@ class Select extends Element
     public function applyAttributes(array $attrs): void
     {
         $this->assertCompatibleAttributes($attrs);
+
+        if (array_key_exists('variant', $attrs)) {
+            if (! is_string($attrs['variant'])) {
+                throw new InvalidArgumentException('Firstlight Select `variant` must be a string.');
+            }
+            $this->variant($attrs['variant']);
+        }
 
         if (array_key_exists('options', $attrs)) {
             $this->options((array) $attrs['options']);
@@ -122,6 +128,16 @@ class Select extends Element
     public function searchable(bool $value = true): static
     {
         $this->searchable = $value;
+
+        return $this;
+    }
+
+    public function variant(string $value): static
+    {
+        if (! in_array($value, ['field', 'chip'], true)) {
+            throw new InvalidArgumentException('Firstlight Select variant is not supported; use field or chip.');
+        }
+        $this->fieldProps['variant'] = $value;
 
         return $this;
     }

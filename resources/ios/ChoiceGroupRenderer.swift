@@ -33,6 +33,9 @@ struct ChoiceGroupRendererConfiguration: Equatable {
     let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
+    let variant: String
+    let optionPrefixes: [String]
+    let optionSupporting: [String]
 
     init(node: NativeUINode) {
         let props = node.props
@@ -56,6 +59,9 @@ struct ChoiceGroupRendererConfiguration: Equatable {
             ? props.getString("label")
             : explicitAccessibilityLabel
         accessibilityHint = props.getString("a11y_hint")
+        variant = props.getString("variant", default: "list")
+        optionPrefixes = props.getStringList("option_prefixes")
+        optionSupporting = props.getStringList("option_supporting")
     }
 }
 
@@ -148,7 +154,10 @@ struct ChoiceGroupRenderer: View {
             onSelection: { index in
                 guard let event = rendererState.userSelected(index) else { return }
                 events.send(event)
-            }
+            },
+            tiles: configuration.variant == "tiles",
+            prefixes: configuration.optionPrefixes,
+            supporting: configuration.optionSupporting
         )
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in

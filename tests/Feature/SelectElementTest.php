@@ -55,6 +55,11 @@ function collectFirstlightSelect(array $attributes, ?CallbackRegistry $registry 
     return NativeElementCollector::collect()->toArray($registry ?? new CallbackRegistry);
 }
 
+it('supports a chip trigger without changing typed options or selection callbacks', function () {
+    $tree = collectFirstlightSelect(['label' => 'Provider', 'variant' => 'chip', 'options' => [42 => '1234567A'], 'value' => 42]);
+    expect($tree['props'])->toMatchArray(['variant' => 'chip', 'selected_values' => ['42'], 'value_type' => 'integer']);
+});
+
 it('publishes stable mapped options and complete field metadata', function () {
     $registry = new CallbackRegistry;
     $tree = collectFirstlightSelect([

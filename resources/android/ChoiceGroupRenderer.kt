@@ -57,6 +57,9 @@ data class ChoiceGroupRendererConfiguration(
     val required: Boolean,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val variant: String = "list",
+    val optionPrefixes: List<String> = emptyList(),
+    val optionSupporting: List<String> = emptyList(),
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -76,6 +79,9 @@ data class ChoiceGroupRendererConfiguration(
             node.props.getString("label")
         },
         accessibilityHint = node.props.getString("a11y_hint"),
+        variant = node.props.getString("variant", "list"),
+        optionPrefixes = node.props.getStringList("option_prefixes"),
+        optionSupporting = node.props.getStringList("option_supporting"),
     )
 }
 
@@ -149,6 +155,9 @@ object ChoiceGroupRenderer {
             required = rendererState.configuration.required,
             accessibilityLabel = rendererState.configuration.accessibilityLabel,
             accessibilityHint = rendererState.configuration.accessibilityHint,
+            tiles = rendererState.configuration.variant == "tiles",
+            prefixes = rendererState.configuration.optionPrefixes,
+            supporting = rendererState.configuration.optionSupporting,
         )
     }
 }

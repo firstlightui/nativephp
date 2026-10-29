@@ -144,6 +144,17 @@ function collectTextField(array $attributes, ?CallbackRegistry $registry = null)
     return NativeElementCollector::collect()->toArray($registry ?? new CallbackRegistry);
 }
 
+it('publishes helper tones separately from validation errors', function () {
+    $tree = collectTextField(['label' => 'Identifier', 'helper' => 'Checksum OK', 'helper-tone' => 'success']);
+    expect($tree['props'])->toMatchArray(['helper' => 'Checksum OK', 'helper_tone' => 'success', 'error' => '']);
+    $tree = collectTextField(['label' => 'Identifier', 'helper' => 'Check this', 'helper-tone' => 'warning', 'error' => 'Invalid identifier']);
+    expect($tree['props'])->toMatchArray(['helper_tone' => 'warning', 'error' => 'Invalid identifier']);
+});
+
+it('rejects unsupported helper tones', function () {
+    collectTextField(['label' => 'Identifier', 'helper-tone' => 'danger']);
+})->throws(InvalidArgumentException::class, 'helper-tone');
+
 it('publishes strict defaults and complete field metadata', function () {
     $tree = collectTextField([
         'label' => 'Email',

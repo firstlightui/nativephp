@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -18,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -46,6 +51,9 @@ fun FirstlightChoiceGroupControl(
     required: Boolean = false,
     accessibilityLabel: String = label,
     accessibilityHint: String = "",
+    tiles: Boolean = false,
+    prefixes: List<String> = emptyList(),
+    supporting: List<String> = emptyList(),
 ) {
     val fieldSemantics = firstlightFieldSemantics(
         accessibilityLabel = accessibilityLabel,
@@ -74,59 +82,102 @@ fun FirstlightChoiceGroupControl(
             )
         }
 
-        Column(modifier = if (multiple) Modifier else Modifier.selectableGroup()) {
-            labels.forEachIndexed { index, optionLabel ->
-                val selected = values.getOrNull(index) in selectedValues
-                val optionEnabled = groupEnabled && enabled.getOrElse(index) { false }
-                val rowModifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
-                    .then(
+        if (tiles) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().then(if (multiple) Modifier else Modifier.selectableGroup()),
+                maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 1 else 2,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                labels.forEachIndexed { index, optionLabel ->
+                    val selected = values.getOrNull(index) in selectedValues
+                    val optionEnabled = groupEnabled && enabled.getOrElse(index) { false }
+                    val selection = if (multiple) Modifier.toggleable(
+                        value = selected, enabled = optionEnabled, role = Role.Checkbox,
+                        onValueChange = { if (!awaitingPublication) onSelection(index) },
+                    ) else Modifier.selectable(
+                        selected = selected, enabled = optionEnabled, role = Role.RadioButton,
+                        onClick = { if (!awaitingPublication) onSelection(index) },
+                    )
+                    OutlinedCard(
+                        modifier = Modifier.weight(1f).defaultMinSize(minHeight = 48.dp).then(selection),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+                        ),
+                    ) {
+                        Column(Modifier.padding(12.dp).alpha(if (optionEnabled) 1f else 0.38f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (multiple) Checkbox(checked = selected, onCheckedChange = null, enabled = optionEnabled)
+                            else RadioButton(selected = selected, onClick = null, enabled = optionEnabled)
+                            prefixes.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let {
+                                Text(it, style = MaterialTheme.typography.labelLarge)
+                            }
+                            Text(optionLabel, style = MaterialTheme.typography.bodyLarge)
+                            supporting.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Column(modifier = if (multiple) Modifier else Modifier.selectableGroup()) {
+                labels.forEachIndexed { index, optionLabel ->
+                    val selected = values.getOrNull(index) in selectedValues
+                    val optionEnabled = groupEnabled && enabled.getOrElse(index) { false }
+                    val rowModifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 48.dp)
+                        .then(
+                            if (multiple) {
+                                Modifier.toggleable(
+                                    value = selected,
+                                    enabled = optionEnabled,
+                                    role = Role.Checkbox,
+                                    onValueChange = {
+                                        if (!awaitingPublication) onSelection(index)
+                                    },
+                                )
+                            } else {
+                                Modifier.selectable(
+                                    selected = selected,
+                                    enabled = optionEnabled,
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        if (!awaitingPublication) onSelection(index)
+                                    },
+                                )
+                            },
+                        )
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+
+                    Row(
+                        modifier = rowModifier,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         if (multiple) {
-                            Modifier.toggleable(
-                                value = selected,
+                            Checkbox(
+                                checked = selected,
+                                onCheckedChange = null,
                                 enabled = optionEnabled,
-                                role = Role.Checkbox,
-                                onValueChange = {
-                                    if (!awaitingPublication) onSelection(index)
-                                },
                             )
                         } else {
-                            Modifier.selectable(
+                            RadioButton(
                                 selected = selected,
+                                onClick = null,
                                 enabled = optionEnabled,
-                                role = Role.RadioButton,
-                                onClick = {
-                                    if (!awaitingPublication) onSelection(index)
-                                },
                             )
-                        },
-                    )
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
-
-                Row(
-                    modifier = rowModifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (multiple) {
-                        Checkbox(
-                            checked = selected,
-                            onCheckedChange = null,
-                            enabled = optionEnabled,
-                        )
-                    } else {
-                        RadioButton(
-                            selected = selected,
-                            onClick = null,
-                            enabled = optionEnabled,
-                        )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            prefixes.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let {
+                                Text(it, color = helperColor, style = MaterialTheme.typography.labelLarge)
+                            }
+                            Text(text = optionLabel, color = labelColor, style = MaterialTheme.typography.bodyLarge)
+                            supporting.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let {
+                                Text(it, color = helperColor, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
                     }
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = optionLabel,
-                        color = labelColor,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
                 }
             }
         }

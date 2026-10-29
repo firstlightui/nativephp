@@ -11,13 +11,15 @@ func firstlightBottomSheetDetent(contentHeight: CGFloat) -> PresentationDetent {
 
 /// SwiftUI sheet sized to its content with a visible drag indicator. Swipe
 /// down and taps on the dimmed background clear `isPresented`.
-struct FirstlightBottomSheetControl<Content: View>: View {
+struct FirstlightBottomSheetControl<Content: View, Footer: View>: View {
     let isPresented: Binding<Bool>
     let accessibilityLabel: String
     let tokens: NativeUITokens
+    @ViewBuilder let footer: () -> Footer
     @ViewBuilder let content: () -> Content
 
     @State private var contentHeight: CGFloat = 0
+    @State private var footerHeight: CGFloat = 0
 
     var body: some View {
         Color.clear
@@ -35,7 +37,12 @@ struct FirstlightBottomSheetControl<Content: View>: View {
                     }
                 }
                 .scrollBounceBehavior(.basedOnSize)
-                .presentationDetents([firstlightBottomSheetDetent(contentHeight: contentHeight)])
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    footer()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { footerHeight = $0 }
+                }
+                .presentationDetents([firstlightBottomSheetDetent(contentHeight: contentHeight + footerHeight)])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(tokens.surface)
                 .accessibilityElement(children: .contain)

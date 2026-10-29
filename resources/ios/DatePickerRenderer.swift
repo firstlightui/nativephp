@@ -36,6 +36,8 @@ struct DatePickerRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let accessibilityHint: String
     let onChangeCallback: Int
+    let variant: String
+    let displayText: String
 
     init(node: NativeUINode) {
         let props = node.props
@@ -58,6 +60,8 @@ struct DatePickerRendererConfiguration: Equatable {
         accessibilityLabel = explicitLabel.isEmpty ? label : explicitLabel
         accessibilityHint = props.getString("a11y_hint")
         onChangeCallback = props.getCallbackId("on_change")
+        variant = props.getString("variant", default: "field")
+        displayText = props.getString("display_text")
     }
 
     var acceptedValue: String? { hasValue ? value : nil }

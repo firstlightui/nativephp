@@ -21,7 +21,6 @@ class ChoiceGroup extends Element
         'selected',
         'loading',
         'tone',
-        'variant',
         'icon',
         'icon-ios',
         'icon-android',
@@ -57,6 +56,13 @@ class ChoiceGroup extends Element
     public function applyAttributes(array $attrs): void
     {
         $this->assertCompatibleAttributes($attrs);
+
+        if (array_key_exists('variant', $attrs)) {
+            if (! is_string($attrs['variant'])) {
+                throw new InvalidArgumentException('Choice Group variant must be a string.');
+            }
+            $this->variant($attrs['variant']);
+        }
 
         if (array_key_exists('options', $attrs)) {
             $this->options((array) $attrs['options']);
@@ -120,6 +126,16 @@ class ChoiceGroup extends Element
         return $this;
     }
 
+    public function variant(string $value): static
+    {
+        if (! in_array($value, ['list', 'tiles'], true)) {
+            throw new InvalidArgumentException('Choice Group variant is not supported; use list or tiles.');
+        }
+        $this->fieldProps['variant'] = $value;
+
+        return $this;
+    }
+
     public function label(string $value): static
     {
         $this->fieldProps['label'] = $value;
@@ -176,7 +192,7 @@ class ChoiceGroup extends Element
 
     protected function resolveProps(CallbackRegistry $registry): array
     {
-        $normalized = OptionNormalizer::normalize($this->rawOptions);
+        $normalized = OptionNormalizer::normalize($this->rawOptions, content: true);
         $selected = $this->normalizeSelectedValues($normalized);
         $this->warnWhenUnlabelled();
 
@@ -202,6 +218,11 @@ class ChoiceGroup extends Element
 
         if ($normalized->items === []) {
             $props['disabled'] = true;
+        }
+
+        if (array_any($normalized->items, fn (NormalizedOption $option): bool => $option->prefix !== '' || $option->supporting !== '')) {
+            $props['option_prefixes'] = array_map(fn (NormalizedOption $option): string => $option->prefix, $normalized->items);
+            $props['option_supporting'] = array_map(fn (NormalizedOption $option): string => $option->supporting, $normalized->items);
         }
 
         return $props;

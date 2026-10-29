@@ -53,6 +53,8 @@ public ?string $appointmentDate = null;
 | `label` | `string` | Visible field label and accessibility-name fallback. |
 | `placeholder` | `string` | Field text while the accepted value is `null`. |
 | `helper` | `string` | Supporting guidance below the field. |
+| `variant` | `field` or `chip` | Full field (default) or compact native picker trigger. |
+| `display-text` | non-empty `string` | App-authored chip caption such as Today. Requires `variant="chip"` and a non-null accepted date; never replaces the bound or spoken date. |
 | `error` | `string` | Validation feedback that replaces helper text. |
 | `required` | `bool` | Communicates required metadata; validation remains in PHP. |
 | `disabled` | `bool` | Prevents opening and confirmation. |
@@ -71,6 +73,14 @@ non-null value. Null bounds are omitted. Firstlight never silently clamps an
 authored value.
 
 ## Events and synchronisation
+
+For a compact date-of-service trigger, use `variant="chip" label="DOS"`.
+Optionally publish `display-text="Today"` only when the app has determined
+that the accepted date is today in its business timezone. Recompute or omit
+that caption when the date changes. Without it, the chip shows the localized
+accepted date. VoiceOver and TalkBack always retain the full localized date.
+iOS uses a native bordered capsule button; Android uses a Material 3
+AssistChip. Both open the existing native calendar and confirmation flow.
 
 `@change` receives a canonical date string only after the user confirms the
 native presentation. In normal use, `native:model` registers this callback and

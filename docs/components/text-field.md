@@ -47,6 +47,7 @@ autofill, selection, and accessibility behaviour of each platform.
 | `label` | `string` | Visible label and accessibility-name fallback. |
 | `placeholder` | `string` | Short example; never a replacement for a label. |
 | `helper` | `string` | Supporting guidance below the field. |
+| `helper-tone` | `neutral`, `success`, or `warning` | Meaning of helper text. Defaults to `neutral`; `error` always takes precedence. |
 | `error` | `string` | Validation feedback that replaces helper text. |
 | `required` | `bool` | Communicates required metadata without performing validation. |
 | `disabled` | `bool` | Prevents focus, editing, and every action. |
@@ -72,6 +73,14 @@ autofill, selection, and accessibility behaviour of each platform.
 | `class` | `string` | External EDGE layout for the complete field. |
 
 ## Events and synchronisation
+
+Use `helper="Checksum OK" helper-tone="success"`,
+`helper="Check this" helper-tone="warning"`, or neutral `helper="From label"`.
+The app supplies meaningful text: colour alone does not announce success or
+warning. Helpers remain guidance, not validation errors or automatic live
+announcements. An `error` replaces the helper and retains native error
+semantics regardless of helper tone. Native semantic colours are adjusted to
+retain readable contrast against the field surface.
 
 `@change` receives the current string. `@submit` flushes any pending change,
 then receives the same current string. An authored interactive trailing icon

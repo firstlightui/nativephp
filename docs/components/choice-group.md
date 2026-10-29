@@ -65,6 +65,7 @@ public array $notifications = ['email'];
 | `options` | `array` | Simple strings, a value-to-label map, or rich option arrays. Labels must contain visible text. |
 | `value` / `native:model` | `string`, `int`, `array`, or `null` | Stable selection. Use a scalar or `null` in single mode and a homogeneous list or `null` in multiple mode. |
 | `multiple` | `bool` | Enables zero-or-more selection. Defaults to `false`. |
+| `variant` | `list` or `tiles` | Full-width rows (default) or an adaptive grid of native selectable tiles. |
 | `label` | `string` | Visible field label. |
 | `helper` | `string` | Supporting text shown when there is no error. |
 | `error` | `string` | Error text and native error semantics; replaces helper text. |
@@ -88,7 +89,8 @@ A map separates stable values from labels and may use all-string or all-integer 
 ['routine' => 'Routine', 'urgent' => 'Urgent']
 ```
 
-Rich options accept only `value`, `label`, and optional `disabled` fields:
+Rich options accept `value`, `label`, optional `disabled`, and optional string
+`prefix` and `supporting` content. These are display text, never selection values:
 
 ```php
 [
@@ -98,6 +100,27 @@ Rich options accept only `value`, `label`, and optional `disabled` fields:
 ```
 
 All option labels must contain visible text. Values in one group must be unique and must all be strings or all be integers.
+
+For a favourites grid, format numbers and fees in the app and keep the bound
+values as stable identifiers:
+
+```blade
+<firstlight:choice-group
+    variant="tiles"
+    :options="[
+        ['value' => 'consult', 'prefix' => '110', 'label' => 'Initial consultation', 'supporting' => '$90.00'],
+        ['value' => 'review', 'prefix' => '116', 'label' => 'Follow-up', 'supporting' => '$45.00'],
+    ]"
+    native:model="favourites"
+    label="Favourites"
+    multiple
+/>
+```
+
+Declare `public array $favourites = [];`. Both variants expose prefix, label,
+and supporting text as one option target. Tiles reflow for larger text rather
+than forcing a fixed column count. They use the same disabled, validation,
+and server-authoritative selection contract as list rows.
 
 In single mode, tapping an unselected row proposes its value. Tapping the selected row does nothing, matching radio-choice semantics. PHP can publish `null` to clear the field programmatically.
 
@@ -141,6 +164,10 @@ fallback.
 ## Platform behaviour
 
 iOS uses native SwiftUI option rows with trailing checkmarks. Android renders one Material 3 radio-row set for single choice and one homogeneous checkbox-row set for multiple choice. Both inherit NativePHP semantic theme tokens and preserve native focus, selection, disabled, and accessibility behaviour without exposing platform-widget props.
+
+The tile variant composes SwiftUI checkmarked buttons in an adaptive grid on
+iOS and Material 3 outlined cards with radio or checkbox indicators on Android.
+Tile geometry remains platform-native; the selection contract is identical.
 
 ## Compatibility
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -61,41 +62,61 @@ internal fun FirstlightDatePickerControl(
 
     val shown = configuration.acceptedValue?.let { formatDateForDisplay(it, configuration.locale) }.orEmpty()
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = shown,
-            onValueChange = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 48.dp)
-                .clearAndSetSemantics {},
-            enabled = enabled,
-            readOnly = true,
-            singleLine = true,
-            isError = configuration.error.isNotEmpty(),
-            label = configuration.label.takeIf(String::isNotEmpty)?.let { label ->
-                { Text(if (configuration.required) "$label *" else label) }
-            },
-            placeholder = configuration.placeholder.takeIf(String::isNotEmpty)?.let { text ->
-                { Text(text) }
-            },
-            supportingText = supporting.takeIf(String::isNotEmpty)?.let { text ->
-                { Text(text, color = if (configuration.error.isEmpty()) tokens.onSurfaceVariant else tokens.destructive) }
-            },
-            trailingIcon = { MaterialIcon("calendar_month", null) },
-        )
+    if (configuration.variant == "chip") {
+        androidx.compose.foundation.layout.Column(modifier) {
+            AssistChip(
+                onClick = { onOpen() }, enabled = enabled,
+                label = { Text(listOf(
+                    configuration.label + if (configuration.required) " *" else "",
+                    if (configuration.acceptedValue != null) configuration.displayText.ifEmpty { shown } else configuration.placeholder,
+                ).filter(String::isNotBlank).joinToString(" ")) },
+                trailingIcon = { MaterialIcon("arrow_drop_down", null) },
+                modifier = Modifier.defaultMinSize(minHeight = 48.dp).semantics {
+                    contentDescription = description
+                    stateDescription = shown.ifEmpty { configuration.placeholder }
+                    if (configuration.error.isNotEmpty()) error(configuration.error)
+                },
+            )
+            if (supporting.isNotEmpty()) Text(supporting, style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                color = if (configuration.error.isEmpty()) tokens.onSurfaceVariant else tokens.destructive)
+        }
+    } else {
+        Box(modifier = modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = shown,
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp)
+                    .clearAndSetSemantics {},
+                enabled = enabled,
+                readOnly = true,
+                singleLine = true,
+                isError = configuration.error.isNotEmpty(),
+                label = configuration.label.takeIf(String::isNotEmpty)?.let { label ->
+                    { Text(if (configuration.required) "$label *" else label) }
+                },
+                placeholder = configuration.placeholder.takeIf(String::isNotEmpty)?.let { text ->
+                    { Text(text) }
+                },
+                supportingText = supporting.takeIf(String::isNotEmpty)?.let { text ->
+                    { Text(text, color = if (configuration.error.isEmpty()) tokens.onSurfaceVariant else tokens.destructive) }
+                },
+                trailingIcon = { MaterialIcon("calendar_month", null) },
+            )
 
-        Box(
-            Modifier
-                .matchParentSize()
-                .clickable(enabled = enabled, role = Role.Button) { onOpen() }
-                .semantics {
-                if (description.isNotEmpty()) contentDescription = description
-                stateDescription = shown.ifEmpty { configuration.placeholder }
-                if (!enabled) disabled()
-                if (configuration.error.isNotEmpty()) error(configuration.error)
-            },
-        )
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clickable(enabled = enabled, role = Role.Button) { onOpen() }
+                    .semantics {
+                        if (description.isNotEmpty()) contentDescription = description
+                        stateDescription = shown.ifEmpty { configuration.placeholder }
+                        if (!enabled) disabled()
+                        if (configuration.error.isNotEmpty()) error(configuration.error)
+                    },
+            )
+        }
     }
 
     if (state.isPresented) {

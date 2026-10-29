@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -68,7 +69,7 @@ fun FirstlightSelectControl(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .then(if (configuration.variant == "chip") Modifier else Modifier.fillMaxWidth())
             .semantics {
                 if (fieldSemantics.contentDescription.isNotEmpty()) {
                     contentDescription = fieldSemantics.contentDescription
@@ -78,7 +79,7 @@ fun FirstlightSelectControl(
             },
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (configuration.label.isNotEmpty()) {
+        if (configuration.label.isNotEmpty() && configuration.variant != "chip") {
             Text(
                 text = if (configuration.required) "${configuration.label} *" else configuration.label,
                 color = tokens.onSurface,
@@ -98,37 +99,50 @@ fun FirstlightSelectControl(
                 }
             },
         ) {
-            OutlinedTextField(
-                value = selectedLabel.orEmpty(),
-                onValueChange = {},
-                readOnly = true,
-                enabled = !configuration.disabled,
-                placeholder = if (configuration.placeholder.isNotEmpty()) {
-                    { Text(configuration.placeholder) }
-                } else {
-                    null
-                },
-                trailingIcon = {
-                    if (configuration.searchEnabled) {
-                        MaterialIcon("search", null)
+            if (configuration.variant == "chip") {
+                AssistChip(
+                    onClick = { if (configuration.searchEnabled) dialogVisible = true else expanded = true },
+                    enabled = !configuration.disabled,
+                    label = { Text(listOf(
+                        configuration.label + if (configuration.required) " *" else "",
+                        selectedLabel ?: configuration.placeholder,
+                    ).filter(String::isNotBlank).joinToString(" ")) },
+                    trailingIcon = { MaterialIcon(if (configuration.searchEnabled) "search" else "arrow_drop_down", null) },
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).defaultMinSize(minHeight = 48.dp),
+                )
+            } else {
+                OutlinedTextField(
+                    value = selectedLabel.orEmpty(),
+                    onValueChange = {},
+                    readOnly = true,
+                    enabled = !configuration.disabled,
+                    placeholder = if (configuration.placeholder.isNotEmpty()) {
+                        { Text(configuration.placeholder) }
                     } else {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                    .defaultMinSize(minHeight = 48.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = tokens.onSurface,
-                    unfocusedTextColor = tokens.onSurface,
-                    focusedBorderColor = if (configuration.error.isEmpty()) tokens.primary else tokens.destructive,
-                    unfocusedBorderColor = if (configuration.error.isEmpty()) tokens.outline else tokens.destructive,
-                    focusedPlaceholderColor = tokens.onSurfaceVariant,
-                    unfocusedPlaceholderColor = tokens.onSurfaceVariant,
-                    disabledBorderColor = tokens.outline.copy(alpha = 0.5f),
-                ),
-            )
+                        null
+                    },
+                    trailingIcon = {
+                        if (configuration.searchEnabled) {
+                            MaterialIcon("search", null)
+                        } else {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        .defaultMinSize(minHeight = 48.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = tokens.onSurface,
+                        unfocusedTextColor = tokens.onSurface,
+                        focusedBorderColor = if (configuration.error.isEmpty()) tokens.primary else tokens.destructive,
+                        unfocusedBorderColor = if (configuration.error.isEmpty()) tokens.outline else tokens.destructive,
+                        focusedPlaceholderColor = tokens.onSurfaceVariant,
+                        unfocusedPlaceholderColor = tokens.onSurfaceVariant,
+                        disabledBorderColor = tokens.outline.copy(alpha = 0.5f),
+                    ),
+                )
+            }
 
             if (!configuration.searchEnabled) {
                 ExposedDropdownMenu(

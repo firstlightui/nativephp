@@ -48,6 +48,8 @@ proposal is being handled.
 | `max` | Optional inclusive canonical upper bound. |
 | `label` | Visible field label. |
 | `placeholder` | Trigger text while the accepted value is `null`. |
+| `variant` | `field` (default) or `chip`; only changes the closed trigger. |
+| `display-text` | Nonblank app-authored chip caption. Requires a chip with an accepted date, never changes canonical or spoken date. |
 | `helper` | Supporting guidance. |
 | `error` | Visible and accessible validation feedback; replaces helper visually. |
 | `required` | Communicates required metadata. It does not invent client-side validation or prevent a null accepted value. |
@@ -60,7 +62,7 @@ proposal is being handled.
 
 Date Picker has no public mode, time, datetime, picker-style, display-style,
 hour-format, clearable, title, confirm-label, cancel-label, icon, range,
-loading, tone, variant, size, or per-control visual escape prop.
+loading, tone, size, or per-control visual escape prop.
 
 ## Values, null, and bounds
 
@@ -131,6 +133,12 @@ The trigger and actions retain at least a 44-point iOS or 48-dp Android
 interaction target. Labels and supporting text reflow at accessibility sizes.
 Both renderers support VoiceOver or TalkBack, Dynamic Type or font scaling,
 dark mode, increased contrast, right-to-left layout, and Reduced Motion.
+
+Chip captions such as Today are owned and recomputed by PHP in the app's
+business timezone. The screen-reader value remains the full localized
+accepted date, even when the visible caption is abbreviated. iOS uses a
+bordered capsule trigger and Android an AssistChip; the calendar draft,
+Cancel/Confirm flow and bounds are unchanged.
 
 ## Platform expression
 

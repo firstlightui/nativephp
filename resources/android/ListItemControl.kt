@@ -78,6 +78,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.semantics.stateDescription
 import coil3.compose.AsyncImage
 import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
@@ -87,7 +89,8 @@ enum class FirstlightListItemLeadingType(val wireName: String) {
     None(""),
     Icon("icon"),
     Avatar("avatar"),
-    Monogram("monogram");
+    Monogram("monogram"),
+    Label("label");
 
     companion object {
         fun fromWire(value: String): FirstlightListItemLeadingType = entries.firstOrNull {
@@ -99,7 +102,8 @@ enum class FirstlightListItemLeadingType(val wireName: String) {
 enum class FirstlightListItemTrailingType(val wireName: String) {
     None(""),
     Icon("icon"),
-    Text("text");
+    Text("text"),
+    Status("status");
 
     companion object {
         fun fromWire(value: String): FirstlightListItemTrailingType = entries.firstOrNull {
@@ -245,7 +249,11 @@ private fun FirstlightListItemContent(
     onAction: (Int) -> Unit,
 ) {
     val description = firstlightListItemDescription(
-        headline = configuration.headline,
+        headline = listOf(
+            configuration.leadingValue.takeIf { configuration.leadingType == FirstlightListItemLeadingType.Label }.orEmpty(),
+            configuration.headline,
+            configuration.trailingValue.takeIf { configuration.trailingType == FirstlightListItemTrailingType.Status }.orEmpty(),
+        ).filter(String::isNotEmpty).joinToString(". "),
         supporting = configuration.supporting,
         accessibilityLabel = configuration.accessibilityLabel,
         accessibilityHint = configuration.accessibilityHint,
@@ -286,6 +294,9 @@ private fun FirstlightListItemContent(
         )
         .clearAndSetSemantics {
             contentDescription = description
+            if (configuration.state != "normal" && configuration.stateLabel.isNotEmpty()) {
+                stateDescription = configuration.stateLabel
+            }
             role = Role.Button
             if (!enabled) {
                 disabled()
@@ -366,29 +377,37 @@ private fun FirstlightListItemRow(
     tokens: NativeUITokens,
     isDark: Boolean,
 ) {
+    val stackedStatus = configuration.trailingType == FirstlightListItemTrailingType.Status && LocalDensity.current.fontScale >= 1.5f
     ListItem(
         headlineContent = {
             Text(
                 text = configuration.headline,
                 style = MaterialTheme.typography.bodyLarge,
+                textDecoration = if (configuration.state == "pending-removal") TextDecoration.LineThrough else null,
             )
         },
         modifier = Modifier.fillMaxWidth(),
-        supportingContent = if (configuration.supporting.isNotEmpty()) {
+        supportingContent = if (configuration.supporting.isNotEmpty() || stackedStatus) {
             {
-                Text(
-                    text = configuration.supporting,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (configuration.supporting.isNotEmpty()) {
+                        Text(
+                            text = configuration.supporting,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textDecoration = if (configuration.state == "pending-removal") TextDecoration.LineThrough else null,
+                        )
+                    }
+                    if (stackedStatus) firstlightListItemTrailingContent(configuration, tokens, isDark)?.invoke()
+                }
             }
         } else {
             null
         },
         leadingContent = firstlightListItemLeadingContent(configuration, tokens),
-        trailingContent = firstlightListItemTrailingContent(configuration),
+        trailingContent = if (stackedStatus) null else firstlightListItemTrailingContent(configuration, tokens, isDark),
         colors = ListItemDefaults.colors(
             containerColor = tokens.surface,
-            headlineColor = tokens.onSurface,
+            headlineColor = if (configuration.state == "provisional") tokens.onSurfaceVariant else tokens.onSurface,
             supportingColor = tokens.onSurfaceVariant,
             leadingIconColor = firstlightListItemIconColor(
                 configuration.leadingIconColor, configuration.leadingIconTone,
@@ -407,6 +426,9 @@ private fun firstlightListItemLeadingContent(
     tokens: NativeUITokens,
 ): (@Composable () -> Unit)? = when (configuration.leadingType) {
     FirstlightListItemLeadingType.None -> null
+    FirstlightListItemLeadingType.Label -> ({
+        Text(configuration.leadingValue, style = MaterialTheme.typography.labelLarge, color = tokens.onSurfaceVariant)
+    })
     FirstlightListItemLeadingType.Icon -> ({
         MaterialIcon(
             name = configuration.leadingValue,
@@ -445,8 +467,17 @@ private fun firstlightListItemLeadingContent(
 
 private fun firstlightListItemTrailingContent(
     configuration: ListItemRendererConfiguration,
+    tokens: NativeUITokens,
+    isDark: Boolean,
 ): (@Composable () -> Unit)? = when (configuration.trailingType) {
     FirstlightListItemTrailingType.None -> null
+    FirstlightListItemTrailingType.Status -> ({
+        FirstlightStatusLabelControl(
+            label = configuration.trailingValue,
+            colors = resolveStatusLabelTokenColors(tokens, StatusLabelTone.fromWire(configuration.statusTone), configuration.warningColors, isDark),
+            accessibilityDescription = configuration.trailingValue,
+        )
+    })
     FirstlightListItemTrailingType.Icon -> ({
         MaterialIcon(
             name = configuration.trailingValue,

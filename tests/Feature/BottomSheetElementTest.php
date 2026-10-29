@@ -73,6 +73,25 @@ it('requires dismiss for PHP reconciliation', function () {
     collectBottomSheet(['visible' => true]);
 })->throws(InvalidArgumentException::class, 'requires `@dismiss`');
 
+it('reserves the final authored child as a pinned footer without moving its callbacks', function () {
+    $body = StatusLabel::make('Bill items');
+    $footer = StatusLabel::make('Total $120');
+    $tree = collectBottomSheet(['pinned-footer' => true, '_dismiss' => 'closeSheet'], [$body, $footer]);
+
+    expect($tree['props']['pinned_footer'])->toBeTrue()
+        ->and(array_column(array_column($tree['children'], 'props'), 'label'))
+        ->toBe(['Bill items', 'Total $120']);
+});
+
+it('requires body and footer children when pinning a footer', function () {
+    collectBottomSheet(['pinned-footer' => true, '_dismiss' => 'closeSheet'], [StatusLabel::make('Only body')]);
+})->throws(InvalidArgumentException::class, 'body and a final footer child');
+
+it('rejects a nonboolean pinned footer', function (mixed $value) {
+    collectBottomSheet(['pinned-footer' => $value, '_dismiss' => 'closeSheet']);
+})->with(['string' => ['true'], 'null' => [null], 'integer' => [1]])
+    ->throws(InvalidArgumentException::class, 'must be a boolean');
+
 it('rejects detents and modelled values from the shared API', function (string $attribute, mixed $value) {
     collectBottomSheet([$attribute => $value, '_dismiss' => 'closeSheet']);
 })->with([

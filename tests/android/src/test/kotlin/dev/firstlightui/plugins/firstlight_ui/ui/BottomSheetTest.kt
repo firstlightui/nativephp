@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.nativephp.mobile.ui.nativerender.GenericProps
@@ -22,6 +23,30 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h892dp")
 class BottomSheetTest {
+    @Test
+    fun `oversized content scrolls while the final footer stays visible`() = runComposeUiTest {
+        val children = (2..25).map { child(it, "Bill item $it", 64) } + child(26, "Total and Save", 96)
+        setContent {
+            MaterialTheme {
+                FirstlightBottomSheetRenderer.Render(sheetNode(children = children, pinnedFooter = true), Modifier)
+            }
+        }
+        onNodeWithText("Total and Save").assertIsDisplayed()
+        val before = onNodeWithText("Total and Save").getBoundsInRoot()
+        onNodeWithText("Bill item 25").performScrollTo().assertIsDisplayed()
+        assertEquals(before, onNodeWithText("Total and Save").getBoundsInRoot())
+    }
+
+    @Test
+    fun `oversized content scrolls without a footer`() = runComposeUiTest {
+        setContent {
+            MaterialTheme {
+                FirstlightBottomSheetRenderer.Render(sheetNode(children = (2..25).map { child(it, "Item $it", 64) }), Modifier)
+            }
+        }
+        onNodeWithText("Item 25").performScrollTo().assertIsDisplayed()
+    }
+
     @Test
     fun `content taller than half the screen opens fully expanded`() = runComposeUiTest {
         // Tipoff's settings sheet: title, switch, three selects, then a large button.
@@ -77,13 +102,14 @@ class BottomSheetTest {
         onNodeWithText("Filters").assertDoesNotExist()
     }
 
-    private fun sheetNode(visible: Boolean = true, children: List<NativeUINode> = emptyList()) = NativeUINode(
+    private fun sheetNode(visible: Boolean = true, children: List<NativeUINode> = emptyList(), pinnedFooter: Boolean = false) = NativeUINode(
         id = 1,
         type = "firstlight.bottom-sheet",
         props = GenericProps(mapOf(
             "visible" to visible,
             "a11y_label" to "Filters sheet",
             "on_dismiss" to 31,
+            "pinned_footer" to pinnedFooter,
         )),
         children = children,
     )

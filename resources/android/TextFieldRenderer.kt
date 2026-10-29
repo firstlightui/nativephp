@@ -78,6 +78,8 @@ data class TextFieldRendererConfiguration(
     val onChangeCallback: Int,
     val onSubmitCallback: Int,
     val onPressCallback: Int,
+    val helperTone: String = "neutral",
+    val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -113,6 +115,8 @@ data class TextFieldRendererConfiguration(
         onChangeCallback = node.props.getCallbackId("on_change"),
         onSubmitCallback = node.props.getCallbackId("on_submit"),
         onPressCallback = node.onPress,
+        helperTone = node.props.getString("helper_tone", "neutral"),
+        warningColors = FirstlightWarningColors(node),
     )
 }
 

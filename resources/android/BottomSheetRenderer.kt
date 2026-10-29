@@ -13,12 +13,14 @@ data class BottomSheetRendererConfiguration(
     val visible: Boolean,
     val accessibilityLabel: String,
     val dismissCallback: Int,
+    val pinnedFooter: Boolean = false,
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
         visible = node.props.getBool("visible"),
         accessibilityLabel = node.props.getString("a11y_label"),
         dismissCallback = node.props.getCallbackId("on_dismiss"),
+        pinnedFooter = node.props.getBool("pinned_footer"),
     )
 }
 
@@ -42,8 +44,12 @@ object FirstlightBottomSheetRenderer {
                 }
             },
             modifier = modifier,
+            footer = {
+                if (configuration.pinnedFooter) node.children.lastOrNull()?.let { RenderNode(it) }
+            },
         ) {
-            node.children.forEach { RenderNode(it) }
+            val body = if (configuration.pinnedFooter) node.children.dropLast(1) else node.children
+            body.forEach { RenderNode(it) }
         }
     }
 }
