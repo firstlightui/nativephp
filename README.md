@@ -1,3 +1,7 @@
+<a href="https://firstlightui.dev">
+  <img src="https://raw.githubusercontent.com/firstlightui/firstlight-public/main/public/firstlight-icon.png" alt="Firstlight UI sunrise logo" width="96" height="96">
+</a>
+
 # Firstlight UI
 
 The app-shell layer for NativePHP. `composer require firstlightui/nativephp` plus [Laravel Boost](https://laravel.com/docs/boost) gives you, or your coding agent, what a standard forms app needs: lists and detail, search, forms with Laravel validation, settings, sheets and dialogs, and feedback.
@@ -148,6 +152,20 @@ Firstlight stamps each complete screen response with a process-wide increasing r
 ## Documentation
 
 Start with a [recipe](docs/how-to/build-a-list-detail-flow.md), the [documentation index](docs/index.md), or [firstlightui.dev](https://firstlightui.dev). Design rules live in the [Firstlight constitution](Constitution.md).
+
+## About Firstlight UI
+
+[Firstlight UI](https://firstlightui.dev) builds open-source tools for Laravel developers creating native iOS and Android apps. Our focus is everyday application screens: bringing familiar Laravel validation, authorization, and testing to genuine platform controls, with accessibility and coding-agent guidance built into the package.
+
+The project spans three repositories:
+
+- **[NativePHP package](https://github.com/firstlightui/nativephp)** — the Blade API, Laravel extensions, SwiftUI and Jetpack Compose renderers, and documentation.
+- **[Showcase app](https://github.com/firstlightui/showcase)** — runnable examples and recipes, with Pest tests that exercise the screens.
+- **[Public website](https://github.com/firstlightui/firstlight-public)** — the [documentation](https://firstlightui.dev/docs) and [component gallery](https://firstlightui.dev/components), including screenshots from both platforms.
+
+Firstlight builds on [NativePHP](https://nativephp.com) and the SuperNative foundation created by [Shane Rosenthal](https://github.com/shanerbaner82) and [Simon Hamp](https://github.com/simonhamp). NativePHP supplies navigation chrome and Mobile UI supplies layout; Firstlight adds the controls and Laravel screen behaviour within them.
+
+For bugs and feature requests, [open an issue](https://github.com/firstlightui/nativephp/issues). For other enquiries, email [team@firstlightui.dev](mailto:team@firstlightui.dev).
 
 ## Licence
 
