@@ -91,7 +91,7 @@ struct FirstlightSelectField: View {
             } label: {
                 triggerLabel
             }
-            .modifier(FirstlightPickerTriggerStyle(compact: chip))
+            .buttonStyle(.plain)
             .disabled(disabled)
             .accessibilityLabel(groupAccessibilityLabel)
             .accessibilityValue(selectedLabel ?? placeholder)
@@ -113,7 +113,7 @@ struct FirstlightSelectField: View {
             } label: {
                 triggerLabel
             }
-            .modifier(FirstlightPickerTriggerStyle(compact: chip))
+            .buttonStyle(.plain)
             .disabled(disabled)
             .accessibilityLabel(groupAccessibilityLabel)
             .accessibilityValue(selectedLabel ?? placeholder)
@@ -121,8 +121,9 @@ struct FirstlightSelectField: View {
         }
     }
 
+    @ViewBuilder
     private var triggerLabel: some View {
-        HStack(spacing: 12) {
+        let row = HStack(spacing: chip ? 8 : 12) {
             if chip && !label.isEmpty {
                 Text(required ? "\(label) *" : label).foregroundStyle(tokens.secondary)
             }
@@ -138,14 +139,20 @@ struct FirstlightSelectField: View {
                 .foregroundStyle(tokens.secondary)
                 .accessibilityHidden(true)
         }
-        .padding(.horizontal, chip ? 0 : 12)
-        .padding(.vertical, chip ? 0 : 10)
-        .frame(maxWidth: chip ? nil : .infinity, minHeight: 44, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(error.isEmpty ? (chip ? .clear : tokens.outline) : tokens.error, lineWidth: 1)
-        )
-        .contentShape(Rectangle())
+
+        if chip {
+            row.modifier(FirstlightPickerChipChrome(error: error.isEmpty ? nil : tokens.error))
+        } else {
+            row
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(error.isEmpty ? tokens.outline : tokens.error, lineWidth: 1)
+                )
+                .contentShape(Rectangle())
+        }
     }
 
     private var searchableSheet: some View {

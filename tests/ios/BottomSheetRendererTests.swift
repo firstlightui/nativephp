@@ -72,6 +72,34 @@ final class BottomSheetRendererTests: XCTestCase {
         XCTAssertEqual(firstlightBottomSheetDetent(contentHeight: 456.2), .height(457))
     }
 
+    func testPinnedFooterKeepsItsIntrinsicHeightAndLeavesTheBodyScrollable() throws {
+        // Mobile UI columns accept the whole proposed height, like this footer.
+        let layout = FirstlightBottomSheetLayout(
+            footer: {
+                VStack { Text("Bill") }
+                    .frame(maxHeight: .infinity)
+            },
+            content: {
+                ForEach(0..<40, id: \.self) { Text("Row \($0)").frame(height: 44) }
+            }
+        )
+        let host = UIHostingController(rootView: layout)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 600))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+
+        let scrollView = try XCTUnwrap(firstScrollView(in: host.view))
+        // The footer is one line of text; the body must keep the rest.
+        XCTAssertGreaterThan(scrollView.frame.height, 450)
+        XCTAssertGreaterThan(scrollView.contentSize.height, scrollView.bounds.height)
+    }
+
+    private func firstScrollView(in view: UIView) -> UIScrollView? {
+        if let scrollView = view as? UIScrollView { return scrollView }
+        return view.subviews.lazy.compactMap(firstScrollView(in:)).first
+    }
+
     func testRendererCompilesAgainstNativePHPContractShims() {
         let renderer = BottomSheetRenderer(
             node: node(children: [child(id: 2, label: "Filters", height: 120)]),

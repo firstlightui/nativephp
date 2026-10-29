@@ -138,7 +138,7 @@ private fun extensionContent(dark: Boolean) {
                 FirstlightSelectControl(selectConfiguration(), false, {}, tokens = tokens)
                 val date = DatePickerRendererState(dateNode())
                 FirstlightDatePickerControl(date, tokens, date::open, date::cancel, date::userSelected, {})
-                tiles(listOf("consult"), false) {}
+                tiles(listOf("consult"), false, tokens.primary) {}
                 helperField("success", "", dark)
                 helperField("warning", "", dark)
                 helperField("neutral", "Invalid identifier", dark)
@@ -167,13 +167,19 @@ private fun dateNode() = NativeUINode(id = 7, props = GenericProps(mapOf(
 )))
 
 @Composable
-private fun tiles(selected: List<String>, pending: Boolean, onSelection: (Int) -> Unit) {
+private fun tiles(
+    selected: List<String>,
+    pending: Boolean,
+    selectedColor: androidx.compose.ui.graphics.Color = NativeUITheme.light.primary,
+    onSelection: (Int) -> Unit,
+) {
     FirstlightChoiceGroupControl(
         labels = listOf("Initial consultation", "Follow-up", "Unavailable"),
         values = listOf("consult", "review", "disabled"), enabled = listOf(true, true, false),
         selectedValues = selected, multiple = true, groupEnabled = true, awaitingPublication = pending,
         label = "Favourites", helper = "", error = null, onSelection = onSelection,
         tiles = true, prefixes = listOf("110", "116", "119"), supporting = listOf("$90.00", "$45.00", "$65.00"),
+        selectedColor = selectedColor,
     )
 }
 

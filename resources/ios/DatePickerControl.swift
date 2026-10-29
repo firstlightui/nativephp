@@ -19,30 +19,39 @@ struct FirstlightDatePickerControl: View {
             Button {
                 state.open()
             } label: {
-                HStack(spacing: 8) {
-                    if configuration.variant == "chip" && !configuration.label.isEmpty {
+                let chip = configuration.variant == "chip"
+                let row = HStack(spacing: 8) {
+                    if chip && !configuration.label.isEmpty {
                         Text(configuration.required ? "\(configuration.label) *" : configuration.label)
                             .foregroundStyle(tokens.onSurfaceVariant)
                     }
                     Text(triggerText)
                         .foregroundStyle(configuration.acceptedValue == nil ? tokens.onSurfaceVariant : tokens.onSurface)
-                        .frame(maxWidth: configuration.variant == "chip" ? nil : .infinity, alignment: .leading)
+                        .frame(maxWidth: chip ? nil : .infinity, alignment: .leading)
 
                     Image(systemName: "calendar")
                         .foregroundStyle(tokens.onSurfaceVariant)
                         .accessibilityHidden(true)
                 }
-                .padding(.horizontal, configuration.variant == "chip" ? 0 : 12)
-                .frame(minHeight: 44)
-                .background(configuration.variant == "chip" ? Color.clear : tokens.surfaceVariant)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(configuration.error.isEmpty ? Color.clear : tokens.destructive, lineWidth: 1)
+
+                if chip {
+                    row.modifier(FirstlightPickerChipChrome(
+                        error: configuration.error.isEmpty ? nil : tokens.destructive
+                    ))
+                } else {
+                    row
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .background(tokens.surfaceVariant)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .stroke(configuration.error.isEmpty ? Color.clear : tokens.destructive, lineWidth: 1)
+                        }
+                        .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
             }
-            .modifier(FirstlightPickerTriggerStyle(compact: configuration.variant == "chip"))
+            .buttonStyle(.plain)
             .disabled(!configuration.isInteractive)
             .accessibilityLabel(Text(
                 configuration.required

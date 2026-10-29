@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- iOS Bottom Sheet: with `pinned-footer`, the footer now keeps its own height pinned at the bottom of the sheet. Before, the Mobile UI column inside the footer took the full proposed height, squeezing the body's scroll view to a sliver so only the footer showed, at the top of the sheet. The detent still covers both body and footer.
+- iOS Select and Date Picker: `variant="chip"` draws its own filled capsule, so select chips no longer render without their fill (the `Menu` trigger did not reliably adopt the bordered style, most visibly on a sheet's first open). Chips also keep their intrinsic width instead of wrapping letter by letter when a row is too narrow.
+- Android Choice Group: selected `variant="tiles"` tiles, and the radio and checkbox marks in both variants, use the theme's `primary` colour, as on iOS, instead of Material's default lavender `secondaryContainer`.
+- Callout: the `action-label` action is drawn as an outlined, tone-tinted button on iOS and Android instead of bold text that did not look tappable.
+- Android Select: the primary focus outline shows only while the menu or search dialog is open, instead of staying on the field after it closes.
+
+### Known issues
+
+- Mobile UI iOS ignores `flex-wrap` on `native:row`, so a row of chips stays on one line and overflows rather than wrapping. This is upstream: `nativephp/mobile` 4.6.1 `FlexContainer.swift` stores `wrap` but never reads it (Android wraps). Firstlight chips now refuse to shrink below their intrinsic width.
+
 ## 1.0.0-RC10 - 2026-10-29
 
 ### Added

@@ -15,7 +15,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -24,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error as semanticsError
@@ -48,6 +52,7 @@ fun FirstlightChoiceGroupControl(
     labelColor: Color = MaterialTheme.colorScheme.onSurface,
     helperColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     errorColor: Color = MaterialTheme.colorScheme.error,
+    selectedColor: Color = MaterialTheme.colorScheme.primary,
     required: Boolean = false,
     accessibilityLabel: String = label,
     accessibilityHint: String = "",
@@ -55,6 +60,11 @@ fun FirstlightChoiceGroupControl(
     prefixes: List<String> = emptyList(),
     supporting: List<String> = emptyList(),
 ) {
+    // Selection follows the theme's primary token, as on iOS, rather than the
+    // Material scheme's secondaryContainer, which apps never theme.
+    val radioColors = RadioButtonDefaults.colors(selectedColor = selectedColor)
+    val checkboxColors = CheckboxDefaults.colors(checkedColor = selectedColor)
+    val surface = MaterialTheme.colorScheme.surface
     val fieldSemantics = firstlightFieldSemantics(
         accessibilityLabel = accessibilityLabel,
         accessibilityHint = accessibilityHint,
@@ -102,12 +112,13 @@ fun FirstlightChoiceGroupControl(
                     OutlinedCard(
                         modifier = Modifier.weight(1f).defaultMinSize(minHeight = 48.dp).then(selection),
                         colors = CardDefaults.outlinedCardColors(
-                            containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+                            containerColor = if (selected) selectedColor.copy(alpha = 0.12f).compositeOver(surface) else surface,
                         ),
+                        border = if (selected) BorderStroke(1.dp, selectedColor) else CardDefaults.outlinedCardBorder(optionEnabled),
                     ) {
                         Column(Modifier.padding(12.dp).alpha(if (optionEnabled) 1f else 0.38f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (multiple) Checkbox(checked = selected, onCheckedChange = null, enabled = optionEnabled)
-                            else RadioButton(selected = selected, onClick = null, enabled = optionEnabled)
+                            if (multiple) Checkbox(checked = selected, onCheckedChange = null, enabled = optionEnabled, colors = checkboxColors)
+                            else RadioButton(selected = selected, onClick = null, enabled = optionEnabled, colors = radioColors)
                             prefixes.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let {
                                 Text(it, style = MaterialTheme.typography.labelLarge)
                             }
@@ -159,12 +170,14 @@ fun FirstlightChoiceGroupControl(
                                 checked = selected,
                                 onCheckedChange = null,
                                 enabled = optionEnabled,
+                                colors = checkboxColors,
                             )
                         } else {
                             RadioButton(
                                 selected = selected,
                                 onClick = null,
                                 enabled = optionEnabled,
+                                colors = radioColors,
                             )
                         }
                         Spacer(Modifier.width(12.dp))

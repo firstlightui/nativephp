@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -110,10 +110,16 @@ fun FirstlightCalloutControl(
                 )
 
                 if (configuration.hasAction) {
-                    TextButton(
+                    // An outlined tone-coloured button reads as tappable; a
+                    // borderless TextButton looked like bold message text.
+                    OutlinedButton(
                         onClick = onPress,
-                        modifier = Modifier.heightIn(min = firstlightCalloutActionMinimumHeight),
-                        colors = ButtonDefaults.textButtonColors(contentColor = colors.foreground),
+                        modifier = Modifier.padding(top = 8.dp).heightIn(min = firstlightCalloutActionMinimumHeight),
+                        border = BorderStroke(1.dp, colors.foreground.copy(alpha = 0.6f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = colors.foreground.copy(alpha = 0.12f),
+                            contentColor = colors.foreground,
+                        ),
                     ) {
                         Text(
                             text = configuration.actionLabel,

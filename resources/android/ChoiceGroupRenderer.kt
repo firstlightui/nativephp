@@ -152,6 +152,7 @@ object ChoiceGroupRenderer {
             labelColor = tokens.onSurface,
             helperColor = tokens.onSurfaceVariant,
             errorColor = tokens.destructive,
+            selectedColor = tokens.primary,
             required = rendererState.configuration.required,
             accessibilityLabel = rendererState.configuration.accessibilityLabel,
             accessibilityHint = rendererState.configuration.accessibilityHint,

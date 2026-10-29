@@ -135,7 +135,14 @@ fun FirstlightSelectControl(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = tokens.onSurface,
                         unfocusedTextColor = tokens.onSurface,
-                        focusedBorderColor = if (configuration.error.isEmpty()) tokens.primary else tokens.destructive,
+                        // Material keeps the read-only anchor focused after the
+                        // menu or search dialog closes; emphasise the outline
+                        // only while a picker is actually open.
+                        focusedBorderColor = when {
+                            configuration.error.isNotEmpty() -> tokens.destructive
+                            expanded || dialogVisible -> tokens.primary
+                            else -> tokens.outline
+                        },
                         unfocusedBorderColor = if (configuration.error.isEmpty()) tokens.outline else tokens.destructive,
                         focusedPlaceholderColor = tokens.onSurfaceVariant,
                         unfocusedPlaceholderColor = tokens.onSurfaceVariant,

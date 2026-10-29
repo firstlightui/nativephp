@@ -77,15 +77,22 @@ struct FirstlightCalloutControl: View {
                     .accessibilityHint(Text(configuration.accessibilityHint))
 
                 if configuration.hasAction {
+                    // A tone-tinted capsule reads as tappable; plain bold
+                    // text in the callout did not.
                     Button(action: onPress) {
                         Text(configuration.actionLabel)
                             .font(.callout.weight(.semibold))
+                            .foregroundStyle(foreground)
+                            .padding(.horizontal, 14)
                             .frame(minHeight: firstlightCalloutActionMinimumHeight)
-                            .contentShape(Rectangle())
+                            .background(Capsule(style: .continuous).fill(foreground.opacity(0.12)))
+                            .overlay(Capsule(style: .continuous).stroke(foreground.opacity(0.6), lineWidth: 1))
+                            .contentShape(Capsule(style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(foreground)
+                    .padding(.top, 4)
                     .accessibilityLabel(Text(configuration.actionLabel))
+                    .accessibilityAddTraits(.isButton)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
