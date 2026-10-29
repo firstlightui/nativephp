@@ -63,11 +63,10 @@ bin/check-docs --development
 
 ### iOS snapshot references
 
-Each iOS runtime rasterises glyphs and system chrome slightly differently, so iOS snapshot references are kept per iOS major version. Every snapshot assertion goes through `assertFirstlightSnapshot` in `tests/ios/FirstlightSnapshot.swift`, which reads and writes the set for the running simulator:
+Each iOS runtime rasterises glyphs and system chrome slightly differently, so iOS snapshot references are kept per iOS major version. Only iOS 27 is a supported snapshot runtime; the iOS 26 set was retired. Every snapshot assertion goes through `assertFirstlightSnapshot` in `tests/ios/FirstlightSnapshot.swift`, which reads and writes the set for the running simulator:
 
 | Runtime | Reference set | Reference simulator |
 | --- | --- | --- |
-| iOS 26 | `tests/ios/__Snapshots__/<TestFile>/` | iPhone 17 Pro, iOS 26.5 (23F73) |
 | iOS 27 | `tests/ios/__Snapshots__iOS27/<TestFile>/` | iPhone 17 Pro, iOS 27.0 (24A434) |
 
 A runtime without a set fails every snapshot assertion with a message to record one. To record or re-record a set, run the suite on that runtime's reference simulator with recording enabled. `xcodebuild` forwards `TEST_RUNNER_`-prefixed variables to the test process:
@@ -79,7 +78,7 @@ TEST_RUNNER_FIRSTLIGHT_RECORD_SNAPSHOTS=1 xcodebuild \
   test
 ```
 
-Recording writes only the running runtime's set. The recording run reports each written image as a failure; rerun without the variable to confirm the set passes. Compare new images with the other runtime's set before committing them, and record every supported runtime when a control's appearance changes. To support a new major version, add it to `FirstlightSnapshotReferences.directoriesByMajorVersion` and record its set.
+Recording writes only the running runtime's set. The recording run reports each written image as a failure; rerun without the variable to confirm the set passes. Inspect new images before committing them, and record every supported runtime when a control's appearance changes. To support a new major version, add it to `FirstlightSnapshotReferences.directoriesByMajorVersion` and record its set.
 
 Omit `--development` from `bin/check-component` only for component-release review. The release mode requires evidence that development mode deliberately defers. Do not make a failing release gate pass by deleting a required row or substituting simulator evidence for a physical device.
 

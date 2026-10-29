@@ -7,7 +7,6 @@ import XCTest
 /// (and record it) before running the suite on a new runtime.
 enum FirstlightSnapshotReferences {
     static let directoriesByMajorVersion: [Int: String] = [
-        26: "__Snapshots__",
         27: "__Snapshots__iOS27",
     ]
 
