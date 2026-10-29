@@ -11,9 +11,9 @@ Get a developer from `composer require` to a running, themed, tested app built f
 
 Confirm, and fix with the developer's agreement:
 
-- `composer.json` requires `nativephp/mobile` `^4.6`, `nativephp/mobile-ui` `^0.8` and `firstlightui/nativephp`. Before 1.0 stable, the constraint needs `@RC`, for example `"firstlightui/nativephp:^1.0@RC"`.
+- `composer.json` requires `nativephp/mobile` `^4.7.0`, `nativephp/mobile-ui` `^0.9.0` and `firstlightui/nativephp`. Before 1.0 stable, the constraint needs `@RC`, for example `"firstlightui/nativephp:^1.0@RC"`.
 - The plugin is registered: `php artisan native:plugin:register`.
-- PHP `^8.4`, iOS 18+ and Android API 29+ targets. See https://firstlightui.dev/docs/reference/compatibility.
+- PHP `^8.4`, iOS 18.2+ and Android API 29+ targets. See https://firstlightui.dev/docs/reference/compatibility.
 
 ## 2. Interview
 

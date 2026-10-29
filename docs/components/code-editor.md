@@ -12,6 +12,7 @@ sources:
   - resources/ios/CodeEditorEditing.swift
   - resources/android/CodeEditorControl.kt
   - resources/android/CodeEditorRenderer.kt
+  - resources/android/FirstlightInputFocus.kt
   - resources/android/CodeEditorEditing.kt
   - tests/Feature/CodeEditorElementTest.php
   - tests/fixtures/code-editor/editing.json
@@ -119,6 +120,11 @@ package chrome; see [Localize Firstlight chrome](../how-to/localize.md).
 `.live` publish while editing. `.blur` and `.lazy` publish on focus loss.
 `.debounce.500ms` publishes after the quiet period and flushes on blur.
 Durations below 50 milliseconds are rejected.
+
+On Android, a separate Button or Icon Button flushes the focused editor's
+pending change through Mobile's synchronous focus policy before posting its
+press. This orders event posting; it does not wait for PHP to process the change.
+A pending debounce does not publish that same edit again.
 
 While the field is focused, the native buffer, cursor, selection, IME
 composition, scroll position, and undo history stay local. PHP

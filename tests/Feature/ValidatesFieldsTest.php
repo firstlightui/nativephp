@@ -11,6 +11,8 @@ use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
 
+require_once __DIR__.'/../Support/ScreenHarness.php';
+
 class StoreSignupRequest
 {
     public function rules(): array
@@ -72,6 +74,40 @@ class ValidatingScreen extends NativeComponent
     public function dispatchEvent(array $event): void
     {
         $this->dispatchUiEvent($event);
+    }
+}
+
+class ValidationBladeScreen extends ValidatingScreen
+{
+    public function render(): \Illuminate\View\View
+    {
+        return view('native.validation');
+    }
+
+    public function validationFrame(string $method): \Native\Mobile\Edge\Element
+    {
+        return in_array($method, ['view', 'partial'], true)
+            ? $this->{$method}('validation')
+            : $this->{$method}(view('native.validation'));
+    }
+}
+
+class DeferredValidationScreen extends ValidatingScreen
+{
+    public function render(): \Native\Mobile\Edge\Element
+    {
+        return $this->response(\FirstlightUI\Elements\Button::make('Validate')->onPress('deferValidation'));
+    }
+
+    public function deferValidation(): void
+    {
+        $this->dispatch('validate-email')->self();
+    }
+
+    #[\Native\Mobile\Attributes\On('validate-email')]
+    public function checkEmail(): void
+    {
+        parent::checkEmail();
     }
 }
 
@@ -284,6 +320,45 @@ it('swallows ValidationException from dispatch and stores the bag', function () 
         ->and($screen->getErrorBag()->first('email'))->toBe('The email field is required.');
 });
 
+it('handles deferred listener validation without losing unrelated errors or its announcement', function () {
+    $state = bootFirstlightScreenHarness(new \Illuminate\Container\Container, __DIR__);
+    ElementRegistry::register('firstlight.checkbox', Checkbox::class);
+
+    try {
+        $screen = \Native\Mobile\Testing\Native::test(DeferredValidationScreen::class);
+        $screen->instance()->addError('accepted', 'Keep this');
+
+        $screen->press('deferValidation');
+        [$checkbox, $email] = renderAlertFrame($screen->instance(), signupLeaves())['children'];
+
+        expect($screen->instance()->getErrorBag()->first('accepted'))->toBe('Keep this')
+            ->and($email['props']['error'])->toBe('The email field is required.')
+            ->and($checkbox['props']['validation_announcement'])->toBe('There are 2 errors. Keep this The email field is required.');
+    } finally {
+        tearDownFirstlightScreenHarness($state);
+    }
+});
+
+it('handles validation thrown directly from a drag-end callback', function () {
+    $screen = new class extends ValidatingScreen
+    {
+        public function finishDrag(float $x, float $y): void
+        {
+            throw new ValidationException($this->standaloneValidatorFactory()->make(
+                [], ['email' => 'required'], ['email.required' => "Invalid position: {$x}, {$y}."],
+            ));
+        }
+    };
+    $id = $screen->bootCallbacks()->register('finishDrag', 'drag_end');
+
+    $screen->dispatchEvent(['callback_id' => $id, 'type' => 2, 'text' => '12.5,-8']);
+    [, $email] = renderAlertFrame($screen, signupLeaves())['children'];
+
+    expect($email['props']['error'])->toBe('Invalid position: 12.5, -8.')
+        ->and($email['props']['validation_announcement'])->toBe('Invalid position: 12.5, -8.')
+        ->and($email['props'])->not->toHaveKey('validation_focus');
+});
+
 it('rethrows a non-validation exception from dispatch', function () {
     $screen = new ValidatingScreen;
     $registry = $screen->bootCallbacks();
@@ -393,7 +468,8 @@ it('announces only the field a property sync failed, without moving focus', func
     [$checkbox, $email] = renderAlertFrame($screen, signupLeaves())['children'];
 
     // The earlier checkbox error renders first but is not what just failed.
-    expect($checkbox['props'])->not->toHaveKey('validation_alert')
+    expect($checkbox['props']['error'])->toBe('Earlier message')
+        ->and($checkbox['props'])->not->toHaveKey('validation_alert')
         ->and($email['props'])->toMatchArray(['validation_announcement' => 'The email field is required.'])
         ->and($email['props'])->not->toHaveKey('validation_focus');
 });
@@ -434,3 +510,74 @@ it('alerts for addError from a press, such as a server-side check after validati
         'validation_announcement' => 'This account is already registered.',
     ]);
 });
+
+it('binds Firstlight fields to upstream validation scopes', function () {
+    $tree = \Native\Mobile\Edge\FieldErrors::using(new MessageBag(['email' => 'Upstream message']),
+        fn () => collectBoundField('firstlight.text-field', ['label' => 'Email', '_change' => "__syncProperty('email')"]));
+
+    expect($tree['props']['error'])->toBe('Upstream message')
+        ->and(FieldErrorBag::current())->toBeNull();
+});
+
+it('binds upstream controls to the Firstlight validation scope', function () {
+    ElementRegistry::register('outlined_text_input', \Native\Mobile\UI\Elements\OutlinedTextInput::class);
+
+    $tree = FieldErrorBag::using(new MessageBag(['email' => 'Firstlight message']),
+        fn () => collectBoundField('outlined_text_input', ['label' => 'Email', '_change' => "__syncProperty('email')"]));
+
+    expect($tree['props'])->toMatchArray(['is_error' => true, 'supporting' => 'Firstlight message'])
+        ->and(\Native\Mobile\Edge\FieldErrors::current())->toBeNull();
+});
+
+it('restores the parent bag without leaking its announcement into an upstream child scope', function () {
+    $screen = new ValidatingScreen;
+    $screen->dispatchEvent(['callback_id' => $screen->bootCallbacks()->register('save'), 'type' => 0]);
+
+    $tree = renderAlertFrame($screen, function () {
+        \Native\Mobile\Edge\FieldErrors::using(new MessageBag(['email' => 'Child error']), function () {
+            NativeElementCollector::open('column', []);
+            NativeElementCollector::leaf('firstlight.text-field', ['label' => 'Child', 'error-for' => 'email']);
+        });
+        NativeElementCollector::leaf('firstlight.text-field', ['label' => 'Parent', 'error-for' => 'email']);
+        NativeElementCollector::close();
+    });
+
+    expect($tree['children'][0]['props']['error'])->toBe('Child error')
+        ->and($tree['children'][0]['props'])->not->toHaveKey('validation_alert')
+        ->and($tree['children'][1]['props']['error'])->toBe('The email field is required.')
+        ->and($tree['children'][1]['props']['validation_focus'])->toBeTrue();
+});
+
+it('shares validation errors across Blade fields, directives, and legacy views', function (string $method) {
+    $directory = sys_get_temp_dir().'/firstlight-validation-'.bin2hex(random_bytes(8));
+    $files = new \Illuminate\Filesystem\Filesystem;
+    $files->makeDirectory($directory.'/native', 0755, true);
+    $files->put($directory.'/native/validation.blade.php', <<<'BLADE'
+        <native:column>
+            <firstlight:text-field label="Firstlight email" native:model="email" />
+            <native:outlined-text-input label="Native email" native:model="email" />
+            @error('accepted')
+                <native:text :text="$message" />
+            @enderror
+            <native:text :text="$errorBag->first('email')" />
+            <firstlight:button label="Save" @press="save" />
+        </native:column>
+        BLADE);
+    $state = bootFirstlightScreenHarness(new \Illuminate\Container\Container, $directory);
+
+    try {
+        app('blade.compiler')->component('native-outlined-text-input', \Native\Mobile\UI\Components\OutlinedTextInput::class);
+        ElementRegistry::register('outlined_text_input', \Native\Mobile\UI\Elements\OutlinedTextInput::class);
+        $screen = \Native\Mobile\Testing\Native::test(ValidationBladeScreen::class)->press('save');
+        $tree = $screen->instance()->validationFrame($method)->toArray(new CallbackRegistry);
+
+        expect($tree['children'][0]['props']['error'])->toBe('The email field is required.')
+            ->and($tree['children'][1]['props'])->toMatchArray(['is_error' => true, 'supporting' => 'The email field is required.'])
+            ->and($tree['children'][2]['props']['text'])->toBe('The accepted must be accepted.')
+            ->and($tree['children'][3]['props']['text'])->toBe('The email field is required.')
+            ->and(\Native\Mobile\Edge\FieldErrors::current())->toBeNull();
+    } finally {
+        tearDownFirstlightScreenHarness($state);
+        $files->deleteDirectory($directory);
+    }
+})->with(['view', 'fromView', 'partial', 'fromViewPartial']);

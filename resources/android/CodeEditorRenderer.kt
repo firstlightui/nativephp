@@ -307,6 +307,11 @@ object CodeEditorRenderer {
     ) {
         val validationFocus = firstlightValidationAlert(node.id)
         val state = remember(node.id) { CodeEditorRendererState(node) }
+        val focusChanged = firstlightInputFocus(
+            state,
+            flush = { state.flush()?.let(events::dispatch) },
+            focusChanged = { state.focusChanged(it)?.let(events::dispatch) },
+        )
 
         NativeUIBridge.currentTree.value?.let { tree ->
             LaunchedEffect(tree) { state.serverPublished(tree) }
@@ -333,7 +338,7 @@ object CodeEditorRenderer {
             onOperation = { state.perform(it)?.let(events::dispatch) },
             onUndo = { state.undo()?.let(events::dispatch) },
             onRedo = { state.redo()?.let(events::dispatch) },
-            onFocusChanged = { state.focusChanged(it)?.let(events::dispatch) },
+            onFocusChanged = focusChanged,
             modifier = modifier.focusRequester(validationFocus),
         )
     }

@@ -143,6 +143,11 @@ object TextAreaRenderer {
     ) {
         val validationFocus = firstlightValidationAlert(node.id)
         val state = remember(node.id) { TextAreaRendererState(node) }
+        val focusChanged = firstlightInputFocus(
+            state,
+            flush = { state.flush()?.let(events::dispatch) },
+            focusChanged = { state.focusChanged(it)?.let(events::dispatch) },
+        )
 
         NativeUIBridge.currentTree.value?.let { tree ->
             LaunchedEffect(tree) { state.serverPublished(tree) }
@@ -160,7 +165,7 @@ object TextAreaRenderer {
             draft = state.draft,
             tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
             onValueChange = { state.userChanged(it)?.let(events::dispatch) },
-            modifier = modifier.focusRequester(validationFocus).onFocusChanged { state.focusChanged(it.isFocused)?.let(events::dispatch) },
+            modifier = modifier.focusRequester(validationFocus).onFocusChanged { focusChanged(it.isFocused) },
         )
     }
 }

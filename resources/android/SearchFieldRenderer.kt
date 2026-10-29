@@ -148,6 +148,11 @@ object SearchFieldRenderer {
         events: SearchFieldRendererEvents = SearchFieldRendererEvents.native,
     ) {
         val state = remember(node.id) { SearchFieldRendererState(node) }
+        val focusChanged = firstlightInputFocus(
+            state,
+            flush = { state.flush()?.let(events::dispatch) },
+            focusChanged = { state.focusChanged(it)?.let(events::dispatch) },
+        )
         NativeUIBridge.currentTree.value?.let { tree ->
             LaunchedEffect(tree) { state.serverPublished(tree) }
         }
@@ -165,7 +170,7 @@ object SearchFieldRenderer {
             onClear = { state.clear()?.let(events::dispatch) },
             onSubmit = { state.submit().forEach(events::dispatch) },
             modifier = modifier.onFocusChanged {
-                state.focusChanged(it.isFocused)?.let(events::dispatch)
+                focusChanged(it.isFocused)
             },
         )
     }

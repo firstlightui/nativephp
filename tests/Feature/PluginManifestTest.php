@@ -16,7 +16,7 @@ it('declares the Firstlight package identity', function () {
         ->and($manifest['namespace'])->toBe('Firstlight')
         ->and($manifest['platforms'])->toBe(['android', 'ios'])
         ->and($manifest['android']['min_version'])->toBe(29)
-        ->and($manifest['ios']['min_version'])->toBe('18.0');
+        ->and($manifest['ios']['min_version'])->toBe('18.2');
 });
 
 it('registers the Feedback Center root host without feature bridge functions', function () {

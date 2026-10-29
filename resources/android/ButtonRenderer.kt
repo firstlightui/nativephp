@@ -9,6 +9,7 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.stateDescription
+import com.nativephp.mobile.ui.nativerender.KeyboardFocusPolicy
 import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 
@@ -35,7 +36,10 @@ object FirstlightButtonRenderer {
                     disabled()
                 } else {
                     onClick {
-                        if (callbackId != 0) NativeUIBridge.sendPressEvent(callbackId, node.id)
+                        if (callbackId != 0) {
+                            KeyboardFocusPolicy.dismissForInteractiveTap()
+                            NativeUIBridge.sendPressEvent(callbackId, node.id)
+                        }
                         callbackId != 0
                     }
                 }

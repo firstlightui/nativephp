@@ -19,16 +19,21 @@ sources:
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.6.1` |
-| NativePHP Mobile UI | `^0.8` |
-| iOS application target | iOS 18.0 or later |
+| NativePHP Mobile | `^4.7.0` |
+| NativePHP Mobile UI | `^0.9.0` |
+| iOS application target | iOS 18.2 or later |
 | Android application target | API 29 or later |
-| Firstlight Swift package | iOS 18 or later |
+| Firstlight Swift package | iOS 18.2 or later |
 | Swift tools | Swift 6.2 |
 
 These are the package's current declared floors. Firstlight does not promise support for earlier versions. Both the iOS and Android renderers are required for a public component; the same documented EDGE example works on both platforms.
 
 After changing NativePHP versions, run `composer update` and `php artisan native:install --force` so bundled PHP binaries, native project files, and plugin copies match the resolved release.
+
+Mobile 4.7 supplies the validation and Android focused-input flush seams
+Firstlight uses; Mobile UI 0.9 requires Mobile 4.7. `ValidatesFields` extends
+upstream `ValidatesInput`, and native and Firstlight fields share the current
+`FieldErrors` bag. Existing Firstlight screen code does not need a trait swap.
 
 ## Runtime response contract
 
@@ -70,6 +75,11 @@ This is a screen-rendering contract, not a replacement for NativePHP's generic
 publisher: framework-owned loading placeholders and error/dump overlays are
 outside it.
 
+On navigation, the farewell response also closes Firstlight Bottom Sheets and
+Modals, including nested overlays, without changing the screen's bound
+visibility properties. Mobile's cleanup handles its own overlay types;
+Firstlight extends it to its namespaced types.
+
 ### Upstream context and qualification
 
 The October 2026 Android and iOS PHP 8.5.11 bundles still suppress byte-identical
@@ -78,6 +88,10 @@ frames in the shared C runtime. Android `treePublicationId`, shipped in Mobile
 a publication reaches Kotlin. The cross-platform bug
 [#365](https://github.com/NativePHP/mobile-air/issues/365) remains upstream;
 the response revision makes Firstlight independent of it.
+
+Mobile 4.7 additionally skips matching frame fingerprints in PHP. Firstlight
+keeps the response revision so repeated rejected values still publish distinct
+responses; the upstream optimisation is not a per-event acknowledgement.
 
 The permanent implementation was checked on October 19, 2026 with Mobile 4.6.0,
 Mobile UI 0.8.0, and the official PHP 8.5.11 bundles: 14 nonstreaming phases each

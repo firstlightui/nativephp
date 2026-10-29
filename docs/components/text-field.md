@@ -11,6 +11,7 @@ sources:
   - resources/ios/TextFieldRenderer.swift
   - resources/android/TextFieldControl.kt
   - resources/android/TextFieldRenderer.kt
+  - resources/android/FirstlightInputFocus.kt
   - resources/ios/FirstlightTextMask.swift
   - resources/android/TextFieldMask.kt
   - tests/Feature/TextFieldElementTest.php
@@ -92,12 +93,11 @@ period and flushes on blur or submit; durations below 50 ms are rejected.
 Native typing, selection, cursor position, and marked-text composition remain
 local while focused so PHP acknowledgements do not cause keyboard jumps.
 
-On iOS, pressing a `<firstlight:button>` or `<firstlight:icon-button>` while
-the field is focused publishes its pending `.blur` or `.debounce` change before
-the press, so the handler reads the current value. List Item presses do not
-flush the field first. On Android, blur/debounce changes are not yet guaranteed
-to reach PHP before a button press, so for forms submitted by a separate button use
-`native:model.live="email"` (or plain `native:model`). A button press is not the
+On iOS and Android, pressing a `<firstlight:button>` or `<firstlight:icon-button>`
+while the field is focused queues its pending `.blur` or `.debounce` change
+before the press. This orders event posting; it does not wait for PHP to process
+the change. List Item presses do not flush the field first. Android uses Mobile's
+synchronous focused-input flush hook rather than waiting for blur. A button press is not the
 field's `@submit` event; for keyboard submission, the field's own `@submit`
 handler receives the current string directly.
 

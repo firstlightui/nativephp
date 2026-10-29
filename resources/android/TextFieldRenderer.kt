@@ -192,6 +192,11 @@ object TextFieldRenderer {
     fun Render(node: NativeUINode, modifier: Modifier, events: TextFieldRendererEvents = TextFieldRendererEvents.native) {
         val validationFocus = firstlightValidationAlert(node.id)
         val state = remember(node.id) { TextFieldRendererState(node) }
+        val focusChanged = firstlightInputFocus(
+            state,
+            flush = { state.flush()?.let(events::dispatch) },
+            focusChanged = { state.focusChanged(it)?.let(events::dispatch) },
+        )
         NativeUIBridge.currentTree.value?.let { tree -> LaunchedEffect(tree) { state.serverPublished(tree) } }
         LaunchedEffect(state.draft.text) {
             if (state.configuration.syncMode == "debounce") {
@@ -209,7 +214,7 @@ object TextFieldRenderer {
             onReveal = state::toggleReveal,
             onTrailingPress = { state.configuration.onPressCallback.takeIf { it != 0 }?.let { events.dispatch(TextFieldRendererEvent.Press(it, state.configuration.nodeId)) } },
             onSubmit = { state.submit().forEach(events::dispatch) },
-            modifier = modifier.focusRequester(validationFocus).onFocusChanged { state.focusChanged(it.isFocused)?.let(events::dispatch) },
+            modifier = modifier.focusRequester(validationFocus).onFocusChanged { focusChanged(it.isFocused) },
         )
     }
 }

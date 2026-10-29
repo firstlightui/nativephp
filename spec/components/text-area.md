@@ -116,24 +116,26 @@ the official SuperNative element and wire-event seams.
 
 ## Evidence plan
 
-Separate button presses do not carry the editor buffer. Recommend
-`native:model.live` for button-submitted forms: blur/debounce publication has
-no cross-platform change-before-press guarantee. Any future fix must prove
-ordering through the official focus and event seams, not just renderer state
-tests or an arbitrary press delay.
+Separate button presses do not carry the editor buffer. Firstlight integrates
+both platforms' official focus policies to flush pending blur/debounce changes
+before a Button or Icon Button posts its press; keyboard dismissal alone is
+not an ordering barrier.
 
-In locked Mobile 4.6.0 / Mobile UI 0.8.0, the official iOS Button calls
+The official iOS Button calls
 `KeyboardFocusPolicy.dispatchPress` in `NativeUIButtonRenderer.swift`. Official
 `NativeUITextInputCore.swift` registers a focused-editor flush closure with
 `KeyboardFocusPolicy.fieldFocused`. Firstlight Text Field, Text Area, Code
 Editor, and Search Field now register there too, so on iOS a Button press
 flushes their pending change first (`FocusedFieldFlushTests`, plus a simulator
 check of the form recipe with `.blur`).
-On Android, `ButtonRenderer.kt` calls `dismissForInteractiveTap`, but Mobile's
-`ui/nativerender/KeyboardFocusPolicy.kt` exposes no synchronous buffer-flush hook;
-focus loss alone is not an ordering barrier. A paired fix needs an official
-Android flush seam and end-to-end change-before-press coverage on both platforms.
-No arbitrary delay, vendor patch, or separate event transport is introduced.
+On Android, Mobile 4.7's `KeyboardFocusPolicy.fieldFocused` accepts a synchronous
+flush closure. `FirstlightInputFocus.kt` registers the current buffer and releases
+ownership on blur or disposal for Text Field, Text Area, Search Field, and Code
+Editor. `FocusedInputActionTest` exercises all four real Compose renderers in
+blur and debounce modes against the installed upstream policy, including a
+delayed blur and no duplicate debounce publication. This is JVM evidence, not
+a substitute for rebuilt host/device interaction checks. No arbitrary delay,
+vendor patch, or separate event transport is introduced.
 
 - Pest 5 proves strict strings and booleans, line validation, sync modifiers,
   callback registration, accessibility diagnostics, exclusions, layout-only

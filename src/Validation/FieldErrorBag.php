@@ -3,39 +3,40 @@
 namespace FirstlightUI\Validation;
 
 use Illuminate\Support\MessageBag;
+use Native\Mobile\Edge\FieldErrors;
 
 final class FieldErrorBag
 {
-    private static ?MessageBag $current = null;
+    private static ?MessageBag $alertBag = null;
 
     private static ?ValidationAlert $alert = null;
 
     public static function current(): ?MessageBag
     {
-        return self::$current;
+        return FieldErrors::current();
     }
 
     public static function alert(): ?ValidationAlert
     {
-        return self::$alert;
+        return self::$alertBag === self::current() ? self::$alert : null;
     }
 
     public static function using(MessageBag $bag, callable $callback, ?ValidationAlert $alert = null): mixed
     {
-        $previous = [self::$current, self::$alert];
-        self::$current = $bag;
+        $previous = [self::$alertBag, self::$alert];
+        self::$alertBag = $bag;
         self::$alert = $alert;
 
         try {
-            return $callback();
+            return FieldErrors::using($bag, $callback);
         } finally {
-            [self::$current, self::$alert] = $previous;
+            [self::$alertBag, self::$alert] = $previous;
         }
     }
 
     public static function reset(): void
     {
-        self::$current = null;
+        self::$alertBag = null;
         self::$alert = null;
     }
 }

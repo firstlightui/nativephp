@@ -56,6 +56,9 @@ bound visibility property to `false` in that handler. Dismiss handlers must
 be safe to run more than once because the delegated iOS cover can also notify
 PHP when a programmatic close is published.
 
+When a Firstlight screen navigates away, its farewell response closes the modal,
+including nested modals, without changing the bound visibility property.
+
 There is no overlay `@press`, `native:model`, or detent API. Actions belong
 on child controls.
 

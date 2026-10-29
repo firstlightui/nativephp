@@ -58,6 +58,10 @@ heading role yet, so screen readers announce the surface by its `a11y-label`.
 outside, or uses system back. Set the bound visibility property to `false` in
 that handler.
 
+When a Firstlight screen navigates away, its farewell response closes the sheet
+without changing that visibility property. This also covers sheets in nested
+children.
+
 There is no overlay `@press`, `native:model`, `dismissible`, or `detents`
 API. You don't set the height: the sheet measures its content.
 

@@ -41,6 +41,11 @@ sources:
 
 Field validation is a PHP extension over existing Firstlight fields. Laravel's `Validator` owns rules and messages. Native renderers only present the published `error` string. Firstlight does not compile rules to Swift or Kotlin, does not invent a parallel rule DSL, and does not emit a sibling `@nativeError` text node.
 
+`ValidatesFields` composes Mobile 4.7's `ValidatesInput`: validation, field-only
+bag updates, clearing, and public-property collection delegate upstream.
+Firstlight retains Form Request sources, Media conversion, standalone test
+validation, error summaries, and interaction-scoped accessibility alerts.
+
 ## Public PHP surface
 
 `FirstlightUI\Concerns\ValidatesFields` is the opt-in API. `FirstlightUI\NativeComponent` already uses the trait. Screens that extend NativePHP's `NativeComponent` directly may `use ValidatesFields`.
@@ -62,7 +67,12 @@ Rule keys must equal public property names. Nested and wildcard keys are unsuppo
 
 ## Error slot binding
 
-While `view()`, `fromView()`, and `fromViewPartial()` run, `FieldErrorBag` holds the screen's `MessageBag`. Each participating element's `applyAttributes()` calls `FieldErrorBinder::apply()`.
+While `view()`, `partial()`, `fromView()`, and `fromViewPartial()` run, upstream
+`FieldErrors` holds the screen's `MessageBag`. `FieldErrorBag` delegates bag
+lookups and scopes upstream and adds only Firstlight's alert context, tied to
+the same bag so a nested upstream screen cannot claim a parent's alert. Each
+participating element's `applyAttributes()` calls `FieldErrorBinder::apply()`.
+Views receive upstream's `$errors` and the existing `$errorBag` alias.
 
 `FieldErrorBinder` resolves the bag key in this order:
 

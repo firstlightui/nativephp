@@ -104,6 +104,23 @@ class ResponseNestedScreen extends ResponseBladeScreen
     }
 }
 
+class ResponseOverlayScreen extends ResponseElementScreen
+{
+    public bool $visible = true;
+
+    private ?Element $content = null;
+
+    public function render(): Element
+    {
+        return $this->response($this->content ??= Column::make(
+            \FirstlightUI\Elements\BottomSheet::make()->visible($this->visible)->onDismiss('dismiss'),
+            Column::make(\FirstlightUI\Elements\Modal::make()->visible($this->visible)->onDismiss('dismiss')),
+        ));
+    }
+
+    public function dismiss(): void {}
+}
+
 beforeEach(function () {
     $this->previousContainer = Container::getInstance();
     $container = new Container;
@@ -200,6 +217,23 @@ it('leaves detached partials unstamped', function () {
     expect($fragment['props'] ?? [])->not->toHaveKey('firstlight_response_revision')
         ->and($fragment['children'][0]['props']['value'])->toBeFalse();
 });
+
+it('closes Firstlight overlays in the farewell frame without changing the model or retained tree', function (string $action) {
+    $screen = Native::test(ResponseOverlayScreen::class);
+    $initial = $screen->tree();
+
+    $screen->instance()->{$action}(...($action === 'back' ? [] : ['/next']));
+    $farewell = FakeBridge::current()->lastPublish();
+    $returned = $screen->instance()->render()->toArray(new CallbackRegistry);
+
+    expect($initial['children'][0]['props']['visible'])->toBeTrue()
+        ->and($initial['children'][1]['children'][0]['props']['visible'])->toBeTrue()
+        ->and($farewell['children'][0]['props']['visible'])->toBeFalse()
+        ->and($farewell['children'][1]['children'][0]['props']['visible'])->toBeFalse()
+        ->and($returned['children'][0]['props']['visible'])->toBeTrue()
+        ->and($returned['children'][1]['children'][0]['props']['visible'])->toBeTrue()
+        ->and($screen->instance()->visible)->toBeTrue();
+})->with(['navigate', 'replace', 'back']);
 
 it('stamps only the screen root while preserving nested Blade and Element callback ownership', function (string $child) {
     ComponentRegistry::register('response-child', $child);

@@ -152,7 +152,7 @@ Excluded public capabilities are Blade authoring, host installation, arbitrary d
 
 ## Compatibility and evidence boundary
 
-The declared floors are PHP 8.4, NativePHP Mobile 4, NativePHP Mobile UI 0.3, iOS 18, Android API 29, and Swift tools 6.2. `nativephp.json` must retain exact init functions `registerFirstlightUI` and `dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI`, with no `bridge_functions` key.
+The declared floors are PHP 8.4, NativePHP Mobile 4.7, NativePHP Mobile UI 0.9, iOS 18.2, Android API 29, and Swift tools 6.2. `nativephp.json` must retain exact init functions `registerFirstlightUI` and `dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI`, with no `bridge_functions` key.
 
 Current executable evidence covers the PHP facade/store/events, child-registry callbacks, navigation refresh, event ordering, queue/tombstones, platform timing, lifecycle suspension, accessibility semantics, init registration, large-text and RTL test cases, and API 29 compilation. Snapshot suites and committed goldens cover tones, actions, held feedback, long copy, large text, and RTL, but only a fresh passing `verifyPaparazziDebug` establishes current Android visual-regression evidence. The registered showcase route is `/captures/transient-feedback` with a focused `TransientFeedbackCaptureTest.php` command and four standard image outputs.
 

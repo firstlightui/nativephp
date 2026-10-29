@@ -16,10 +16,12 @@ sources:
 
 # ValidatesFields
 
-`FirstlightUI\Concerns\ValidatesFields` is a Livewire-shaped Laravel Validator
-layer for NativePHP EDGE screens. `FirstlightUI\NativeComponent` includes the
-trait. See [Validate fields](../how-to/validate-fields.md) for a complete
-working screen.
+`FirstlightUI\Concerns\ValidatesFields` extends NativePHP Mobile's
+`ValidatesInput` with Form Request sources, Media conversion, error summaries,
+and accessibility announcements. `FirstlightUI\NativeComponent` includes the
+trait. Validation and bag management use upstream's implementation; existing
+Firstlight screen code does not need a trait swap. See
+[Validate fields](../how-to/validate-fields.md) for a complete working screen.
 
 Do not place `@nativeError` next to Firstlight fields. That directive emits a
 sibling text node and skips native field error colour, helper replacement, and
@@ -62,8 +64,12 @@ set their native `error` slot from the first message for the resolved name:
 An empty authored `error` is treated as unset. Fields without a resolvable
 name stay empty. Only the first message for a key is published.
 
-The view also receives `$errorBag` for explicit `:error="$errorBag->first('email')"`
-bindings.
+The view receives upstream's `$errors` (`ViewErrorBag`) and Firstlight's
+`$errorBag` (`MessageBag`) for explicit bindings. Both expose the same messages.
+Native and Firstlight fields read the shared `FieldErrors` render scope, so
+mixed-control screens work together. A screen using only upstream
+`ValidatesInput` also binds Firstlight field errors, but does not add
+Firstlight's Form Request, Media, or announcement extensions.
 
 ## Form-level Callouts
 
