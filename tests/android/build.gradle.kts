@@ -22,6 +22,33 @@ val syncNativePhpFocusPolicy = tasks.register<Sync>("syncNativePhpFocusPolicy") 
     into(layout.buildDirectory.dir("generated/nativePhpFocusPolicy"))
 }
 
+// Compile NativePHP's own MaterialIcon and its Material Icons font so icon
+// snapshots show the real ligature glyphs that ship in the host app.
+val nativePhpAndroidApp = layout.projectDirectory.dir("../../vendor/nativephp/mobile/resources/androidstudio/app/src/main")
+val nativePhpIconHelper = nativePhpAndroidApp.file("java/com/nativephp/mobile/ui/IconHelper.kt")
+val nativePhpIconFont = nativePhpAndroidApp.file("res/font/material_icons.ttf")
+
+val syncNativePhpIconSources = tasks.register<Sync>("syncNativePhpIconSources") {
+    doFirst {
+        check(nativePhpIconHelper.asFile.isFile && nativePhpIconFont.asFile.isFile) {
+            "NativePHP's MaterialIcon sources are missing from vendor/nativephp/mobile; run composer install in the repository root"
+        }
+    }
+    from(nativePhpIconHelper)
+    // AGP drops classes named R from library classes, so point IconHelper at
+    // this test library's generated R, which carries the synced font.
+    filter { line ->
+        if (line == "import com.nativephp.mobile.R") "import dev.firstlightui.plugins.firstlight_ui.tests.R" else line
+    }
+    into(layout.buildDirectory.dir("generated/nativePhpIconSources"))
+}
+
+val nativePhpIconRes = layout.buildDirectory.dir("generated/nativePhpIconRes")
+val syncNativePhpIconFont = tasks.register<Sync>("syncNativePhpIconFont") {
+    from(nativePhpIconFont)
+    into(nativePhpIconRes.map { it.dir("font") })
+}
+
 tasks.register("verifyFirstlightAndroidSourceLayout") {
     dependsOn(syncFirstlightAndroidSources)
     inputs.dir(productionAndroidSourceDirectory)
@@ -78,6 +105,8 @@ android {
         getByName("main") {
             kotlin.srcDir(syncFirstlightAndroidSources.map { it.destinationDir })
             kotlin.srcDir(syncNativePhpFocusPolicy.map { it.destinationDir })
+            kotlin.srcDir(syncNativePhpIconSources.map { it.destinationDir })
+            res.srcDir(nativePhpIconRes)
 
             val nativePhpFork = providers.gradleProperty("nativePhpFork").orNull
             if (nativePhpFork == null) {
@@ -103,7 +132,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
-    dependsOn("verifyFirstlightAndroidSourceLayout", syncNativePhpFocusPolicy)
+    dependsOn("verifyFirstlightAndroidSourceLayout", syncNativePhpFocusPolicy, syncNativePhpIconSources, syncNativePhpIconFont)
 }
 
 kotlin {
