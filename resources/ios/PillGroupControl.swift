@@ -33,7 +33,16 @@ struct FirstlightPillGroupTokens {
         case .warning: warningColors.resolve(isDark: traits.userInterfaceStyle == .dark)
         case .danger: (theme.destructive, theme.onDestructive)
         }
-        let primary = UIColor(pair.background).resolvedColor(with: traits)
+        let surface = FirstlightSegmentedTokens.opaqueComposite(
+            foreground: UIColor(theme.surface),
+            over: .systemBackground,
+            traits: traits
+        )
+        let primary = FirstlightSegmentedTokens.opaqueComposite(
+            foreground: UIColor(pair.background),
+            over: surface,
+            traits: traits
+        )
         let preferred = UIColor(pair.foreground).resolvedColor(with: traits)
 
         return Self(

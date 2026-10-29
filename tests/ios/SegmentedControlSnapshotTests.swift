@@ -196,6 +196,24 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(contrastRatio(darkForeground, darkPrimary), 4.5)
     }
 
+    func testTranslucentPreferredForegroundIsCompositedBeforeContrastCheck() {
+        let primary = UIColor(red: 174 / 255, green: 21 / 255, blue: 21 / 255, alpha: 1)
+
+        let clearForeground = FirstlightSegmentedTokens.contrastSafeSelectedTextColor(
+            primary: primary,
+            preferred: .clear
+        )
+        let translucentForeground = FirstlightSegmentedTokens.contrastSafeSelectedTextColor(
+            primary: primary,
+            preferred: UIColor(white: 0, alpha: 0.3)
+        )
+
+        XCTAssertEqual(alpha(of: clearForeground), 1)
+        XCTAssertEqual(alpha(of: translucentForeground), 1)
+        XCTAssertGreaterThanOrEqual(contrastRatio(clearForeground, primary), 4.5)
+        XCTAssertGreaterThanOrEqual(contrastRatio(translucentForeground, primary), 4.5)
+    }
+
     func testSelectedTokenRetainsThemeOnPrimaryWhenItIsContrastSafe() {
         let preferredOnPrimary = UIColor(red: 1, green: 0.8, blue: 0, alpha: 1)
         let theme = NativeUITokens(
