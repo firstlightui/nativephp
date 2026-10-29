@@ -5147,7 +5147,7 @@ grouped section styling.
 
 # Pill Group
 
-Pill Group presents compact, individually shaped options for selecting zero or one value, or zero or more values.
+Pill Group presents compact, individually shaped options for selecting zero or one value, or zero or more values. It can also be a scrolling filter row in which each option has an icon and only the selected pill shows its label.
 
 ## Complete examples
 
@@ -5169,6 +5169,32 @@ public array $queueOptions = [
     native:model="queue"
     label="Queue"
     helper="Choose the queue to include."
+/>
+```
+
+### Scrolling filter row
+
+Give each option an icon, then add `scrollable` and `collapse-labels`. Unselected pills show only their icon; the selected pill shows its icon and label in the colour set by `tone`.
+
+```php
+public ?string $filter = 'all';
+
+public array $filterOptions = [
+    ['value' => 'all', 'label' => 'All', 'icon' => 'inbox'],
+    ['value' => 'unread', 'label' => 'Unread', 'icon' => 'mail'],
+    ['value' => 'starred', 'label' => 'Starred', 'icon' => 'star', 'icon-ios' => 'star.fill'],
+    ['value' => 'attachments', 'label' => 'Attachments', 'icon' => 'attach_file', 'icon-ios' => 'paperclip'],
+];
+```
+
+```blade
+<firstlight:pill-group
+    :options="$filterOptions"
+    native:model="filter"
+    a11y-label="Filter"
+    scrollable
+    collapse-labels
+    tone="success"
 />
 ```
 
@@ -5195,6 +5221,9 @@ public array $queues = ['mine'];
 | `options` | `array` | Simple strings, a value-to-label map, or rich option arrays. |
 | `value` / `native:model` | `string`, `int`, `array`, or `null` | Stable selection. Use a scalar or `null` in single mode and a homogeneous list or `null` in multiple mode. |
 | `multiple` | `bool` | Enables zero-or-more selection. Defaults to `false`. |
+| `scrollable` | `bool` | Shows the pills in one horizontally scrolling row instead of wrapping. |
+| `collapse-labels` | `bool` | Shows only the icon of unselected pills and the icon and label of selected pills. Every option needs an `icon`. |
+| `tone` | `string` | Selected pill colour: `primary` (default), `accent`, `success`, `warning`, or `danger`. Unselected pills always look the same. |
 | `label` | `string` | Visible field label. |
 | `helper` | `string` | Supporting text below the pills. |
 | `error` | `string` | Error text and native error semantics. |
@@ -5218,14 +5247,16 @@ A map separates stable values from labels and may use all-string or all-integer 
 ['mine' => 'Mine', 'all' => 'All']
 ```
 
-Rich options accept only `value`, `label`, and optional `disabled` fields:
+Rich options accept `value`, `label`, and optional `disabled`, `icon`, `icon-ios`, and `icon-android` fields:
 
 ```php
 [
-    ['value' => 'mine', 'label' => 'Mine'],
-    ['value' => 'all', 'label' => 'All', 'disabled' => true],
+    ['value' => 'mine', 'label' => 'Mine', 'icon' => 'person'],
+    ['value' => 'all', 'label' => 'All', 'icon' => 'groups', 'icon-ios' => 'person.3', 'disabled' => true],
 ]
 ```
+
+`icon` is the shared fallback; `icon-ios` and `icon-android` override it per platform and also accept NativePHP `IosSymbol` and `AndroidSymbol` values. Option icons are decorative: VoiceOver and TalkBack announce the option label instead. Icons are set per option; `icon` on the group itself is rejected.
 
 All values in one group must be unique and must all be strings or all be integers. In single mode, tapping the selected pill proposes `null`. In multiple mode, tapping toggles that stable value while preserving the order of the others. `null` and `[]` both mean no multiple selection.
 
@@ -5245,12 +5276,16 @@ Use plain `native:model` or `native:model.live`; deferred `blur` and `debounce` 
 
 ## Accessibility
 
-Provide either a visible `label` or an explicit `a11y-label`. Firstlight warns during development when both are blank. Each pill exposes its label, selected state, and disabled state through native platform semantics. Selection also has a visible checkmark, so it does not depend on colour alone. Pills wrap at larger text sizes and retain at least a 44-point iOS or 48-dp Android interaction target.
+Provide either a visible `label` or an explicit `a11y-label`. Firstlight warns during development when both are blank. Each pill exposes its label, selected state, and disabled state through native platform semantics. Selection also has a visible checkmark, or with `collapse-labels` a revealed label, so it does not depend on colour alone. Icon-only pills are announced by their option label. Pills wrap at larger text sizes, or scroll when `scrollable`, and retain at least a 44-point iOS or 48-dp Android interaction target. The label reveal animation is removed when Reduce Motion or system animations are turned off.
+
+Collapsed labels hide meaning until a pill is selected, so use them for short sets with recognisable icons.
 
 ## Validation and failure behaviour
 
-Contract exceptions still reject malformed options, mixed selections, and
-unsupported presentation props before publication. User validation is
+Contract exceptions still reject malformed options, mixed selections, an
+unsupported `tone`, blank or invalid option icons, `collapse-labels` without
+an icon on every option, and unsupported presentation props before
+publication. User validation is
 separate: screens that `use ValidatesFields` auto-bind the first MessageBag
 message for the field's `native:model` or `error-for` name. An authored
 `error` wins. `required` is display metadata and does not run Laravel rules.
@@ -5260,7 +5295,7 @@ fallback.
 
 ## Platform behaviour
 
-iOS uses native SwiftUI capsule buttons in a wrapping layout. Android uses Material 3 `FilterChip` controls in a wrapping `FlowRow`. Both inherit NativePHP semantic theme tokens and preserve native press, focus, selection, disabled, and accessibility behaviour without exposing platform-widget props.
+iOS uses native SwiftUI capsule buttons in a wrapping layout or a horizontal `ScrollView`. Android uses Material 3 `FilterChip` controls in a wrapping `FlowRow` or a horizontally scrolling row. Both inherit NativePHP semantic theme tokens and preserve native press, focus, selection, disabled, and accessibility behaviour without exposing platform-widget props.
 
 ## Compatibility
 

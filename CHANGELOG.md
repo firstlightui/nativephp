@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Pill Group: options accept `icon`, `icon-ios`, and `icon-android`; `scrollable` shows the pills in one horizontally scrolling row; `collapse-labels` shows only the icon of unselected pills and reveals the selected pill's label; and `tone="primary|accent|success|warning|danger"` sets the selected pill's colour from the theme while unselected pills stay uniform. Existing groups render unchanged. Group-level `icon` is still rejected, now with guidance to put icons on options.
+
 ### Changed
 
 - Require iOS 18.2+. Android remains API 29+, with NativePHP Mobile `^4.7.0` and Mobile UI `^0.9.0` as the dependency floor. Regenerate native projects with `php artisan native:install --force` and rebuild the host applications after updating Composer dependencies.

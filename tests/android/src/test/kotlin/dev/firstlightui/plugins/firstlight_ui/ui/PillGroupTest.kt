@@ -121,6 +121,56 @@ class PillGroupRendererContractTest {
     }
 
     @Test
+    fun `configuration decodes icons row presentation and tone`() {
+        val configuration = PillGroupRendererConfiguration(
+            node(
+                extra = mapOf(
+                    "option_icons" to listOf("apps", "mail", "star"),
+                    "option_icon_variants" to listOf("", "", "outlined"),
+                    "scrollable" to true,
+                    "collapse_labels" to true,
+                    "tone" to "danger",
+                ),
+            ),
+        )
+
+        assertEquals(listOf("apps", "mail", "star"), configuration.optionIcons)
+        assertEquals(listOf("", "", "outlined"), configuration.optionIconVariants)
+        assertTrue(configuration.scrollable)
+        assertTrue(configuration.collapseLabels)
+        assertEquals(PillGroupTone.Danger, configuration.tone)
+    }
+
+    @Test
+    fun `configuration defaults to a wrapping primary group without icons`() {
+        val configuration = PillGroupRendererConfiguration(node())
+
+        assertEquals(emptyList<String>(), configuration.optionIcons)
+        assertFalse(configuration.scrollable)
+        assertFalse(configuration.collapseLabels)
+        assertEquals(PillGroupTone.Primary, configuration.tone)
+        assertEquals(PillGroupTone.Primary, PillGroupTone.fromWire("unknown"))
+    }
+
+    @Test
+    fun `every tone tints only the selected pill and stays contrast safe`() {
+        listOf(NativeUITheme.light to false, NativeUITheme.dark to true).forEach { (tokens, isDark) ->
+            val primary = resolvePillGroupTokenColors(tokens, PillGroupTone.Primary, isDark = isDark)
+            PillGroupTone.entries.forEach { tone ->
+                val resolved = resolvePillGroupTokenColors(tokens, tone, isDark = isDark)
+
+                assertTrue("$tone contrast", contrastRatio(resolved.selectedContent, resolved.selectedContainer) >= 4.5f)
+                assertEquals(primary.unselectedContainer, resolved.unselectedContainer)
+                assertEquals(primary.unselectedContent, resolved.unselectedContent)
+            }
+            assertTrue(
+                resolvePillGroupTokenColors(tokens, PillGroupTone.Danger, isDark = isDark).selectedContainer !=
+                    primary.selectedContainer,
+            )
+        }
+    }
+
+    @Test
     fun `field semantics merge label hint required and error`() {
         assertEquals(
             FirstlightFieldSemantics(
@@ -147,6 +197,7 @@ class PillGroupRendererContractTest {
         error: String = "",
         a11yLabel: String = "",
         a11yHint: String = "",
+        extra: Map<String, Any> = emptyMap(),
     ) = NativeUINode(
         id = 7,
         props = GenericProps(
@@ -165,7 +216,7 @@ class PillGroupRendererContractTest {
                 "required" to true,
                 "a11y_label" to a11yLabel,
                 "a11y_hint" to a11yHint,
-            ),
+            ) + extra,
         ),
     )
 
@@ -212,6 +263,57 @@ class PillGroupControlScreenshotTest {
                         errorColor = tokens.destructive,
                         required = true,
                     )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun collapsedRowLight() = collapsedRow(dark = false)
+
+    @Test
+    fun collapsedRowDark() = collapsedRow(dark = true)
+
+    private fun collapsedRow(dark: Boolean) {
+        paparazzi.snapshot {
+            MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+                val tokens = if (dark) NativeUITheme.dark else NativeUITheme.light
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    androidx.compose.foundation.layout.Column {
+                        FirstlightPillGroupControl(
+                            labels = listOf("All", "Unread", "Starred", "Attachments", "Mentions", "Archived"),
+                            values = listOf("all", "unread", "starred", "attachments", "mentions", "archived"),
+                            enabled = listOf(true, true, true, true, true, false),
+                            selectedValues = listOf("starred"),
+                            groupEnabled = true,
+                            awaitingPublication = false,
+                            label = "Filter",
+                            helper = "",
+                            error = null,
+                            onSelection = {},
+                            modifier = Modifier.padding(16.dp),
+                            colors = pillGroupColors(tokens),
+                            icons = listOf("inbox", "mail", "star", "attach_file", "alternate_email", "archive"),
+                            scrollable = true,
+                            collapseLabels = true,
+                        )
+                        FirstlightPillGroupControl(
+                            labels = listOf("Open", "Overdue", "Paid", "Void"),
+                            values = listOf("open", "overdue", "paid", "void"),
+                            enabled = listOf(true, true, true, true),
+                            selectedValues = listOf("overdue"),
+                            groupEnabled = true,
+                            awaitingPublication = false,
+                            label = "Invoices",
+                            helper = "",
+                            error = null,
+                            onSelection = {},
+                            modifier = Modifier.padding(16.dp),
+                            colors = pillGroupColors(tokens, PillGroupTone.Danger, isDark = dark),
+                            icons = listOf("description", "schedule", "check_circle", "block"),
+                            scrollable = true,
+                        )
+                    }
                 }
             }
         }

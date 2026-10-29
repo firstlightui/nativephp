@@ -6,6 +6,18 @@ use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\NativeTagPrecompiler;
+use Native\Mobile\Icon\AndroidSymbol;
+use Native\Mobile\Platform;
+
+enum PillGroupAndroidIcon: string implements AndroidSymbol
+{
+    case Star = 'star';
+
+    public function variant(): string
+    {
+        return 'outlined';
+    }
+}
 
 beforeEach(function () {
     NativeElementCollector::reset();
@@ -14,6 +26,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    Platform::set(null);
     NativeTagPrecompiler::setActive(false);
     NativeElementCollector::reset();
     ElementRegistry::reset();
@@ -220,11 +233,113 @@ it('rejects incompatible presentation and event props', function (string $attrib
 })->with([
     ['selected', true],
     ['loading', true],
-    ['tone', 'info'],
     ['variant', 'filled'],
     ['icon', 'star'],
+    ['icon-ios', 'star.fill'],
+    ['icon-android', 'star'],
     ['_press', 'pressed'],
 ])->throws(InvalidArgumentException::class, 'not supported');
+
+it('defaults to a wrapping primary group with no option icons', function () {
+    $tree = collectPillGroup([
+        'options' => ['mine' => 'Mine', 'all' => 'All'],
+        'value' => null,
+        'label' => 'Queue',
+    ]);
+
+    expect($tree['props']['scrollable'])->toBeFalse()
+        ->and($tree['props']['collapse_labels'])->toBeFalse()
+        ->and($tree['props']['tone'])->toBe('primary')
+        ->and($tree['props']['option_icons'])->toBe(['', ''])
+        ->and($tree['props']['option_icon_variants'])->toBe(['', ''])
+        ->and($tree['props'])->not->toHaveKey('warning_color');
+});
+
+it('publishes a scrollable collapsing icon row with resolved per-option icons', function () {
+    $registry = new CallbackRegistry;
+    $tree = collectPillGroup([
+        'options' => [
+            ['value' => 'all', 'label' => 'All', 'icon' => 'apps'],
+            ['value' => 'unread', 'label' => 'Unread', 'icon' => 'mail', 'disabled' => true],
+            ['value' => 'starred', 'label' => 'Starred', 'icon' => 'star', 'iconIos' => 'star.fill', 'icon-android' => 'grade'],
+        ],
+        'value' => 'starred',
+        'label' => 'Filter',
+        'scrollable' => true,
+        'collapse-labels' => true,
+        'tone' => 'success',
+        '_change' => 'filter',
+    ], $registry);
+
+    // Unknown platform in tests: the shared fallback wins over both overrides.
+    expect($tree['props']['scrollable'])->toBeTrue()
+        ->and($tree['props']['collapse_labels'])->toBeTrue()
+        ->and($tree['props']['tone'])->toBe('success')
+        ->and($tree['props']['option_icons'])->toBe(['apps', 'mail', 'star'])
+        ->and($tree['props']['option_labels'])->toBe(['All', 'Unread', 'Starred'])
+        ->and($tree['props']['option_enabled'])->toBe(['1', '0', '1'])
+        ->and($tree['props']['option_callbacks'][1])->toBe('0')
+        ->and($registry->resolve((int) $tree['props']['option_callbacks'][2])['args'])->toBe([null]);
+});
+
+it('resolves option icon overrides for each platform', function (string $platform, array $icons, array $variants) {
+    Platform::set($platform);
+    $tree = collectPillGroup([
+        'options' => [
+            ['value' => 'all', 'label' => 'All', 'icon' => 'apps'],
+            ['value' => 'starred', 'label' => 'Starred', 'icon' => 'star', 'icon-ios' => 'star.fill', 'iconAndroid' => PillGroupAndroidIcon::Star],
+        ],
+        'value' => null,
+        'label' => 'Filter',
+    ]);
+
+    expect($tree['props']['option_icons'])->toBe($icons)
+        ->and($tree['props']['option_icon_variants'])->toBe($variants);
+})->with([
+    'ios' => [Platform::IOS, ['apps', 'star.fill'], ['', '']],
+    'android' => [Platform::ANDROID, ['apps', 'star'], ['', 'outlined']],
+]);
+
+it('publishes warning colours only for the warning tone', function () {
+    $tree = collectPillGroup([
+        'options' => ['Open', 'Overdue'],
+        'value' => 'Overdue',
+        'label' => 'Status',
+        'tone' => 'warning',
+    ]);
+
+    expect($tree['props']['tone'])->toBe('warning')
+        ->and($tree['props'])->toHaveKeys(['warning_color', 'on_warning_color', 'dark_warning_color', 'dark_on_warning_color']);
+});
+
+it('rejects unsupported tones and malformed option icons', function (array $attributes, string $message) {
+    expect(fn () => collectPillGroup([
+        'options' => [['value' => 'all', 'label' => 'All', 'icon' => 'apps']],
+        'value' => null,
+        'label' => 'Filter',
+        ...$attributes,
+    ]))->toThrow(InvalidArgumentException::class, $message);
+})->with([
+    'tone' => [['tone' => 'info'], 'Unsupported Pill Group tone [info]'],
+    'blank icon' => [['options' => [['value' => 'all', 'label' => 'All', 'icon' => ' ']]], 'icon must be a non-empty string'],
+    'android type' => [['options' => [['value' => 'all', 'label' => 'All', 'icon-android' => 5]]], 'icon-android must be an AndroidSymbol or string'],
+    'unknown field still rejected' => [['options' => [['value' => 'all', 'label' => 'All', 'badge' => '2']]], 'unknown field: badge'],
+]);
+
+it('requires an icon on every option before labels can collapse', function (array $options, int $index) {
+    expect(fn () => collectPillGroup([
+        'options' => $options,
+        'value' => null,
+        'label' => 'Filter',
+        'collapse-labels' => true,
+    ]))->toThrow(InvalidArgumentException::class, "option at index {$index} has none");
+})->with([
+    'rich option without icon' => [[
+        ['value' => 'all', 'label' => 'All', 'icon' => 'apps'],
+        ['value' => 'unread', 'label' => 'Unread'],
+    ], 1],
+    'map options' => [['all' => 'All', 'unread' => 'Unread'], 0],
+]);
 
 it('warns in development when visible and accessibility labels are blank', function () {
     $warnings = [];

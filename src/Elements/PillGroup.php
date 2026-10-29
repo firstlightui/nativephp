@@ -2,7 +2,9 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Exceptions\InvalidOption;
 use FirstlightUI\Support\CallbackExpression;
+use FirstlightUI\Support\WarningColors;
 use FirstlightUI\Validation\FieldErrorBinder;
 use FirstlightUI\Support\NormalizedOption;
 use FirstlightUI\Support\NormalizedOptions;
@@ -10,6 +12,9 @@ use FirstlightUI\Support\OptionNormalizer;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
+use Native\Mobile\Icon\AndroidSymbol;
+use Native\Mobile\Icon\IconResolver;
+use Native\Mobile\Icon\IosSymbol;
 use Throwable;
 
 class PillGroup extends Element
@@ -20,17 +25,28 @@ class PillGroup extends Element
     private const INCOMPATIBLE_ATTRIBUTES = [
         'selected',
         'loading',
-        'tone',
         'variant',
-        'icon',
-        'icon-ios',
-        'icon-android',
         '_press',
         '_submit',
     ];
 
+    /** Group-level icon props: icons belong to individual options. */
+    private const GROUP_ICON_ATTRIBUTES = ['icon', 'icon-ios', 'iconIos', 'icon-android', 'iconAndroid'];
+
+    /** @var list<string> */
+    private const TONES = ['primary', 'accent', 'success', 'warning', 'danger'];
+
+    /** @var list<string> Shared fallback, then iOS and Android overrides with camelCase aliases. */
+    private const OPTION_ICON_FIELDS = ['icon', 'icon-ios', 'iconIos', 'icon-android', 'iconAndroid'];
+
     /** @var array<int|string, mixed> */
     protected array $rawOptions = [];
+
+    protected bool $scrollable = false;
+
+    protected bool $collapseLabels = false;
+
+    protected string $tone = 'primary';
 
     protected mixed $rawValue = null;
 
@@ -62,6 +78,18 @@ class PillGroup extends Element
 
         if (array_key_exists('multiple', $attrs)) {
             $this->multiple((bool) $attrs['multiple']);
+        }
+
+        if (array_key_exists('scrollable', $attrs)) {
+            $this->scrollable((bool) $attrs['scrollable']);
+        }
+
+        if (array_key_exists('collapse-labels', $attrs) || array_key_exists('collapseLabels', $attrs)) {
+            $this->collapseLabels((bool) ($attrs['collapse-labels'] ?? $attrs['collapseLabels']));
+        }
+
+        if (array_key_exists('tone', $attrs)) {
+            $this->tone((string) $attrs['tone']);
         }
 
         if (array_key_exists('value', $attrs)) {
@@ -114,6 +142,34 @@ class PillGroup extends Element
     public function multiple(bool $value = true): static
     {
         $this->multiple = $value;
+
+        return $this;
+    }
+
+    /** Presents the pills as one horizontally scrolling row instead of wrapping. */
+    public function scrollable(bool $value = true): static
+    {
+        $this->scrollable = $value;
+
+        return $this;
+    }
+
+    public function collapseLabels(bool $value = true): static
+    {
+        $this->collapseLabels = $value;
+
+        return $this;
+    }
+
+    public function tone(string $tone): static
+    {
+        if (! in_array($tone, self::TONES, true)) {
+            throw new InvalidArgumentException(
+                "Unsupported Pill Group tone [{$tone}]. Expected one of: ".implode(', ', self::TONES).'.'
+            );
+        }
+
+        $this->tone = $tone;
 
         return $this;
     }
@@ -174,7 +230,9 @@ class PillGroup extends Element
 
     protected function resolveProps(CallbackRegistry $registry): array
     {
-        $normalized = OptionNormalizer::normalize($this->rawOptions);
+        [$options, $icons] = $this->extractOptionIcons($this->rawOptions);
+        $normalized = OptionNormalizer::normalize($options);
+        $this->assertCollapsibleLabels($icons, count($normalized->items));
         $selected = $this->normalizeSelectedValues($normalized);
         $this->warnWhenUnlabelled();
 
@@ -190,6 +248,11 @@ class PillGroup extends Element
             'option_values' => $normalized->wireValues(),
             'option_labels' => $normalized->labels(),
             'option_enabled' => $normalized->enabledFlags(),
+            'option_icons' => array_map(fn (array $icon): string => $icon['icon'], $icons),
+            'option_icon_variants' => array_map(fn (array $icon): string => $icon['variant'], $icons),
+            'scrollable' => $this->scrollable,
+            'collapse_labels' => $this->collapseLabels,
+            'tone' => $this->tone,
             'option_callbacks' => $this->optionCallbacks(
                 $registry,
                 $normalized->items,
@@ -202,7 +265,7 @@ class PillGroup extends Element
             $props['disabled'] = true;
         }
 
-        return $props;
+        return $this->tone === 'warning' ? array_merge($props, WarningColors::props()) : $props;
     }
 
     /**
@@ -341,8 +404,76 @@ class PillGroup extends Element
         return in_array($candidate, $values, true);
     }
 
+    /**
+     * Removes the shared icon fields from rich options before the shared
+     * normalizer validates them, resolving each option's platform icon.
+     *
+     * @param array<int|string, mixed> $options
+     * @return array{0: array<int|string, mixed>, 1: list<array{icon: string, variant: string}>}
+     */
+    private function extractOptionIcons(array $options): array
+    {
+        if ($options === [] || ! array_is_list($options) || ! is_array($options[0])) {
+            return [$options, array_fill(0, count($options), ['icon' => '', 'variant' => ''])];
+        }
+
+        $icons = [];
+        foreach ($options as $index => $entry) {
+            if (! is_array($entry)) {
+                $icons[] = ['icon' => '', 'variant' => ''];
+
+                continue;
+            }
+
+            $name = $entry['icon'] ?? null;
+            $ios = $entry['icon-ios'] ?? $entry['iconIos'] ?? null;
+            $android = $entry['icon-android'] ?? $entry['iconAndroid'] ?? null;
+
+            if ($name !== null && (! is_string($name) || trim($name) === '')) {
+                throw InvalidOption::at($index, 'icon must be a non-empty string');
+            }
+            if ($ios !== null && ! is_string($ios) && ! $ios instanceof IosSymbol) {
+                throw InvalidOption::at($index, 'icon-ios must be an IosSymbol or string');
+            }
+            if ($android !== null && ! is_string($android) && ! $android instanceof AndroidSymbol) {
+                throw InvalidOption::at($index, 'icon-android must be an AndroidSymbol or string');
+            }
+
+            $resolved = IconResolver::resolve($name, $ios, $android);
+            $icons[] = ['icon' => $resolved['icon'] ?? '', 'variant' => $resolved['variant'] ?? ''];
+            $options[$index] = array_diff_key($entry, array_flip(self::OPTION_ICON_FIELDS));
+        }
+
+        return [$options, $icons];
+    }
+
+    /** @param list<array{icon: string, variant: string}> $icons */
+    private function assertCollapsibleLabels(array $icons, int $count): void
+    {
+        if (! $this->collapseLabels) {
+            return;
+        }
+
+        for ($index = 0; $index < $count; $index++) {
+            if (($icons[$index]['icon'] ?? '') === '') {
+                throw new InvalidArgumentException(
+                    "Pill Group `collapse-labels` requires every option to have an `icon`; option at index {$index} has none. "
+                    .'Unselected pills show only their icon, so each one must stay identifiable.'
+                );
+            }
+        }
+    }
+
     private function assertCompatibleAttributes(array $attrs): void
     {
+        foreach (self::GROUP_ICON_ATTRIBUTES as $attribute) {
+            if (array_key_exists($attribute, $attrs)) {
+                throw new InvalidArgumentException(
+                    "Firstlight Pill Group `{$attribute}` is not supported on the group. Add `icon` to each rich option instead."
+                );
+            }
+        }
+
         foreach (self::INCOMPATIBLE_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException(

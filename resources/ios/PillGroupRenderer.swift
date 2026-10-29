@@ -34,6 +34,12 @@ struct PillGroupRendererConfiguration: Equatable {
     let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
+    let optionIcons: [String]
+    let optionIconVariants: [String]
+    let scrollable: Bool
+    let collapseLabels: Bool
+    let tone: PillGroupTone
+    let warningColors: FirstlightWarningColors
 
     init(node: NativeUINode) {
         let props = node.props
@@ -57,6 +63,12 @@ struct PillGroupRendererConfiguration: Equatable {
             ? props.getString("label")
             : explicitAccessibilityLabel
         self.accessibilityHint = props.getString("a11y_hint")
+        self.optionIcons = props.getStringList("option_icons")
+        self.optionIconVariants = props.getStringList("option_icon_variants")
+        self.scrollable = props.getBool("scrollable")
+        self.collapseLabels = props.getBool("collapse_labels")
+        self.tone = PillGroupTone(rawValue: props.getString("tone")) ?? .primary
+        self.warningColors = FirstlightWarningColors(node: node)
     }
 }
 
@@ -146,14 +158,19 @@ struct PillGroupRenderer: View {
                 theme: theme,
                 traits: UITraitCollection(
                     userInterfaceStyle: colorScheme == .dark ? .dark : .light
-                )
+                ),
+                tone: configuration.tone,
+                warningColors: configuration.warningColors
             ),
             accessibilityLabel: configuration.accessibilityLabel,
             accessibilityHint: configuration.accessibilityHint,
             onSelection: { index in
                 guard let event = rendererState.userSelected(index) else { return }
                 events.send(event)
-            }
+            },
+            icons: configuration.optionIcons,
+            scrollable: configuration.scrollable,
+            collapseLabels: configuration.collapseLabels
         )
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in

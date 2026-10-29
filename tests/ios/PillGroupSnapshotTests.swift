@@ -32,6 +32,68 @@ final class PillGroupControlSnapshotTests: XCTestCase {
         )
     }
 
+    func testCollapsedScrollableRowSnapshots() {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            assertFirstlightSnapshot(
+                of: makeCollapsedRowViewController(style: style),
+                as: .image(on: .iPhoneSe, size: CGSize(width: 320, height: 220)),
+                named: style == .dark ? "collapsed-row-dark" : "collapsed-row-light"
+            )
+        }
+    }
+
+    private func makeCollapsedRowViewController(style: UIUserInterfaceStyle) -> UIViewController {
+        let traits = UITraitCollection(userInterfaceStyle: style)
+        let view = VStack(alignment: .leading, spacing: 16) {
+            FirstlightPillGroupField(
+                label: "Filter",
+                helper: "",
+                error: "",
+                required: false,
+                labels: ["All", "Unread", "Starred", "Attachments", "Mentions", "Archived"],
+                values: ["all", "unread", "starred", "attachments", "mentions", "archived"],
+                optionEnabled: [true, true, true, true, true, false],
+                selectedValues: ["starred"],
+                disabled: false,
+                awaitingPublication: false,
+                tokens: FirstlightPillGroupTokens.from(theme: .pillGroupTest, traits: traits),
+                accessibilityLabel: "Filter",
+                accessibilityHint: "",
+                onSelection: { _ in },
+                icons: ["tray", "envelope", "star", "paperclip", "at", "archivebox"],
+                scrollable: true,
+                collapseLabels: true
+            )
+            FirstlightPillGroupField(
+                label: "Invoices",
+                helper: "",
+                error: "",
+                required: false,
+                labels: ["Open", "Overdue", "Paid", "Void"],
+                values: ["open", "overdue", "paid", "void"],
+                optionEnabled: [true, true, true, true],
+                selectedValues: ["overdue"],
+                disabled: false,
+                awaitingPublication: false,
+                tokens: FirstlightPillGroupTokens.from(theme: .pillGroupTest, traits: traits, tone: .danger),
+                accessibilityLabel: "Invoices",
+                accessibilityHint: "",
+                onSelection: { _ in },
+                icons: ["doc.text", "clock", "checkmark.circle", "nosign"],
+                scrollable: true
+            )
+        }
+        .padding(16)
+        .frame(width: 320, alignment: .leading)
+        .background(Color(uiColor: .systemBackground))
+
+        return PillGroupTraitHostingController(
+            rootView: view,
+            style: style,
+            contentSize: .large
+        )
+    }
+
     private func makeViewController(
         style: UIUserInterfaceStyle,
         contentSize: UIContentSizeCategory
@@ -140,6 +202,49 @@ final class PillGroupRendererContractTests: XCTestCase {
         XCTAssertTrue(configuration.required)
         XCTAssertEqual(configuration.accessibilityLabel, "Queue filters")
         XCTAssertEqual(configuration.accessibilityHint, "Double tap to toggle")
+    }
+
+    func testConfigurationDecodesIconsRowPresentationAndTone() {
+        let configuration = PillGroupRendererConfiguration(node: makeNode(extra: [
+            "option_icons": ["tray", "envelope", "star.fill"],
+            "option_icon_variants": ["", "", ""],
+            "scrollable": true,
+            "collapse_labels": true,
+            "tone": "danger",
+        ]))
+
+        XCTAssertEqual(configuration.optionIcons, ["tray", "envelope", "star.fill"])
+        XCTAssertTrue(configuration.scrollable)
+        XCTAssertTrue(configuration.collapseLabels)
+        XCTAssertEqual(configuration.tone, .danger)
+    }
+
+    func testConfigurationDefaultsToWrappingPrimaryGroupWithoutIcons() {
+        let configuration = PillGroupRendererConfiguration(node: makeNode(extra: ["tone": "unknown"]))
+
+        XCTAssertEqual(configuration.optionIcons, [])
+        XCTAssertFalse(configuration.scrollable)
+        XCTAssertFalse(configuration.collapseLabels)
+        XCTAssertEqual(configuration.tone, .primary)
+    }
+
+    func testEveryToneTintsOnlyTheSelectedPillAndStaysContrastSafe() {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            let primary = FirstlightPillGroupTokens.from(theme: .pillGroupTest, traits: traits)
+
+            for tone in PillGroupTone.allCases {
+                let tokens = FirstlightPillGroupTokens.from(theme: .pillGroupTest, traits: traits, tone: tone)
+                let background = UIColor(tokens.selectedBackground).resolvedColor(with: traits)
+                let foreground = UIColor(tokens.selectedForeground).resolvedColor(with: traits)
+
+                XCTAssertGreaterThanOrEqual(
+                    statusLabelContrastRatio(foreground, background), 4.5, "\(tone) in \(style.rawValue)"
+                )
+                XCTAssertEqual(tokens.unselectedBackground, primary.unselectedBackground)
+                XCTAssertEqual(tokens.unselectedForeground, primary.unselectedForeground)
+            }
+        }
     }
 
     func testTapEmitsPressWithoutOptimisticallyChangingSelection() {
@@ -268,14 +373,15 @@ final class PillGroupRendererContractTests: XCTestCase {
         helper: String = "",
         error: String = "",
         a11yLabel: String = "",
-        a11yHint: String = ""
+        a11yHint: String = "",
+        extra: [String: Any] = [:]
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
             type: "firstlight.pill-group",
             layout: nil,
             style: nil,
-            props: GenericProps([
+            props: GenericProps(([
                 "option_values": ["mine", "all", "urgent"],
                 "option_labels": ["Mine", "All", "Urgent"],
                 "option_enabled": optionEnabled.map { $0 ? "1" : "0" },
@@ -290,7 +396,7 @@ final class PillGroupRendererContractTests: XCTestCase {
                 "required": true,
                 "a11y_label": a11yLabel,
                 "a11y_hint": a11yHint,
-            ]),
+            ] as [String: Any]).merging(extra) { _, new in new }),
             onPress: 0,
             onLongPress: 0,
             children: []
@@ -300,4 +406,25 @@ final class PillGroupRendererContractTests: XCTestCase {
     private func tree(root: NativeUINode) -> NativeUITree {
         NativeUITree(version: 0, callbackCount: 0, root: root)
     }
+}
+
+// The shim's `.fallback` leaves on-* tone colours clear; Mobile UI's real
+// fallback pairs each tone with an opaque foreground, so tone tests use this.
+private extension NativeUITokens {
+    static let pillGroupTest = NativeUITokens(
+        primary: Color(uiColor: .systemTeal),
+        onPrimary: Color(uiColor: .white),
+        surface: Color(uiColor: .systemBackground),
+        onSurface: Color(uiColor: .label),
+        background: Color(uiColor: .systemBackground),
+        onBackground: Color(uiColor: .label),
+        surfaceVariant: Color(uiColor: .secondarySystemBackground),
+        onSurfaceVariant: Color(uiColor: .secondaryLabel),
+        destructive: Color(uiColor: .systemRed),
+        onDestructive: Color(uiColor: .white),
+        success: Color(uiColor: .systemGreen),
+        onSuccess: Color(uiColor: .black),
+        accent: Color(uiColor: .systemOrange),
+        onAccent: Color(uiColor: .white)
+    )
 }

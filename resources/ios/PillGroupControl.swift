@@ -1,6 +1,14 @@
 import SwiftUI
 import UIKit
 
+enum PillGroupTone: String, CaseIterable {
+    case primary
+    case accent
+    case success
+    case warning
+    case danger
+}
+
 struct FirstlightPillGroupTokens {
     let selectedBackground: Color
     let selectedForeground: Color
@@ -11,9 +19,22 @@ struct FirstlightPillGroupTokens {
     let helper: Color
     let error: Color
 
-    static func from(theme: NativeUITokens, traits: UITraitCollection) -> Self {
-        let primary = UIColor(theme.primary).resolvedColor(with: traits)
-        let preferred = UIColor(theme.onPrimary).resolvedColor(with: traits)
+    static func from(
+        theme: NativeUITokens,
+        traits: UITraitCollection,
+        tone: PillGroupTone = .primary,
+        warningColors: FirstlightWarningColors = FirstlightWarningColors()
+    ) -> Self {
+        // Only the selected pill takes the tone; unselected pills stay uniform.
+        let pair: (background: Color, foreground: Color) = switch tone {
+        case .primary: (theme.primary, theme.onPrimary)
+        case .accent: (theme.accent, theme.onAccent)
+        case .success: (theme.success, theme.onSuccess)
+        case .warning: warningColors.resolve(isDark: traits.userInterfaceStyle == .dark)
+        case .danger: (theme.destructive, theme.onDestructive)
+        }
+        let primary = UIColor(pair.background).resolvedColor(with: traits)
+        let preferred = UIColor(pair.foreground).resolvedColor(with: traits)
 
         return Self(
             selectedBackground: Color(uiColor: primary),
@@ -150,6 +171,7 @@ struct PillFlowLayout: Layout {
 
 struct FirstlightPillGroupField: View {
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let label: String
     let helper: String
@@ -165,6 +187,9 @@ struct FirstlightPillGroupField: View {
     let accessibilityLabel: String
     let accessibilityHint: String
     let onSelection: (Int) -> Void
+    var icons: [String] = []
+    var scrollable = false
+    var collapseLabels = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -182,16 +207,7 @@ struct FirstlightPillGroupField: View {
                 .foregroundStyle(tokens.label)
             }
 
-            PillFlowLayout(
-                layoutDirection: layoutDirection,
-                horizontalSpacing: 8,
-                verticalSpacing: 8
-            ) {
-                ForEach(labels.indices, id: \.self) { index in
-                    pill(index: index)
-                        .firstlightValidationFocusTarget(index == labels.indices.first)
-                }
-            }
+            pillContainer
             .frame(maxWidth: .infinity, alignment: .leading)
             .allowsHitTesting(!awaitingPublication)
             .accessibilityElement(children: .contain)
@@ -217,32 +233,66 @@ struct FirstlightPillGroupField: View {
     }
 
     @ViewBuilder
+    private var pillContainer: some View {
+        if scrollable {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) { pills }
+            }
+        } else {
+            PillFlowLayout(
+                layoutDirection: layoutDirection,
+                horizontalSpacing: 8,
+                verticalSpacing: 8
+            ) { pills }
+        }
+    }
+
+    private var pills: some View {
+        ForEach(labels.indices, id: \.self) { index in
+            pill(index: index)
+                .firstlightValidationFocusTarget(index == labels.indices.first)
+        }
+    }
+
+    @ViewBuilder
     private func pill(index: Int) -> some View {
         let value = values.indices.contains(index) ? values[index] : ""
         let selected = selectedValues.contains(value)
         let enabled = !disabled
             && optionEnabled.indices.contains(index)
             && optionEnabled[index]
+        let icon = icons.indices.contains(index) ? icons[index] : ""
+        let showsLabel = !collapseLabels || selected
 
         Button {
             onSelection(index)
         } label: {
             HStack(spacing: 6) {
-                if selected {
+                // A collapsing pill reveals its label when selected, so that
+                // reveal (not a checkmark) is its non-colour selection cue.
+                if selected && !collapseLabels {
                     Image(systemName: "checkmark")
                         .font(.caption.weight(.bold))
                         .accessibilityHidden(true)
+                } else if !icon.isEmpty {
+                    Image(systemName: getIconForName(icon))
+                        .font(.subheadline.weight(.medium))
+                        .accessibilityHidden(true)
                 }
 
-                Text(labels[index])
-                    .font(.subheadline.weight(.medium))
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                if showsLabel {
+                    Text(labels[index])
+                        .font(.subheadline.weight(.medium))
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(scrollable ? 1 : nil)
+                        .fixedSize(horizontal: scrollable, vertical: true)
+                        .transition(.opacity)
+                }
             }
             .foregroundStyle(selected ? tokens.selectedForeground : tokens.unselectedForeground)
-            .padding(.horizontal, 14)
+            .padding(.horizontal, showsLabel ? 14 : 12)
             .padding(.vertical, 8)
-            .frame(minHeight: 44)
+            .frame(minWidth: 44, minHeight: 44)
             .background(
                 Capsule().fill(
                     selected ? tokens.selectedBackground : tokens.unselectedBackground
@@ -258,6 +308,7 @@ struct FirstlightPillGroupField: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .animation(reduceMotion ? nil : .snappy, value: selected)
         .disabled(!enabled)
         .accessibilityLabel(labels[index])
         .accessibilityValue(selected ? "Selected" : "Not selected")

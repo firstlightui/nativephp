@@ -46,6 +46,20 @@ class PillGroupRendererEvents(
     }
 }
 
+enum class PillGroupTone(val wireName: String) {
+    Primary("primary"),
+    Accent("accent"),
+    Success("success"),
+    Warning("warning"),
+    Danger("danger");
+
+    companion object {
+        fun fromWire(value: String): PillGroupTone = entries.firstOrNull {
+            it.wireName == value
+        } ?: Primary
+    }
+}
+
 data class PillGroupRendererConfiguration(
     val nodeId: Int,
     val optionValues: List<String>,
@@ -62,6 +76,12 @@ data class PillGroupRendererConfiguration(
     val required: Boolean,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val optionIcons: List<String> = emptyList(),
+    val optionIconVariants: List<String> = emptyList(),
+    val scrollable: Boolean = false,
+    val collapseLabels: Boolean = false,
+    val tone: PillGroupTone = PillGroupTone.Primary,
+    val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -81,6 +101,12 @@ data class PillGroupRendererConfiguration(
             node.props.getString("label")
         },
         accessibilityHint = node.props.getString("a11y_hint"),
+        optionIcons = node.props.getStringList("option_icons"),
+        optionIconVariants = node.props.getStringList("option_icon_variants"),
+        scrollable = node.props.getBool("scrollable"),
+        collapseLabels = node.props.getBool("collapse_labels"),
+        tone = PillGroupTone.fromWire(node.props.getString("tone", "primary")),
+        warningColors = FirstlightWarningColors(node),
     )
 }
 
@@ -131,7 +157,9 @@ object PillGroupRenderer {
             publishedTree?.let(rendererState::serverPublished)
         }
 
-        val tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
+        val isDark = isSystemInDarkTheme()
+        val tokens = if (isDark) NativeUITheme.dark else NativeUITheme.light
+        val configuration = rendererState.configuration
 
         FirstlightPillGroupControl(
             labels = rendererState.configuration.optionLabels,
@@ -147,13 +175,16 @@ object PillGroupRenderer {
                 rendererState.userSelected(index)?.let(events::dispatch)
             },
             modifier = modifier,
-            colors = pillGroupColors(tokens),
+            colors = pillGroupColors(tokens, configuration.tone, configuration.warningColors, isDark),
             labelColor = tokens.onSurface,
             helperColor = tokens.onSurfaceVariant,
             errorColor = tokens.destructive,
             required = rendererState.configuration.required,
             accessibilityLabel = rendererState.configuration.accessibilityLabel,
             accessibilityHint = rendererState.configuration.accessibilityHint,
+            icons = configuration.optionIcons,
+            scrollable = configuration.scrollable,
+            collapseLabels = configuration.collapseLabels,
         )
     }
 }
@@ -173,10 +204,23 @@ internal data class PillGroupTokenColors(
     val outline: Color,
 )
 
-internal fun resolvePillGroupTokenColors(tokens: NativeUITokens): PillGroupTokenColors {
+internal fun resolvePillGroupTokenColors(
+    tokens: NativeUITokens,
+    tone: PillGroupTone = PillGroupTone.Primary,
+    warningColors: FirstlightWarningColors = FirstlightWarningColors(),
+    isDark: Boolean = false,
+): PillGroupTokenColors {
     val surface = tokens.surface.compositeOver(tokens.background).copy(alpha = 1f)
-    val selectedContainer = tokens.primary.compositeOver(surface).copy(alpha = 1f)
-    val preferredSelectedContent = tokens.onPrimary.compositeOver(selectedContainer).copy(alpha = 1f)
+    // Only the selected pill takes the tone; unselected pills stay uniform.
+    val (toneContainer, toneContent) = when (tone) {
+        PillGroupTone.Primary -> tokens.primary to tokens.onPrimary
+        PillGroupTone.Accent -> tokens.accent to tokens.onAccent
+        PillGroupTone.Success -> tokens.success to tokens.onSuccess
+        PillGroupTone.Warning -> warningColors.resolve(isDark)
+        PillGroupTone.Danger -> tokens.destructive to tokens.onDestructive
+    }
+    val selectedContainer = toneContainer.compositeOver(surface).copy(alpha = 1f)
+    val preferredSelectedContent = toneContent.compositeOver(selectedContainer).copy(alpha = 1f)
     val selectedContent = preferredSelectedContent.takeIf {
         contrastRatio(it, selectedContainer) >= 4.5f
     } ?: listOf(Color.Black, Color.White).maxBy { contrastRatio(it, selectedContainer) }
@@ -192,12 +236,18 @@ internal fun resolvePillGroupTokenColors(tokens: NativeUITokens): PillGroupToken
 }
 
 @Composable
-internal fun pillGroupColors(tokens: NativeUITokens): SelectableChipColors {
-    val resolved = resolvePillGroupTokenColors(tokens)
+internal fun pillGroupColors(
+    tokens: NativeUITokens,
+    tone: PillGroupTone = PillGroupTone.Primary,
+    warningColors: FirstlightWarningColors = FirstlightWarningColors(),
+    isDark: Boolean = false,
+): SelectableChipColors {
+    val resolved = resolvePillGroupTokenColors(tokens, tone, warningColors, isDark)
 
     return FilterChipDefaults.filterChipColors(
         containerColor = resolved.unselectedContainer,
         labelColor = resolved.unselectedContent,
+        iconColor = resolved.unselectedContent,
         selectedContainerColor = resolved.selectedContainer,
         selectedLabelColor = resolved.selectedContent,
         selectedLeadingIconColor = resolved.selectedLeadingIcon,
