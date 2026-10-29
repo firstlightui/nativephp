@@ -34,6 +34,10 @@ struct FirstlightChoiceGroupField: View {
     let accessibilityLabel: String
     let accessibilityHint: String
     let onSelection: (Int) -> Void
+    var tiles = false
+    var prefixes: [String] = []
+    var supporting: [String] = []
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -49,13 +53,24 @@ struct FirstlightChoiceGroupField: View {
                 .foregroundStyle(tokens.foreground)
             }
 
-            VStack(spacing: 0) {
-                ForEach(labels.indices, id: \.self) { index in
-                    choiceRow(index: index)
-                        .firstlightValidationFocusTarget(index == labels.indices.first)
+            Group {
+                if tiles {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 280 : 150))], spacing: 8) {
+                        ForEach(labels.indices, id: \.self) { index in
+                            choiceRow(index: index)
+                                .firstlightValidationFocusTarget(index == labels.indices.first)
+                        }
+                    }
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(labels.indices, id: \.self) { index in
+                            choiceRow(index: index)
+                                .firstlightValidationFocusTarget(index == labels.indices.first)
 
-                    if index != labels.indices.last {
-                        Divider().overlay(tokens.divider)
+                            if index != labels.indices.last {
+                                Divider().overlay(tokens.divider)
+                            }
+                        }
                     }
                 }
             }
@@ -88,11 +103,20 @@ struct FirstlightChoiceGroupField: View {
             }
         } label: {
             HStack(alignment: .center, spacing: 12) {
-                Text(labels[index])
-                    .font(.body)
-                    .foregroundStyle(tokens.foreground)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    if prefixes.indices.contains(index), !prefixes[index].isEmpty {
+                        Text(prefixes[index]).font(.subheadline.weight(.semibold)).foregroundStyle(tokens.secondary)
+                    }
+                    Text(labels[index])
+                        .font(.body)
+                        .foregroundStyle(tokens.foreground)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if supporting.indices.contains(index), !supporting[index].isEmpty {
+                        Text(supporting[index]).font(.subheadline).foregroundStyle(tokens.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
 
                 Spacer(minLength: 12)
 
@@ -105,11 +129,26 @@ struct FirstlightChoiceGroupField: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .background {
+                if tiles {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(selected ? tokens.selected.opacity(0.12) : tokens.divider.opacity(0.25))
+                }
+            }
+            .overlay {
+                if tiles {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(selected ? tokens.selected : tokens.divider, lineWidth: 1)
+                }
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .accessibilityLabel(labels[index])
+        .accessibilityLabel([
+            prefixes.indices.contains(index) ? prefixes[index] : "",
+            labels[index], supporting.indices.contains(index) ? supporting[index] : "",
+        ].filter { !$0.isEmpty }.joined(separator: ", "))
         .accessibilityValue(multiple
             ? (selected ? "Checked" : "Not checked")
             : (selected ? "Selected" : "Not selected"))

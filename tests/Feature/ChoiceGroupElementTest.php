@@ -26,6 +26,22 @@ function collectChoiceGroup(array $attributes, ?CallbackRegistry $registry = nul
     return NativeElementCollector::collect()->toArray($registry ?? new CallbackRegistry);
 }
 
+it('keeps rich tile content separate from stable multiselect values', function () {
+    $registry = new CallbackRegistry;
+    $tree = collectChoiceGroup([
+        'label' => 'Favourites', 'variant' => 'tiles', 'multiple' => true, 'value' => ['consult'],
+        'options' => [
+            ['value' => 'consult', 'prefix' => '104', 'label' => 'Consultation', 'supporting' => '$90.25'],
+            ['value' => 'review', 'prefix' => '105', 'label' => 'Review', 'supporting' => '$45.10'],
+        ], '_change' => 'chooseItems',
+    ], $registry);
+    expect($tree['props'])->toMatchArray([
+        'variant' => 'tiles', 'option_prefixes' => ['104', '105'],
+        'option_supporting' => ['$90.25', '$45.10'], 'selected_values' => ['consult'],
+    ])->and($registry->resolve((int) $tree['props']['option_callbacks'][1]))
+        ->toBe(['method' => 'chooseItems', 'args' => [['consult', 'review']]]);
+});
+
 it('publishes single-choice rows with radio semantics and stable values', function () {
     $registry = new CallbackRegistry;
     $tree = collectChoiceGroup([

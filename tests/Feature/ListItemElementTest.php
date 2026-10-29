@@ -48,6 +48,34 @@ function collectListItem(array $attributes, ?CallbackRegistry $registry = null):
     return NativeElementCollector::collect()->toArray($registry ?? new CallbackRegistry);
 }
 
+it('publishes meaningful leading labels, status and pending removal without disabling actions', function () {
+    $tree = collectListItem([
+        'headline' => 'Alex Morgan', 'leading-label' => '4B-12',
+        'trailing-status' => 'Waiting to sync', 'trailing-status-tone' => 'warning',
+        'state' => 'pending-removal', 'state-label' => 'Discharge waiting to sync',
+        '_press' => 'openPatient(42)',
+    ]);
+
+    expect($tree['props'])->toMatchArray([
+        'leading_type' => 'label', 'leading_value' => '4B-12',
+        'trailing_type' => 'status', 'trailing_value' => 'Waiting to sync',
+        'trailing_status_tone' => 'warning', 'state' => 'pending-removal',
+        'state_label' => 'Discharge waiting to sync', 'disabled' => false,
+    ])->and($tree['on_press'])->toBeGreaterThan(0);
+});
+
+it('requires spoken meaning for a nonnormal row state', function () {
+    collectListItem(['headline' => 'Patient', 'state' => 'provisional', '_press' => 'openPatient']);
+})->throws(InvalidArgumentException::class, 'state-label');
+
+it('rejects ambiguous leading labels and trailing status', function (array $attributes) {
+    collectListItem(['headline' => 'Patient', '_press' => 'openPatient', ...$attributes]);
+})->with([
+    [['leading-label' => '4B-12', 'leading-monogram' => 'AB']],
+    [['trailing-status' => 'Syncing', 'trailing-text' => 'Today']],
+    [['trailing-status' => 'Syncing', 'trailing-icon' => 'check']],
+])->throws(InvalidArgumentException::class, 'exactly one');
+
 it('publishes the complete application row contract', function () {
     $registry = new CallbackRegistry;
     $tree = collectListItem([

@@ -47,6 +47,7 @@ Confirmation Dialog remains the confirm/cancel decision contract.
 | Prop or event | Contract |
 | --- | --- |
 | `visible` | Server-published presentation request. Defaults to unpublished/`false` in the native renderer. |
+| `pinned-footer` | Strict bool, default false. When true, at least two direct children are required; the final direct child stays outside the scrolling body. CamelCase alias and `pinnedFooter()` are supported. |
 | `a11y-label` | Optional non-empty accessible name for the sheet. The `a11yLabel` alias is accepted. |
 | `a11y-hint` | Optional non-empty supplementary guidance. The `a11yHint` alias is accepted. |
 | `@dismiss` | Required NativePHP dismissal callback. The handler sets the server property to `false`. |
@@ -57,8 +58,10 @@ There is no `value`, `native:model`, `dismissible`, `detents`, or overlay
 height of its content, capped at the full-height sheet, and follows the
 content as it changes. Short sheets stay short; tall sheets open fully so
 every authored control is reachable without a drag. Content taller than the
-full-height sheet scrolls on iOS; on Android it is clipped, so keep sheets
-shorter than the screen.
+full-height sheet scrolls on both platforms. With `pinned-footer`, all earlier
+children scroll and the final direct child stays visible. Multiple footer
+controls use an existing Mobile UI column; no new layout tag is introduced.
+The footer should remain compact enough to leave a scrollable body viewport.
 
 Child content is authored inside the paired tag. Sheets are always
 user-dismissible through native drag and outside/back dismissal.
@@ -89,11 +92,17 @@ scaling because it is measured from the rendered content.
   `.height` presentation detent measured from the content (system-capped at
   the large detent). Content sits in a `ScrollView` that only bounces when it
   overflows. Swipe down and taps on the dimmed background dismiss it.
+  A pinned footer uses a bottom safe-area inset and contributes to the
+  measured content-height detent.
 - Android renders a Firstlight Material 3 `ModalBottomSheet` with
   theme-sourced surface and scrim. The sheet is sized to its content and
   skips the partially expanded stop, so content taller than half the screen
   opens fully expanded and every authored control is reachable without a
-  drag. Short content opens at its own height.
+  drag. Short content opens at its own height. A bounded, vertically scrolling
+  body sits above the unscrolled footer, within the native sheet insets.
+  An authored vertical scroll view, list, virtual list or refreshable container
+  remains the body scroll owner, including through layout wrappers, so lazy
+  content is never measured inside another unbounded vertical scroller.
 
 ## Renderer decision
 

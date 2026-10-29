@@ -35,6 +35,8 @@ struct TextFieldRendererConfiguration {
     let label: String
     let placeholder: String
     let helper: String
+    let helperTone: String
+    let warningColors: FirstlightWarningColors
     let error: String
     let required: Bool
     let disabled: Bool
@@ -70,6 +72,8 @@ struct TextFieldRendererConfiguration {
         label = props.getString("label")
         placeholder = props.getString("placeholder")
         helper = props.getString("helper")
+        helperTone = props.getString("helper_tone", default: "neutral")
+        warningColors = FirstlightWarningColors(node: node)
         error = props.getString("error")
         required = props.getBool("required")
         disabled = props.getBool("disabled")

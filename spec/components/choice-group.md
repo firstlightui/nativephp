@@ -43,7 +43,8 @@ Multiple selection uses the same option shape and a list-valued binding:
 
 | Prop | Contract |
 | --- | --- |
-| `options` | Simple strings, a homogeneous value-to-label map, or rich option arrays with `value`, `label`, and optional `disabled`. Labels must contain visible text. |
+| `options` | Simple strings, a homogeneous value-to-label map, or rich option arrays with `value`, `label`, optional `disabled`, and optional string `prefix` and `supporting`. Labels must contain visible text. |
+| `variant` | `list` (default) or `tiles`; the same value/event contract in native rows or an adaptive selectable grid. |
 | `value` / `native:model` | Single mode accepts `string`, `int`, or `null`. Multiple mode accepts a list of homogeneous strings or integers, or `null`. |
 | `multiple` | Enables zero-or-more selection. Defaults to `false`. |
 | `label` | Visible group label. |
@@ -55,7 +56,7 @@ Multiple selection uses the same option shape and a list-valued binding:
 | `a11y-hint` | Supplementary VoiceOver and TalkBack guidance. |
 | `class` | External EDGE layout only. |
 
-Choice Group has no public orientation, density, tone, variant, icon, loading, per-option callback, press, or submit prop.
+Choice Group has no public orientation, density, tone, icon, loading, per-option callback, press, or submit prop.
 
 ## Options and values
 
@@ -89,12 +90,21 @@ The group exposes its visible or explicit label, hint, required state, helper, a
 
 The complete row is interactive. iOS rows meet the 44-point target and Android rows meet the 48-dp target. Selection uses a checkmark or platform control as well as colour.
 
+Prefix, label and supporting content form one option target, including tiles.
+Metadata never changes selection identity. Both variants wrap content; tiles
+reflow to fewer columns at accessibility text sizes rather than truncate fees
+or names. Currency formatting and item-number meaning belong to the app.
+
 ## Platform expression
 
 - iOS uses native SwiftUI button rows and trailing checkmarks, matching Apple's option-list convention. Single and multiple modes share the row geometry but expose exclusive-selection or toggle accessibility semantics respectively.
 - Android uses one Material 3 `RadioButton` row set in single mode and one homogeneous `Checkbox` row set in multiple mode. The row owns the selectable or toggleable semantics and the nested indicator does not create a duplicate TalkBack target.
 
 Both renderers use NativePHP semantic theme tokens and the same server-authoritative state contract.
+
+`tiles` uses SwiftUI checkmarked button cards in an adaptive LazyVGrid and
+Material 3 OutlinedCards with the existing checkbox/radio semantics. This
+extends Choice Group rather than introducing a billing or generic grid tag.
 
 ## Official primitive decision
 

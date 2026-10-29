@@ -10,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.autofill.contentType
@@ -37,6 +39,14 @@ internal fun FirstlightTextFieldControl(
     modifier: Modifier = Modifier,
 ) {
     val supporting = configuration.error.ifEmpty { configuration.helper }
+    val preferred = when {
+        configuration.error.isNotEmpty() -> tokens.destructive
+        configuration.helperTone == "success" -> tokens.success
+        configuration.helperTone == "warning" -> configuration.warningColors.resolve(isSystemInDarkTheme()).first
+        else -> tokens.onSurfaceVariant
+    }
+    val supportingColor = if (statusLabelContrastRatio(preferred, tokens.surface) >= 4.5f) preferred
+        else listOf(Color.Black, Color.White).maxBy { statusLabelContrastRatio(it, tokens.surface) }
     val description = listOf(configuration.accessibilityLabel, configuration.accessibilityHint)
         .filter(String::isNotEmpty)
         .joinToString(". ")
@@ -64,7 +74,7 @@ internal fun FirstlightTextFieldControl(
                 { Text(text) }
             },
             supportingText = supporting.takeIf(String::isNotEmpty)?.let { text ->
-                { Text(text, color = if (configuration.error.isEmpty()) tokens.onSurfaceVariant else tokens.destructive) }
+                { Text(text, color = supportingColor) }
             },
             leadingIcon = configuration.leadingIcon.takeIf(String::isNotEmpty)?.let { name ->
                 { MaterialIcon(name, null) }

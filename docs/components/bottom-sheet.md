@@ -47,6 +47,7 @@ heading role yet, so screen readers announce the surface by its `a11y-label`.
 | API | Accepted type | Purpose |
 | --- | --- | --- |
 | `visible` | `bool` | Server-controlled presentation request. Defaults to closed. |
+| `pinned-footer` | `bool` | Keeps the final direct child outside the scrolling body. Defaults to `false`; requires at least two direct children. |
 | `a11y-label` | non-empty `string` | Accessible name for the sheet. |
 | `a11y-hint` | non-empty `string` | Supplementary screen-reader guidance. |
 | `class` | `string` | External EDGE layout utilities. |
@@ -66,8 +67,36 @@ The sheet opens at the height of its content on both platforms. A short sheet
 stays short, and a sheet taller than half the screen opens fully, so a button
 at the bottom is visible without dragging. The height follows the content when
 it changes, including for larger text sizes, up to a full-height sheet.
-Content taller than that scrolls on iOS but is clipped on Android, so keep
-sheet content shorter than the screen.
+Content taller than that scrolls on both platforms.
+
+## Pinned footer
+
+With `pinned-footer`, the final **direct child** is the footer; every earlier
+child is scrolling content. Group multiple footer controls in an existing
+Mobile UI column. Do not wrap the body and footer in a single outer child.
+
+```blade
+<firstlight:bottom-sheet
+    :visible="$showingBill"
+    pinned-footer
+    a11y-label="Review bill"
+    @dismiss="closeBill"
+>
+    <native:column class="w-full p-4 gap-3">
+        @foreach ($items as $item)
+            <native:text class="text-theme-on-surface">{{ $item['label'] }}</native:text>
+        @endforeach
+    </native:column>
+    <native:column class="w-full p-4 gap-3 bg-theme-surface">
+        <native:text class="text-theme-on-surface">Total: {{ $formattedTotal }}</native:text>
+        <firstlight:button label="Save" @press="saveBill" />
+    </native:column>
+</firstlight:bottom-sheet>
+```
+
+The app supplies the items, formatted total and handlers. Keep the footer
+compact; body content must have space to scroll. PHP owns Save and whether
+the sheet closes. Native dismissal and its callback remain unchanged.
 
 ## Platform expression
 
@@ -75,6 +104,12 @@ iOS uses a SwiftUI `.sheet` with a drag indicator and a height detent
 measured from the content. Android uses Material 3 `ModalBottomSheet` sized to
 its content without the half-height stop. Theme tokens own surface and scrim
 colour.
+
+iOS places the footer in a bottom safe-area inset. Android keeps it below the
+bounded scrolling body. Both retain their native sheet chrome and insets.
+On Android, an authored vertical scroll view or list keeps ownership of body
+scrolling, including when nested in a layout column. The sheet supplies the
+scrolling viewport only when the body has no vertical scrolling container.
 
 ## Screenshots
 

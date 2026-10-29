@@ -35,6 +35,7 @@ struct SelectRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let accessibilityHint: String
     let doneLabel: String
+    let variant: String
 
     init(node: NativeUINode) {
         let props = node.props
@@ -60,6 +61,7 @@ struct SelectRendererConfiguration: Equatable {
             : explicitAccessibilityLabel
         accessibilityHint = props.getString("a11y_hint")
         doneLabel = props.getString("done_label", default: "Done")
+        variant = props.getString("variant", default: "field")
     }
 }
 
@@ -155,7 +157,8 @@ struct SelectRenderer: View {
             onSelection: { index in
                 guard let event = rendererState.userSelected(index) else { return }
                 events.send(event)
-            }
+            },
+            chip: configuration.variant == "chip"
         )
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in

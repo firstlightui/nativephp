@@ -58,6 +58,9 @@ struct ListItemRendererConfiguration: Equatable {
     let leadingIconColor: String
     let trailingIconColor: String
     let warningColors: FirstlightWarningColors
+    let statusTone: StatusLabelTone
+    let state: String
+    let stateLabel: String
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -85,6 +88,9 @@ struct ListItemRendererConfiguration: Equatable {
         leadingIconColor = node.props.getString("leading_icon_color")
         trailingIconColor = node.props.getString("trailing_icon_color")
         warningColors = FirstlightWarningColors(node: node)
+        statusTone = StatusLabelTone(rawValue: node.props.getString("trailing_status_tone")) ?? .neutral
+        state = node.props.getString("state", default: "normal")
+        stateLabel = node.props.getString("state_label")
     }
 
     var isEnabled: Bool {
@@ -93,7 +99,8 @@ struct ListItemRendererConfiguration: Equatable {
 
     var resolvedAccessibilityLabel: String {
         firstlightListItemAccessibilityLabel(
-            headline: headline,
+            headline: [leadingType == .label ? leadingValue : "", headline, trailingType == .status ? trailingValue : ""]
+                .filter { !$0.isEmpty }.joined(separator: ", "),
             supporting: supporting,
             explicit: accessibilityLabel
         )

@@ -59,9 +59,13 @@ data class DatePickerRendererConfiguration(
     val accessibilityLabel: String,
     val accessibilityHint: String,
     val onChangeCallback: Int,
+    val variant: String = "field",
+    val displayText: String = "",
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
+        variant = node.props.getString("variant", "field"),
+        displayText = node.props.getString("display_text"),
         hasValue = node.props.getBool("has_value"),
         value = node.props.getString("value"),
         min = node.props.getString("min"),

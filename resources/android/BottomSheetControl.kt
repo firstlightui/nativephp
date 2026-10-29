@@ -3,6 +3,8 @@ package dev.firstlightui.plugins.firstlight_ui.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -26,6 +28,8 @@ fun FirstlightBottomSheetControl(
     tokens: NativeUITokens,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    footer: @Composable () -> Unit = {},
+    scrollBody: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (!configuration.visible) return
@@ -45,7 +49,14 @@ fun FirstlightBottomSheetControl(
                         contentDescription = configuration.accessibilityLabel
                     }
                 },
-            content = content,
-        )
+        ) {
+            Column(
+                modifier = Modifier.weight(1f, fill = false).then(
+                    if (scrollBody) Modifier.verticalScroll(rememberScrollState()) else Modifier,
+                ),
+                content = content,
+            )
+            footer()
+        }
     }
 }

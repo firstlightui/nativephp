@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use FirstlightUI\Support\Chrome;
+use FirstlightUI\Support\WarningColors;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -67,6 +68,8 @@ class TextField extends Element
 
         foreach ([
             'keyboard' => 'keyboard',
+            'helper-tone' => 'helperTone',
+            'helperTone' => 'helperTone',
             'content-type' => 'contentType',
             'contentType' => 'contentType',
             'autocapitalize' => 'autocapitalize',
@@ -140,6 +143,11 @@ class TextField extends Element
         $this->inputProps['error'] = $value;
 
         return $this;
+    }
+
+    public function helperTone(string $value): static
+    {
+        return $this->enumProp('helper-tone', $value, ['neutral', 'success', 'warning']);
     }
 
     /**
@@ -292,6 +300,9 @@ class TextField extends Element
         $this->validateContract();
         $this->warnWhenUnlabelled();
         $props = $this->inputProps;
+        if (($props['helper_tone'] ?? '') === 'warning') {
+            $props = array_merge($props, WarningColors::props());
+        }
         $props['done_label'] = Chrome::string('done');
         $props['clear_a11y_label'] = Chrome::string('clear_text');
         $props['show_password_a11y_label'] = Chrome::string('show_password');

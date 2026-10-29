@@ -29,6 +29,15 @@ function collectFirstlightDatePicker(array $attributes, ?CallbackRegistry $regis
     return NativeElementCollector::collect()->toArray($registry ?? new CallbackRegistry);
 }
 
+it('supports an authored chip caption without changing the accepted date', function () {
+    $tree = collectFirstlightDatePicker(['label' => 'DOS', 'variant' => 'chip', 'display-text' => 'Today', 'value' => '2026-10-29']);
+    expect($tree['props'])->toMatchArray(['variant' => 'chip', 'display_text' => 'Today', 'value' => '2026-10-29']);
+});
+
+it('does not allow a chip caption to disguise an empty date', function () {
+    collectFirstlightDatePicker(['label' => 'DOS', 'variant' => 'chip', 'display-text' => 'Today']);
+})->throws(InvalidArgumentException::class, 'accepted date');
+
 it('publishes an accepted canonical date and field metadata', function () {
     $tree = collectFirstlightDatePicker([
         'value' => '2026-07-25',

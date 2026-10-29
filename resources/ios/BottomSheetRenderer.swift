@@ -20,12 +20,14 @@ struct BottomSheetRendererConfiguration: Equatable {
     let visible: Bool
     let accessibilityLabel: String
     let dismissCallback: Int
+    let pinnedFooter: Bool
 
     init(node: NativeUINode) {
         nodeID = node.id
         visible = node.props.getBool("visible")
         accessibilityLabel = node.props.getString("a11y_label")
         dismissCallback = node.props.getCallbackId("on_dismiss")
+        pinnedFooter = node.props.getBool("pinned_footer")
     }
 }
 
@@ -100,9 +102,14 @@ struct BottomSheetRenderer: View {
                 }
             ),
             accessibilityLabel: state.configuration.accessibilityLabel,
-            tokens: themeStore.resolve(for: colorScheme)
+            tokens: themeStore.resolve(for: colorScheme),
+            footer: {
+                if published.pinnedFooter, let child = node.children.last {
+                    NodeView(node: child).equatable()
+                }
+            }
         ) {
-            ForEach(node.children) { child in
+            ForEach(published.pinnedFooter ? Array(node.children.dropLast()) : node.children) { child in
                 NodeView(node: child).equatable()
             }
         }

@@ -19,6 +19,20 @@ struct FirstlightTextFieldControl: View {
     let onMaskedTextReplaced: (String) -> String
     let onMaskedFocusChanged: (Bool) -> Void
     @State private var maskedFocusRequest = 0
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var supportingColor: Color {
+        let preferred: Color = if !configuration.error.isEmpty { tokens.destructive }
+            else if configuration.helperTone == "success" { tokens.success }
+            else if configuration.helperTone == "warning" { configuration.warningColors.resolve(isDark: colorScheme == .dark).background }
+            else { tokens.onSurfaceVariant }
+        let foreground = UIColor(preferred)
+        let surface = UIColor(tokens.surface)
+        if statusLabelContrastRatio(foreground, surface) >= 4.5 { return preferred }
+        return Color(uiColor: [UIColor.black, .white].max {
+            statusLabelContrastRatio($0, surface) < statusLabelContrastRatio($1, surface)
+        }!)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -65,7 +79,7 @@ struct FirstlightTextFieldControl: View {
             if !supporting.isEmpty {
                 Text(supporting)
                     .font(.footnote)
-                    .foregroundStyle(configuration.error.isEmpty ? tokens.onSurfaceVariant : tokens.destructive)
+                    .foregroundStyle(supportingColor)
                     .accessibilityLabel(configuration.error.isEmpty ? supporting : "Error: \(supporting)")
             }
         }

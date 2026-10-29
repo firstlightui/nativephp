@@ -19,7 +19,7 @@ final class DatePicker extends Element
         'hour-format', 'hourFormat', 'clearable', 'title', 'confirm-label',
         'confirmLabel', 'cancel-label', 'cancelLabel', 'icon', 'icon-ios',
         'iconIos', 'icon-android', 'iconAndroid', 'range', 'loading', 'tone',
-        'variant', 'size', 'time', 'datetime', '_press', '_submit', '_clear',
+        'size', 'time', 'datetime', '_press', '_submit', '_clear',
         '_longPress', '_doubleTap', '_pressDown', '_pressUp', '_navigate',
     ];
 
@@ -54,9 +54,10 @@ final class DatePicker extends Element
             $this->value($attrs['value']);
         }
 
-        foreach (['label', 'placeholder', 'helper', 'error'] as $attribute) {
+        foreach (['label', 'placeholder', 'helper', 'error', 'variant', 'display-text', 'displayText'] as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
-                $this->{$attribute}($this->strictString($attribute, $attrs[$attribute]));
+                $method = $attribute === 'display-text' ? 'displayText' : $attribute;
+                $this->{$method}($this->strictString($attribute, $attrs[$attribute]));
             }
         }
 
@@ -151,6 +152,26 @@ final class DatePicker extends Element
         return $this;
     }
 
+    public function variant(string $value): static
+    {
+        if (! in_array($value, ['field', 'chip'], true)) {
+            throw new InvalidArgumentException('Date Picker does not support this variant; use field or chip.');
+        }
+        $this->inputProps['variant'] = $value;
+
+        return $this;
+    }
+
+    public function displayText(string $value): static
+    {
+        if (trim($value) === '') {
+            throw new InvalidArgumentException('Date Picker `display-text` must be non-empty.');
+        }
+        $this->inputProps['display_text'] = $value;
+
+        return $this;
+    }
+
     public function helper(string $value): static
     {
         $this->inputProps['helper'] = $value;
@@ -219,6 +240,11 @@ final class DatePicker extends Element
 
     protected function resolveProps(CallbackRegistry $registry): array
     {
+        if (isset($this->inputProps['display_text']) && (
+            ($this->inputProps['variant'] ?? 'field') !== 'chip' || ! $this->inputProps['has_value']
+        )) {
+            throw new InvalidArgumentException('Date Picker `display-text` requires a chip with an accepted date.');
+        }
         $this->validateBounds();
         $this->warnWhenUnlabelled();
         $props = Chrome::withPickerChrome($this->inputProps);

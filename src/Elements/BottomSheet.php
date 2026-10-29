@@ -65,6 +65,14 @@ class BottomSheet extends \Native\Mobile\UI\Elements\BottomSheet
             );
         }
 
+        if (array_key_exists('pinned-footer', $attrs) || array_key_exists('pinnedFooter', $attrs)) {
+            $value = array_key_exists('pinned-footer', $attrs) ? $attrs['pinned-footer'] : $attrs['pinnedFooter'];
+            if (! is_bool($value)) {
+                throw new InvalidArgumentException('Firstlight Bottom Sheet `pinned-footer` must be a boolean.');
+            }
+            $this->pinnedFooter($value);
+        }
+
         foreach (['a11y-label', 'a11yLabel', 'a11y-hint', 'a11yHint'] as $attribute) {
             if (! array_key_exists($attribute, $attrs)) {
                 continue;
@@ -80,8 +88,19 @@ class BottomSheet extends \Native\Mobile\UI\Elements\BottomSheet
         parent::applyAttributes($attrs);
     }
 
+    public function pinnedFooter(bool $value = true): static
+    {
+        $this->sheetProps['pinned_footer'] = $value;
+
+        return $this;
+    }
+
     protected function resolveProps(CallbackRegistry $registry): array
     {
+        if (($this->sheetProps['pinned_footer'] ?? false) && count($this->children) < 2) {
+            throw new InvalidArgumentException('Firstlight Bottom Sheet requires body and a final footer child when using `pinned-footer`.');
+        }
+
         if ($this->dismissCallback === null || trim($this->dismissCallback) === '') {
             throw new InvalidArgumentException(
                 'Firstlight Bottom Sheet requires `@dismiss`.'

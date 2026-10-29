@@ -3739,6 +3739,7 @@ public array $notifications = ['email'];
 | `options` | `array` | Simple strings, a value-to-label map, or rich option arrays. Labels must contain visible text. |
 | `value` / `native:model` | `string`, `int`, `array`, or `null` | Stable selection. Use a scalar or `null` in single mode and a homogeneous list or `null` in multiple mode. |
 | `multiple` | `bool` | Enables zero-or-more selection. Defaults to `false`. |
+| `variant` | `list` or `tiles` | Full-width rows (default) or an adaptive grid of native selectable tiles. |
 | `label` | `string` | Visible field label. |
 | `helper` | `string` | Supporting text shown when there is no error. |
 | `error` | `string` | Error text and native error semantics; replaces helper text. |
@@ -3762,7 +3763,8 @@ A map separates stable values from labels and may use all-string or all-integer 
 ['routine' => 'Routine', 'urgent' => 'Urgent']
 ```
 
-Rich options accept only `value`, `label`, and optional `disabled` fields:
+Rich options accept `value`, `label`, optional `disabled`, and optional string
+`prefix` and `supporting` content. These are display text, never selection values:
 
 ```php
 [
@@ -3772,6 +3774,27 @@ Rich options accept only `value`, `label`, and optional `disabled` fields:
 ```
 
 All option labels must contain visible text. Values in one group must be unique and must all be strings or all be integers.
+
+For a favourites grid, format numbers and fees in the app and keep the bound
+values as stable identifiers:
+
+```blade
+<firstlight:choice-group
+    variant="tiles"
+    :options="[
+        ['value' => 'consult', 'prefix' => '110', 'label' => 'Initial consultation', 'supporting' => '$90.00'],
+        ['value' => 'review', 'prefix' => '116', 'label' => 'Follow-up', 'supporting' => '$45.00'],
+    ]"
+    native:model="favourites"
+    label="Favourites"
+    multiple
+/>
+```
+
+Declare `public array $favourites = [];`. Both variants expose prefix, label,
+and supporting text as one option target. Tiles reflow for larger text rather
+than forcing a fixed column count. They use the same disabled, validation,
+and server-authoritative selection contract as list rows.
 
 In single mode, tapping an unselected row proposes its value. Tapping the selected row does nothing, matching radio-choice semantics. PHP can publish `null` to clear the field programmatically.
 
@@ -3815,6 +3838,10 @@ fallback.
 ## Platform behaviour
 
 iOS uses native SwiftUI option rows with trailing checkmarks. Android renders one Material 3 radio-row set for single choice and one homogeneous checkbox-row set for multiple choice. Both inherit NativePHP semantic theme tokens and preserve native focus, selection, disabled, and accessibility behaviour without exposing platform-widget props.
+
+The tile variant composes SwiftUI checkmarked buttons in an adaptive grid on
+iOS and Material 3 outlined cards with radio or checkbox indicators on Android.
+Tile geometry remains platform-native; the selection contract is identical.
 
 ## Compatibility
 
@@ -4252,6 +4279,7 @@ heading role yet, so screen readers announce the surface by its `a11y-label`.
 | API | Accepted type | Purpose |
 | --- | --- | --- |
 | `visible` | `bool` | Server-controlled presentation request. Defaults to closed. |
+| `pinned-footer` | `bool` | Keeps the final direct child outside the scrolling body. Defaults to `false`; requires at least two direct children. |
 | `a11y-label` | non-empty `string` | Accessible name for the sheet. |
 | `a11y-hint` | non-empty `string` | Supplementary screen-reader guidance. |
 | `class` | `string` | External EDGE layout utilities. |
@@ -4271,8 +4299,36 @@ The sheet opens at the height of its content on both platforms. A short sheet
 stays short, and a sheet taller than half the screen opens fully, so a button
 at the bottom is visible without dragging. The height follows the content when
 it changes, including for larger text sizes, up to a full-height sheet.
-Content taller than that scrolls on iOS but is clipped on Android, so keep
-sheet content shorter than the screen.
+Content taller than that scrolls on both platforms.
+
+## Pinned footer
+
+With `pinned-footer`, the final **direct child** is the footer; every earlier
+child is scrolling content. Group multiple footer controls in an existing
+Mobile UI column. Do not wrap the body and footer in a single outer child.
+
+```blade
+<firstlight:bottom-sheet
+    :visible="$showingBill"
+    pinned-footer
+    a11y-label="Review bill"
+    @dismiss="closeBill"
+>
+    <native:column class="w-full p-4 gap-3">
+        @foreach ($items as $item)
+            <native:text class="text-theme-on-surface">{{ $item['label'] }}</native:text>
+        @endforeach
+    </native:column>
+    <native:column class="w-full p-4 gap-3 bg-theme-surface">
+        <native:text class="text-theme-on-surface">Total: {{ $formattedTotal }}</native:text>
+        <firstlight:button label="Save" @press="saveBill" />
+    </native:column>
+</firstlight:bottom-sheet>
+```
+
+The app supplies the items, formatted total and handlers. Keep the footer
+compact; body content must have space to scroll. PHP owns Save and whether
+the sheet closes. Native dismissal and its callback remain unchanged.
 
 ## Platform expression
 
@@ -4280,6 +4336,12 @@ iOS uses a SwiftUI `.sheet` with a drag indicator and a height detent
 measured from the content. Android uses Material 3 `ModalBottomSheet` sized to
 its content without the half-height stop. Theme tokens own surface and scrim
 colour.
+
+iOS places the footer in a bottom safe-area inset. Android keeps it below the
+bounded scrolling body. Both retain their native sheet chrome and insets.
+On Android, an authored vertical scroll view or list keeps ownership of body
+scrolling, including when nested in a layout column. The sheet supplies the
+scrolling viewport only when the body has no vertical scrolling container.
 
 ## Screenshots
 
@@ -4328,6 +4390,8 @@ public ?string $appointmentDate = null;
 | `label` | `string` | Visible field label and accessibility-name fallback. |
 | `placeholder` | `string` | Field text while the accepted value is `null`. |
 | `helper` | `string` | Supporting guidance below the field. |
+| `variant` | `field` or `chip` | Full field (default) or compact native picker trigger. |
+| `display-text` | non-empty `string` | App-authored chip caption such as Today. Requires `variant="chip"` and a non-null accepted date; never replaces the bound or spoken date. |
 | `error` | `string` | Validation feedback that replaces helper text. |
 | `required` | `bool` | Communicates required metadata; validation remains in PHP. |
 | `disabled` | `bool` | Prevents opening and confirmation. |
@@ -4346,6 +4410,14 @@ non-null value. Null bounds are omitted. Firstlight never silently clamps an
 authored value.
 
 ## Events and synchronisation
+
+For a compact date-of-service trigger, use `variant="chip" label="DOS"`.
+Optionally publish `display-text="Today"` only when the app has determined
+that the accepted date is today in its business timezone. Recompute or omit
+that caption when the date changes. Without it, the chip shows the localized
+accepted date. VoiceOver and TalkBack always retain the full localized date.
+iOS uses a native bordered capsule button; Android uses a Material 3
+AssistChip. Both open the existing native calendar and confirmation flow.
 
 `@change` receives a canonical date string only after the user confirms the
 native presentation. In normal use, `native:model` registers this callback and
@@ -4619,10 +4691,15 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `leading-icon-color`, `trailing-icon-color` | hex `string` | Explicit icon colour overrides tone on both platforms; accepts `#RGB`, `#RRGGBB`, `#AARRGGBB`. |
 | `leading-avatar` | non-empty `string` | Optional image source representing the row subject. |
 | `leading-monogram` | one or two characters | Optional short identity marker such as `WJ`. |
+| `leading-label` | non-empty `string` | Text identity such as `4B-12`, without the monogram length limit. |
 | `trailing-icon` | non-empty `string` | Optional shared decorative affordance icon. |
 | `trailing-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `trailing-icon`. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `trailing-icon`; typed variants are preserved on the wire. |
 | `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
+| `trailing-status` | non-empty `string` | Display-only Status Label inside the row's single target. |
+| `trailing-status-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Status meaning; defaults to `neutral` and requires `trailing-status`. |
+| `state` | `normal`, `provisional`, `pending-removal` | Normal (default), subdued provisional text, or struck-through headline/supporting text. Does not disable actions. |
+| `state-label` | non-empty `string` | Required spoken meaning for a nonnormal state. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
 | `trailing-actions` | `array` of action descriptors | Optional actions revealed from the logical trailing edge inside List. |
 | `context-menu` | `array` of menu item descriptors | Optional native context menu opened by long press, with matching screen-reader actions. |
@@ -4631,14 +4708,70 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `a11y-hint` | non-empty `string` | Optional supplementary VoiceOver or TalkBack guidance. |
 | `class` | `string` | External EDGE layout utilities. |
 
-Choose at most one leading source: icon, avatar, or monogram. Choose at most
-one trailing affordance: icon or text. Supporting text and both edges may be
+Choose at most one leading source: icon, avatar, monogram, or label. Choose at most
+one trailing affordance: icon, text, or status. Supporting text and both edges may be
 omitted for a headline-only row.
 
 Blade examples use kebab-case names. The equivalent `leadingIcon`,
 `leadingIconIos`, `leadingIconAndroid`, `leadingAvatar`, `leadingMonogram`,
 `trailingIcon`, `trailingIconIos`, `trailingIconAndroid`, and `trailingText`
 aliases are also accepted for parity with NativePHP authoring.
+
+The new attributes also accept matching camelCase aliases and fluent setters:
+`leadingLabel()`, `trailingStatus()`, `trailingStatusTone()`, `state()` and
+`stateLabel()`.
+
+## Status and pending state
+
+```blade
+<firstlight:list-item
+    headline="Alex Morgan"
+    supporting="Discharge"
+    leading-label="4B-12"
+    trailing-status="Waiting to sync"
+    trailing-status-tone="warning"
+    state="pending-removal"
+    state-label="Discharge waiting to sync"
+    @press="openPatient(42)"
+/>
+```
+
+`provisional` subdues text with a readable secondary foreground rather than
+making the row disabled. `pending-removal` strikes through the headline and
+supporting text but keeps the row until PHP publishes its removal. Neither
+state starts a job, retries sync, or changes action availability. Use `disabled`
+separately when actions must be unavailable.
+
+The leading label and trailing status join the default spoken row name.
+An explicit `a11y-label` replaces that name; `state-label` is still announced
+as state. The status is not a nested action or separate accessibility stop.
+At accessibility text sizes it moves below the headline/supporting text so
+the headline remains readable.
+
+## Read-only summaries and comparisons
+
+Use Mobile UI text/columns for read-only key-value content, not a List Item
+with a fake press handler. For a comparison, PHP decides match, mismatch or
+unknown; Status Label communicates the result with words as well as a mark:
+
+```blade
+<native:column class="w-full gap-2">
+    <native:text class="text-theme-on-surface">Patient: {{ $patientName }}</native:text>
+    <native:text class="text-theme-on-surface">Date of birth: {{ $formattedDob }}</native:text>
+    <native:text class="text-theme-on-surface">Label identifier: {{ $labelIdentifier }}</native:text>
+    <native:text class="text-theme-on-surface">On file: {{ $fileIdentifier }}</native:text>
+    @if ($comparison === 'match')
+        <firstlight:status-label label="Matches" tone="success" icon="check" icon-ios="checkmark" />
+    @elseif ($comparison === 'mismatch')
+        <firstlight:status-label label="Does not match" tone="warning" />
+    @else
+        <firstlight:status-label label="Not compared" tone="neutral" />
+    @endif
+</native:column>
+```
+
+The app supplies the display values and comparison result. This is ordinary
+native composition, not a new catalogue layout or validation engine.
 
 ## Swipe actions
 
@@ -5662,6 +5795,7 @@ public array $priorityOptions = [
 | `options` | `array` | Simple strings, a value-to-label map, or rich option arrays. Labels must contain visible text. |
 | `value` / `native:model` | `string`, `int`, or `null` | Stable selection. Every non-null value must exactly match one option by type and value. |
 | `searchable` | `bool` | Forces search for a collection with 12 or fewer options. Collections with 13 or more are always searchable. |
+| `variant` | `field` or `chip` | Full field (default) or compact native trigger; chooser and selection semantics are unchanged. |
 | `label` | `string` | Visible field label. |
 | `placeholder` | `string` | Trigger text when the published value is `null`; it is not the accessible name. |
 | `helper` | `string` | Supporting text shown when there is no error. |
@@ -5698,6 +5832,25 @@ Rich options accept only `value`, `label`, and optional `disabled` fields:
 Values in one collection must be unique and all strings or all integers. Matching is strict: integer `10` does not match string `'10'`. `null` means no selection and displays the placeholder. Empty options accept only `null` and produce an inert trigger.
 
 ## Compact and searchable presentation
+
+Set `variant="chip"` for an intrinsic-width picker trigger with the label and
+accepted value inline, for example a hospital or provider selector. The
+default is `variant="field"`. iOS uses a native bordered capsule trigger;
+Android uses a Material 3 AssistChip. This changes the closed trigger only:
+menus, search threshold, stable values, required/error/disabled metadata and
+state timing remain unchanged. Chips retain 44-point iOS / 48-dp Android
+targets rather than shrinking the touch area to the text.
+
+```blade
+<firstlight:select
+    variant="chip"
+    :options="['north' => 'North', 'south' => 'South']"
+    native:model="hospital"
+    label="Hospital"
+/>
+```
+
+Declare `public ?string $hospital = 'north';` on the screen.
 
 Select chooses its platform presentation from the option count. Up to 12 options use a compact menu or dropdown. Thirteen or more options use a searchable presentation automatically. Set `searchable` to force search for a smaller collection.
 
@@ -6168,6 +6321,7 @@ autofill, selection, and accessibility behaviour of each platform.
 | `label` | `string` | Visible label and accessibility-name fallback. |
 | `placeholder` | `string` | Short example; never a replacement for a label. |
 | `helper` | `string` | Supporting guidance below the field. |
+| `helper-tone` | `neutral`, `success`, or `warning` | Meaning of helper text. Defaults to `neutral`; `error` always takes precedence. |
 | `error` | `string` | Validation feedback that replaces helper text. |
 | `required` | `bool` | Communicates required metadata without performing validation. |
 | `disabled` | `bool` | Prevents focus, editing, and every action. |
@@ -6193,6 +6347,14 @@ autofill, selection, and accessibility behaviour of each platform.
 | `class` | `string` | External EDGE layout for the complete field. |
 
 ## Events and synchronisation
+
+Use `helper="Checksum OK" helper-tone="success"`,
+`helper="Check this" helper-tone="warning"`, or neutral `helper="From label"`.
+The app supplies meaningful text: colour alone does not announce success or
+warning. Helpers remain guidance, not validation errors or automatic live
+announcements. An `error` replaces the helper and retains native error
+semantics regardless of helper tone. Native semantic colours are adjusted to
+retain readable contrast against the field surface.
 
 `@change` receives the current string. `@submit` flushes any pending change,
 then receives the same current string. An authored interactive trailing icon

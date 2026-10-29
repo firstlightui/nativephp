@@ -7,21 +7,21 @@ use FirstlightUI\Exceptions\InvalidOption;
 final class OptionNormalizer
 {
     /** @param array<int|string, mixed> $options */
-    public static function normalize(array $options): NormalizedOptions
+    public static function normalize(array $options, bool $content = false): NormalizedOptions
     {
         if ($options === []) {
             return new NormalizedOptions('string', []);
         }
 
         if (array_is_list($options)) {
-            return self::normalizeList($options);
+            return self::normalizeList($options, $content);
         }
 
         return self::normalizeMap($options);
     }
 
     /** @param list<mixed> $options */
-    private static function normalizeList(array $options): NormalizedOptions
+    private static function normalizeList(array $options, bool $content): NormalizedOptions
     {
         $first = $options[0];
 
@@ -44,7 +44,7 @@ final class OptionNormalizer
         }
 
         if (is_array($first)) {
-            return self::normalizeRichList($options);
+            return self::normalizeRichList($options, $content);
         }
 
         throw InvalidOption::at(0, 'option must be a string or rich option');
@@ -73,7 +73,7 @@ final class OptionNormalizer
     }
 
     /** @param list<mixed> $options */
-    private static function normalizeRichList(array $options): NormalizedOptions
+    private static function normalizeRichList(array $options, bool $content): NormalizedOptions
     {
         $items = [];
         $valueType = null;
@@ -84,7 +84,9 @@ final class OptionNormalizer
                 throw InvalidOption::at($index, 'rich options must be arrays');
             }
 
-            $unknown = array_diff(array_keys($entry), ['value', 'label', 'disabled']);
+            $unknown = array_diff(array_keys($entry), $content
+                ? ['value', 'label', 'disabled', 'prefix', 'supporting']
+                : ['value', 'label', 'disabled']);
 
             if ($unknown !== []) {
                 throw InvalidOption::at($index, 'unknown field: '.implode(', ', $unknown));
@@ -115,7 +117,12 @@ final class OptionNormalizer
             self::assertValueType($value, $valueType, $index);
             self::assertUnique($value, $seen, $index);
 
-            $items[] = new NormalizedOption($value, $label, $disabled);
+            foreach (['prefix', 'supporting'] as $field) {
+                if (array_key_exists($field, $entry) && ! is_string($entry[$field])) {
+                    throw InvalidOption::at($index, "{$field} must be a string");
+                }
+            }
+            $items[] = new NormalizedOption($value, $label, $disabled, $entry['prefix'] ?? '', $entry['supporting'] ?? '');
         }
 
         return new NormalizedOptions($valueType, $items);

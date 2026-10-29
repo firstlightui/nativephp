@@ -55,10 +55,15 @@ arrange List Items; swipe-enabled rows require a List host.
 | `leading-icon-color`, `trailing-icon-color` | Optional `#RGB`, `#RRGGBB`, or `#AARRGGBB`; explicit colour wins over tone on both platforms. |
 | `leading-avatar` | Optional non-empty image source representing the row subject. Mutually exclusive with other leading content. |
 | `leading-monogram` | Optional one- or two-grapheme identity marker. Mutually exclusive with other leading content. |
+| `leading-label` | Nonblank text identity without the monogram length limit; mutually exclusive with other leading content. |
 | `trailing-icon` | Optional non-empty shared decorative affordance icon. Mutually exclusive with `trailing-text`. |
 | `trailing-icon-ios` | Optional `IosSymbol|string` override; requires `trailing-icon`. |
 | `trailing-icon-android` | Optional `AndroidSymbol|string` override; requires `trailing-icon`; typed variants are preserved. |
 | `trailing-text` | Optional nullable metadata. Non-empty text is mutually exclusive with `trailing-icon`; null/empty/whitespace omit it. |
+| `trailing-status` | Nonblank Status Label content, mutually exclusive with trailing icon/text. |
+| `trailing-status-tone` | Existing neutral/info/success/warning/danger semantic tone, defaults neutral; requires a status. |
+| `state` | normal (default), provisional (secondary foreground), or pending-removal (struck-through headline/supporting); actions remain enabled unless separately disabled. |
+| `state-label` | Required nonblank authored spoken meaning for nonnormal state; platform state/value semantics, independent of accessible-name override. |
 | `leading-actions`, `trailing-actions` | Optional arrays of labelled callback descriptors; see Swipe actions below. |
 | `context-menu` | Optional array of labelled callback descriptors with `disabled`; see Context menu below. |
 | `disabled` | Prevents row and swipe action presses and exposes native disabled semantics. Defaults to `false`. |
@@ -189,6 +194,11 @@ opened from `combinedClickable(onLongClick:)` and anchored at the press point.
 ## Accessibility
 
 The headline and supporting text form the default accessible row name.
+Leading label and trailing status are also included when present. Status
+uses the existing contrast-aware native Status Label composition and is not
+a nested target. At accessibility text sizes it moves beneath row text to
+avoid squeezing the headline. Provisional state retains readable contrast;
+pending-removal never removes the row or starts sync on the native side.
 `a11y-label` replaces that combined name and `a11y-hint` adds context. The row
 is one native button node. Disabled state is exposed through native semantics.
 Its interaction target is at least 44 points on iOS and 48 dp on Android.

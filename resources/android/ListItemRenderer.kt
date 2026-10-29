@@ -95,6 +95,9 @@ data class ListItemRendererConfiguration(
     val leadingIconColor: String,
     val trailingIconColor: String,
     val warningColors: FirstlightWarningColors,
+    val statusTone: String = "neutral",
+    val state: String = "normal",
+    val stateLabel: String = "",
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -122,6 +125,9 @@ data class ListItemRendererConfiguration(
         leadingIconColor = node.props.getString("leading_icon_color"),
         trailingIconColor = node.props.getString("trailing_icon_color"),
         warningColors = FirstlightWarningColors(node),
+        statusTone = node.props.getString("trailing_status_tone", "neutral"),
+        state = node.props.getString("state", "normal"),
+        stateLabel = node.props.getString("state_label"),
     )
 
     val enabled: Boolean

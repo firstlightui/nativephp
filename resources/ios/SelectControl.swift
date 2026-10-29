@@ -49,10 +49,11 @@ struct FirstlightSelectField: View {
     let accessibilityHint: String
     let doneLabel: String
     let onSelection: (Int) -> Void
+    var chip = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if !label.isEmpty {
+            if !label.isEmpty && !chip {
                 HStack(spacing: 2) {
                     Text(label)
                         .fixedSize(horizontal: false, vertical: true)
@@ -90,7 +91,7 @@ struct FirstlightSelectField: View {
             } label: {
                 triggerLabel
             }
-            .buttonStyle(.plain)
+            .modifier(FirstlightPickerTriggerStyle(compact: chip))
             .disabled(disabled)
             .accessibilityLabel(groupAccessibilityLabel)
             .accessibilityValue(selectedLabel ?? placeholder)
@@ -112,7 +113,7 @@ struct FirstlightSelectField: View {
             } label: {
                 triggerLabel
             }
-            .buttonStyle(.plain)
+            .modifier(FirstlightPickerTriggerStyle(compact: chip))
             .disabled(disabled)
             .accessibilityLabel(groupAccessibilityLabel)
             .accessibilityValue(selectedLabel ?? placeholder)
@@ -122,24 +123,27 @@ struct FirstlightSelectField: View {
 
     private var triggerLabel: some View {
         HStack(spacing: 12) {
+            if chip && !label.isEmpty {
+                Text(required ? "\(label) *" : label).foregroundStyle(tokens.secondary)
+            }
             Text(selectedLabel ?? placeholder)
                 .font(.body)
                 .foregroundStyle(selectedLabel == nil ? tokens.secondary : tokens.foreground)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Spacer(minLength: 8)
+            if !chip { Spacer(minLength: 8) }
 
             Image(systemName: searchEnabled ? "magnifyingglass" : "chevron.up.chevron.down")
                 .foregroundStyle(tokens.secondary)
                 .accessibilityHidden(true)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .padding(.horizontal, chip ? 0 : 12)
+        .padding(.vertical, chip ? 0 : 10)
+        .frame(maxWidth: chip ? nil : .infinity, minHeight: 44, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(error.isEmpty ? tokens.outline : tokens.error, lineWidth: 1)
+                .stroke(error.isEmpty ? (chip ? .clear : tokens.outline) : tokens.error, lineWidth: 1)
         )
         .contentShape(Rectangle())
     }
