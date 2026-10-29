@@ -10,6 +10,13 @@ The app-shell layer for NativePHP. `composer require firstlightui/nativephp` plu
 
 > **Release candidate (`v1.0.0-RC6`).** Physical-device, spoken screen-reader, soak/performance, and wider application qualification are still outstanding. This is not yet a production-readiness claim.
 
+## Try the showcase
+
+Explore the native controls and recipes in the [showcase app](https://github.com/firstlightui/showcase).
+
+- **iOS:** [Join the showcase beta on TestFlight](https://testflight.apple.com/join/4CCrA7JB).
+- **Android:** Coming soon.
+
 ## What you get
 
 - **Genuine native controls.** Every control is SwiftUI on iOS and Jetpack Compose Material 3 on Android. Nothing is drawn to imitate a platform control. One Blade API becomes the right pattern on each platform: Tabs are a segmented control on iOS and Material 3 tabs on Android, and a Select becomes a searchable picker when its list is long.
