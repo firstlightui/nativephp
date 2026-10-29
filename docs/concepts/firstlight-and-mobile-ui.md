@@ -10,6 +10,8 @@ sources:
   - vendor/nativephp/mobile-ui/nativephp.json
   - spec/architecture/package.md
   - vendor/nativephp/mobile/src/Edge/Layouts/NativeLayout.php
+  - vendor/nativephp/mobile/resources/xcode/NativePHP/NativeRender/SwiftUINodeRenderer.swift
+  - vendor/nativephp/mobile/resources/androidstudio/app/src/main/java/com/nativephp/mobile/ui/nativerender/NodeAccessibility.kt
   - resources/boost/guidelines/core.blade.php
   - spec/components/badge.md
   - spec/components/button.md
@@ -153,19 +155,18 @@ Layout, typography, and generic media stay in Mobile UI, and navigation chrome s
 
 ### Custom tappable content and accessibility
 
-NativePHP core owns arbitrary-content `native:pressable` surfaces. In the supported
-Mobile 4.6 implementation, Blade preserves their authored accessibility labels,
-but the generic native renderers do not consume those labels/hints or explicitly
-map a button role and disabled/selected state. Android's clickable supplies implicit
-Compose grouping; iOS uses a tap gesture without explicit accessibility grouping.
-Adding `a11y-label` to a `native:column` does not turn it into one accessible
-measurement either. Do not assume a visual tap target is accessible.
+NativePHP core owns arbitrary-content `native:pressable` surfaces. Mobile 4.7
+consumes authored `a11y-label` and `a11y-hint` on Pressable, Column, Row, and
+Stack containers, grouping a labelled container as one accessible element.
+A non-menu Pressable with `@press` receives a button role and native accessible
+activation. Menu Pressables retain their menu renderer's semantics.
 
 Use [Button](../components/button.md) for labelled actions and
 [List Item](../components/list-item.md) for application rows when their content
 contracts fit. Use [Metric](../components/metric.md) for a static grouped statistic.
-There is no supported arbitrary-content accessible action wrapper in Firstlight;
-custom interactive banners need an upstream core accessibility fix. Panels,
+For custom content, use upstream Pressable and verify its accessible name,
+activation, target size, and any application-specific disabled or selected state
+on both platforms. Firstlight does not add a competing action wrapper. Panels,
 dividers and tile grids remain Mobile UI layout, not catalogue controls.
 
 ## Reusing Mobile UI when it already fits

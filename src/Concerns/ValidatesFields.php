@@ -7,21 +7,28 @@ use FirstlightUI\Media\MediaValue;
 use FirstlightUI\Validation\ErrorSummary;
 use FirstlightUI\Validation\FieldErrorBag;
 use FirstlightUI\Validation\ValidationAlert;
-use Illuminate\Support\MessageBag;
 use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\Translator;
 use Illuminate\Validation\Factory as ValidatorFactory;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use Illuminate\View\View;
+use Native\Mobile\Edge\Concerns\ValidatesInput;
 use Native\Mobile\Edge\Element;
-use ReflectionClass;
-use ReflectionProperty;
 use Throwable;
 
 trait ValidatesFields
 {
-    protected ?MessageBag $errorBag = null;
+    use ValidatesInput {
+        validate as private validateInput;
+        validateOnly as private validateOnlyInput;
+        addError as private addInputError;
+        view as private inputView;
+        partial as private inputPartial;
+        fromView as private inputFromView;
+        fromViewPartial as private inputFromViewPartial;
+        validationData as private inputValidationData;
+    }
 
     /** Keys whose messages changed during the current interaction; null outside one. */
     private ?array $failedValidationKeys = null;
@@ -42,20 +49,14 @@ trait ValidatesFields
     public function validate(array|string|null $rules = null, array $messages = [], array $attributes = []): array
     {
         [$rules, $messages, $attributes] = $this->resolveValidation($rules, $messages, $attributes);
-        $validator = $this->makeFieldValidator($rules, $messages, $attributes);
 
         try {
-            $validated = $validator->validate();
+            return $this->validateInput($rules, $messages, $attributes);
         } catch (ValidationException $exception) {
-            $this->errorBag = $exception->validator->errors();
-            $this->recordFailedValidation($this->errorBag->keys());
+            $this->recordFailedValidation($this->getErrorBag()->keys());
 
             throw $exception;
         }
-
-        $this->resetValidation(array_keys($rules));
-
-        return $validated;
     }
 
     /**
@@ -67,50 +68,37 @@ trait ValidatesFields
     public function validateOnly(string $field, array|string|null $rules = null, array $messages = [], array $attributes = []): array
     {
         [$rules, $messages, $attributes] = $this->resolveValidation($rules, $messages, $attributes);
-        $fieldRules = array_key_exists($field, $rules) ? [$field => $rules[$field]] : [];
-        $validator = $this->makeFieldValidator($fieldRules, $messages, $attributes);
 
         try {
-            $validated = $validator->validate();
+            return $this->validateOnlyInput($field, $rules, $messages, $attributes);
         } catch (ValidationException $exception) {
-            $this->replaceFieldErrors($field, $exception->validator->errors());
             $this->recordFailedValidation([$field]);
 
             throw $exception;
         }
-
-        $this->resetValidation($field);
-
-        return $validated;
     }
 
     public function addError(string $field, string $message): void
     {
-        $this->getErrorBag()->add($field, $message);
+        $this->addInputError($field, $message);
         $this->recordFailedValidation([$field]);
-    }
-
-    public function resetValidation(string|array|null $field = null): void
-    {
-        if ($field === null) {
-            $this->errorBag = new MessageBag;
-
-            return;
-        }
-
-        foreach ((array) $field as $key) {
-            $this->getErrorBag()->forget($key);
-        }
-    }
-
-    public function getErrorBag(): MessageBag
-    {
-        return $this->errorBag ??= new MessageBag;
     }
 
     public function hasError(string $field): bool
     {
         return $this->getErrorBag()->has($field);
+    }
+
+    /** Keep upstream's exception bookkeeping while recording accessibility alerts. */
+    public function __invokeInteraction(string $method, array $parameters): mixed
+    {
+        try {
+            return parent::__invokeInteraction($method, $parameters);
+        } catch (ValidationException $exception) {
+            $this->storeValidationException($exception);
+
+            return null;
+        }
     }
 
     protected function dispatchUiEvent(array $event): void
@@ -125,6 +113,7 @@ trait ValidatesFields
         try {
             parent::dispatchUiEvent($event);
         } catch (ValidationException $exception) {
+            // Deferred listeners and drag-end callbacks bypass __invokeInteraction().
             $this->storeValidationException($exception);
         } finally {
             $failed = $this->failedValidationKeys;
@@ -166,11 +155,15 @@ trait ValidatesFields
         );
     }
 
-    /** Replace the bag with a thrown exception's messages, such as `ValidationException::withMessages()`. */
+    /** Record hand-thrown messages without replacing a bag already updated by upstream validation. */
     protected function storeValidationException(ValidationException $exception): void
     {
-        $this->errorBag = $exception->validator->errors();
-        $this->recordFailedValidation($this->errorBag->keys());
+        if ($exception !== $this->recordedValidationException) {
+            $this->errorBag = $exception->validator->errors();
+            $this->recordFailedValidation($this->errorBag->keys());
+        }
+
+        $this->recordedValidationException = null;
     }
 
     /** @param  list<string>  $keys */
@@ -186,8 +179,17 @@ trait ValidatesFields
         return $this->withFieldErrorBag(function () use ($name, $data): Element {
             $data['errorBag'] = $this->getErrorBag();
 
-            return parent::view($name, $data);
+            return $this->inputView($name, $data);
         }, publishesAlert: true);
+    }
+
+    protected function partial(string $name, array $data = []): Element
+    {
+        return $this->withFieldErrorBag(function () use ($name, $data): Element {
+            $data['errorBag'] = $this->getErrorBag();
+
+            return $this->inputPartial($name, $data);
+        });
     }
 
     protected function fromView(View $view): Element
@@ -195,7 +197,7 @@ trait ValidatesFields
         return $this->withFieldErrorBag(function () use ($view): Element {
             $view->with('errorBag', $this->getErrorBag());
 
-            return parent::fromView($view);
+            return $this->inputFromView($view);
         }, publishesAlert: true);
     }
 
@@ -204,7 +206,7 @@ trait ValidatesFields
         return $this->withFieldErrorBag(function () use ($view): Element {
             $view->with('errorBag', $this->getErrorBag());
 
-            return parent::fromViewPartial($view);
+            return $this->inputFromViewPartial($view);
         });
     }
 
@@ -265,7 +267,7 @@ trait ValidatesFields
      * @param  array<string, string>  $messages
      * @param  array<string, string>  $attributes
      */
-    protected function makeFieldValidator(array $rules, array $messages, array $attributes): Validator
+    protected function makeValidator(array $rules, array $messages, array $attributes): Validator
     {
         $data = $this->validationData();
 
@@ -286,33 +288,12 @@ trait ValidatesFields
     /** @return array<string, mixed> */
     protected function validationData(): array
     {
-        $data = [];
-
-        foreach ((new ReflectionClass($this))->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
-            if ($property->isStatic()) {
-                continue;
-            }
-
-            $value = $property->isInitialized($this)
-                ? $property->getValue($this)
-                : null;
-
-            $data[$property->getName()] = $value instanceof MediaValue
+        return array_map(
+            fn (mixed $value): mixed => $value instanceof MediaValue
                 ? MediaValidation::toUploadedFile($value)
-                : $value;
-        }
-
-        return $data;
-    }
-
-    protected function replaceFieldErrors(string $field, MessageBag $incoming): void
-    {
-        $bag = $this->getErrorBag();
-        $bag->forget($field);
-
-        foreach ($incoming->get($field) as $message) {
-            $bag->add($field, $message);
-        }
+                : $value,
+            $this->inputValidationData(),
+        );
     }
 
     /**

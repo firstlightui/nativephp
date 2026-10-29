@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Require iOS 18.2+. Android remains API 29+, with NativePHP Mobile `^4.7.0` and Mobile UI `^0.9.0` as the dependency floor. Regenerate native projects with `php artisan native:install --force` and rebuild the host applications after updating Composer dependencies.
+- `ValidatesFields` now composes upstream `ValidatesInput` and shares the `FieldErrors` render scope with Mobile UI controls. Existing Form Request sources, Media conversion, `$errorBag`, summaries, and accessibility announcements remain available; views also receive upstream's `$errors`.
+
+### Fixed
+
+- Android Text Field, Text Area, Search Field, and Code Editor register Mobile's focused-input flush hook so pending blur/debounce text posts before a separate Button or Icon Button press, including accessibility activation, without a duplicate debounce event.
+- Navigation farewell responses close Firstlight Bottom Sheets and Modals, including nested overlays, without changing their bound visibility properties or retained Element trees.
+- Field-only validation through an interaction preserves other fields' errors. Deferred listeners and drag-end callbacks retain validation messages and announcements instead of opening the error overlay.
+
+### Qualification
+
+- Response revisions remain required: Mobile 4.7's frame-fingerprint optimisation does not resolve identical-response suppression. Native host builds, device interactions, spoken accessibility, and soak/performance qualification remain required before 1.0.0.
+
 ## 1.0.0-RC12 - 2026-10-30
 
 ### Changed

@@ -131,6 +131,10 @@ it('publishes the documented list pagination callback through Blade', function (
     expect($tree['props']['on_end_reached'])->toBeInt()->toBeGreaterThan(0);
 });
 
+it('keeps upstream unknown-tag diagnostics inside Firstlight containers', function () {
+    renderFirstlightBladeTree('<firstlight:list><missing-control /></firstlight:list>', []);
+})->throws(\Native\Mobile\Edge\Exceptions\UnknownElementException::class, 'missing-control');
+
 it('omits nullable and empty optional list row text through Blade', function (mixed $value) {
     $tree = renderFirstlightBladeTree(
         '<firstlight:list-item headline="Issue" :supporting="$value" :trailing-text="$value" @press="openIssue" />',

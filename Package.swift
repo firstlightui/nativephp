@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "FirstlightIOSControls",
     platforms: [
-        .iOS(.v18),
+        .iOS("18.2"),
     ],
     products: [
         .library(name: "FirstlightIOSControls", targets: ["FirstlightIOSControls"]),

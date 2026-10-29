@@ -10,6 +10,7 @@ sources:
   - resources/ios/SearchFieldRenderer.swift
   - resources/android/SearchFieldControl.kt
   - resources/android/SearchFieldRenderer.kt
+  - resources/android/FirstlightInputFocus.kt
   - tests/Feature/SearchFieldElementTest.php
   - docs/how-to/localize.md
   - src/Support/Chrome.php
@@ -64,12 +65,11 @@ Plain `native:model` and `.live` publish every edit. `.blur` and `.lazy` publish
 on focus loss or submit. `.debounce.300ms` publishes after the quiet period and
 flushes on focus loss or submit; durations below 50 ms fail.
 
-On iOS, pressing a `<firstlight:button>` or `<firstlight:icon-button>` while
-the field is focused publishes its pending `.blur` or `.debounce` change before
-the press. List Item presses do not flush the field first. On Android, blur/debounce
-changes are not yet guaranteed to reach PHP before a button press, so if a
-separate button submits the query, use `native:model.live="query"` (or plain
-`native:model`). For keyboard submission, accept the current query argument
+On iOS and Android, pressing a `<firstlight:button>` or `<firstlight:icon-button>`
+while the field is focused queues its pending `.blur` or `.debounce` change
+before the press. This orders event posting; it does not wait for PHP to process
+the change. List Item presses do not flush the field first. Android uses Mobile's
+synchronous focused-input flush hook. For keyboard submission, accept the current query argument
 from `@submit` rather than relying on a separate button to flush it.
 
 Native typing, selection, cursor position, and marked-text composition stay in

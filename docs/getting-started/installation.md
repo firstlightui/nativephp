@@ -22,7 +22,8 @@ Jetpack Compose controls.
 
 Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
 
-Use NativePHP Mobile `^4.6` and Mobile UI `^0.8`. Firstlight screens must
+Use NativePHP Mobile `^4.7.0` and Mobile UI `^0.9.0`, with iOS 18.2+ or
+Android API 29+. Firstlight screens must
 extend `FirstlightUI\NativeComponent` for the
 [response-revision contract](../reference/compatibility.md#runtime-response-contract).
 Firstlight 1.0.0 is a release candidate pending physical-device,

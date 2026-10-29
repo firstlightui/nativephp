@@ -16,6 +16,12 @@ val syncFirstlightAndroidSources = tasks.register<Sync>("syncFirstlightAndroidSo
     into(layout.buildDirectory.dir("generated/firstlightAndroidSources"))
 }
 
+// Exercise the official focus/flush seam, not a test-double implementation.
+val syncNativePhpFocusPolicy = tasks.register<Sync>("syncNativePhpFocusPolicy") {
+    from("../../vendor/nativephp/mobile/resources/androidstudio/app/src/main/java/com/nativephp/mobile/ui/nativerender/KeyboardFocusPolicy.kt")
+    into(layout.buildDirectory.dir("generated/nativePhpFocusPolicy"))
+}
+
 tasks.register("verifyFirstlightAndroidSourceLayout") {
     dependsOn(syncFirstlightAndroidSources)
     inputs.dir(productionAndroidSourceDirectory)
@@ -71,6 +77,7 @@ android {
     sourceSets {
         getByName("main") {
             kotlin.srcDir(syncFirstlightAndroidSources.map { it.destinationDir })
+            kotlin.srcDir(syncNativePhpFocusPolicy.map { it.destinationDir })
 
             val nativePhpFork = providers.gradleProperty("nativePhpFork").orNull
             if (nativePhpFork == null) {
@@ -96,7 +103,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
-    dependsOn("verifyFirstlightAndroidSourceLayout")
+    dependsOn("verifyFirstlightAndroidSourceLayout", syncNativePhpFocusPolicy)
 }
 
 kotlin {

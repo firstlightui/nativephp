@@ -10,6 +10,7 @@ sources:
   - resources/ios/TextAreaRenderer.swift
   - resources/android/TextAreaControl.kt
   - resources/android/TextAreaRenderer.kt
+  - resources/android/FirstlightInputFocus.kt
   - tests/Feature/TextAreaElementTest.php
 ---
 
@@ -65,13 +66,12 @@ Plain `native:model` and `.live` publish while editing. `.blur` and `.lazy`
 publish on focus loss. `.debounce.500ms` publishes after the quiet period and
 flushes on blur. Durations below 50 milliseconds are rejected.
 
-On iOS, pressing a `<firstlight:button>` or `<firstlight:icon-button>` while
-the editor is focused publishes its pending `.blur` or `.debounce` change before
-the press, so the handler reads the current value. List Item presses do not
-flush the editor first. On Android, blur/debounce changes are not yet guaranteed to reach PHP
-before a button press, so for forms submitted by a separate button use
-`native:model.live="notes"` (or plain `native:model`). Keyboard dismissal alone
-is not an ordering guarantee there.
+On iOS and Android, pressing a `<firstlight:button>` or `<firstlight:icon-button>`
+while the editor is focused queues its pending `.blur` or `.debounce` change
+before the press. This orders event posting; it does not wait for PHP to process
+the change. List Item presses do not flush the editor first. Android uses Mobile's
+synchronous focused-input flush hook rather than relying on keyboard dismissal
+to order the events.
 
 Typing, selection, cursor position, marked text or IME composition, focus,
 keyboard, and scroll position remain native while focused. PHP acknowledgements

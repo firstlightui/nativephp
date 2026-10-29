@@ -25,6 +25,8 @@ class NativeComponent extends EdgeNativeComponent
 
     private bool $leavingScreen = false;
 
+    private bool $publishingFinalState = false;
+
     /**
      * True when nothing is below this screen on PHP's navigation stack.
      * Layouts use it to decide whether the native bar shows a back button.
@@ -64,10 +66,39 @@ class NativeComponent extends EdgeNativeComponent
 
     protected function wrapWithChrome(Element $content): Element
     {
-        return parent::wrapWithChrome($content)->setProp(
+        $root = parent::wrapWithChrome($content)->setProp(
             'firstlight_response_revision',
             $this->leavingScreen ? self::$responseRevision : ++self::$responseRevision,
         );
+
+        if ($this->publishingFinalState) {
+            return $this->closeFirstlightOverlays($root);
+        }
+
+        return $root;
+    }
+
+    protected function publishFinalState(): void
+    {
+        $this->publishingFinalState = true;
+
+        try {
+            parent::publishFinalState();
+        } finally {
+            $this->publishingFinalState = false;
+        }
+    }
+
+    /** Close only the farewell copy: a screen may retain its Element tree on the navigation stack. */
+    private function closeFirstlightOverlays(Element $element): Element
+    {
+        $element = clone $element;
+
+        if ($element instanceof Elements\BottomSheet || $element instanceof Elements\Modal) {
+            $element->visible(false);
+        }
+
+        return $element->setChildren(array_map($this->closeFirstlightOverlays(...), $element->getChildren()));
     }
 
     /** Streaming bypasses the revision-bearing Element response. */

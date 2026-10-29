@@ -19,10 +19,11 @@ sources:
 
 # Validate Firstlight Fields
 
-NativePHP EDGE has no built-in `validate()`. Firstlight adds a Livewire-shaped
-Laravel Validator layer. A screen that opts in can call `$this->validate()` or
-`$this->validateOnly()`, and participating fields show the first `MessageBag`
-message in the native `error` slot.
+Firstlight extends NativePHP Mobile's `ValidatesInput` with Form Request
+sources, Media conversion, error summaries, and accessibility announcements.
+Call `$this->validate()` or `$this->validateOnly()`; participating fields show
+the first `MessageBag` message in the native `error` slot. Firstlight and
+Mobile UI controls share the upstream `FieldErrors` bag on the same screen.
 
 Do not place `@nativeError` next to Firstlight fields. That directive emits a
 sibling text node and skips native field error colour, helper replacement, and

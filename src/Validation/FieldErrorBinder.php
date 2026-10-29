@@ -2,6 +2,8 @@
 
 namespace FirstlightUI\Validation;
 
+use Native\Mobile\Edge\FieldErrors;
+
 final class FieldErrorBinder
 {
     /**
@@ -59,11 +61,6 @@ final class FieldErrorBinder
             return $model;
         }
 
-        $change = $attrs['_change'] ?? null;
-        if (is_string($change) && preg_match("/^__syncProperty\\('([^']+)'\\)$/", $change, $matches) === 1) {
-            return $matches[1];
-        }
-
-        return null;
+        return FieldErrors::fieldFor($attrs);
     }
 }
