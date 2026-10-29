@@ -12,7 +12,7 @@ it('declares the Firstlight package identity', function () {
         ->and($composer['require-dev']['pestphp/pest'])->toBe('^5.0')
         ->and($composer['autoload']['psr-4'])->toBe(['FirstlightUI\\' => 'src/'])
         ->and($manifest['name'])->toBe('firstlightui/nativephp')
-        ->and($manifest['version'])->toBe('1.0.0-RC10')
+        ->and($manifest['version'])->toBe('1.0.0-RC11')
         ->and($manifest['namespace'])->toBe('Firstlight')
         ->and($manifest['platforms'])->toBe(['android', 'ios'])
         ->and($manifest['android']['min_version'])->toBe(29)

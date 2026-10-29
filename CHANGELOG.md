@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.0-RC11 - 2026-10-29
+
 ### Fixed
 
 - iOS Bottom Sheet: with `pinned-footer`, the footer now keeps its own height pinned at the bottom of the sheet. Before, the Mobile UI column inside the footer took the full proposed height, squeezing the body's scroll view to a sliver so only the footer showed, at the top of the sheet. The detent still covers both body and footer.
