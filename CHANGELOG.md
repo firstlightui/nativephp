@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Android Bottom Sheet: content taller than the screen scrolls instead of being clipped, including sheets without a pinned footer.
+- Android Bottom Sheet: content taller than the screen scrolls instead of being clipped, including sheets without a pinned footer. Existing authored scrolling containers retain a bounded viewport instead of nesting inside another vertical scroller.
 - List Item: trailing statuses stack below the headline and supporting text at accessibility text sizes instead of squeezing the row text.
 - Package tests: the manifest version assertion matches the release, the iOS test theme supplies its success colour, and iOS 27 Date Picker references include RC8's intentional theme-primary picker tint.
 

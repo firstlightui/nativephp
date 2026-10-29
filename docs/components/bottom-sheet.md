@@ -107,6 +107,9 @@ colour.
 
 iOS places the footer in a bottom safe-area inset. Android keeps it below the
 bounded scrolling body. Both retain their native sheet chrome and insets.
+On Android, an authored vertical scroll view or list keeps ownership of body
+scrolling, including when nested in a layout column. The sheet supplies the
+scrolling viewport only when the body has no vertical scrolling container.
 
 ## Screenshots
 

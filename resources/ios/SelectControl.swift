@@ -124,7 +124,7 @@ struct FirstlightSelectField: View {
     private var triggerLabel: some View {
         HStack(spacing: 12) {
             if chip && !label.isEmpty {
-                Text(label).foregroundStyle(tokens.secondary)
+                Text(required ? "\(label) *" : label).foregroundStyle(tokens.secondary)
             }
             Text(selectedLabel ?? placeholder)
                 .font(.body)

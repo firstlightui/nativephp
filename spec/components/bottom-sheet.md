@@ -100,6 +100,9 @@ scaling because it is measured from the rendered content.
   opens fully expanded and every authored control is reachable without a
   drag. Short content opens at its own height. A bounded, vertically scrolling
   body sits above the unscrolled footer, within the native sheet insets.
+  An authored vertical scroll view, list, virtual list or refreshable container
+  remains the body scroll owner, including through layout wrappers, so lazy
+  content is never measured inside another unbounded vertical scroller.
 
 ## Renderer decision
 

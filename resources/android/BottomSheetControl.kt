@@ -29,6 +29,7 @@ fun FirstlightBottomSheetControl(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     footer: @Composable () -> Unit = {},
+    scrollBody: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (!configuration.visible) return
@@ -50,7 +51,9 @@ fun FirstlightBottomSheetControl(
                 },
         ) {
             Column(
-                modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                modifier = Modifier.weight(1f, fill = false).then(
+                    if (scrollBody) Modifier.verticalScroll(rememberScrollState()) else Modifier,
+                ),
                 content = content,
             )
             footer()

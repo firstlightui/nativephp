@@ -5,9 +5,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.nativephp.mobile.ui.nativerender.GenericProps
@@ -23,6 +26,37 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h892dp")
 class BottomSheetTest {
+    @Test
+    fun `authored scroll view stays bounded with and without a pinned footer`() {
+        for (pinned in listOf(false, true)) {
+            runComposeUiTest {
+                val scroller = NativeUINode(
+                    id = 30,
+                    type = "scroll_view",
+                    props = GenericProps(),
+                    children = (2..25).map { child(it, "Nested item $it", 64) },
+                )
+                val body = NativeUINode(id = 31, type = "column", props = GenericProps(), children = listOf(scroller))
+                val children = listOf(body) + if (pinned) listOf(child(32, "Total and Save", 96)) else emptyList()
+                setContent {
+                    MaterialTheme {
+                        FirstlightBottomSheetRenderer.Render(sheetNode(children = children, pinnedFooter = pinned), Modifier)
+                    }
+                }
+                val before = if (pinned) onNodeWithText("Total and Save").getBoundsInRoot() else null
+                onNode(hasScrollToIndexAction()).performScrollToIndex(23)
+                onNodeWithText("Nested item 25").assertIsDisplayed()
+                val last = onNodeWithText("Nested item 25").getBoundsInRoot()
+                assertEquals(onNodeWithText("Nested item 25").getUnclippedBoundsInRoot(), last)
+                if (pinned) {
+                    onNodeWithText("Total and Save").assertIsDisplayed()
+                    assertEquals(before, onNodeWithText("Total and Save").getBoundsInRoot())
+                    assertTrue(last.bottom <= before!!.top)
+                }
+            }
+        }
+    }
+
     @Test
     fun `oversized content scrolls while the final footer stays visible`() = runComposeUiTest {
         val children = (2..25).map { child(it, "Bill item $it", 64) } + child(26, "Total and Save", 96)

@@ -49,7 +49,7 @@ final class AppControlExtensionsTests: XCTestCase {
             ForEach(["normal", "provisional", "pending-removal"], id: \.self) { state in
                 ListItemRenderer(node: self.rowNode(state: state))
             }
-            SelectRenderer(node: node(["variant": "chip", "label": "Hospital", "option_values": ["north", "south"],
+            SelectRenderer(node: node(["variant": "chip", "label": "Hospital", "required": true, "option_values": ["north", "south"],
                 "option_labels": ["North", "South"], "option_enabled": ["1", "1"],
                 "option_callbacks": ["51", "52"], "selected_values": ["north"]]))
             DatePickerRenderer(node: node(["variant": "chip", "label": "DOS", "display_text": "Today",

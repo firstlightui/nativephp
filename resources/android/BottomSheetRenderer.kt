@@ -34,6 +34,7 @@ object FirstlightBottomSheetRenderer {
     @Composable
     fun Render(node: NativeUINode, modifier: Modifier) {
         val configuration = BottomSheetRendererConfiguration(node)
+        val body = if (configuration.pinnedFooter) node.children.dropLast(1) else node.children
 
         FirstlightBottomSheetControl(
             configuration = configuration,
@@ -47,9 +48,17 @@ object FirstlightBottomSheetRenderer {
             footer = {
                 if (configuration.pinnedFooter) node.children.lastOrNull()?.let { RenderNode(it) }
             },
+            // Native lazy scroll containers require a finite viewport. Do not
+            // measure one inside another vertical scroller, even through a column.
+            scrollBody = body.none(::containsVerticalScroller),
         ) {
-            val body = if (configuration.pinnedFooter) node.children.dropLast(1) else node.children
             body.forEach { RenderNode(it) }
         }
+    }
+
+    private fun containsVerticalScroller(node: NativeUINode): Boolean = when (node.type) {
+        "scroll_view", "list", "firstlight.list" -> !node.props.getBool("horizontal") || node.children.any(::containsVerticalScroller)
+        "virtual_list", "refreshable" -> true
+        else -> node.children.any(::containsVerticalScroller)
     }
 }
