@@ -74,6 +74,7 @@ final class BottomSheetRendererTests: XCTestCase {
 
     func testPinnedFooterKeepsItsIntrinsicHeightAndLeavesTheBodyScrollable() throws {
         // Mobile UI columns accept the whole proposed height, like this footer.
+        var footerHeight: CGFloat = 0
         let layout = FirstlightBottomSheetLayout(
             footer: {
                 VStack { Text("Bill") }
@@ -81,7 +82,8 @@ final class BottomSheetRendererTests: XCTestCase {
             },
             content: {
                 ForEach(0..<40, id: \.self) { Text("Row \($0)").frame(height: 44) }
-            }
+            },
+            onFooterHeight: { footerHeight = $0 }
         )
         let host = UIHostingController(rootView: layout)
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 600))
@@ -89,10 +91,16 @@ final class BottomSheetRendererTests: XCTestCase {
         window.makeKeyAndVisible()
         host.view.layoutIfNeeded()
 
+        // The ScrollView always spans the window; the footer inset arrives as
+        // its bottom content inset, so measure the body that stays visible.
         let scrollView = try XCTUnwrap(firstScrollView(in: host.view))
+        let inset = scrollView.adjustedContentInset
+        let visibleBodyHeight = scrollView.bounds.height - inset.top - inset.bottom
         // The footer is one line of text; the body must keep the rest.
-        XCTAssertGreaterThan(scrollView.frame.height, 450)
-        XCTAssertGreaterThan(scrollView.contentSize.height, scrollView.bounds.height)
+        XCTAssertLessThan(footerHeight, 60)
+        XCTAssertLessThan(inset.bottom, 60)
+        XCTAssertGreaterThan(visibleBodyHeight, 450)
+        XCTAssertGreaterThan(scrollView.contentSize.height, visibleBodyHeight)
     }
 
     private func firstScrollView(in view: UIView) -> UIScrollView? {
