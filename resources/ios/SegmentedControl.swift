@@ -92,6 +92,10 @@ struct FirstlightSegmentedTokens {
         primary: UIColor,
         preferred: UIColor
     ) -> UIColor {
+        let preferred = preferred.cgColor.alpha < 1
+            ? opaqueComposite(foreground: preferred, over: primary, traits: .current)
+            : preferred
+
         guard contrastRatio(foreground: preferred, background: primary) < 4.5 else {
             return preferred
         }
@@ -113,7 +117,7 @@ struct FirstlightSegmentedTokens {
             / (min(foregroundLuminance, backgroundLuminance) + 0.05)
     }
 
-    private static func opaqueComposite(
+    static func opaqueComposite(
         foreground: UIColor,
         over background: UIColor,
         traits: UITraitCollection

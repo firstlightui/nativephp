@@ -94,6 +94,48 @@ final class PillGroupControlSnapshotTests: XCTestCase {
         )
     }
 
+    func testTranslucentThemeTokensBecomeOpaqueSelectedColors() {
+        let theme = NativeUITokens(
+            primary: Color(uiColor: .systemTeal),
+            onPrimary: Color(uiColor: .white),
+            surface: Color(uiColor: .white),
+            onSurface: Color(uiColor: .label),
+            surfaceVariant: Color(uiColor: .secondarySystemBackground),
+            onSurfaceVariant: Color(uiColor: .secondaryLabel),
+            destructive: Color(uiColor: UIColor(red: 1, green: 0, blue: 0, alpha: 0.5)),
+            onDestructive: Color(uiColor: .clear)
+        )
+
+        let tokens = FirstlightPillGroupTokens.from(
+            theme: theme,
+            traits: UITraitCollection(userInterfaceStyle: .light),
+            tone: .danger
+        )
+        let background = rgba(tokens.selectedBackground)
+        let foreground = rgba(tokens.selectedForeground)
+
+        // Half-opaque red over the white surface is an opaque pink fill,
+        // and a clear on-destructive falls back to black on it.
+        XCTAssertEqual(background.alpha, 1, accuracy: 0.001)
+        XCTAssertEqual(background.red, 1, accuracy: 0.01)
+        XCTAssertEqual(background.green, 0.5, accuracy: 0.01)
+        XCTAssertEqual(background.blue, 0.5, accuracy: 0.01)
+        XCTAssertEqual(foreground.alpha, 1, accuracy: 0.001)
+        XCTAssertEqual(foreground.red, 0, accuracy: 0.001)
+        XCTAssertEqual(foreground.green, 0, accuracy: 0.001)
+        XCTAssertEqual(foreground.blue, 0, accuracy: 0.001)
+    }
+
+    private func rgba(_ color: Color) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        XCTAssertTrue(UIColor(color).getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+
+        return (red, green, blue, alpha)
+    }
+
     private func makeViewController(
         style: UIUserInterfaceStyle,
         contentSize: UIContentSizeCategory
