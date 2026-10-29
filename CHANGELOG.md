@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.0-RC12 - 2026-10-30
+
 ### Changed
 
 - Firstlight now requires `nativephp/mobile` `^4.7` and `nativephp/mobile-ui` `^0.9`.
@@ -11,6 +13,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Blade: on `nativephp/mobile` 4.7, a nested container such as a `list-section` inside a `list`, or an `<x-*>` Blade component inside a sheet, modal or list, no longer fails to compile with app.debug on. With debug off it no longer logs a false unknown-element report. Firstlight passed already-compiled component tags through NativePHP's new unknown-tag check.
+
+### Known issues
+
+- `nativephp/mobile-ui` 0.9.0 is tagged on GitHub but not yet on Packagist. Until it is, installing this release needs a VCS repository for `https://github.com/NativePHP/mobile-ui.git` in the app's `composer.json`.
+- Android: on the Pixel 9 Pro emulator (Android 16 arm64), NativePHP 4.7's PHP binaries (OpenSSL 4.0.3) crash with SIGILL in `OPENSSL_cpuid_setup` before any PHP runs. This is upstream and has not been checked on physical devices. iOS is verified.
 
 ## 1.0.0-RC11 - 2026-10-29
 
