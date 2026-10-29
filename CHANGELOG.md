@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Firstlight now requires `nativephp/mobile` `^4.7` and `nativephp/mobile-ui` `^0.9`.
+
+### Fixed
+
+- Blade: on `nativephp/mobile` 4.7, a nested container such as a `list-section` inside a `list`, or an `<x-*>` Blade component inside a sheet, modal or list, no longer fails to compile with app.debug on. With debug off it no longer logs a false unknown-element report. Firstlight passed already-compiled component tags through NativePHP's new unknown-tag check.
+
 ## 1.0.0-RC11 - 2026-10-29
 
 ### Fixed

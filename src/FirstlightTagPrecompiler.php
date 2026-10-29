@@ -52,9 +52,22 @@ final class FirstlightTagPrecompiler
 
     private const COMPILED_MARKER = '<?php '.NativeTagPrecompiler::COMPILED_MARKER.' ?>';
 
+    /**
+     * Hides Blade component tags from NativePHP's unknown-tag check. A paired
+     * container's source holds nested containers this class has already
+     * compiled to `<x-native-firstlight-*>`, plus any authored `<x-*>`
+     * components. Blade compiles those before NativePHP's own precompiler
+     * runs, but this class runs it early, on the raw fragment.
+     */
+    private const COMPONENT_TAG_MASK = "<\u{E000}x-";
+
     private function compileTag(string $source, string $tag, bool $paired): string
     {
-        $expanded = (new NativeTagPrecompiler)($source);
+        $expanded = str_replace(
+            self::COMPONENT_TAG_MASK,
+            '<x-',
+            (new NativeTagPrecompiler)(str_replace('<x-', self::COMPONENT_TAG_MASK, $source)),
+        );
 
         if (str_starts_with($expanded, self::COMPILED_MARKER)) {
             $expanded = substr($expanded, strlen(self::COMPILED_MARKER));
