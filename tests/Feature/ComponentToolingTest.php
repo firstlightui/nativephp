@@ -243,7 +243,7 @@ it('accepts an official adapter without placeholder native sources', function ()
 it('rejects adapter renderer mappings that drift from the official primitive', function () {
     $root = makeButtonAdapterValidationCopy();
     $manifest = json_decode(file_get_contents($root.'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
-    $manifest['components'][0]['ios_renderer'] = 'FirstlightButtonRenderer';
+    $manifest['components'][0]['ios_renderer'] = 'CustomButtonRenderer';
     file_put_contents($root.'/nativephp.json', json_encode($manifest, JSON_THROW_ON_ERROR));
 
     $process = new Process([$root.'/bin/check-component', 'Button', '--development']);
@@ -252,6 +252,70 @@ it('rejects adapter renderer mappings that drift from the official primitive', f
     expect($process->getExitCode())->toBe(1)
         ->and($process->getErrorOutput())
         ->toContain('Manifest ios_renderer must match nativephp/mobile-ui button: NativeUIButtonRenderer');
+});
+
+function useFirstlightButtonWrappers(string $root): void
+{
+    $sourceRoot = dirname(__DIR__, 2);
+    $manifest = json_decode(file_get_contents($root.'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    $manifest['components'][0]['ios_renderer'] = 'FirstlightButtonRenderer';
+    $manifest['components'][0]['android_renderer'] = 'dev.firstlightui.plugins.firstlight_ui.ui.FirstlightButtonRenderer';
+    file_put_contents($root.'/nativephp.json', json_encode($manifest, JSON_THROW_ON_ERROR));
+
+    foreach (['resources/ios/ButtonRenderer.swift', 'resources/android/ButtonRenderer.kt'] as $path) {
+        copyComponentToolingPath($sourceRoot.'/'.$path, $root.'/'.$path);
+    }
+}
+
+it('accepts Firstlight adapter wrappers that delegate to the official primitive', function () {
+    $root = makeButtonAdapterValidationCopy();
+    useFirstlightButtonWrappers($root);
+
+    $process = new Process([$root.'/bin/check-component', 'Button', '--development']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(0)
+        ->and($process->getOutput())->toContain('Constitution checks passed');
+});
+
+it('rejects Firstlight adapter wrappers that are missing or no longer delegate', function () {
+    $root = makeButtonAdapterValidationCopy();
+    useFirstlightButtonWrappers($root);
+    unlink($root.'/resources/ios/ButtonRenderer.swift');
+    $android = $root.'/resources/android/ButtonRenderer.kt';
+    file_put_contents($android, str_replace(
+        'com.nativephp.plugins.native_ui.ui.ButtonRenderer.Render(',
+        '// Formerly com.nativephp.plugins.native_ui.ui.ButtonRenderer.Render(node, modifier)'."\n        FirstlightButtonControl(",
+        file_get_contents($android),
+    ));
+
+    $process = new Process([$root.'/bin/check-component', 'Button', '--development']);
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1)
+        ->and($process->getErrorOutput())
+        ->toContain('Manifest ios_renderer wrapper FirstlightButtonRenderer is not declared in resources/ios')
+        ->toContain('Manifest android_renderer wrapper dev.firstlightui.plugins.firstlight_ui.ui.FirstlightButtonRenderer must delegate to nativephp/mobile-ui button: com.nativephp.plugins.native_ui.ui.ButtonRenderer');
+});
+
+it('rejects web bridge calls in component PHP but not comments that mention them', function () {
+    $root = makeSegmentedValidationCopy();
+    installDocumentationGateProbe($root);
+    $element = $root.'/src/Elements/Segmented.php';
+    $source = file_get_contents($element);
+    file_put_contents($element, $source."\n/** Storage URLs only resolve in the WebView, so use local paths. */\n");
+
+    $comment = new Process([$root.'/bin/check-component', 'Segmented', '--development']);
+    $comment->run();
+
+    file_put_contents($element, $source."\nnativephp_call('Media.Pick', '{}');\n");
+
+    $call = new Process([$root.'/bin/check-component', 'Segmented', '--development']);
+    $call->run();
+
+    expect($comment->getExitCode())->toBe(0)
+        ->and($call->getExitCode())->toBe(1)
+        ->and($call->getErrorOutput())->toContain('Prohibited web bridge in component source: src/Elements/Segmented.php');
 });
 
 it('accepts the paired Firstlight Bottom Sheet renderers', function () {
