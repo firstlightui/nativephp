@@ -139,12 +139,51 @@ if (is_array($component)) {
             if (is_array($officialManifest) && ! is_array($officialComponent)) {
                 $errors[] = "Adapter package {$package} does not register component type {$type}";
             } elseif (is_array($officialComponent)) {
-                foreach (['ios_renderer', 'android_renderer'] as $key) {
+                // An adapter may point at a thin Firstlight wrapper, provided the
+                // wrapper source exists and still delegates to the official renderer.
+                $wrappers = [
+                    'ios_renderer' => ['', 'ios', 'swift', '(?:struct|class|enum)'],
+                    'android_renderer' => ['dev.firstlightui.plugins.firstlight_ui.ui.', 'android', 'kt', '(?:object|class)'],
+                ];
+
+                foreach ($wrappers as $key => [$namespace, $platform, $extension, $declaration]) {
                     $value = $officialComponent[$key] ?? null;
+                    $declared = $component[$key] ?? null;
+
                     if (! is_string($value) || $value === '') {
                         $errors[] = "Adapter package {$package} component {$type} has no {$key}";
-                    } elseif (($component[$key] ?? null) !== $value) {
+
+                        continue;
+                    }
+
+                    if ($declared === $value) {
+                        continue;
+                    }
+
+                    $wrapperName = is_string($declared) && str_starts_with($declared, $namespace)
+                        ? substr($declared, strlen($namespace))
+                        : null;
+
+                    if ($wrapperName === null || preg_match('/^Firstlight[A-Z][A-Za-z0-9]*Renderer$/', $wrapperName) !== 1) {
                         $errors[] = "Manifest {$key} must match {$package} {$type}: {$value}";
+
+                        continue;
+                    }
+
+                    $wrapperSource = null;
+                    foreach (glob($root."/resources/{$platform}/*.{$extension}") ?: [] as $sourcePath) {
+                        $source = (string) preg_replace('~/\*.*?\*/|//[^\n]*~s', '', (string) file_get_contents($sourcePath));
+                        if (preg_match('/\b'.$declaration.'\s+'.$wrapperName.'\b/', $source) === 1
+                            && ($namespace === '' || preg_match('/^\s*package\s+'.preg_quote(rtrim($namespace, '.'), '/').'\s*$/m', $source) === 1)) {
+                            $wrapperSource = $source;
+                            break;
+                        }
+                    }
+
+                    if ($wrapperSource === null) {
+                        $errors[] = "Manifest {$key} wrapper {$declared} is not declared in resources/{$platform}";
+                    } elseif (preg_match('/(?<![\w.])'.preg_quote($value, '/').'(?!\w)/', $wrapperSource) !== 1) {
+                        $errors[] = "Manifest {$key} wrapper {$declared} must delegate to {$package} {$type}: {$value}";
                     }
                 }
             }
@@ -174,7 +213,18 @@ foreach ($componentFiles as $path) {
     }
 
     if (str_starts_with($relativePath, 'src/') || str_starts_with($relativePath, 'resources/')) {
-        if (preg_match('/\bWebView\b|nativephp_call/', $contents) === 1) {
+        $code = $contents;
+        if (str_ends_with($relativePath, '.php')) {
+            // Comments may explain why a component avoids the web bridge; only code counts.
+            $code = implode('', array_map(
+                fn (array|string $token): string => is_array($token)
+                    ? (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true) ? '' : $token[1])
+                    : $token,
+                token_get_all($contents),
+            ));
+        }
+
+        if (preg_match('/\bWebView\b|nativephp_call/', $code) === 1) {
             $errors[] = "Prohibited web bridge in component source: {$relativePath}";
         }
     }
