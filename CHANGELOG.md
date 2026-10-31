@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Qualification
 
-- Verified on physical iOS and Android devices. Spoken VoiceOver and TalkBack output and soak/performance testing have not been recorded.
+- Verified on physical iOS and Android devices, including VoiceOver on iOS. Spoken TalkBack output and soak/performance testing have not been recorded.
 - Response revisions remain required: Mobile 4.7's frame-fingerprint optimisation does not resolve identical-response suppression.
 
 ## 1.0.0-RC12 - 2026-10-30

@@ -2733,8 +2733,9 @@ and what a screen reader hears when a form fails.
 
 **Status.** The behaviour on this page
 is covered by contract, XCTest, and Robolectric tests, and validation focus was
-observed with TalkBack on the Android emulator. Spoken VoiceOver and TalkBack
-output has not been checked on physical devices. See
+observed with TalkBack on the Android emulator. VoiceOver was checked on a
+physical iPhone; spoken TalkBack output has not been recorded on a physical
+Android device. See
 [Known gaps](#known-gaps).
 
 ## What you get from the platform
@@ -2823,11 +2824,9 @@ light and dark appearance.
 
 These are known gaps, stated plainly:
 
-- Spoken VoiceOver and TalkBack passes on physical devices have not been
-  completed. VoiceOver does not run in the iOS Simulator, so iOS spoken output
-  is covered by tests of the accessibility tree, not by listening. TalkBack
-  focus moving to the first invalid field was observed on the Android
-  emulator; spoken output was not captured on either platform.
+- A spoken TalkBack pass on a physical Android device has not been recorded.
+  TalkBack focus moving to the first invalid field was observed on the Android
+  emulator. VoiceOver was checked on a physical iPhone.
 - The error summary reads messages in rule order, not screen order. Declare
   rules in the order the fields appear.
 - The app recipes were checked on an iOS simulator and an Android emulator,
