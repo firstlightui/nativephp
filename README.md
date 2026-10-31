@@ -8,8 +8,6 @@ The app-shell layer for NativePHP. `composer require firstlightui/nativephp` plu
 
 [Documentation](https://firstlightui.dev/docs) · [Recipes](docs/how-to/build-a-list-detail-flow.md) · [Components](https://firstlightui.dev/components) · [llms.txt](https://firstlightui.dev/llms.txt) · [Source](https://github.com/firstlightui/nativephp) · [Email](mailto:team@firstlightui.dev)
 
-> **Release candidate (`v1.0.0-RC6`).** Physical-device, spoken screen-reader, soak/performance, and wider application qualification are still outstanding. This is not yet a production-readiness claim.
-
 ## Try the showcase
 
 Explore the native controls and recipes in the [showcase app](https://github.com/firstlightui/showcase).
@@ -57,7 +55,7 @@ See [Compatibility](docs/reference/compatibility.md) for the full table.
 ## Installation
 
 ```bash
-composer require "firstlightui/nativephp:^1.0@RC"
+composer require firstlightui/nativephp
 php artisan native:plugin:register
 php artisan native:install --force
 ```

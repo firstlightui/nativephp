@@ -104,6 +104,6 @@ prove one response per physical tap. The earlier spike did not reproduce a
 baseline Segmented failure, so these results do not establish a Segmented fix.
 
 Package regression tests cover Blade, inferred views, hand-built responses,
-remounts, nested children, and unstamped partials. This is not production
-qualification. Firstlight 1.0.0 is a release candidate pending physical-device,
-soak/performance, and wider app qualification, including simultaneous controls.
+remounts, nested children, and unstamped partials. Firstlight 1.0.0 was
+verified on physical iOS and Android devices. Soak/performance testing,
+including simultaneous controls, has not been recorded.

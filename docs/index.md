@@ -25,10 +25,6 @@ platform. Navigation chrome comes from NativePHP's own native chrome, and
 VoiceOver, TalkBack, larger text, right-to-left layout, and Reduce Motion reach
 every control the way they reach the platform's own apps.
 
-Firstlight 1.0.0 is a release candidate (`v1.0.0-RC6`). Physical-device,
-spoken screen-reader, soak/performance, and wider application checks are still
-outstanding.
-
 ## Start with a recipe
 
 Each recipe is a complete screen you can copy. Each one runs unchanged in the

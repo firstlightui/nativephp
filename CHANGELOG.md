@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.0.0 - 2026-10-31
 
 ### Added
 
@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- `nativephp/mobile-ui` 0.9.0 is now on Packagist, so apps no longer need the VCS repository workaround from RC12. Install with `composer require firstlightui/nativephp`; the `@RC` stability flag is no longer needed.
 - Require iOS 18.2+. Android remains API 29+, with NativePHP Mobile `^4.7.0` and Mobile UI `^0.9.0` as the dependency floor. Regenerate native projects with `php artisan native:install --force` and rebuild the host applications after updating Composer dependencies.
 - `ValidatesFields` now composes upstream `ValidatesInput` and shares the `FieldErrors` render scope with Mobile UI controls. Existing Form Request sources, Media conversion, `$errorBag`, summaries, and accessibility announcements remain available; views also receive upstream's `$errors`.
 
@@ -21,7 +22,8 @@ All notable changes to this project will be documented in this file.
 
 ### Qualification
 
-- Response revisions remain required: Mobile 4.7's frame-fingerprint optimisation does not resolve identical-response suppression. Native host builds, device interactions, spoken accessibility, and soak/performance qualification remain required before 1.0.0.
+- Verified on physical iOS and Android devices. Spoken VoiceOver and TalkBack output and soak/performance testing have not been recorded.
+- Response revisions remain required: Mobile 4.7's frame-fingerprint optimisation does not resolve identical-response suppression.
 
 ## 1.0.0-RC12 - 2026-10-30
 

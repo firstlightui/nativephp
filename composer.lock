@@ -2008,7 +2008,7 @@
             "version": "0.9.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:NativePHP/mobile-ui.git",
+                "url": "https://github.com/NativePHP/mobile-ui.git",
                 "reference": "9cee87cbc676a6500247bec99be5d19f633a04e9"
             },
             "dist": {
@@ -2042,17 +2042,7 @@
                     "Native\\Mobile\\UI\\": "src/"
                 }
             },
-            "scripts": {
-                "test": [
-                    "pest"
-                ],
-                "lint": [
-                    "pint"
-                ],
-                "lint:test": [
-                    "pint --test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2063,10 +2053,14 @@
                 }
             ],
             "description": "Native SwiftUI and Jetpack Composer components for NativePHP",
+            "support": {
+                "issues": "https://github.com/NativePHP/mobile-ui/issues",
+                "source": "https://github.com/NativePHP/mobile-ui/tree/0.9.0"
+            },
             "funding": [
                 {
-                    "type": "other",
-                    "url": "https://nativephp.com/sponsor"
+                    "url": "https://nativephp.com/sponsor",
+                    "type": "other"
                 }
             ],
             "time": "2026-10-29T17:44:09+00:00"

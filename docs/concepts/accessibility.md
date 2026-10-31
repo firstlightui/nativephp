@@ -48,7 +48,7 @@ and what a screen reader hears when a form fails.
 | Reduce Motion | Platform motion settings, and Feedback that fades instead of moving on iOS |
 | Contrast and colour | Status named in words, and status colours below 4.5:1 corrected to black or white text |
 
-**Status.** Firstlight 1.0.0 is a release candidate. The behaviour on this page
+**Status.** The behaviour on this page
 is covered by contract, XCTest, and Robolectric tests, and validation focus was
 observed with TalkBack on the Android emulator. Spoken VoiceOver and TalkBack
 output has not been checked on physical devices. See

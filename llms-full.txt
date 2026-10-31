@@ -1242,17 +1242,13 @@ Use NativePHP Mobile `^4.7.0` and Mobile UI `^0.9.0`, with iOS 18.2+ or
 Android API 29+. Firstlight screens must
 extend `FirstlightUI\NativeComponent` for the
 [response-revision contract](../reference/compatibility.md#runtime-response-contract).
-Firstlight 1.0.0 is a release candidate pending physical-device,
-soak/performance, and wider app qualification.
 
 ## Install and register the plugin
 
-Install Firstlight as a normal Composer dependency. Until 1.0.0 is stable,
-allow release candidates in the constraint; Laravel's default minimum
-stability otherwise finds no installable version:
+Install Firstlight as a normal Composer dependency:
 
 ```bash
-composer require "firstlightui/nativephp:^1.0@RC"
+composer require firstlightui/nativephp
 ```
 
 Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
@@ -2735,7 +2731,7 @@ and what a screen reader hears when a form fails.
 | Reduce Motion | Platform motion settings, and Feedback that fades instead of moving on iOS |
 | Contrast and colour | Status named in words, and status colours below 4.5:1 corrected to black or white text |
 
-**Status.** Firstlight 1.0.0 is a release candidate. The behaviour on this page
+**Status.** The behaviour on this page
 is covered by contract, XCTest, and Robolectric tests, and validation focus was
 observed with TalkBack on the Android emulator. Spoken VoiceOver and TalkBack
 output has not been checked on physical devices. See
@@ -7197,6 +7193,6 @@ prove one response per physical tap. The earlier spike did not reproduce a
 baseline Segmented failure, so these results do not establish a Segmented fix.
 
 Package regression tests cover Blade, inferred views, hand-built responses,
-remounts, nested children, and unstamped partials. This is not production
-qualification. Firstlight 1.0.0 is a release candidate pending physical-device,
-soak/performance, and wider app qualification, including simultaneous controls.
+remounts, nested children, and unstamped partials. Firstlight 1.0.0 was
+verified on physical iOS and Android devices. Soak/performance testing,
+including simultaneous controls, has not been recorded.
