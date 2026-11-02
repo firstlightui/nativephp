@@ -40,6 +40,7 @@ Each recipe is a complete screen. Each one runs unchanged in the [showcase app](
 | [Form screen](docs/how-to/build-a-form-screen.md) | A Form Request, native field errors, a form-level error, a loading Save button, and success Feedback |
 | [Settings screen](docs/how-to/build-a-settings-screen.md) | Grouped native sections with Switch and Select rows that save on change |
 | [Photo upload](docs/how-to/build-a-photo-upload-screen.md) | A cropped Media field validated with Laravel rules and saved to a model on Save |
+| [App lock](docs/how-to/build-an-app-lock-screen.md) | An app-switcher cover, a lock after time in the background, and biometric unlock with App Guard |
 
 ## Requirements
 

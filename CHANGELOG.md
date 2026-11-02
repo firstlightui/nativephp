@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Recipe: Build an app lock screen. It hides the app in the app switcher, locks after time in the background, and unlocks with Face ID, Touch ID, or a fingerprint, using `firstlightui/app-guard` and `nativephp/mobile-biometrics`.
+
 ## 1.0.0 - 2026-10-31
 
 ### Added

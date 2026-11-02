@@ -17,6 +17,7 @@ Firstlight renders genuine SwiftUI and Jetpack Compose controls from one Blade v
 | Validates several values and saves with a button | [Form screen](https://firstlightui.dev/docs/how-to/build-a-form-screen) |
 | Changes preferences one at a time | [Settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen) |
 | Uploads a photo or document | [Photo upload](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen) |
+| Locks private data behind Face ID or a fingerprint | [App lock](https://firstlightui.dev/docs/how-to/build-an-app-lock-screen) |
 
 Copy the recipe, then change names, models and fields. Or scaffold with `php artisan make:firstlight-screen Name [--form] [--list] [--destroy] [--test]` and replace every `TODO`.
 

@@ -26,6 +26,7 @@ every control the way they reach the platform's own apps.
 - [Build a form screen](https://firstlightui.dev/docs/how-to/build-a-form-screen): Recipe for a create form with a Form Request, native field errors, a form-level error, a loading Save button, success Feedback, and return navigation.
 - [Build a settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen): Recipe for a grouped settings screen with native section headers and footers, Switch and Select rows, and save-on-change.
 - [Build a photo upload screen](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen): Recipe for a Media field that crops a photo, validates it with Laravel rules, and saves it to a model only when the user taps Save.
+- [Build an app lock screen](https://firstlightui.dev/docs/how-to/build-an-app-lock-screen): Recipe for a lock screen that covers the app in the app switcher, locks it after time in the background, and unlocks with Face ID, Touch ID, or a fingerprint.
 
 ## Get started
 

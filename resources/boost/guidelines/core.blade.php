@@ -14,6 +14,7 @@ Build new screens from these recipes rather than from scratch:
 - Form screen: https://firstlightui.dev/docs/how-to/build-a-form-screen
 - Settings screen: https://firstlightui.dev/docs/how-to/build-a-settings-screen
 - Photo upload screen: https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen
+- App lock screen: https://firstlightui.dev/docs/how-to/build-an-app-lock-screen
 
 Scaffold a screen with `php artisan make:firstlight-screen Name --form|--list|--destroy --test`.
 

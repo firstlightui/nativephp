@@ -38,6 +38,7 @@ recipes run inside.
 - [Build a form screen](how-to/build-a-form-screen.md) — Validate with a Form Request, show field and form-level errors, and save with Feedback.
 - [Build a settings screen](how-to/build-a-settings-screen.md) — Group switches and pickers in native sections that save on change.
 - [Build a photo upload screen](how-to/build-a-photo-upload-screen.md) — Crop, validate, and save a photo to a model only when the user taps Save.
+- [Build an app lock screen](how-to/build-an-app-lock-screen.md) — Hide the app in the app switcher, lock it after time away, and unlock with Face ID, Touch ID, or a fingerprint.
 
 ## Get started
 
