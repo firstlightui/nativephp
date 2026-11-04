@@ -133,8 +133,9 @@ EOF
     fi
 }
 
-echo 'Installing locked PHP dependencies for the package'
-time composer install --prefer-dist --no-progress
+# The package commits no composer.lock, so resolve the newest versions apps would get.
+echo 'Resolving PHP dependencies for the package'
+time composer update --prefer-dist --no-progress
 
 additional_repos="$repo_root/../repos"
 showcase="$additional_repos/showcase"
