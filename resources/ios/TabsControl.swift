@@ -36,7 +36,7 @@ struct FirstlightTabsControl: View {
             tokens: tokens,
             onSelection: onSelection
         )
-        .frame(maxWidth: .infinity, minHeight: 44)
+        .frame(maxWidth: .infinity)
         // Android tab rows span the width; an iOS segmented control sits
         // inside the system margin, so full-width Blade works on both.
         .padding(.horizontal)
@@ -92,6 +92,22 @@ struct FirstlightTabsSegmentedControl: UIViewRepresentable {
         updateControl(control)
     }
 
+    // SwiftUI sizes a hosted UIKit view from its intrinsic content size
+    // (31pt for UISegmentedControl) and ignores Auto Layout constraints on
+    // the view itself, so report the 44pt minimum target here.
+    func sizeThatFits(
+        _ proposal: ProposedViewSize,
+        uiView control: UISegmentedControl,
+        context: Context
+    ) -> CGSize? {
+        let intrinsic = control.intrinsicContentSize
+
+        return CGSize(
+            width: proposal.width ?? intrinsic.width,
+            height: max(44, intrinsic.height)
+        )
+    }
+
     func makeControl(coordinator: Coordinator? = nil) -> UISegmentedControl {
         let control = UISegmentedControl(items: titles)
         control.translatesAutoresizingMaskIntoConstraints = false
@@ -99,10 +115,6 @@ struct FirstlightTabsSegmentedControl: UIViewRepresentable {
         // segments take their content width instead of truncating equally.
         control.apportionsSegmentWidthsByContent = true
         control.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
-        let minimumHeight = control.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
-        minimumHeight.identifier = "Firstlight.minimumTapTarget"
-        minimumHeight.isActive = true
 
         if let coordinator {
             control.addTarget(

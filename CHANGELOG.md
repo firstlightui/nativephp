@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- iOS Tabs is now drawn at least 44 pt tall, as documented. Like Segmented before 1.1.0-beta2, SwiftUI sized its hosted `UISegmentedControl` from the 31 pt intrinsic height and ignored the height constraint and `minHeight` frame, so the tabs and their touch area stayed at 31 pt.
+
 ## 1.1.0-beta2 - 2026-11-10
 
 ### Added

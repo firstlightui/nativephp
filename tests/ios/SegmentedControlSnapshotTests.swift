@@ -657,7 +657,7 @@ struct LargeButtonReference: View {
     }
 }
 
-private extension UIView {
+extension UIView {
     func firstSubview<T: UIView>(of type: T.Type) -> T? {
         if let match = self as? T { return match }
         for subview in subviews {

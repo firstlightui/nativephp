@@ -97,9 +97,25 @@ final class TabsRendererContractTests: XCTestCase {
         XCTAssertTrue(control.apportionsSegmentWidthsByContent)
         XCTAssertEqual(control.selectedSegmentIndex, UISegmentedControl.noSegment)
         XCTAssertFalse(control.isEnabledForSegment(at: 3))
-        XCTAssertTrue(control.constraints.contains {
-            $0.identifier == "Firstlight.minimumTapTarget" && $0.constant == 44
-        })
+    }
+
+    func testHostedControlIsDrawnAtLeastTheMinimumTargetTall() {
+        // SwiftUI sizes the hosted UISegmentedControl from its 31pt intrinsic
+        // height unless the representable reports the minimum itself.
+        let host = UIHostingController(
+            rootView: tabsControl(selectedIndex: 0, disabled: false).frame(width: 360)
+        )
+        host.safeAreaRegions = []
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 360, height: 400))
+        window.rootViewController = host
+        window.isHidden = false
+        defer { window.isHidden = true }
+        let height = host.sizeThatFits(in: CGSize(width: 360, height: 400)).height
+        host.view.frame = CGRect(x: 0, y: 0, width: 360, height: height)
+        host.view.layoutIfNeeded()
+
+        let control = host.view.firstSubview(of: UISegmentedControl.self)
+        XCTAssertEqual(control?.bounds.height ?? 0, 44, accuracy: 1)
     }
 
     func testAccessibilityNamesIncludeBadgeText() {
