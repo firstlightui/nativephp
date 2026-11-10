@@ -41,7 +41,7 @@ The same authored tag renders on iOS and Android.
 | --- | --- | --- |
 | `label` | non-empty `string` | Visible status text. Required. |
 | `tone` | `neutral`, `info`, `success`, `warning`, or `danger` | Semantic colour intent. Defaults to `neutral`. |
-| `icon` | `string` or `null` | Optional decorative leading icon; shared fallback. |
+| `icon` | `string` or `null` | Optional decorative leading icon; shared fallback. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `icon-ios` | `IosSymbol`, `string`, or `null` | iOS override of `icon`. |
 | `icon-android` | `AndroidSymbol`, `string`, or `null` | Android override of `icon`. |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |

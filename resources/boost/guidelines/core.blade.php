@@ -18,6 +18,8 @@ Build new screens from these recipes rather than from scratch:
 
 Scaffold a screen with `php artisan make:firstlight-screen Name --form|--list|--destroy --test`.
 
+When no SF Symbol or Material icon fits, install an SVG with `php artisan firstlight:icon lucide:rocket` (any Iconify set; `fontawesome:light/rocket` with `FA_API_TOKEN`; or a file path or URL) and use it as `icon="custom:rocket"` in any Firstlight icon attribute. Custom icons need a native build (`php artisan native:run`): https://firstlightui.dev/docs/how-to/use-custom-icons
+
 ### Rules
 
 - Every screen extends `FirstlightUI\NativeComponent`, never `Native\Mobile\Edge\NativeComponent` directly. It carries the response-revision contract and includes `ValidatesFields`, `SubmitsForms`, `AuthorizesActions`, `PaginatesLists` and `DestroysListItems`.

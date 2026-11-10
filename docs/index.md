@@ -46,6 +46,7 @@ recipes run inside.
 - [Build with a coding agent](getting-started/build-with-a-coding-agent.md) — What the Boost guideline, the `firstlight-init` and `building-firstlight-screens` skills, and `llms.txt` give your agent.
 - [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
+- [Use custom icons](how-to/use-custom-icons.md) — Install SVGs from Lucide, Heroicons, Font Awesome and other sets with `firstlight:icon`, and draw them as native icons in Firstlight controls.
 
 ## Laravel on native screens
 

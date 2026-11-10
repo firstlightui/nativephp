@@ -117,7 +117,7 @@ A map separates stable values from labels and may use all-string or all-integer 
 ['mine' => 'Mine', 'all' => 'All']
 ```
 
-Rich options accept `value`, `label`, and optional `disabled`, `icon`, `icon-ios`, and `icon-android` fields:
+Rich options accept `value`, `label`, and optional `disabled`, `icon`, `icon-ios`, and `icon-android` fields. Icons may be [custom icons](../how-to/use-custom-icons.md) such as `custom:plant-2`:
 
 ```php
 [

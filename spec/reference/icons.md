@@ -60,6 +60,17 @@ Resolution occurs in PHP before Element Tree publication:
 
 Renderers consume only resolved primitive props such as `leading_icon`, `leading_icon_variant`, `trailing_icon`, and `trailing_icon_variant`. Swift and Kotlin do not choose between authored fallback and override values.
 
+## Custom icons
+
+NativePHP Mobile 4.7 builds `resources/icons/<name>.svg` into native assets addressed as `custom:<name>`. A custom name is an ordinary icon string: PHP resolves and publishes it unchanged in any shared fallback or platform override.
+
+Renderers draw every authored icon through NativePHP's custom-aware helpers, never through a symbol-only API:
+
+- iOS uses `NativeIconView(name, pointSize:relativeTo:)` where the control sizes the icon with a font, passing the point size of the font it applies (and its text style when that font follows Dynamic Type), and `NativeIcon.image(name)` inside `Label` icons such as swipe actions and context menus. `Image(systemName:)` and `Label(_:systemImage:)` are reserved for Firstlight-owned affordances such as clear, reveal, checkmarks and chevrons.
+- Android uses NativePHP's `MaterialIcon`, which draws `custom:<name>` from its VectorDrawable.
+
+A build without the asset falls back to the system icon for the bare name. The SwiftPM shims in `resources/ios/NativePHPTestShims.swift` take that fallback path because package tests ship no assets. `php artisan firstlight:icon` (`src/Console/InstallIconCommand.php`) installs SVGs after validating them with NativePHP's `SvgParser`.
+
 ## Accessibility and interaction
 
 Decorative icons are hidden from VoiceOver and TalkBack and do not duplicate the control's label. An icon-only action requires a separate explicit accessible label using the NativePHP name established for its slot, such as `a11y-label` for Icon Button or `trailing-a11y-label` for a trailing action. It owns a distinct native accessibility node and a minimum 44-point iOS or 48-dp Android target.

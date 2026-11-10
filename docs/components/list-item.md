@@ -51,7 +51,7 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | --- | --- | --- |
 | `headline` | non-empty `string` | Required primary text and default accessible name. |
 | `supporting` | nullable `string` | Optional secondary text; null, empty, and whitespace-only strings omit it. |
-| `leading-icon` | non-empty `string` | Optional shared leading icon and cross-platform fallback. |
+| `leading-icon` | non-empty `string` | Optional shared leading icon and cross-platform fallback. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `leading-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `leading-icon`. |
 | `leading-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `leading-icon`; typed variants are preserved on the wire. |
 | `leading-icon-tone`, `trailing-icon-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Semantic icon colour from the active theme. |
@@ -59,7 +59,7 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `leading-avatar` | non-empty `string` | Optional image source representing the row subject. |
 | `leading-monogram` | one or two characters | Optional short identity marker such as `WJ`. |
 | `leading-label` | non-empty `string` | Text identity such as `4B-12`, without the monogram length limit. |
-| `trailing-icon` | non-empty `string` | Optional shared decorative affordance icon. |
+| `trailing-icon` | non-empty `string` | Optional shared decorative affordance icon. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `trailing-icon-ios` | `IosSymbol|string` | Optional iOS override; requires `trailing-icon`. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Optional Android override; requires `trailing-icon`; typed variants are preserved on the wire. |
 | `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |

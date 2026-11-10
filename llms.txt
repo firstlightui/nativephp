@@ -34,6 +34,7 @@ every control the way they reach the platform's own apps.
 - [Build with a coding agent](https://firstlightui.dev/docs/getting-started/build-with-a-coding-agent): What the Boost guideline, the firstlight-init and building-firstlight-screens skills, and llms.txt give your coding agent, and how to set them up.
 - [Add your first Firstlight component](https://firstlightui.dev/docs/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
 - [Theme Firstlight components](https://firstlightui.dev/docs/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
+- [Use custom icons](https://firstlightui.dev/docs/how-to/use-custom-icons): Install SVGs from Lucide, Heroicons, Font Awesome and other sets with firstlight:icon, and draw them as native icons in Firstlight controls.
 
 ## Laravel on native screens
 

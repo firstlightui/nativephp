@@ -60,10 +60,10 @@ autofill, selection, and accessibility behaviour of each platform.
 | `autocapitalize` | enum string | `none`, `sentences`, `words`, or `characters`; omission keeps platform policy. |
 | `autocorrect` | `bool` | Explicitly enables or disables platform autocorrection. |
 | `submit-label` | enum string | `done`, `go`, `next`, `search`, or `send`; omission keeps the platform default. |
-| `leading-icon` | `string` | Shared decorative leading icon fallback. |
+| `leading-icon` | `string` | Shared decorative leading icon fallback. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `leading-icon-ios` | `IosSymbol|string` | iOS leading icon override. |
 | `leading-icon-android` | `AndroidSymbol|string` | Android leading icon and variant override. |
-| `trailing-icon` | `string` | Shared decorative or authored-action icon fallback. |
+| `trailing-icon` | `string` | Shared decorative or authored-action icon fallback. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `trailing-icon-ios` | `IosSymbol|string` | iOS trailing icon override. |
 | `trailing-icon-android` | `AndroidSymbol|string` | Android trailing icon and variant override. |
 | `trailing-a11y-label` | `string` | Required accessible name when `trailing-icon` has `@press`. |

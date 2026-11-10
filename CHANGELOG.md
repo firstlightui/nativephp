@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.1.0-beta1 - 2026-11-10
 
 ### Added
 
+- Custom icons: Button, Icon Button, List Item (leading and trailing icons, swipe actions and context menus), Pill Group options, Status Label and Text Field draw NativePHP custom icons (`custom:<name>`, built from `resources/icons/<name>.svg`) on iOS as well as Android. A build without the icon, such as Jump, shows the system icon with the same name.
+- `php artisan firstlight:icon` installs SVG icons into `resources/icons` from any Iconify set (`lucide:rocket`, `heroicons:bell-solid`, `tabler:plant-2`, `fa7-solid:mug-hot`), from Font Awesome Pro with `FA_API_TOKEN` (`fontawesome:light/rocket-launch`, `fontawesome:sharp/solid/house`), or from a file path or URL. It checks each SVG with NativePHP's converter before writing it, skips icons that are already installed unless you pass `--force`, and records each icon's source in a comment. See [Use custom icons](docs/how-to/use-custom-icons.md).
 - Recipe: Build an app lock screen. It hides the app in the app switcher, locks after time in the background, and unlocks with Face ID, Touch ID, or a fingerprint, using `firstlightui/app-guard` and `nativephp/mobile-biometrics`.
+
+### Fixed
+
+- iOS Text Field and Status Label resolve icon names through NativePHP like Button, Icon Button and List Item, so shared names such as `search` show their SF Symbol instead of nothing. Bare names NativePHP maps, such as `lock` and `star`, now show the same filled symbol (`lock.fill`, `star.fill`) as in those controls; dotted SF Symbol names such as `star.circle` are unchanged.
+
+### Changed
+
+- `illuminate/http` is now a runtime dependency, for `firstlight:icon`. Laravel applications already include it.
 
 ## 1.0.0 - 2026-10-31
 

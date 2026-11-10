@@ -45,7 +45,7 @@ Icon Button is self-closing and has no visible text slot. Use
 
 | API | Accepted type | Purpose |
 | --- | --- | --- |
-| `icon` | non-empty `string` | Required shared icon name and cross-platform fallback. |
+| `icon` | non-empty `string` | Required shared icon name and cross-platform fallback. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `icon-ios` | `IosSymbol|string` | Optional iOS override. |
 | `icon-android` | `AndroidSymbol|string` | Optional Android override; typed filled or outlined variants are preserved on the wire. |
 | `a11y-label` | non-empty `string` | Required accessible action name. Firstlight never derives it from the machine icon name. |

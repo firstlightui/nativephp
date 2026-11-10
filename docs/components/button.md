@@ -50,7 +50,7 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `size` | `sm`, `md`, or `lg` | Native control size. Defaults to `md`. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Shows native progress presentation and prevents interaction. Defaults to `false`. |
-| `icon` | `string` | Optional leading cross-platform icon name. |
+| `icon` | `string` | Optional leading cross-platform icon name. Accepts a [custom icon](../how-to/use-custom-icons.md) as `custom:<name>`. |
 | `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
 | `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
