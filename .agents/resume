@@ -16,4 +16,4 @@ done
 
 echo 'Firstlight orb ready. Run composer test in each repository; Android tests use tests/android/gradlew.'
 echo 'After package edits, run composer reinstall firstlightui/nativephp in ../repos/showcase to refresh its mirror.'
-echo 'iOS builds and simulator captures require macOS.'
+echo 'Showcase Android builds run here; iOS builds need a Mac satellite (see AGENTS.md, .agents/mac-setup).'

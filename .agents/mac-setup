@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Prepares a Mac satellite for Showcase iOS consumer builds. The Mac mirrors only this package
+# checkout, and Showcase's vendor/ needs the authenticated plugins.nativephp.com repository and
+# the orb's Composer credentials, so the orb serves its prepared Showcase over a forwarded port.
+#
+# 1. On the orb:   .agents/mac-setup serve
+# 2. mac_sidecar start with forward_ports ["8765"]
+# 3. In mac_shell: .agents/mac-setup
+# 4. On the orb:   .agents/mac-setup stop
+# Re-run 1 and 3 after package or Showcase changes; the Showcase copy is a snapshot.
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+port=8765
+dir=/tmp/firstlight-mac-transfer
+
+case "$(uname -s):${1:-}" in
+Linux:serve)
+    showcase="$repo_root/../repos/showcase"
+    [[ -f "$showcase/vendor/autoload.php" ]] || { echo "Run .agents/setup first: $showcase has no vendor/." >&2; exit 1; }
+    # Showcase's path repository copies the package, so refresh it from this checkout first.
+    (cd -- "$showcase" && composer reinstall firstlightui/nativephp --prefer-dist --no-progress --no-interaction)
+    mkdir -p "$dir"
+    # Generated hosts, Node modules, logs, and the SQLite database stay on the orb.
+    tar -C "$showcase" -czf "$dir/showcase.tgz" --exclude=./.git --exclude=./nativephp \
+        --exclude=./node_modules --exclude=./storage/logs --exclude=./database/database.sqlite .
+    amp orb service stop firstlight-mac-transfer >/dev/null 2>&1 || true
+    amp orb service start firstlight-mac-transfer --port "$port" \
+        --command "python3 -m http.server $port --bind 127.0.0.1 --directory $dir"
+    ;;
+Linux:stop)
+    amp orb service stop firstlight-mac-transfer || true
+    rm -rf -- "$dir"
+    ;;
+Darwin:)
+    command -v composer >/dev/null || brew install --quiet composer
+    workspace="$(dirname -- "$repo_root")"
+    staging="$(mktemp -d)"
+    trap 'rm -rf -- "$staging"' EXIT
+    curl -fsS "http://127.0.0.1:$port/showcase.tgz" -o "$staging/showcase.tgz"
+    mkdir "$staging/showcase"
+    tar -xzf "$staging/showcase.tgz" -C "$staging/showcase"
+    # Keep the previous copy until the new one is complete, then match the orb's ../nativephp link.
+    rm -rf -- "$workspace/showcase"
+    mv -- "$staging/showcase" "$workspace/showcase"
+    ln -sfn "$repo_root" "$workspace/nativephp"
+    cd -- "$workspace/showcase"
+    mkdir -p storage/logs
+    touch database/database.sqlite
+    php artisan native:install ios --no-interaction
+    echo "Showcase ready at $workspace/showcase. Build with: php artisan native:run ios <simulator-udid> --no-tty"
+    ;;
+*)
+    echo "usage: $0 serve|stop (orb), $0 (Mac)" >&2
+    exit 2
+    ;;
+esac
