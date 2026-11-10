@@ -32,15 +32,19 @@ time {
         fi
     done
     if ((${#missing[@]})); then
-        if [[ ! -f /etc/apt/sources.list.d/firstlight-php.list ]]; then
+        # Sury builds per Debian release, so match this orb's release (bookworm, trixie, ...).
+        php_source="deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ $(. /etc/os-release && echo "$VERSION_CODENAME") main"
+        if [[ ! -f /usr/share/keyrings/debsuryorg-archive-keyring.gpg ]]; then
             sudo apt-get update -qq
             sudo apt-get install -y --no-install-recommends ca-certificates curl
             keyring="$(mktemp --suffix=.deb)"
             curl -fsSL --retry 3 https://packages.sury.org/debsuryorg-archive-keyring.deb -o "$keyring"
             sudo dpkg -i "$keyring"
             rm -f -- "$keyring"
-            echo 'deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ bookworm main' |
-                sudo tee /etc/apt/sources.list.d/firstlight-php.list >/dev/null
+        fi
+        # Rewrite a source left by an older release, such as a bookworm snapshot upgraded to trixie.
+        if [[ "$(cat /etc/apt/sources.list.d/firstlight-php.list 2>/dev/null || true)" != "$php_source" ]]; then
+            echo "$php_source" | sudo tee /etc/apt/sources.list.d/firstlight-php.list >/dev/null
         fi
         sudo apt-get update -qq
         sudo apt-get install -y --no-install-recommends "${missing[@]}"
