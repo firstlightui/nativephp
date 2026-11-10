@@ -93,7 +93,7 @@ struct FirstlightIconButtonControl: View {
                         .controlSize(.small)
                         .accessibilityHidden(true)
                 } else {
-                    Image(systemName: getIconForName(configuration.icon))
+                    NativeIconView(configuration.icon, pointSize: metrics.iconSize)
                         .font(.system(size: metrics.iconSize, weight: .semibold))
                         .accessibilityHidden(true)
                 }

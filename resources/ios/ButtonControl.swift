@@ -67,14 +67,14 @@ struct FirstlightGhostButtonControl: View {
                         .controlSize(.small)
                         .tint(tokens.onSurfaceVariant)
                 } else if !configuration.leadingIcon.isEmpty {
-                    Image(systemName: getIconForName(configuration.leadingIcon))
+                    NativeIconView(configuration.leadingIcon, pointSize: textSize)
                         .font(.system(size: textSize, weight: .medium))
                         .accessibilityHidden(true)
                 }
                 Text(configuration.label)
                     .font(.system(size: textSize, weight: .medium))
                 if !configuration.loading && !configuration.trailingIcon.isEmpty {
-                    Image(systemName: getIconForName(configuration.trailingIcon))
+                    NativeIconView(configuration.trailingIcon, pointSize: textSize)
                         .font(.system(size: textSize, weight: .medium))
                         .accessibilityHidden(true)
                 }

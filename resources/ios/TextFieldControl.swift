@@ -44,7 +44,7 @@ struct FirstlightTextFieldControl: View {
 
             HStack(spacing: 8) {
                 if !configuration.leadingIcon.isEmpty {
-                    Image(systemName: configuration.leadingIcon)
+                    NativeIconView(configuration.leadingIcon, pointSize: 17, relativeTo: .body)
                         .foregroundStyle(tokens.onSurfaceVariant)
                         .accessibilityHidden(true)
                 }
@@ -156,7 +156,7 @@ struct FirstlightTextFieldControl: View {
                     action: onTrailingPress
                 )
             } else {
-                Image(systemName: configuration.trailingIcon)
+                NativeIconView(configuration.trailingIcon, pointSize: 17, relativeTo: .body)
                     .foregroundStyle(tokens.onSurfaceVariant)
                     .accessibilityHidden(true)
             }
@@ -165,7 +165,7 @@ struct FirstlightTextFieldControl: View {
 
     private func actionButton(symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).frame(minWidth: 44, minHeight: 44)
+            NativeIconView(symbol, pointSize: 17, relativeTo: .body).frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(label))

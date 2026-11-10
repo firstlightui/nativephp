@@ -303,7 +303,29 @@ extension View {
 // tests use canonical SF Symbol names, so preserve them here; consumer builds
 // omit this branch and continue through NativePHP's real icon resolver.
 func getIconForName(_ iconName: String) -> String {
-    iconName
+    // Like the host, a custom icon without an asset falls back to its bare name.
+    iconName.hasPrefix("custom:") ? String(iconName.dropFirst("custom:".count)) : iconName
+}
+
+// Mobile 4.7's NativeIcon.swift draws `custom:<name>` from the app's asset
+// catalog. Package tests ship no custom icons, so these take the host's
+// missing-asset path: the system symbol for the name.
+enum NativeIcon {
+    static func image(_ name: String) -> Image {
+        Image(systemName: getIconForName(name))
+    }
+}
+
+struct NativeIconView: View {
+    let name: String
+
+    init(_ name: String, pointSize: CGFloat, relativeTo textStyle: Font.TextStyle? = nil) {
+        self.name = name
+    }
+
+    var body: some View {
+        Image(systemName: getIconForName(name))
+    }
 }
 
 // Mobile UI 0.8 supplies the enclosing scroll proxy to descendant inputs.

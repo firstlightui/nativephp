@@ -284,7 +284,7 @@ struct FirstlightPillGroupField: View {
                         .font(.caption.weight(.bold))
                         .accessibilityHidden(true)
                 } else if !icon.isEmpty {
-                    Image(systemName: getIconForName(icon))
+                    NativeIconView(icon, pointSize: 15, relativeTo: .subheadline)
                         .font(.subheadline.weight(.medium))
                         .accessibilityHidden(true)
                 }

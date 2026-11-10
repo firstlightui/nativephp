@@ -120,7 +120,7 @@ struct FirstlightListItemControl: View {
                     if action.icon.isEmpty {
                         Text(action.label)
                     } else {
-                        Label(action.label, systemImage: getIconForName(action.icon))
+                        Label { Text(action.label) } icon: { NativeIcon.image(action.icon) }
                     }
                 }
                 .tint(action.role == "destructive" ? tokens.destructive : tokens.primary)
@@ -141,7 +141,7 @@ struct FirstlightListItemControl: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityHidden(true)
         case .icon:
-            Image(systemName: getIconForName(configuration.leadingValue))
+            NativeIconView(configuration.leadingValue, pointSize: 20, relativeTo: .title3)
                 .font(.title3.weight(.medium))
                 .foregroundStyle(firstlightListItemIconColor(
                     explicit: configuration.leadingIconColor, tone: configuration.leadingIconTone,
@@ -189,7 +189,7 @@ struct FirstlightListItemControl: View {
             )
             .accessibilityHidden(true)
         case .icon:
-            Image(systemName: getIconForName(configuration.trailingValue))
+            NativeIconView(configuration.trailingValue, pointSize: 17, relativeTo: .body)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(firstlightListItemIconColor(
                     explicit: configuration.trailingIconColor, tone: configuration.trailingIconTone,
@@ -229,7 +229,7 @@ struct FirstlightListItemContextMenu: ViewModifier {
                             if item.icon.isEmpty {
                                 Text(item.label)
                             } else {
-                                Label(item.label, systemImage: getIconForName(item.icon))
+                                Label { Text(item.label) } icon: { NativeIcon.image(item.icon) }
                             }
                         }
                         .disabled(!item.isEnabled)

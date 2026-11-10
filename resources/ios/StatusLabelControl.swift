@@ -103,7 +103,7 @@ struct FirstlightStatusLabelControl: View {
     var body: some View {
         HStack(spacing: 6) {
             if !icon.isEmpty {
-                Image(systemName: icon)
+                NativeIconView(icon, pointSize: 13, relativeTo: .footnote)
                     .accessibilityHidden(true)
             }
             Text(label)
