@@ -107,6 +107,12 @@ class SegmentedRendererContractTest {
         assertEquals(0, authoredEmpty.serverSelectedIndex)
     }
 
+    @Test
+    fun `configuration decodes size and defaults to md`() {
+        assertEquals(FirstlightControlSize.Md, SegmentedRendererConfiguration(node(valueType = "string", selectedValue = "mine")).size)
+        assertEquals(FirstlightControlSize.Lg, SegmentedRendererConfiguration(node(valueType = "string", selectedValue = "mine", size = "lg")).size)
+    }
+
     private fun node(
         valueType: String,
         selectedValue: String,
@@ -114,6 +120,7 @@ class SegmentedRendererContractTest {
         values: List<String> = listOf("mine", "all"),
         optionEnabled: List<String> = listOf("1", "1"),
         disabled: Boolean = false,
+        size: String? = null,
     ) = NativeUINode(
         id = 7,
         props = GenericProps(
@@ -133,7 +140,7 @@ class SegmentedRendererContractTest {
                 "required" to true,
                 "a11y_label" to "Queue selection",
                 "a11y_hint" to "Choose one queue",
-            ),
+            ) + listOfNotNull(size?.let { "size" to it }),
         ),
     )
 

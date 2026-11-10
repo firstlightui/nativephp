@@ -130,6 +130,7 @@ class PillGroupRendererContractTest {
                     "scrollable" to true,
                     "collapse_labels" to true,
                     "tone" to "danger",
+                    "size" to "lg",
                 ),
             ),
         )
@@ -139,6 +140,7 @@ class PillGroupRendererContractTest {
         assertTrue(configuration.scrollable)
         assertTrue(configuration.collapseLabels)
         assertEquals(PillGroupTone.Danger, configuration.tone)
+        assertEquals(FirstlightControlSize.Lg, configuration.size)
     }
 
     @Test
@@ -150,6 +152,7 @@ class PillGroupRendererContractTest {
         assertFalse(configuration.collapseLabels)
         assertEquals(PillGroupTone.Primary, configuration.tone)
         assertEquals(PillGroupTone.Primary, PillGroupTone.fromWire("unknown"))
+        assertEquals(FirstlightControlSize.Md, configuration.size)
     }
 
     @Test

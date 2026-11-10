@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.0-beta2 - 2026-11-10
+
+### Added
+
+- Segmented and Pill Group accept `size="md|lg"`. `md` is the default and keeps existing controls unchanged in size apart from the iOS fix below. `lg` is as tall as a Button with `size="lg"` (54 pt on iOS and 48 dp on Android at the default text size), with one step larger labels, and grows with Dynamic Type and Android font scaling as that button does. Other values are rejected.
+
+### Fixed
+
+- iOS Segmented is now drawn at least 44 pt tall, as documented. SwiftUI sized the hosted `UISegmentedControl` from its 31 pt intrinsic height and ignored both the height constraint on the control and the enclosing `minHeight` frame, so the control and its touch area stayed at 31 pt on iOS 18 through 27. The control now reports its minimum height to SwiftUI directly.
+
 ## 1.1.0-beta1 - 2026-11-10
 
 ### Added

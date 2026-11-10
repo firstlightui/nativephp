@@ -9,8 +9,10 @@ sources:
   - src/Support/OptionNormalizer.php
   - resources/ios/SegmentedControl.swift
   - resources/ios/SegmentedRenderer.swift
+  - resources/ios/FirstlightControlSize.swift
   - resources/android/SegmentedControl.kt
   - resources/android/SegmentedRenderer.kt
+  - resources/android/FirstlightControlSize.kt
   - tests/Feature/SegmentedElementTest.php
   - tests/Unit/Support/OptionNormalizerTest.php
 ---
@@ -51,9 +53,26 @@ public array $priorityOptions = [
 | `error` | `string` | Error text and error semantics. |
 | `required` | `bool` | Marks the field as required. |
 | `disabled` | `bool` | Disables the complete control. |
+| `size` | `string` | `md` (default) or `lg`. `lg` is as tall as a Button with `size="lg"`. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout utilities. |
+
+## Sizes
+
+`md` is the default. Use `lg` when the control sits with `size="lg"` Buttons, so the row of controls shares one height:
+
+```blade
+<firstlight:segmented :options="$viewOptions" native:model="view" a11y-label="View" size="lg" />
+<firstlight:button label="Admit patient" icon="add" size="lg" />
+```
+
+| Size | iOS | Android |
+| --- | --- | --- |
+| `md` | At least 44 pt, footnote-sized titles. | At least 48 dp, Material label titles. |
+| `lg` | Button lg's height: 54 pt at the default text size, subheadline-sized titles. | Button lg's height: 48 dp at the default text size, Material title-sized labels. |
+
+Both sizes grow with Dynamic Type and Android font scaling; `lg` grows with the text the same way a `size="lg"` Button does. `size` changes only height and type size, not selection, state, or accessibility behaviour. Other values, including `sm`, are rejected because they would fall below the platform interaction target.
 
 ## Events
 
@@ -98,8 +117,8 @@ Provide either a visible `label` or an explicit `a11y-label`. Firstlight warns d
 
 ## Validation and failure behaviour
 
-Contract exceptions still reject mixed or duplicate option values and
-unsupported types before publication. User validation is separate: screens
+Contract exceptions still reject mixed or duplicate option values,
+unsupported types, and sizes other than `md` and `lg` before publication. User validation is separate: screens
 that `use ValidatesFields` auto-bind the first MessageBag message for the
 field's `native:model` or `error-for` name. An authored `error` wins.
 `required` is display metadata and does not run Laravel rules. See

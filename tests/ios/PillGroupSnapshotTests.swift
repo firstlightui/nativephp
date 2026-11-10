@@ -30,6 +30,56 @@ final class PillGroupControlSnapshotTests: XCTestCase {
             as: .image(on: .iPhoneSe, size: CGSize(width: 320, height: 900)),
             named: "accessibility-extra-extra-extra-large"
         )
+        assertFirstlightSnapshot(
+            of: makeViewController(style: .light, contentSize: .large, size: .lg),
+            as: .image(on: .iPhoneSe),
+            named: "large"
+        )
+    }
+
+    func testLargePillsMatchLargeButtonHeightAcrossDynamicType() {
+        for dynamicTypeSize in [DynamicTypeSize.large, .xxxLarge, .accessibility3] {
+            XCTAssertEqual(
+                fittingHeight(of: singlePillGroup(size: .lg), dynamicTypeSize: dynamicTypeSize),
+                fittingHeight(of: LargeButtonReference(), dynamicTypeSize: dynamicTypeSize),
+                accuracy: 0.5,
+                "Pill Group lg at \(dynamicTypeSize)"
+            )
+        }
+
+        XCTAssertEqual(fittingHeight(of: singlePillGroup(size: .md), dynamicTypeSize: .large), 44, accuracy: 0.5)
+    }
+
+    private func singlePillGroup(size: FirstlightControlSize) -> FirstlightPillGroupField {
+        FirstlightPillGroupField(
+            label: "",
+            helper: "",
+            error: "",
+            required: false,
+            labels: ["Ward"],
+            values: ["ward"],
+            optionEnabled: [true],
+            selectedValues: ["ward"],
+            disabled: false,
+            awaitingPublication: false,
+            tokens: FirstlightPillGroupTokens.from(
+                theme: .pillGroupTest,
+                traits: UITraitCollection(userInterfaceStyle: .light)
+            ),
+            accessibilityLabel: "View",
+            accessibilityHint: "",
+            onSelection: { _ in },
+            size: size
+        )
+    }
+
+    private func fittingHeight<V: View>(of view: V, dynamicTypeSize: DynamicTypeSize) -> CGFloat {
+        let host = UIHostingController(
+            rootView: view.frame(width: 320).environment(\.dynamicTypeSize, dynamicTypeSize)
+        )
+        host.safeAreaRegions = []
+
+        return host.sizeThatFits(in: CGSize(width: 320, height: 1000)).height
     }
 
     func testCollapsedScrollableRowSnapshots() {
@@ -138,7 +188,8 @@ final class PillGroupControlSnapshotTests: XCTestCase {
 
     private func makeViewController(
         style: UIUserInterfaceStyle,
-        contentSize: UIContentSizeCategory
+        contentSize: UIContentSizeCategory,
+        size: FirstlightControlSize = .md
     ) -> UIViewController {
         let theme = NativeUITokens(
             primary: Color(uiColor: UIColor(red: 174 / 255, green: 21 / 255, blue: 21 / 255, alpha: 1)),
@@ -164,7 +215,8 @@ final class PillGroupControlSnapshotTests: XCTestCase {
             tokens: FirstlightPillGroupTokens.from(theme: theme, traits: traits),
             accessibilityLabel: "Referral queues",
             accessibilityHint: "Toggle queue filters",
-            onSelection: { _ in }
+            onSelection: { _ in },
+            size: size
         )
         .padding(16)
         .frame(width: 320, alignment: .leading)

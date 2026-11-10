@@ -193,6 +193,7 @@ struct FirstlightSegmentedField: View {
     let tokens: FirstlightSegmentedTokens
     let accessibilityLabel: String
     let accessibilityHint: String
+    var size: FirstlightControlSize = .md
     let onSelection: (Int) -> Void
 
     var body: some View {
@@ -221,9 +222,10 @@ struct FirstlightSegmentedField: View {
                 required: required,
                 accessibilityLabel: accessibilityLabel,
                 accessibilityHint: accessibilityHint,
+                size: size,
                 onSelection: onSelection
             )
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity)
             .firstlightValidationFocusTarget()
 
             if !helper.isEmpty {
@@ -255,6 +257,7 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
     let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
+    let size: FirstlightControlSize
     let onSelection: (Int) -> Void
 
     init(
@@ -269,6 +272,7 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
         required: Bool,
         accessibilityLabel: String,
         accessibilityHint: String,
+        size: FirstlightControlSize = .md,
         onSelection: @escaping (Int) -> Void
     ) {
         self.labels = labels
@@ -282,6 +286,7 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
         self.required = required
         self.accessibilityLabel = accessibilityLabel
         self.accessibilityHint = accessibilityHint
+        self.size = size
         self.onSelection = onSelection
     }
 
@@ -298,15 +303,36 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
         updateControl(control)
     }
 
+    // SwiftUI sizes a hosted UIKit view from its intrinsic content size
+    // (31pt for UISegmentedControl) and ignores Auto Layout constraints on
+    // the view itself, so a height constraint or an enclosing
+    // `.frame(minHeight:)` left the drawn control, and its touch area, at
+    // 31pt. Report the minimum height here instead; UISegmentedControl draws
+    // its track and segments to fill the bounds it is given.
+    func sizeThatFits(
+        _ proposal: ProposedViewSize,
+        uiView control: UISegmentedControl,
+        context: Context
+    ) -> CGSize? {
+        let intrinsic = control.intrinsicContentSize
+        let traits = UITraitCollection(traitsFrom: [
+            control.traitCollection,
+            UITraitCollection(
+                preferredContentSizeCategory: UIContentSizeCategory(context.environment.dynamicTypeSize)
+            ),
+        ])
+
+        return CGSize(
+            width: proposal.width ?? intrinsic.width,
+            height: max(size.minimumHeight(compatibleWith: traits), intrinsic.height)
+        )
+    }
+
     func makeControl(coordinator: Coordinator? = nil) -> UISegmentedControl {
         let control = UISegmentedControl(items: labels)
         control.translatesAutoresizingMaskIntoConstraints = false
         control.apportionsSegmentWidthsByContent = false
         control.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
-        let minimumHeight = control.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
-        minimumHeight.identifier = "Firstlight.minimumTapTarget"
-        minimumHeight.isActive = true
 
         if let coordinator {
             control.addTarget(
@@ -365,12 +391,7 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
                 : "\(label), \(statuses.joined(separator: ", "))"
         }.joined(separator: ". ").nilIfEmpty
 
-        // Segmented controls use compact, single-line chrome typography.
-        // Derive the baseline from UIKit's public footnote text style, then
-        // scale it with Dynamic Type. The 24pt ceiling prevents accessibility
-        // categories from drawing outside this fixed-height native control;
-        // VoiceOver still exposes every full title and state.
-        let titleFont = Self.titleFont(compatibleWith: control.traitCollection)
+        let titleFont = Self.titleFont(size: size, compatibleWith: control.traitCollection)
         control.setTitleTextAttributes(
             [.font: titleFont, .foregroundColor: unselectedTextColor],
             for: .normal
@@ -385,16 +406,28 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
         )
     }
 
-    static func titleFont(compatibleWith traits: UITraitCollection) -> UIFont {
+    // Segmented controls use compact, single-line chrome typography: the
+    // footnote text style, or subheadline for `lg`, one step larger to suit
+    // Button lg's height. Each scales with Dynamic Type up to a ceiling, because the
+    // single-line titles truncate rather than wrap; VoiceOver still exposes
+    // every full title and state.
+    static func titleFont(
+        size: FirstlightControlSize = .md,
+        compatibleWith traits: UITraitCollection
+    ) -> UIFont {
+        let (textStyle, maximumPointSize): (UIFont.TextStyle, CGFloat) = switch size {
+        case .md: (.footnote, 24)
+        case .lg: (.subheadline, 28)
+        }
         let standardTraits = UITraitCollection(preferredContentSizeCategory: .large)
         let systemBaseline = UIFont.preferredFont(
-            forTextStyle: .footnote,
+            forTextStyle: textStyle,
             compatibleWith: standardTraits
         )
 
-        return UIFontMetrics(forTextStyle: .footnote).scaledFont(
+        return UIFontMetrics(forTextStyle: textStyle).scaledFont(
             for: systemBaseline,
-            maximumPointSize: 24,
+            maximumPointSize: maximumPointSize,
             compatibleWith: traits
         )
     }

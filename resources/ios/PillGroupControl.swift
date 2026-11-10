@@ -181,6 +181,8 @@ struct PillFlowLayout: Layout {
 struct FirstlightPillGroupField: View {
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.displayScale) private var displayScale
 
     let label: String
     let helper: String
@@ -199,6 +201,7 @@ struct FirstlightPillGroupField: View {
     var icons: [String] = []
     var scrollable = false
     var collapseLabels = false
+    var size: FirstlightControlSize = .md
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -281,17 +284,17 @@ struct FirstlightPillGroupField: View {
                 // reveal (not a checkmark) is its non-colour selection cue.
                 if selected && !collapseLabels {
                     Image(systemName: "checkmark")
-                        .font(.caption.weight(.bold))
+                        .font(checkmarkFont)
                         .accessibilityHidden(true)
                 } else if !icon.isEmpty {
-                    NativeIconView(icon, pointSize: 15, relativeTo: .subheadline)
-                        .font(.subheadline.weight(.medium))
+                    NativeIconView(icon, pointSize: iconPointSize, relativeTo: textStyle)
+                        .font(pillFont)
                         .accessibilityHidden(true)
                 }
 
                 if showsLabel {
                     Text(labels[index])
-                        .font(.subheadline.weight(.medium))
+                        .font(pillFont)
                         .multilineTextAlignment(.leading)
                         .lineLimit(scrollable ? 1 : nil)
                         .fixedSize(horizontal: scrollable, vertical: true)
@@ -299,9 +302,9 @@ struct FirstlightPillGroupField: View {
                 }
             }
             .foregroundStyle(selected ? tokens.selectedForeground : tokens.unselectedForeground)
-            .padding(.horizontal, showsLabel ? 14 : 12)
+            .padding(.horizontal, horizontalPadding(showsLabel: showsLabel))
             .padding(.vertical, 8)
-            .frame(minWidth: 44, minHeight: 44)
+            .frame(minWidth: 44, minHeight: minimumPillHeight)
             .background(
                 Capsule().fill(
                     selected ? tokens.selectedBackground : tokens.unselectedBackground
@@ -323,6 +326,37 @@ struct FirstlightPillGroupField: View {
         .accessibilityValue(selected ? "Selected" : "Not selected")
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityHint(accessibilityHint)
+    }
+
+    // `lg` pills are as tall as Button lg and use body-sized labels.
+    private var textStyle: Font.TextStyle {
+        size == .lg ? .body : .subheadline
+    }
+
+    private var iconPointSize: CGFloat {
+        size == .lg ? 17 : 15
+    }
+
+    private var pillFont: Font {
+        .system(textStyle, weight: .medium)
+    }
+
+    private var checkmarkFont: Font {
+        size == .lg ? .subheadline.weight(.bold) : .caption.weight(.bold)
+    }
+
+    private var minimumPillHeight: CGFloat {
+        size.minimumHeight(compatibleWith: UITraitCollection(traitsFrom: [
+            UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize)),
+            UITraitCollection(displayScale: displayScale),
+        ]))
+    }
+
+    private func horizontalPadding(showsLabel: Bool) -> CGFloat {
+        switch size {
+        case .md: showsLabel ? 14 : 12
+        case .lg: showsLabel ? 18 : 16
+        }
     }
 
     private var groupAccessibilityLabel: String {

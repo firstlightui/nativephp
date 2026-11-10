@@ -7,6 +7,14 @@ import XCTest
 
 @MainActor
 final class SegmentedControlSnapshotTests: XCTestCase {
+    private var retainedWindows: [UIWindow] = []
+
+    override func tearDown() {
+        retainedWindows.forEach { $0.isHidden = true }
+        retainedWindows.removeAll()
+        super.tearDown()
+    }
+
     func testNewSelectionWaitsForServerAndAllowsRepeatedAttempts() {
         var state = SegmentedSelectionState(selectedIndex: 0)
         var stateObservedAtEmission: [Int?] = []
@@ -137,16 +145,46 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         XCTAssertEqual(changes, [1])
     }
 
-    func testMinimumTargetAndAccessibilityMetadata() {
+    func testHostedControlIsDrawnAtLeastTheMinimumTargetTall() {
+        // SwiftUI sizes the hosted UISegmentedControl, so measure it there:
+        // a constraint on the control or an enclosing minHeight frame left it
+        // drawn, and tappable, at its 31pt intrinsic height.
+        let control = hostedControl(size: .md, dynamicTypeSize: .large)
+
+        XCTAssertEqual(control.bounds.height, 44, accuracy: 1)
+        XCTAssertEqual(control.superview?.bounds.height ?? 0, 44, accuracy: 0.5)
+    }
+
+    func testLargeSizeMatchesLargeButtonHeightAcrossDynamicType() {
+        for dynamicTypeSize in [DynamicTypeSize.large, .xxxLarge, .accessibility3] {
+            let buttonHeight = hostedHeight(of: LargeButtonReference(), dynamicTypeSize: dynamicTypeSize)
+            let control = hostedControl(size: .lg, dynamicTypeSize: dynamicTypeSize)
+
+            XCTAssertEqual(
+                control.superview?.bounds.height ?? 0,
+                buttonHeight,
+                accuracy: 0.5,
+                "Segmented lg at \(dynamicTypeSize)"
+            )
+        }
+
+        XCTAssertEqual(hostedHeight(of: LargeButtonReference(), dynamicTypeSize: .large), 54, accuracy: 0.5)
+    }
+
+    func testLargeTitlesUseTheSubheadlineTextStyle() {
+        let standardTraits = UITraitCollection(preferredContentSizeCategory: .large)
+        let font = FirstlightSegmentedControl.titleFont(size: .lg, compatibleWith: standardTraits)
+
+        XCTAssertEqual(
+            font.fontDescriptor.object(forKey: .textStyle) as? String,
+            UIFont.TextStyle.subheadline.rawValue
+        )
+    }
+
+    func testAccessibilityMetadata() {
         let representable = makeRepresentable(onSelection: { _ in })
         let control = representable.makeControl()
-        let fittingSize = control.systemLayoutSizeFitting(
-            CGSize(width: 320, height: UIView.layoutFittingCompressedSize.height),
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        )
 
-        XCTAssertGreaterThanOrEqual(fittingSize.height, 44)
         XCTAssertEqual(control.accessibilityLabel, "Document queue, required")
         XCTAssertEqual(control.accessibilityHint, "Changes the active queue")
         XCTAssertEqual(control.accessibilityValue, "Mine, selected. All")
@@ -371,6 +409,58 @@ final class SegmentedControlSnapshotTests: XCTestCase {
             as: .image(on: .iPhoneSe),
             named: "accessibility-extra-extra-extra-large"
         )
+        assertFirstlightSnapshot(
+            of: makeViewController(style: .light, contentSize: .large, size: .lg),
+            as: .image(on: .iPhoneSe),
+            named: "large"
+        )
+    }
+
+    private func hostedControl(
+        size: FirstlightControlSize,
+        dynamicTypeSize: DynamicTypeSize
+    ) -> UISegmentedControl {
+        let field = FirstlightSegmentedField(
+            label: "",
+            helper: "",
+            error: "",
+            required: false,
+            labels: ["Ward", "Patients"],
+            optionEnabled: [true, true],
+            disabled: false,
+            selectionState: .constant(SegmentedSelectionState(selectedIndex: 0)),
+            tokens: .snapshot,
+            accessibilityLabel: "View",
+            accessibilityHint: "",
+            size: size,
+            onSelection: { _ in }
+        )
+        let host = layOut(field, dynamicTypeSize: dynamicTypeSize)
+
+        return host.view.firstSubview(of: UISegmentedControl.self)!
+    }
+
+    private func hostedHeight<V: View>(of view: V, dynamicTypeSize: DynamicTypeSize) -> CGFloat {
+        layOut(view, dynamicTypeSize: dynamicTypeSize).view.bounds.height
+    }
+
+    private func layOut<V: View>(
+        _ view: V,
+        dynamicTypeSize: DynamicTypeSize
+    ) -> UIHostingController<some View> {
+        let host = UIHostingController(
+            rootView: view.frame(width: 320).environment(\.dynamicTypeSize, dynamicTypeSize)
+        )
+        host.safeAreaRegions = []
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 400))
+        window.rootViewController = host
+        window.isHidden = false
+        let height = host.sizeThatFits(in: CGSize(width: 320, height: 400)).height
+        host.view.frame = CGRect(x: 0, y: 0, width: 320, height: height)
+        host.view.layoutIfNeeded()
+        retainedWindows.append(window)
+
+        return host
     }
 
     private func makeControl(
@@ -412,7 +502,8 @@ final class SegmentedControlSnapshotTests: XCTestCase {
 
     private func makeViewController(
         style: UIUserInterfaceStyle,
-        contentSize: UIContentSizeCategory
+        contentSize: UIContentSizeCategory,
+        size: FirstlightControlSize = .md
     ) -> UIViewController {
         let state = Binding.constant(SegmentedSelectionState(selectedIndex: nil))
         let view = FirstlightSegmentedField(
@@ -427,6 +518,7 @@ final class SegmentedControlSnapshotTests: XCTestCase {
             tokens: .snapshot,
             accessibilityLabel: "Referral queue",
             accessibilityHint: "Changes the active referral queue",
+            size: size,
             onSelection: { _ in }
         )
         .padding(20)
@@ -544,5 +636,33 @@ private final class TraitHostingController<Content: View>: UIViewController {
         ])
         host.didMove(toParent: self)
         setOverrideTraitCollection(traits, forChild: host)
+    }
+}
+
+/// Mobile UI's Button `size="lg"`: a prominent large-control-size button around
+/// a 20pt medium label scaled relative to body (NativeUIButtonRenderer).
+struct LargeButtonReference: View {
+    @ScaledMetric(relativeTo: .body) private var textSize: CGFloat = 20
+
+    var body: some View {
+        let button = Button(action: {}) {
+            Text("Admit").font(.system(size: textSize, weight: .medium))
+        }
+
+        if #available(iOS 26.0, *) {
+            button.buttonStyle(.glassProminent).controlSize(.large)
+        } else {
+            button.buttonStyle(.borderedProminent).controlSize(.large)
+        }
+    }
+}
+
+private extension UIView {
+    func firstSubview<T: UIView>(of type: T.Type) -> T? {
+        if let match = self as? T { return match }
+        for subview in subviews {
+            if let match = subview.firstSubview(of: type) { return match }
+        }
+        return nil
     }
 }

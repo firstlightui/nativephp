@@ -39,6 +39,7 @@ struct PillGroupRendererConfiguration: Equatable {
     let scrollable: Bool
     let collapseLabels: Bool
     let tone: PillGroupTone
+    let size: FirstlightControlSize
     let warningColors: FirstlightWarningColors
 
     init(node: NativeUINode) {
@@ -68,6 +69,7 @@ struct PillGroupRendererConfiguration: Equatable {
         self.scrollable = props.getBool("scrollable")
         self.collapseLabels = props.getBool("collapse_labels")
         self.tone = PillGroupTone(rawValue: props.getString("tone")) ?? .primary
+        self.size = FirstlightControlSize(wire: props.getString("size"))
         self.warningColors = FirstlightWarningColors(node: node)
     }
 }
@@ -170,7 +172,8 @@ struct PillGroupRenderer: View {
             },
             icons: configuration.optionIcons,
             scrollable: configuration.scrollable,
-            collapseLabels: configuration.collapseLabels
+            collapseLabels: configuration.collapseLabels,
+            size: configuration.size
         )
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in

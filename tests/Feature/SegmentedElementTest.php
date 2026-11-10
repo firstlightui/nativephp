@@ -148,6 +148,7 @@ it('publishes the string-valued element tree through a SELECT_CHANGE callback', 
         ->and($tree['props']['helper'])->toBe('Choose a queue')
         ->and($tree['props']['required'])->toBeTrue()
         ->and($tree['props']['disabled'])->toBeFalse()
+        ->and($tree['props']['size'])->toBe('md')
         ->and($tree['props']['a11y_label'])->toBe('Document queue')
         ->and($tree['props']['a11y_hint'])->toBe('Changes the active queue')
         ->and($tree['props'])->not->toHaveKey('option_callbacks')
@@ -259,6 +260,26 @@ it('publishes group field metadata and disabled state as primitives', function (
         ->and($tree['props']['disabled'])->toBeTrue()
         ->and(json_decode(json_encode($tree, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR))->toBe($tree);
 });
+
+it('publishes the large size that matches Button lg', function () {
+    $tree = collectSegmented([
+        'options' => ['Ward', 'Patients'],
+        'value' => 'Ward',
+        'label' => 'View',
+        'size' => 'lg',
+    ]);
+
+    expect($tree['props']['size'])->toBe('lg');
+});
+
+it('rejects sizes other than md and lg', function (string $size) {
+    collectSegmented([
+        'options' => ['Ward', 'Patients'],
+        'value' => 'Ward',
+        'label' => 'View',
+        'size' => $size,
+    ]);
+})->with(['sm', 'large', ''])->throws(\InvalidArgumentException::class, 'Expected one of: md, lg.');
 
 it('rejects a selected value whose type differs from the option values', function () {
     collectSegmented([

@@ -250,6 +250,7 @@ it('defaults to a wrapping primary group with no option icons', function () {
     expect($tree['props']['scrollable'])->toBeFalse()
         ->and($tree['props']['collapse_labels'])->toBeFalse()
         ->and($tree['props']['tone'])->toBe('primary')
+        ->and($tree['props']['size'])->toBe('md')
         ->and($tree['props']['option_icons'])->toBe(['', ''])
         ->and($tree['props']['option_icon_variants'])->toBe(['', ''])
         ->and($tree['props'])->not->toHaveKey('warning_color');
@@ -268,6 +269,7 @@ it('publishes a scrollable collapsing icon row with resolved per-option icons', 
         'scrollable' => true,
         'collapse-labels' => true,
         'tone' => 'success',
+        'size' => 'lg',
         '_change' => 'filter',
     ], $registry);
 
@@ -275,6 +277,7 @@ it('publishes a scrollable collapsing icon row with resolved per-option icons', 
     expect($tree['props']['scrollable'])->toBeTrue()
         ->and($tree['props']['collapse_labels'])->toBeTrue()
         ->and($tree['props']['tone'])->toBe('success')
+        ->and($tree['props']['size'])->toBe('lg')
         ->and($tree['props']['option_icons'])->toBe(['apps', 'mail', 'star'])
         ->and($tree['props']['option_labels'])->toBe(['All', 'Unread', 'Starred'])
         ->and($tree['props']['option_enabled'])->toBe(['1', '0', '1'])
@@ -312,7 +315,7 @@ it('publishes warning colours only for the warning tone', function () {
         ->and($tree['props'])->toHaveKeys(['warning_color', 'on_warning_color', 'dark_warning_color', 'dark_on_warning_color']);
 });
 
-it('rejects unsupported tones and malformed option icons', function (array $attributes, string $message) {
+it('rejects unsupported tones and sizes and malformed option icons', function (array $attributes, string $message) {
     expect(fn () => collectPillGroup([
         'options' => [['value' => 'all', 'label' => 'All', 'icon' => 'apps']],
         'value' => null,
@@ -321,6 +324,7 @@ it('rejects unsupported tones and malformed option icons', function (array $attr
     ]))->toThrow(InvalidArgumentException::class, $message);
 })->with([
     'tone' => [['tone' => 'info'], 'Unsupported Pill Group tone [info]'],
+    'size' => [['size' => 'sm'], 'Unsupported Pill Group size [sm]. Expected one of: md, lg.'],
     'blank icon' => [['options' => [['value' => 'all', 'label' => 'All', 'icon' => ' ']]], 'icon must be a non-empty string'],
     'android type' => [['options' => [['value' => 'all', 'label' => 'All', 'icon-android' => 5]]], 'icon-android must be an AndroidSymbol or string'],
     'unknown field still rejected' => [['options' => [['value' => 'all', 'label' => 'All', 'badge' => '2']]], 'unknown field: badge'],

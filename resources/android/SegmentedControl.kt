@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonColors
@@ -93,6 +94,7 @@ fun FirstlightSegmentedControl(
     required: Boolean = false,
     accessibilityLabel: String = label,
     accessibilityHint: String = "",
+    size: FirstlightControlSize = FirstlightControlSize.Md,
 ) {
     val fieldSemantics = firstlightFieldSemantics(
         accessibilityLabel = accessibilityLabel,
@@ -152,9 +154,11 @@ fun FirstlightSegmentedControl(
                 ) {
                     Text(
                         text = optionLabel,
+                        // SegmentedButtonDefaults.ContentPadding already pads the label 8 dp.
+                        modifier = Modifier.padding(vertical = size.labelVerticalPadding(inset = 8.dp)),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = size.labelStyle,
                     )
                 }
             }

@@ -43,6 +43,7 @@ struct SegmentedRendererConfiguration: Equatable {
     let required: Bool
     let accessibilityLabel: String
     let accessibilityHint: String
+    let size: FirstlightControlSize
 
     init(node: NativeUINode) {
         let props = node.props
@@ -67,6 +68,7 @@ struct SegmentedRendererConfiguration: Equatable {
             ? props.getString("label")
             : explicitAccessibilityLabel
         self.accessibilityHint = props.getString("a11y_hint")
+        self.size = FirstlightControlSize(wire: props.getString("size"))
     }
 
     var serverSelectedIndex: Int? {
@@ -186,6 +188,7 @@ struct SegmentedRenderer: View {
             ),
             accessibilityLabel: configuration.accessibilityLabel,
             accessibilityHint: configuration.accessibilityHint,
+            size: configuration.size,
             onSelection: { index in
                 guard let event = rendererState.userSelected(index) else { return }
                 events.send(event)

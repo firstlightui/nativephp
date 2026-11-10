@@ -77,6 +77,7 @@ data class SegmentedRendererConfiguration(
     val required: Boolean,
     val accessibilityLabel: String,
     val accessibilityHint: String,
+    val size: FirstlightControlSize = FirstlightControlSize.Md,
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -97,6 +98,7 @@ data class SegmentedRendererConfiguration(
             node.props.getString("label")
         },
         accessibilityHint = node.props.getString("a11y_hint"),
+        size = FirstlightControlSize.fromWire(node.props.getString("size")),
     )
 
     val serverSelectedIndex: Int?
@@ -188,6 +190,7 @@ object SegmentedRenderer {
             required = rendererState.configuration.required,
             accessibilityLabel = rendererState.configuration.accessibilityLabel,
             accessibilityHint = rendererState.configuration.accessibilityHint,
+            size = rendererState.configuration.size,
         )
     }
 }

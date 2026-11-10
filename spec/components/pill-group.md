@@ -65,6 +65,7 @@ Multiple selection uses the same option contract and an array-valued binding:
 | `scrollable` | Presents the pills as one horizontally scrolling row instead of wrapping. Defaults to `false`. |
 | `collapse-labels` | Shows only the icon of each unselected pill and reveals the label of each selected pill. Requires an icon on every option. Defaults to `false`. |
 | `tone` | Semantic colour of selected pills: `primary` (default), `accent`, `success`, `warning`, or `danger`. Unselected pills always use the neutral surface style. |
+| `size` | `md` (default) or `lg`. `lg` pills share Button `size="lg"`'s height and grow with text size as that button does, with one step larger labels. |
 | `label` | Visible group label. |
 | `helper` | Supporting guidance below the group. |
 | `error` | Visible and accessible validation feedback. |
@@ -96,6 +97,8 @@ Without `collapse-labels`, every pill shows its label. A selected pill replaces 
 
 The label reveal animates only when PHP publishes a changed selection. Initial rendering and reconciliation without a selection change do not animate, and Reduce Motion or disabled system animations remove the motion.
 
+`size` changes only pill height, padding, and label and icon size. `lg` matches Button `size="lg"`: 54 points on iOS and 48 dp on Android at the default text size. Both sizes keep the platform interaction target, so no smaller size exists.
+
 `tone` changes only the selected pill's container and content colours, which come from the NativePHP semantic theme (`primary`, `accent`, `success`, the Firstlight warning pair, and `destructive` for `danger`). Selected content falls back to black or white when the theme pair does not reach 4.5:1 contrast. Unselected pills stay uniform regardless of tone.
 
 ## Events and state timing
@@ -110,7 +113,7 @@ Pill Group commits immediately. Plain `native:model` and `native:model.live` are
 
 An empty option collection renders an inert disabled group. A disabled group or disabled option emits nothing. Missing same-typed selections remain visibly unselected; Pill Group never chooses a fallback.
 
-Pill Group fails before publication for an unsupported `tone`, an option icon that is blank or of an unsupported type, `collapse-labels` when any option lacks an icon, malformed options, mixed or duplicate option values, a single-mode array, a multiple-mode scalar, a non-list multiple value, duplicate selected values, mixed selected-value types, a selected-value type that differs from the options, unsupported value types, deferred sync modes, or incompatible public props.
+Pill Group fails before publication for an unsupported `tone` or `size`, an option icon that is blank or of an unsupported type, `collapse-labels` when any option lacks an icon, malformed options, mixed or duplicate option values, a single-mode array, a multiple-mode scalar, a non-list multiple value, duplicate selected values, mixed selected-value types, a selected-value type that differs from the options, unsupported value types, deferred sync modes, or incompatible public props.
 
 During development, a blank visible label and blank `a11y-label` emit the same actionable unlabelled-field warning as other Firstlight choice controls.
 

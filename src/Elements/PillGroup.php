@@ -36,6 +36,9 @@ class PillGroup extends Element
     /** @var list<string> */
     private const TONES = ['primary', 'accent', 'success', 'warning', 'danger'];
 
+    /** @var list<string> */
+    private const SIZES = ['md', 'lg'];
+
     /** @var list<string> Shared fallback, then iOS and Android overrides with camelCase aliases. */
     private const OPTION_ICON_FIELDS = ['icon', 'icon-ios', 'iconIos', 'icon-android', 'iconAndroid'];
 
@@ -47,6 +50,8 @@ class PillGroup extends Element
     protected bool $collapseLabels = false;
 
     protected string $tone = 'primary';
+
+    protected string $size = 'md';
 
     protected mixed $rawValue = null;
 
@@ -90,6 +95,10 @@ class PillGroup extends Element
 
         if (array_key_exists('tone', $attrs)) {
             $this->tone((string) $attrs['tone']);
+        }
+
+        if (array_key_exists('size', $attrs)) {
+            $this->size((string) $attrs['size']);
         }
 
         if (array_key_exists('value', $attrs)) {
@@ -174,6 +183,20 @@ class PillGroup extends Element
         return $this;
     }
 
+    /** `lg` matches Button `size="lg"`. */
+    public function size(string $value): static
+    {
+        if (! in_array($value, self::SIZES, true)) {
+            throw new InvalidArgumentException(
+                "Unsupported Pill Group size [{$value}]. Expected one of: ".implode(', ', self::SIZES).'.'
+            );
+        }
+
+        $this->size = $value;
+
+        return $this;
+    }
+
     public function label(string $value): static
     {
         $this->fieldProps['label'] = $value;
@@ -253,6 +276,7 @@ class PillGroup extends Element
             'scrollable' => $this->scrollable,
             'collapse_labels' => $this->collapseLabels,
             'tone' => $this->tone,
+            'size' => $this->size,
             'option_callbacks' => $this->optionCallbacks(
                 $registry,
                 $normalized->items,

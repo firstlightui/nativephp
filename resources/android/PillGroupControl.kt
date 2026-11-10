@@ -57,6 +57,7 @@ fun FirstlightPillGroupControl(
     icons: List<String> = emptyList(),
     scrollable: Boolean = false,
     collapseLabels: Boolean = false,
+    size: FirstlightControlSize = FirstlightControlSize.Md,
 ) {
     val fieldSemantics = firstlightFieldSemantics(
         accessibilityLabel = accessibilityLabel,
@@ -102,8 +103,11 @@ fun FirstlightPillGroupControl(
                             // The icon lives in the label slot so an unselected
                             // pill keeps symmetric icon-only padding; the label
                             // expands beside it once PHP publishes the selection.
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                PillIcon(icon)
+                            Row(
+                                modifier = Modifier.padding(vertical = size.labelVerticalPadding()),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                PillIcon(icon, size)
                                 AnimatedVisibility(
                                     visible = selected,
                                     enter = fadeIn() + expandHorizontally(),
@@ -112,14 +116,15 @@ fun FirstlightPillGroupControl(
                                     Text(
                                         text = optionLabel,
                                         modifier = Modifier.padding(start = 8.dp),
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = size.labelStyle,
                                     )
                                 }
                             }
                         } else {
                             Text(
                                 text = optionLabel,
-                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(vertical = size.labelVerticalPadding()),
+                                style = size.labelStyle,
                             )
                         }
                     },
@@ -132,11 +137,11 @@ fun FirstlightPillGroupControl(
                                 Text(
                                     text = "✓",
                                     modifier = Modifier.clearAndSetSemantics { },
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = size.labelStyle,
                                 )
                             }
                         }
-                        icon.isNotEmpty() -> { { PillIcon(icon) } }
+                        icon.isNotEmpty() -> { { PillIcon(icon, size) } }
                         else -> null
                     },
                     colors = colors,
@@ -175,12 +180,12 @@ fun FirstlightPillGroupControl(
 }
 
 @Composable
-private fun PillIcon(name: String) {
+private fun PillIcon(name: String, size: FirstlightControlSize) {
     if (name.isEmpty()) return
     MaterialIcon(
         name = name,
         contentDescription = null,
         modifier = Modifier.clearAndSetSemantics { },
-        size = FilterChipDefaults.IconSize,
+        size = if (size == FirstlightControlSize.Lg) 20.dp else FilterChipDefaults.IconSize,
     )
 }

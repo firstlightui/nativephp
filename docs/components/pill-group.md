@@ -10,8 +10,10 @@ sources:
   - src/Support/OptionNormalizer.php
   - resources/ios/PillGroupControl.swift
   - resources/ios/PillGroupRenderer.swift
+  - resources/ios/FirstlightControlSize.swift
   - resources/android/PillGroupControl.kt
   - resources/android/PillGroupRenderer.kt
+  - resources/android/FirstlightControlSize.kt
   - tests/Feature/PillGroupElementTest.php
 ---
 
@@ -94,6 +96,7 @@ public array $queues = ['mine'];
 | `scrollable` | `bool` | Shows the pills in one horizontally scrolling row instead of wrapping. |
 | `collapse-labels` | `bool` | Shows only the icon of unselected pills and the icon and label of selected pills. Every option needs an `icon`. |
 | `tone` | `string` | Selected pill colour: `primary` (default), `accent`, `success`, `warning`, or `danger`. Unselected pills always look the same. |
+| `size` | `string` | `md` (default) or `lg`. `lg` pills are as tall as a Button with `size="lg"`. |
 | `label` | `string` | Visible field label. |
 | `helper` | `string` | Supporting text below the pills. |
 | `error` | `string` | Error text and native error semantics. |
@@ -102,6 +105,21 @@ public array $queues = ['mine'];
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout utilities. |
+
+## Sizes
+
+`md` is the default. Use `lg` when the pills sit with `size="lg"` Buttons:
+
+```blade
+<firstlight:pill-group :options="$queueOptions" native:model="queue" label="Queue" size="lg" />
+```
+
+| Size | iOS | Android |
+| --- | --- | --- |
+| `md` | Pills at least 44 pt tall, subheadline-sized labels. | Chips at least 48 dp tall, Material label text. |
+| `lg` | Button lg's height: 54 pt at the default text size, body-sized labels. | Button lg's height: 48 dp at the default text size, Material title-sized labels. |
+
+Both sizes grow with Dynamic Type and Android font scaling; `lg` grows the same way a `size="lg"` Button does. `size` works with `scrollable`, `collapse-labels`, `tone`, and `multiple`, and changes no selection or accessibility behaviour. Other values, including `sm`, are rejected.
 
 ## Options and values
 
@@ -153,7 +171,7 @@ Collapsed labels hide meaning until a pill is selected, so use them for short se
 ## Validation and failure behaviour
 
 Contract exceptions still reject malformed options, mixed selections, an
-unsupported `tone`, blank or invalid option icons, `collapse-labels` without
+unsupported `tone` or `size`, blank or invalid option icons, `collapse-labels` without
 an icon on every option, and unsupported presentation props before
 publication. User validation is
 separate: screens that `use ValidatesFields` auto-bind the first MessageBag

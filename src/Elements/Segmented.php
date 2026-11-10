@@ -15,6 +15,11 @@ class Segmented extends Element
 {
     protected string $type = 'firstlight.segmented';
 
+    /** @var list<string> */
+    private const SIZES = ['md', 'lg'];
+
+    protected string $size = 'md';
+
     /** @var array<int|string, mixed> */
     protected array $rawOptions = [];
 
@@ -58,6 +63,10 @@ class Segmented extends Element
 
         if (array_key_exists('disabled', $attrs)) {
             $this->disabled((bool) $attrs['disabled']);
+        }
+
+        if (array_key_exists('size', $attrs)) {
+            $this->size((string) $attrs['size']);
         }
 
         if (isset($attrs['sync-mode']) || isset($attrs['syncMode'])) {
@@ -124,6 +133,20 @@ class Segmented extends Element
         return $this;
     }
 
+    /** `lg` matches Button `size="lg"`. */
+    public function size(string $value): static
+    {
+        if (! in_array($value, self::SIZES, true)) {
+            throw new InvalidArgumentException(
+                "Unsupported Segmented size [{$value}]. Expected one of: ".implode(', ', self::SIZES).'.'
+            );
+        }
+
+        $this->size = $value;
+
+        return $this;
+    }
+
     public function syncMode(string $mode): static
     {
         if ($mode !== 'live') {
@@ -156,6 +179,7 @@ class Segmented extends Element
             'option_values' => $normalized->wireValues(),
             'option_labels' => $normalized->labels(),
             'option_enabled' => $normalized->enabledFlags(),
+            'size' => $this->size,
         ]);
 
         if ($normalized->items === []) {

@@ -81,6 +81,7 @@ data class PillGroupRendererConfiguration(
     val scrollable: Boolean = false,
     val collapseLabels: Boolean = false,
     val tone: PillGroupTone = PillGroupTone.Primary,
+    val size: FirstlightControlSize = FirstlightControlSize.Md,
     val warningColors: FirstlightWarningColors = FirstlightWarningColors(),
 ) {
     constructor(node: NativeUINode) : this(
@@ -106,6 +107,7 @@ data class PillGroupRendererConfiguration(
         scrollable = node.props.getBool("scrollable"),
         collapseLabels = node.props.getBool("collapse_labels"),
         tone = PillGroupTone.fromWire(node.props.getString("tone", "primary")),
+        size = FirstlightControlSize.fromWire(node.props.getString("size")),
         warningColors = FirstlightWarningColors(node),
     )
 }
@@ -185,6 +187,7 @@ object PillGroupRenderer {
             icons = configuration.optionIcons,
             scrollable = configuration.scrollable,
             collapseLabels = configuration.collapseLabels,
+            size = configuration.size,
         )
     }
 }
