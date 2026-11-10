@@ -90,8 +90,11 @@ scaling because it is measured from the rendered content.
 
 - iOS presents a SwiftUI `.sheet` with a visible drag indicator and one
   `.height` presentation detent measured from the content (system-capped at
-  the large detent). Content sits in a `ScrollView` that only bounces when it
-  overflows. Swipe down and taps on the dimmed background dismiss it.
+  the large detent). A 16 pt band above the content holds the drag indicator,
+  leaving the same gap under it as the system leaves above it, as Material's
+  drag handle does on Android; the detent includes the band. Content sits
+  below the band in a `ScrollView` that only bounces when it overflows. Swipe
+  down and taps on the dimmed background dismiss it.
   A pinned footer uses a bottom safe-area inset and contributes to the
   measured content-height detent.
 - Android renders a Firstlight Material 3 `ModalBottomSheet` with

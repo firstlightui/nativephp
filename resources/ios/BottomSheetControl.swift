@@ -1,12 +1,19 @@
 import SwiftUI
 
-/// The single detent for a sheet whose content measures `contentHeight` points.
-/// Before the first measurement the sheet uses `.medium` so presentation
-/// never starts at full height. Height detents exclude the bottom safe area,
-/// which the system adds, and are capped by the system at `.large`; content
-/// beyond that scrolls.
+/// Band at the top of the sheet that holds the system drag indicator, like
+/// Material's drag handle on Android. The system draws the indicator about
+/// 5 pt below the sheet edge and 5 pt tall, so the band leaves the same gap
+/// under it, and authored padding starts below the indicator rather than
+/// beside it in the curve of the top corners.
+let firstlightBottomSheetTopInset: CGFloat = 16
+
+/// The single detent for a sheet whose content measures `contentHeight` points,
+/// plus the drag-indicator band. Before the first measurement the sheet uses
+/// `.medium` so presentation never starts at full height. Height detents
+/// exclude the bottom safe area, which the system adds, and are capped by the
+/// system at `.large`; content beyond that scrolls.
 func firstlightBottomSheetDetent(contentHeight: CGFloat) -> PresentationDetent {
-    contentHeight > 0 ? .height(contentHeight.rounded(.up)) : .medium
+    contentHeight > 0 ? .height((contentHeight + firstlightBottomSheetTopInset).rounded(.up)) : .medium
 }
 
 /// SwiftUI sheet sized to its content with a visible drag indicator. Swipe
@@ -56,6 +63,8 @@ struct FirstlightBottomSheetLayout<Content: View, Footer: View>: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onContentHeight($0) }
         }
         .scrollBounceBehavior(.basedOnSize)
+        // Outside the ScrollView, so scrolled content never runs up under the indicator.
+        .padding(.top, firstlightBottomSheetTopInset)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // The Mobile UI column inside the footer accepts the full
             // proposed height; without this the inset takes the sheet and

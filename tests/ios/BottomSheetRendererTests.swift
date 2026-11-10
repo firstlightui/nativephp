@@ -66,10 +66,10 @@ final class BottomSheetRendererTests: XCTestCase {
         XCTAssertTrue(state.isPresented)
     }
 
-    func testDetentFollowsMeasuredContentHeight() {
+    func testDetentFollowsMeasuredContentHeightBelowTheDragIndicatorBand() {
         XCTAssertEqual(firstlightBottomSheetDetent(contentHeight: 0), .medium)
-        XCTAssertEqual(firstlightBottomSheetDetent(contentHeight: 120), .height(120))
-        XCTAssertEqual(firstlightBottomSheetDetent(contentHeight: 456.2), .height(457))
+        XCTAssertEqual(firstlightBottomSheetDetent(contentHeight: 120), .height(136))
+        XCTAssertEqual(firstlightBottomSheetDetent(contentHeight: 456.2), .height(473))
     }
 
     func testPinnedFooterKeepsItsIntrinsicHeightAndLeavesTheBodyScrollable() throws {

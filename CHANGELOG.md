@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- iOS Bottom Sheet now keeps a 16 pt band for the drag indicator above its content, as Material's drag handle does on Android. Content used to start at the top edge of the sheet, so a heading with the usual `p-4` padding sat 9 pt under the indicator and inside the curve of the top corners. The gap under the indicator now matches the gap above it, and authored padding starts below that. Side insets are unchanged, and sheets are 16 pt taller.
+
 ## 1.1.0-beta3 - 2026-11-10
 
 ### Fixed
