@@ -25,6 +25,7 @@
         "php": "^8.4",
         "illuminate/console": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/filesystem": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/translation": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/validation": "^10.0|^11.0|^12.0|^13.0",
         "nativephp/mobile": "^4.7",
@@ -47,7 +48,6 @@
         }
     },
     "require-dev": {
-        "illuminate/http": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/pagination": "^13.0",
         "illuminate/view": "^13.0",
         "league/flysystem": "^3.25.1",

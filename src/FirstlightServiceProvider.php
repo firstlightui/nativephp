@@ -2,6 +2,7 @@
 
 namespace FirstlightUI;
 
+use FirstlightUI\Console\InstallIconCommand;
 use FirstlightUI\Console\MakeScreenCommand;
 use FirstlightUI\Feedback\FeedbackManager;
 use FirstlightUI\Feedback\FeedbackStore;
@@ -39,7 +40,7 @@ class FirstlightServiceProvider extends ServiceProvider
         );
 
         if (method_exists($this->app, 'runningInConsole') && $this->app->runningInConsole()) {
-            $this->commands([MakeScreenCommand::class]);
+            $this->commands([MakeScreenCommand::class, InstallIconCommand::class]);
         }
     }
 
