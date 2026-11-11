@@ -12,8 +12,8 @@ The app-shell layer for NativePHP. `composer require firstlightui/nativephp` plu
 
 Explore the native controls and recipes in the [showcase app](https://github.com/firstlightui/showcase).
 
-- **iOS:** [Join the showcase beta on TestFlight](https://testflight.apple.com/join/4CCrA7JB).
-- **Android:** [Download the showcase on Google Play](https://play.google.com/store/apps/details?id=dev.firstlightui.showcase).
+<a href="https://apps.apple.com/au/app/firstlight-showcase/id6826403090"><img src="https://raw.githubusercontent.com/firstlightui/firstlight-public/main/public/badges/app-store.svg" alt="Download on the App Store" height="40"></a>
+<a href="https://play.google.com/store/apps/details?id=dev.firstlightui.showcase"><img src="https://raw.githubusercontent.com/firstlightui/firstlight-public/main/public/badges/google-play.png" alt="Get it on Google Play" height="40"></a>
 
 ## What you get
 
