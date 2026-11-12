@@ -19,9 +19,6 @@ final class FirstlightTagPrecompiler
             return $value;
         }
 
-        // Media clear is Firstlight-owned; NativeTagPrecompiler does not map @clear.
-        $value = preg_replace('/@clear=/', '_clear=', $value) ?? $value;
-
         foreach (self::NESTED_PAIRED_CONTAINER_TAGS as $tag) {
             $value = $this->compilePairedTag($value, $tag);
         }

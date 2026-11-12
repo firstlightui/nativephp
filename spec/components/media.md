@@ -7,6 +7,7 @@ sources:
   - Constitution.md
   - spec/designs/2026-08-24-firstlight-media-field-design.md
   - spec/reference/field-validation.md
+  - nativephp.json
   - src/Elements/Media.php
   - src/Media/MediaValue.php
   - src/Media/MediaStorage.php
@@ -93,7 +94,9 @@ Element type `firstlight.media`. Props include `mode`, field metadata, `disk`,
 optional dimensions, `preview_url`, and optional `on_change` / `on_clear`.
 
 `@change` carries the temp absolute path string for PHP to commit.
-`@clear` presses clear when a value is present.
+`@clear` presses clear when a value is present. `clear` is not a NativePHP
+core event, so `nativephp.json` lists it in Media's `element_events` and
+NativePHP Mobile 4.7 compiles it to `_clear`.
 
 ## Native expression
 
