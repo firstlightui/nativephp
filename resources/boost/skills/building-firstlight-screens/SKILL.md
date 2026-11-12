@@ -18,6 +18,7 @@ Firstlight renders genuine SwiftUI and Jetpack Compose controls from one Blade v
 | Changes preferences one at a time | [Settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen) |
 | Uploads a photo or document | [Photo upload](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen) |
 | Locks private data behind Face ID or a fingerprint | [App lock](https://firstlightui.dev/docs/how-to/build-an-app-lock-screen) |
+| Must only open for a signed-in or unlocked user | [Guard screens](https://firstlightui.dev/docs/how-to/guard-screens) |
 
 Copy the recipe, then change names, models and fields. Or scaffold with `php artisan make:firstlight-screen Name [--form] [--list] [--destroy] [--test]` and replace every `TODO`.
 
@@ -45,6 +46,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
 - Draw your own controls, tab bars, drawers, charts or carousels in Blade.
 - Use `custom` top bars or bottom navs, or set `usesNativeChrome()` to false.
 - Put non-List-Item children in `firstlight:list`.
+- Gate who may open a screen in `mount()`; put the check in route middleware.
 - Pass loop indexes to callbacks, or delete from a swipe without confirmation.
 - Add `@nativeError`, try/catch around validation, or hard-coded colours.
 - Add props a component's reference does not list. Firstlight rejects unknown attributes with an exception; fix the markup instead of suppressing it.

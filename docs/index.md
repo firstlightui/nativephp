@@ -50,6 +50,7 @@ recipes run inside.
 
 ## Laravel on native screens
 
+- [Guard screens](how-to/guard-screens.md) — Keep signed-out or locked users off protected screens with route middleware, re-check on resume, and test both.
 - [Validate fields](how-to/validate-fields.md) — Show Laravel validation messages on Firstlight fields with `validate()`, `validateOnly()`, and Form Requests.
 - [Submit forms](how-to/submit-forms.md) — Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize actions](how-to/authorize-actions.md) — Hide, disable, or guard Firstlight actions with Laravel Gate and Policy decisions.

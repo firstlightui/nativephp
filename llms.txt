@@ -38,6 +38,7 @@ every control the way they reach the platform's own apps.
 
 ## Laravel on native screens
 
+- [Guard screens](https://firstlightui.dev/docs/how-to/guard-screens): Keep signed-out or locked users off protected screens with route middleware, re-check when a screen is shown again, and test both.
 - [Validate Firstlight fields](https://firstlightui.dev/docs/how-to/validate-fields): Show Laravel validation messages on Firstlight fields with validate(), validateOnly(), and Form Requests.
 - [Submit Firstlight forms](https://firstlightui.dev/docs/how-to/submit-forms): Validate Firstlight fields, run a PHP action once, and publish success Feedback.
 - [Authorize Firstlight actions](https://firstlightui.dev/docs/how-to/authorize-actions): Apply Laravel Gate and Policy decisions to Firstlight actions with explicit hide, disable, and destructive confirmation patterns.
