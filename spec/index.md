@@ -15,6 +15,7 @@ sources:
 - [Callout component contract](components/callout.md) — Defines persistent semantic messages, optional actions, tone-owned affordances, accessibility, and the paired-renderer boundary.
 - [Transient Feedback maintained contract](components/transient-feedback.md) — Defines the service API, package-owned wire, native queue, lifecycle, accessibility, failures, and evidence boundary.
 - [Checkbox component contract](components/checkbox.md) — Defines strict Boolean field semantics, server-authoritative proposals, accessibility, and the paired-renderer boundary.
+- [Switch component contract](components/switch.md) — Defines strict Boolean setting semantics, server-authoritative proposals, accessibility, and the paired-renderer boundary.
 - [Media component contract](components/media.md) — Defines image-or-document MediaValue Storage, crop composition, ValidatesFields participation, and paired crop sheets.
 - [Badge component contract](components/badge.md) — Defines compact count and marker semantics, strict display sources, tones, accessibility, and the paired-renderer decision.
 - [Choice Group component contract](components/choice-group.md) — Defines visible radio or checkbox choice rows, stable values, state timing, accessibility, and native expression.
@@ -40,9 +41,12 @@ sources:
 - [Catalogue boundary](reference/catalogue-boundary.md) — Defines what belongs in the Firstlight catalogue, what is a PHP SuperNative extension, and what stays in Mobile UI.
 - [Tabs component contract](components/tabs.md) — Defines section values, badges, state timing, tab accessibility, the catalogue boundary, and native expression.
 - [Pill Group component contract](components/pill-group.md) — Defines compact choice values, selection modes, state timing, accessibility, and native expression.
+- [Segmented component contract](components/segmented.md) — Defines stable single-choice values, integer callbacks, sizes, state timing, accessibility, and the paired-renderer boundary.
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
 - [Metric component contract](components/metric.md) — Defines a static measurement with tabular figures and one accessible description.
 - [Text Area component contract](components/text-area.md) — Defines focused multiline editing, line bounds, sync policies, accessibility, and the paired-renderer boundary.
+- [Text Field component contract](components/text-field.md) — Defines focused single-line editing, sync policies, input masks, icons and trailing actions, accessibility, and the paired-renderer boundary.
+- [Search Field component contract](components/search-field.md) — Defines focused query editing, native search and clear affordances, sync policies, accessibility, and the paired-renderer boundary.
 - [Code Editor component contract](components/code-editor.md) — Defines focused code editing, shared indentation and scroll-anchor fixtures, key row, follow mode, and the paired-renderer boundary.
 - [Package architecture](architecture/package.md) — Maps the public PHP API to the iOS and Android renderer lifecycle.
 - [Adding components](workflows/adding-components.md) — Defines the evidence-based workflow for delivering a paired Firstlight component.
