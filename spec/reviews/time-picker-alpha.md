@@ -149,3 +149,11 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- Value or `disabled` changing while open: section **Changes while open**. Change time and Disable queue a change that a `#[Poll(1000)]` method applies about 3 s later, while the tester holds the picker open; Reset open picker restores the start state. Test: `publishes scheduled value and disabled changes for an open picker`. The dismissal behaviour comes from `spec/components/time-picker.md`; `docs/components/time-picker.md` does not yet state it. It must be observed on a device.
+- 12-hour locale beside 24-hour de-DE: section **Validation and context**. `New York clinic time` (`en-US`, `America/New_York`) sits next to the Berlin `de-DE` field. Test: `publishes a 12-hour locale beside 24-hour German and a field named only by a11y-label`.
+- `a11y-label` only: section **Accessibility label only**. `Medication time` has no visible label, plus `a11y-hint`. Same test.

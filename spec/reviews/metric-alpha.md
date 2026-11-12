@@ -142,3 +142,10 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- No `MetricShowcaseTest`: created `tests/Feature/MetricShowcaseTest.php`, which covers the catalogue (tones, zero value, `a11y-label`, long value, empty detail, no interactive props).
+- Programmatic value updates: in the **Programmatic updates and hint** section, **Check in a patient** and **Clear the queue** make PHP republish one metric's value, detail and tone (warning, danger at 6, success at 0). `MetricShowcaseTest` › "republishes a metric value, detail and tone from PHP with an a11y-hint" asserts each publication.
+- `a11y-hint`: the same metric publishes `a11y-hint`, asserted by the same test.
+- Left as a note: `ios-largest-text.png` and `android-largest-text.png` are earlier simulator evidence. Recapturing them needs a simulator/emulator run and a documentation change, both outside this showcase change.

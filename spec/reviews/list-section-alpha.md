@@ -134,3 +134,9 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Left as a note: there is still no dedicated List Section page. Adding a route is outside this change. The new demos live in the **List sections** section of the List Item page (`/components/list-item`), next to the existing List and List Item coverage.
+- Footer-only and header-less/footer-less sections: the **List sections** list contains a footer-only section and a bare section. `ListItemShowcaseTest` › "publishes footer-only, bare and programmatically renamed List Sections" asserts that the published props are footer-only and empty.
+- Programmatic header/footer changes: in the same section, **Rename section** republishes the header and footer, and **Remove header and footer** publishes the section without them; the same test asserts each publication.

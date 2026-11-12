@@ -161,3 +161,15 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- `disabled`: section **Disabled from PHP**. The `Reference` field starts disabled and a PHP button toggles `disabled` (shown on the PHP state line). Test: `toggles disabled from PHP and dispatches keyboard submit with the current text`.
+- `@submit`: section **Keyboard submit**. The `Note` field uses `submit-label="send"` and `@submit`; a counter records the submitted string, including an empty one. Same test.
+- `.lazy` and `.live`: section **Lazy and live models**. `Lazy referral` uses `native:model.lazy` (published as `sync_mode: blur`) and `Live referral` uses `native:model.live`. Test: `publishes lazy and live models and keeps a rejected edit at the approved value`.
+- Server rejection: section **Server rejection**. `Server-approved ward` sends `@change` to a handler that rejects every edit; the field stays `Ward 4` and a counter rises. Same test.
+- Keyboards and content types: section **Keyboards and autofill**. It adds `name`, `username`, `new-password` and `one-time-code` content types and `phone`, `url`, `number` and `decimal` keyboards. Test: `publishes every documented keyboard and content type`.
+- `a11y-label` only: section **Accessibility label only**. `Ward code` has no visible label, plus `a11y-hint`. Test: `names a label-less field by a11y-label and records the PHP value at a button press`.
+- Flush before a button press: section **Flush before button press**. The `Handover note` field (`.blur`) sits next to a `<firstlight:button>` that records the PHP value at the moment of the press. Same test. The test proves the PHP side only; the device rows must confirm that the queued change arrives before the press on iOS and Android.

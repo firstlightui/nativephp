@@ -153,3 +153,16 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- Programmatic set/clear without emitting: section **Programmatic set and clear**. Set ward from PHP and Clear ward from PHP publish `ward-3` or `null` without changing the accepted-change counter. Test: `counts accepted choices and publishes programmatic set and clear without emitting`.
+- Empty option set: section **Empty options and accessibility label only**. `Clinic` has `:options="[]"` and publishes an inert, disabled trigger with no option callbacks. Test: `publishes an inert empty select and a select named only by a11y-label`.
+- `a11y-label` only: same section. `Hospital site` has no visible label, plus `a11y-hint`. Same test.
+- In-flight guard counter: section **Programmatic set and clear**. `Ward` accepts every proposal through `@change` and shows an Accepted changes counter, so rapid choices on an accepting select are observable on device. Test: `counts accepted choices and publishes programmatic set and clear without emitting`.
+
+Left as a note:
+
+- Same-typed value absent from `options`: not demonstrable. `docs/components/select.md` requires every non-null value to match one option exactly, and `src/Elements/Select.php` throws `Select value must match an option exactly by type and value.` before publication. The state the audit described cannot be published; contract tests cover the exception.

@@ -232,3 +232,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Programmatic replacement of label or tone: in the **Programmatic replacement** section, **Next claim status** makes PHP republish one status label's label, tone and icon (text-only drafted, then submitted, paid and rejected). `StatusLabelShowcaseTest` › "replaces the label, tone and icon of the same Status Label through later publications" asserts each publication, the stable node ID, and no callbacks.
+- Left as a note: typed `IosSymbol` / `AndroidSymbol` icon values are still PHP-contract-only evidence. They are not visually distinct from string names on device.

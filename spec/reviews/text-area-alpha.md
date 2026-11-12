@@ -151,3 +151,10 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- `.lazy`: section **Deferred synchronisation**. `Lazy care plan` uses `native:model.lazy` (published as `sync_mode: blur`). Test: `publishes a lazy model and an editor named only by a11y-label`.
+- `a11y-label` only: section **Accessibility label only**. `Incident description` has no visible label, plus `a11y-hint`. Same test.

@@ -144,3 +144,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- PHP-owned `loading` or `disabled` transition after a press: in the **PHP-owned transition** section, **Sync inbox** publishes `loading` and PHP publishes the result after an `AsyncTask` finishes. The lock icon button toggles `disabled` on the same control. `IconButtonShowcaseTest` › "publishes a PHP-owned press to loading to result transition" and "toggles disabled on the same icon button from PHP" assert the published state.
+- Left as a note: typed `IosSymbol` / `AndroidSymbol` variant preservation is still PHP-contract-only evidence. The showcase authors string overrides, and a typed variant is not visually distinct on device because the Material icon-font helper renders the resolved name.

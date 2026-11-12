@@ -144,3 +144,9 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- `shows-indicators`: the List now publishes `:shows-indicators="$showsIndicators"`, toggled by **Scroll indicators** in the Test options sheet. `ListShowcaseTest` › "toggles shows-indicators on the list from PHP" asserts both values. The catalogue test asserts the default `true`.
+- Documented `@endReached` spelling: the showcase now binds `@endReached="loadMore"` instead of `on-end-reached`. `ListShowcaseTest` › "binds the documented @endReached spelling and round-trips it to the next page" checks the Blade source and fires the published `on_end_reached` callback to load page two.
+- Left as a note: de-duplicating repeated end-reached or refresh events is still visible only through the row and refresh counters. No PHP test can reproduce native repeat delivery.

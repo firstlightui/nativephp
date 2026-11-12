@@ -141,3 +141,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Programmatic count or label updates: in the **Programmatic updates** section, PHP changes a count badge (Add 49 reaches `99+`, Clear hides it) and swaps a text badge between Wait/warning and Ready/success. `BadgeShowcaseTest` › "replaces count, label and tone through later publications without callbacks" asserts the republished label, tone and `a11y_label`.
+- Warning colours after `Theme::merge()`: the **Warning colours after Theme::merge()** section merges a custom warning pair and republishes the screen. **Restore default warning colours** merges the package fallback pair back. `BadgeShowcaseTest` › "refreshes custom warning colours after Theme::merge republishes the tree" asserts the four published warning colours before, after and on restore. The merge is app-wide while applied.

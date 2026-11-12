@@ -158,3 +158,18 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/choice-group` and `tests/Feature/ChoiceGroupShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 304 passed.
+
+- Programmatic clear to `null`: **Single radio choice** now has a **Clear priority** button that publishes `null`; PHP state reads `(empty)` and every row is unselected. Test: `it clears the single choice to null from PHP`.
+- Rejection in multiple mode: **Server rejection** adds **Locked notifications** (`multiple`, `:value` plus `@change="rejectNotifications"`), which keeps Email and shows a rejected-multiple-attempts counter. Test: `it publishes the unchanged authoritative list after a multiple-mode rejection`.
+- Empty option set: **Accessibility name, absent value and empty options** adds **No available priorities** with `[]` options; it publishes `disabled` with no callbacks. Test: `it publishes an accessibility-only name, an absent value and an inert empty group`.
+- Named only by `a11y-label`: same section, **Unlabelled priority** has no visible label. Same test.
+- Same-typed value absent from `options`: same section, **Deferred priority** binds `deferred`, which is not an option; no row is selected and every row stays tappable. Same test.
+- `ValidatesFields` auto-bound error and `native:model.live`: **Laravel validation with native:model.live** adds **Validated priority**. Its `updatedValidatedPriority` runs `validateOnly`; choosing Critical binds the message without an `error` attribute, and Routine or Urgent clears it. Test: `it auto-binds a live validateOnly failure and clears it on a valid choice`.
+
+Left as notes:
+
+- The in-flight guard for rapid taps is left as a note. A PHP counter only records proposals that arrive, so it cannot show taps the renderer ignored. The guard can only be judged on device.

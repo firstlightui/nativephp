@@ -152,3 +152,14 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- Value, bounds or `disabled` changing while open: section **Changes while open**. Change value, Change bounds and Disable queue a change that a `#[Poll(1000)]` method applies about 3 s later, while the tester holds the picker open; Reset open picker restores the start state. Both replacement bounds contain every value the field can hold. Test: `publishes scheduled value bounds and disabled changes for an open picker`. Dismissal and draft discard must be observed on a device.
+- `a11y-label` only and inherited locale/timezone: section **Inherited locale and accessibility label only**. `Inherited locale date` omits `locale` and `timezone` and publishes the application's locale and timezone (shown on screen). `Follow-up date` has no visible label, plus `a11y-hint`. Test: `inherits the application locale and timezone and names a label-less field by a11y-label`.
+
+Left as a note:
+
+- iPad popover presentation is outside the iPhone capture and needs an iPad run.

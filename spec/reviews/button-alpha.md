@@ -219,3 +219,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- PHP-owned transition: in the **PHP-owned transition** section, **Send reminder** publishes `loading` at once and PHP publishes the result after an `AsyncTask` finishes. **Lock sending** toggles `disabled` on the same button. `ButtonShowcaseTest` › "publishes a PHP-owned press to loading to result transition" and "toggles disabled on the same button from PHP" assert the published `loading`/`disabled` props and that the handler does not dispatch again while loading or locked.
+- `a11y-label` replacing the visible text: the **Accessibility label** section shows a visible `Pay` button with `a11y-label` "Pay invoice 1042, 45 dollars". `ButtonShowcaseTest` › "publishes an a11y-label that replaces the visible text" asserts the prop and a press round-trip.

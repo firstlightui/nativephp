@@ -148,3 +148,10 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/stepper` and `tests/Feature/StepperShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 304 passed.
+
+- Emission counter on an accepting stepper: **Exact numeric models** now shows `Quantity changes`, which `updatedQuantity` increments once per accepted proposal and the programmatic publish does not. Test: `it counts accepted Quantity proposals but not programmatic publications`. Whether taps were ignored while a proposal was in flight is still judged on device, where the counter must equal the number of steps moved.
+- Named only by `a11y-label`: **Named only by a11y-label** adds **Guest count**, which has no visible label. Test: `it publishes a Stepper named only by a11y-label and round-trips its step`.

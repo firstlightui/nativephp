@@ -151,3 +151,10 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/switch` and `tests/Feature/SwitchShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 304 passed.
+
+- Named only by `a11y-label`, with `a11y-hint`: **Accessibility name and hint** adds **Appointment reminders**, which has no visible label and a hint. Test: `it publishes a Switch named only by a11y-label with an a11y-hint`.
+- `ValidatesFields` auto-bound error: **Laravel validation** adds **Share records**. Its `updatedShareRecords` runs `validateOnly` with `accepted`; turning it off binds the message and turning it on clears it. Test: `it auto-binds a failed accepted rule to the Switch and clears it when valid`.

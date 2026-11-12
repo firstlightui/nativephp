@@ -155,3 +155,17 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/pill-group` and `tests/Feature/PillGroupShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 304 passed.
+
+- Rejection in multiple mode: **Server rejection** adds **Locked queues** (`multiple`, `:value` plus `@change="rejectQueues"`), which keeps Mine and shows a rejected-multiple-attempts counter. Test: `it publishes the unchanged authoritative list after a multiple-mode rejection`.
+- Empty option set: **Absent value and empty options** adds **No available queues** with `[]` options; it publishes `disabled` with no callbacks. Test: `it leaves an absent value unselected and makes an empty option set inert`.
+- Clearing the final pill of a `required` multiple group, then a PHP-published error: **Required multiple with Laravel validation** adds **Required queues** (`multiple`, `required`, `native:model.live`). Clearing Mine is accepted as `[]`, `updatedRequiredQueues` runs `validateOnly`, and the bound error appears; choosing a pill clears it. Test: `it lets the final required pill clear and then binds the PHP validation error`.
+- Named only by `a11y-label`, absent value, `ValidatesFields` and `native:model.live`. **Scrolling filter row** (**Mail filter**, added after the audited revision) has no visible label; test: `it names the scrolling filter row only by a11y-label`. **Archived queue**, under **Absent value and empty options**, binds `archived`, which is not an option, so no pill is selected; test: `it leaves an absent value unselected and makes an empty option set inert`. **Required queues** covers auto-binding and `.live`; test as above.
+- 1.1 `size="lg"` (not an audit gap; added for the 1.1.0-beta2 prop). **Large size** adds **Large queue** with `size="lg"` above a `size="lg"` Button that clears it from PHP. Test: `it publishes the large size beside a large Button and clears it from PHP`.
+
+Left as notes:
+
+- The in-flight guard for rapid taps is left as a note. A PHP counter only records proposals that arrive, so it cannot show taps the renderer ignored. The guard can only be judged on device.

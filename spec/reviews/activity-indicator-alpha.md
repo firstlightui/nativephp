@@ -142,3 +142,7 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Changing label or size on a mounted indicator: the **Mounted updates** section keeps one indicator mounted while **Change size and label** makes PHP cycle `size` (sm → md → lg) and swap `a11y-label`, with a PHP state line. `ActivityIndicatorShowcaseTest` › "changes the size and label of a mounted Activity Indicator from PHP" asserts the republished props. That the screen reader does not repeat the announcement still needs the device row.

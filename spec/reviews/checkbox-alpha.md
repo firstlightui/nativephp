@@ -149,3 +149,9 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/checkbox` and `tests/Feature/CheckboxShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 304 passed.
+
+- Named only by `a11y-label`: **Named only by a11y-label** adds a checkbox with no visible label whose accessible name is *Share records with the referring clinician*. Test: `it publishes a Checkbox named only by a11y-label and round-trips its change`.

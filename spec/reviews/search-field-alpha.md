@@ -152,3 +152,10 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- `.lazy`: section **Lazy synchronisation**. `Search wards` uses `native:model.lazy` (published as `sync_mode: blur`) and `@submit`. Test: `publishes lazy synchronisation and keeps a rejected query at the approved value`.
+- Server rejection: section **Server rejection**. `Search approved wards` sends `@change` to a handler that rejects every query edit, including the native clear; the field stays `Ward 4` and a counter rises. Same test.

@@ -156,3 +156,14 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/tabs` and `tests/Feature/TabsShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 308 passed.
+
+- Badge above 99: already demonstrated at the audited revision. **Five long labels** (*Site sections*) has Deployments with `badge` 140, published as `99+`; the existing test `it publishes every documented Tabs state through the native wire tree` asserts `tab_badges` `['', '99+', '', '', '']`. The audit listed this gap in error.
+- `a11y-label` overriding `label` and `native:model.live`: **a11y-label overrides label, with native:model.live** adds a group with `label="Live sections"` and `a11y-label="Live server sections"` bound with `native:model.live`. Test: `it lets a11y-label override label and syncs native:model.live`.
+- Emission counter on the accepting group: the PHP state line now shows `tab changes`, which `updatedTab` increments once per accepted Server sections selection and Show Deployments does not. Test: `it counts accepted tab selections but not programmatic selection`.
+- Opening a specific tab from a route parameter: the showcase route is now `/components/tabs/{tab?}` and `TabsShowcase::mount()` validates the segment as the documentation shows. **Open Deployments by link** pushes `/components/tabs/deploys`. `TabsShowcaseTest` ("opens a section from the optional route segment and ignores unknown values") visits `/components/tabs/deploys` and `/components/tabs/billing` and checks the selected section.
+
+No gaps are left as notes.

@@ -155,3 +155,15 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- Programmatic `MediaValue` from PHP: section **Published from PHP**. Publish sample from PHP writes a 48 × 48 PNG to `mobile_public` and publishes its `MediaValue` without a picker; Clear sample from PHP publishes `null`. Test: `publishes a MediaValue from PHP and clears it to null without a pick`.
+- Server rejection of a picked file: section **Server rejection**. `Server-approved copy` mirrors the sample, and its `@change` and `@clear` go to a handler that rejects every change; the previous value stays published and a counter rises. Test: `keeps the previous value when PHP rejects a picked file`.
+- `native:model.live` and a non-default disk: section **Live model on a non-default disk**. `Archive scan` (document mode) uses `native:model.live` and `disk="local"`, and commits to the private `local` disk; the PHP state lines now show each value's disk. Test: `commits a live-bound document to the non-default local disk`.
+
+Left as a note:
+
+- Camera capture needs real hardware; simulators and emulators cannot provide it. It stays on the physical-device rows.

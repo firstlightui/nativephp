@@ -262,3 +262,7 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Switching the same node between indeterminate and determinate: in the **Mode switch on one indicator** section, **Next import step** moves one progress from `null` (indeterminate) to 0, 0.5 and 1.0, then back to `null`. `ProgressShowcaseTest` › "switches the same Progress node between indeterminate and determinate" asserts the published mode and value, with the node ID unchanged.

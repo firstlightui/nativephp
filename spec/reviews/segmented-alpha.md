@@ -225,3 +225,13 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+Showcase page `/components/segmented` and `tests/Feature/SegmentedShowcaseTest.php` in `firstlightui/showcase` (uncommitted working tree on `main` after `773e235`). Full showcase suite: 304 passed.
+
+- Named only by `a11y-label`. **Named only by a11y-label** adds **Unlabelled queue**, and the large **View** control is also named only by `a11y-label`. Test: `it publishes the large size beside a large Button under an accessibility-only name`.
+- Same-typed value absent from `options`: **Selected value absent from options** adds **Archived queue**, which binds `archived`; `option_values` excludes it, so no segment is selected. Test: `it leaves a same-typed value absent from options unselected`.
+- `ValidatesFields` auto-bound error and `native:model.live`: **Laravel validation with native:model.live** adds **Validated queue**. Its `updatedValidatedQueue` runs `validateOnly`; All binds the message and Mine clears it. Test: `it auto-binds a live validateOnly failure and clears it on a valid selection`.
+- Emission counter on an accepting control: the PHP state line now shows `queue changes`, which `updatedQueue` increments once per accepted Queue selection and Reset selections does not. Test: `it counts accepted Queue selections but not programmatic resets`. Whether rapid taps produce stale proposals is still a device judgement; the counter makes the emissions observable.
+- 1.1 `size` (not an audit gap): the six existing published-prop expectations now include `'size' => 'md'`. **Large size beside a large Button** shows `size="lg"` beside a `size="lg"` Button with a PHP reset. Test: `it publishes the large size beside a large Button under an accessibility-only name`.

@@ -146,3 +146,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Content height changes while open, content taller than half the screen, and content taller than the screen: the **Content height and hint** section opens one sheet with 3, 14 or 40 rows. Inside the sheet, **Add 8 rows** and **Back to 3 rows** change its height while it stays open. `BottomSheetShowcaseTest` › "publishes an a11y-hint and republishes sheet content height while open" asserts the published row counts and that `visible` stays true. The native height, full-open and scroll behaviour still need the device rows. The gap text said Android clips; the current doc says content taller than the screen scrolls on both platforms.
+- `a11y-hint`: the same sheet publishes `a11y-hint`, asserted by the same test.

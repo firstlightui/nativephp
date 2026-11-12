@@ -162,3 +162,11 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+The gaps listed in the showcase demo audit above are now addressed in `firstlightui/showcase` (uncommitted working tree on 2026-11-12, on top of `main`).
+
+- `.lazy` and `plain`: section **Plain text and lazy model**. `Plain scratchpad` uses `language="plain"` and `native:model.lazy` (published as `sync_mode: blur`). Test: `publishes a lazy plain editor and an editor named only by a11y-label`.
+- `a11y-label` only: section **Accessibility label only**. `Release notes` has no visible label, plus `a11y-hint`, and uses the default `plain` language. Same test.
+- Programmatic update while focused: section **Publication while focused**. Schedule replacement queues a publication that a `#[Poll(1000)]` method applies about 3 s later, so the tester can keep `Focused draft` focused while PHP publishes. A counter and a scheduled/idle line make the publication observable. Test: `publishes a scheduled replacement from a poll only once it is due`. The test proves the PHP side; the focused buffer, cursor and undo retention must be observed on a device.

@@ -155,3 +155,10 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- `leading-icon-tone`, `trailing-icon-tone` and `*-icon-color`: the **Icon tones and colours** section shows danger, warning, neutral and success tones, plus one row whose hex colours override its tones. `ListItemShowcaseTest` › "publishes semantic icon tones and explicit icon colour overrides" asserts the published tone and colour props.
+- `a11y-label` replacing the combined name and programmatic headline/supporting changes: in the **Accessibility label and programmatic copy** section, the clinician row carries an `a11y-label`, and **Toggle referral** makes PHP republish the referral row's headline and supporting text. `ListItemShowcaseTest` › "publishes an a11y-label and republishes headline and supporting text without a press" asserts both, and that the republication records no press.
+- Swipe actions and a context menu on the same row: the **Swipe actions** list now includes "Message with menu", which has a trailing Archive action and a Reply/Pin context menu. `ListItemShowcaseTest` › "publishes swipe actions and a context menu on the same row" asserts both descriptors and independent callbacks.
+- Left as a note: the remote placehold.co avatar was already replaced by a monogram in showcase `2d01d1e` (App Store privacy preparation), so `leading-avatar` is no longer shown on this page. A bundled local image was not substituted: both renderers load `leading-avatar` as a URL (`AsyncImage`), and the doc does not say how to address a bundled file. Offline behaviour of a remote avatar therefore remains untested.

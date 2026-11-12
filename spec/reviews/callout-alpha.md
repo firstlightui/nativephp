@@ -145,3 +145,7 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Programmatic message/tone change and removal by omission: in the **Programmatic updates** section, **Next sync status** republishes one callout as info → success → danger with new messages, and **Remove callout** omits it from the next tree. `CalloutShowcaseTest` › "replaces message and tone programmatically and removes the callout by omission" asserts each publication, the omission, and that no action press is recorded.

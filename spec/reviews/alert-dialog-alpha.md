@@ -147,3 +147,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- Package-chrome default `OK`: the **Package chrome label** section opens a dialog with no `action-label`. `AlertDialogShowcaseTest` › "publishes the package chrome OK when the action label is omitted" asserts `action_label` `OK` and one acknowledgement.
+- Copy-only republication: the **Copy-only republication** section opens a dialog whose message PHP republishes about 3 seconds later through `AsyncTask` while it stays open. **Republish copy while closed** changes the message after dismissal without reopening it. `AlertDialogShowcaseTest` › "republishes copy while open and after dismissal without reopening" asserts `visible` and the message across both publications, with no extra acknowledgement.

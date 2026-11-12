@@ -139,3 +139,8 @@ Article XII is not applicable.
 - **Automated, consumer and simulator/emulator evidence: PASS.**
 - **Component-release readiness: BLOCKED.** Only the two physical-device rows remain; simulator evidence does not substitute for them.
 - **Catalogue readiness: BLOCKED.** Every component review, physical-device evidence and the shared alpha gate must pass.
+
+## Showcase gaps closed — 2026-11-12
+
+- `a11y-hint`: the default overlay now publishes `a11y-hint`, asserted in `ModalShowcaseTest` › "publishes the complete Modal catalogue through the native wire tree".
+- Showcase/doc conflict: `ModalShowcase::dismissProgrammatic()` now follows the documented "safe to run more than once" rule. A dismiss arriving after PHP already closed the overlay is ignored, so the on-screen "stays unchanged" check holds whether or not the delegated iOS cover reports the programmatic close. `ModalShowcaseTest` › "ignores a dismiss notification that follows a programmatic close" asserts this and that a real native dismissal still counts once. Whether iOS actually sends that notification still needs device observation.
