@@ -213,6 +213,7 @@ it('registers the production component catalogue with canonical renderers', func
             'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.MediaRenderer',
             'ios_renderer' => 'MediaRenderer',
             'self_closing' => true,
+            'element_events' => ['clear'],
         ],
         [
             'type' => 'firstlight.date-picker',

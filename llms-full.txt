@@ -7739,7 +7739,8 @@ These are the package's current declared floors. Firstlight does not promise sup
 After changing NativePHP versions, run `composer update` and `php artisan native:install --force` so bundled PHP binaries, native project files, and plugin copies match the resolved release.
 
 Mobile 4.7 supplies the validation and Android focused-input flush seams
-Firstlight uses; Mobile UI 0.9 requires Mobile 4.7. `ValidatesFields` extends
+Firstlight uses, and compiles Media's `@clear` from the manifest's
+`element_events`; Mobile UI 0.9 requires Mobile 4.7. `ValidatesFields` extends
 upstream `ValidatesInput`, and native and Firstlight fields share the current
 `FieldErrors` bag. Existing Firstlight screen code does not need a trait swap.
 

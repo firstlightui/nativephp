@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+- Media's `@clear` is declared in `nativephp.json` as an `element_events` name, which NativePHP Mobile 4.7 compiles itself. Firstlight's precompiler no longer rewrites `@clear` by hand. Views need no change.
+
 ## 1.1.0-beta4 - 2026-11-11
 
 ### Fixed

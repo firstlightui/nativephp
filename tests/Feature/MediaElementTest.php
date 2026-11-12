@@ -88,6 +88,12 @@ function compileFirstlightMediaView(string $source, array $data = []): array
     $compiler->precompiler(new NativeTagPrecompiler);
     (new FirstlightServiceProvider($container))->boot();
 
+    // Mobile's plugin boot registers each manifest component's element_events.
+    $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
+    foreach ($manifest['components'] as $component) {
+        NativeTagPrecompiler::registerElementEvents($component['element_events'] ?? []);
+    }
+
     NativeElementCollector::reset();
     NativeTagPrecompiler::setActive(true);
 
@@ -125,6 +131,7 @@ function compileFirstlightMediaView(string $source, array $data = []): array
         return compact('compiled', 'output', 'tree', 'registry');
     } finally {
         NativeTagPrecompiler::setActive(false);
+        NativeTagPrecompiler::resetElementEvents();
         NativeElementCollector::reset();
         Container::setInstance($previousContainer);
         Component::flushCache();
@@ -312,7 +319,8 @@ it('binds FieldErrorBag by native:model when @change commits the pick', function
     ));
 
     expect($result['tree']['props']['error'])->toBe('The cover field must be an image.')
-        ->and($result['registry']->resolve($result['tree']['props']['on_change'])['method'])->toBe('coverChosen');
+        ->and($result['registry']->resolve($result['tree']['props']['on_change'])['method'])->toBe('coverChosen')
+        ->and($result['registry']->resolve($result['tree']['props']['on_clear'])['method'])->toBe('coverCleared');
 });
 
 it('publishes package chrome crop and clear labels', function () {
