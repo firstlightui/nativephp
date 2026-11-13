@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => 'Aktualisierung fehlgeschlagen.',
     'freshness_failed_showing' => ':reason Stand: :time.',
     'freshness_load_failed' => 'Konnte nicht geladen werden.',
+    'connectivity_offline' => 'Offline',
+    'connectivity_offline_waiting' => 'Offline · :count wartet auf Synchronisierung|Offline · :count warten auf Synchronisierung',
+    'connectivity_syncing' => ':count Änderung wird synchronisiert…|:count Änderungen werden synchronisiert…',
+    'connectivity_failed' => ':count nicht synchronisiert',
+    'sync_succeeded' => ':count Änderung synchronisiert.|:count Änderungen synchronisiert.',
+    'sync_failed' => ':count Änderung konnte nicht synchronisiert werden.|:count Änderungen konnten nicht synchronisiert werden.',
+    'sync_review' => 'Prüfen',
+    'sync_waiting_label' => 'Wartet auf Synchronisierung',
+    'sync_failed_label' => 'Synchronisierung fehlgeschlagen',
 ];

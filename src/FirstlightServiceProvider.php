@@ -2,6 +2,7 @@
 
 namespace FirstlightUI;
 
+use FirstlightUI\Connectivity\ConnectivityManager;
 use FirstlightUI\Console\InstallIconCommand;
 use FirstlightUI\Console\MakeScreenCommand;
 use FirstlightUI\Drafts\DraftStore;
@@ -22,6 +23,7 @@ class FirstlightServiceProvider extends ServiceProvider
         $this->app->singleton(FeedbackStore::class);
         $this->app->singleton(FeedbackManager::class);
         $this->app->singleton(DraftStore::class);
+        $this->app->singleton(ConnectivityManager::class);
 
         ComponentRegistry::register('firstlight-feedback-center', FeedbackCenter::class);
     }
@@ -30,6 +32,10 @@ class FirstlightServiceProvider extends ServiceProvider
     {
         $this->loadFirstlightTranslations();
         $this->loadFirstlightViews();
+
+        if ($this->app->bound('events')) {
+            $this->app->make(ConnectivityManager::class)->listen($this->app->make('events'));
+        }
 
         ChromeContributorRegistry::register(
             fn (NativeComponent $screen, ?NativeLayout $layout, callable $renderPartial): Element => $renderPartial(

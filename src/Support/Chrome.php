@@ -5,6 +5,7 @@ namespace FirstlightUI\Support;
 use DateTimeZone;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Translation\MessageSelector;
 use InvalidArgumentException;
 use Throwable;
 
@@ -68,6 +69,15 @@ final class Chrome
         'freshness_refresh_failed' => "Couldn't refresh.",
         'freshness_failed_showing' => ':reason Showing data from :time.',
         'freshness_load_failed' => "Couldn't load this.",
+        'connectivity_offline' => 'Offline',
+        'connectivity_offline_waiting' => 'Offline · :count waiting to sync',
+        'connectivity_syncing' => 'Syncing :count change…|Syncing :count changes…',
+        'connectivity_failed' => ':count failed to sync',
+        'sync_succeeded' => 'Synced :count change.|Synced :count changes.',
+        'sync_failed' => ':count change failed to sync.|:count changes failed to sync.',
+        'sync_review' => 'Review',
+        'sync_waiting_label' => 'Waiting to sync',
+        'sync_failed_label' => 'Failed to sync',
     ];
 
     /** @param  array<string, string>  $replace  Values for `:name` placeholders. */
@@ -93,6 +103,42 @@ final class Chrome
         }
 
         return strtr(self::STRINGS[$key], $pairs);
+    }
+
+    /**
+     * A string with plural forms for $count, such as "Synced 3 changes.".
+     * `:count` is replaced along with $replace.
+     *
+     * @param  array<string, string>  $replace
+     */
+    public static function choice(string $key, int $count, array $replace = []): string
+    {
+        if (! array_key_exists($key, self::STRINGS)) {
+            throw new InvalidArgumentException("Unknown Firstlight chrome string [{$key}].");
+        }
+
+        $replace['count'] = (string) $count;
+        $translator = self::translator();
+
+        if ($translator !== null) {
+            try {
+                $translated = $translator->choice('firstlight::chrome.'.$key, $count, $replace);
+
+                if (is_string($translated)
+                    && $translated !== ''
+                    && $translated !== 'firstlight::chrome.'.$key) {
+                    return $translated;
+                }
+            } catch (Throwable) {
+            }
+        }
+
+        $pairs = [];
+        foreach ($replace as $name => $value) {
+            $pairs[':'.$name] = $value;
+        }
+
+        return strtr((new MessageSelector)->choose(self::STRINGS[$key], $count, 'en'), $pairs);
     }
 
     public static function applicationLocale(): ?string

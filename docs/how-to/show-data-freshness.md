@@ -107,6 +107,22 @@ class ServersScreen extends NativeComponent
 A screen with several datasets tracks each under its own key, such as
 `servers` and `alerts`, with its own window.
 
+## Refresh when the user is back
+
+Override `revalidate()` to refresh stale data when the device comes back
+online or the app returns from the background:
+
+```php
+protected function revalidate(): void
+{
+    if ($this->freshness('servers')->isStale()) {
+        $this->reload();
+    }
+}
+```
+
+[Show connectivity](show-connectivity.md) explains when Firstlight calls it.
+
 ## Show the notice
 
 Include the partial where the Callout belongs, usually above the data:

@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => 'No se pudo actualizar.',
     'freshness_failed_showing' => ':reason Mostrando datos de :time.',
     'freshness_load_failed' => 'No se pudo cargar.',
+    'connectivity_offline' => 'Sin conexión',
+    'connectivity_offline_waiting' => 'Sin conexión · :count pendiente de sincronizar|Sin conexión · :count pendientes de sincronizar',
+    'connectivity_syncing' => 'Sincronizando :count cambio…|Sincronizando :count cambios…',
+    'connectivity_failed' => ':count no se pudo sincronizar|:count no se pudieron sincronizar',
+    'sync_succeeded' => 'Se sincronizó :count cambio.|Se sincronizaron :count cambios.',
+    'sync_failed' => 'No se pudo sincronizar :count cambio.|No se pudieron sincronizar :count cambios.',
+    'sync_review' => 'Revisar',
+    'sync_waiting_label' => 'Pendiente de sincronizar',
+    'sync_failed_label' => 'Error al sincronizar',
 ];

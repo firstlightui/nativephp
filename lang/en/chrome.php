@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => "Couldn't refresh.",
     'freshness_failed_showing' => ':reason Showing data from :time.',
     'freshness_load_failed' => "Couldn't load this.",
+    'connectivity_offline' => 'Offline',
+    'connectivity_offline_waiting' => 'Offline · :count waiting to sync',
+    'connectivity_syncing' => 'Syncing :count change…|Syncing :count changes…',
+    'connectivity_failed' => ':count failed to sync',
+    'sync_succeeded' => 'Synced :count change.|Synced :count changes.',
+    'sync_failed' => ':count change failed to sync.|:count changes failed to sync.',
+    'sync_review' => 'Review',
+    'sync_waiting_label' => 'Waiting to sync',
+    'sync_failed_label' => 'Failed to sync',
 ];

@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => 'Nie udało się odświeżyć.',
     'freshness_failed_showing' => ':reason Stan na :time.',
     'freshness_load_failed' => 'Nie udało się wczytać.',
+    'connectivity_offline' => 'Offline',
+    'connectivity_offline_waiting' => 'Offline · :count zmiana czeka na synchronizację|Offline · :count zmiany czekają na synchronizację|Offline · :count zmian czeka na synchronizację',
+    'connectivity_syncing' => 'Synchronizowanie :count zmiany…|Synchronizowanie :count zmian…|Synchronizowanie :count zmian…',
+    'connectivity_failed' => 'Nie zsynchronizowano: :count',
+    'sync_succeeded' => 'Zsynchronizowano :count zmianę.|Zsynchronizowano :count zmiany.|Zsynchronizowano :count zmian.',
+    'sync_failed' => 'Nie udało się zsynchronizować :count zmiany.|Nie udało się zsynchronizować :count zmian.|Nie udało się zsynchronizować :count zmian.',
+    'sync_review' => 'Przejrzyj',
+    'sync_waiting_label' => 'Czeka na synchronizację',
+    'sync_failed_label' => 'Błąd synchronizacji',
 ];

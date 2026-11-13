@@ -38,6 +38,12 @@ final class Freshness
         return $this;
     }
 
+    /** The freshness window in seconds. */
+    public function window(): int
+    {
+        return $this->freshFor;
+    }
+
     /** The screen now shows data fetched at $fetchedAt, or nothing cached when null. Starts a new load. */
     public function showing(?DateTimeInterface $fetchedAt): self
     {

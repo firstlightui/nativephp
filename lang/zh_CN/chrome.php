@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => '无法刷新。',
     'freshness_failed_showing' => ':reason 显示 :time 的数据。',
     'freshness_load_failed' => '无法加载。',
+    'connectivity_offline' => '离线',
+    'connectivity_offline_waiting' => '离线 · :count 项待同步',
+    'connectivity_syncing' => '正在同步 :count 项更改…',
+    'connectivity_failed' => ':count 项同步失败',
+    'sync_succeeded' => '已同步 :count 项更改。',
+    'sync_failed' => ':count 项更改同步失败。',
+    'sync_review' => '查看',
+    'sync_waiting_label' => '待同步',
+    'sync_failed_label' => '同步失败',
 ];

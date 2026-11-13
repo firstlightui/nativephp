@@ -114,6 +114,24 @@ it('selects the right plural form for packaged validation summaries', function (
     ['ja', 4, '4 件のエラーがあります。'],
 ]);
 
+it('selects the right plural form for packaged sync strings', function (string $locale, string $key, int $count, string $expected) {
+    $path = dirname(__DIR__, 3).'/lang';
+    $translator = new Translator(new FileLoader(new Filesystem, $path), $locale);
+    $translator->addNamespace('firstlight', $path);
+
+    expect($translator->choice("firstlight::chrome.{$key}", $count, ['count' => $count]))->toBe($expected);
+})->with([
+    ['en', 'sync_failed', 1, '1 change failed to sync.'],
+    ['en', 'sync_failed', 2, '2 changes failed to sync.'],
+    ['fr', 'sync_succeeded', 1, '1 modification synchronisée.'],
+    ['fr', 'sync_succeeded', 4, '4 modifications synchronisées.'],
+    ['pl', 'sync_succeeded', 1, 'Zsynchronizowano 1 zmianę.'],
+    ['pl', 'sync_succeeded', 3, 'Zsynchronizowano 3 zmiany.'],
+    ['pl', 'sync_succeeded', 5, 'Zsynchronizowano 5 zmian.'],
+    ['pl', 'connectivity_offline_waiting', 22, 'Offline · 22 zmiany czekają na synchronizację'],
+    ['zh_CN', 'connectivity_syncing', 3, '正在同步 3 项更改…'],
+]);
+
 it('maps Laravel application locales onto BCP-47 tags', function (string $laravelLocale, string $expected) {
     $translator = new Translator(new ArrayLoader, $laravelLocale);
     Container::getInstance()->instance('translator', $translator);

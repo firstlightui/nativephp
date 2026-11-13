@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => 'Vernieuwen mislukt.',
     'freshness_failed_showing' => ':reason Gegevens van :time.',
     'freshness_load_failed' => 'Kan dit niet laden.',
+    'connectivity_offline' => 'Offline',
+    'connectivity_offline_waiting' => 'Offline · :count wacht op synchronisatie|Offline · :count wachten op synchronisatie',
+    'connectivity_syncing' => ':count wijziging synchroniseren…|:count wijzigingen synchroniseren…',
+    'connectivity_failed' => ':count niet gesynchroniseerd',
+    'sync_succeeded' => ':count wijziging gesynchroniseerd.|:count wijzigingen gesynchroniseerd.',
+    'sync_failed' => ':count wijziging kon niet worden gesynchroniseerd.|:count wijzigingen konden niet worden gesynchroniseerd.',
+    'sync_review' => 'Bekijken',
+    'sync_waiting_label' => 'Wacht op synchronisatie',
+    'sync_failed_label' => 'Synchronisatie mislukt',
 ];

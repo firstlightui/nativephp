@@ -62,6 +62,12 @@ the [kept drafts](kept-drafts.md) Feedback strings `discard`,
 `freshness_offline_empty`, `freshness_refresh_failed`,
 `freshness_failed_showing`, and `freshness_load_failed`. Freshness strings
 take `:when`, `:time`, and `:reason` placeholders; translations keep them.
+The [connectivity](connectivity.md) strings are `connectivity_offline`,
+`connectivity_offline_waiting`, `connectivity_syncing`,
+`connectivity_failed`, `sync_succeeded`, `sync_failed`, `sync_review`,
+`sync_waiting_label`, and `sync_failed_label`. The counted ones use Laravel
+plural forms with `:count`, resolved by `Chrome::choice()`, which falls back
+to the English forms without a translator.
 
 `lang/en/validation.php` holds `summary`, a Laravel pluralised heading
 (`There is :count error.|There are :count errors.`) used by error-summary

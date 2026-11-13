@@ -4,8 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- `Connectivity` says whether the device is offline and writes one line for the nav bar subtitle: `Offline`, `Offline · 3 waiting to sync`, `Syncing 3 changes…`, or `1 failed to sync`. Apps show their own write queue through the `PendingChanges` interface and `Connectivity::pendingUsing()`, and report a finished drain with `Connectivity::syncFinished()`, which shows `Synced 3 changes.` and a `Review` action for failures. Firstlight owns no queue and never fetches. See [Show connectivity and refresh on reconnect](docs/how-to/show-connectivity.md).
+- `TracksFreshness` screens get a `revalidate()` hook. Firstlight calls it when the device comes back online, after asking the app's queue to sync once, and when the app returns from the background after longer than the screen's shortest freshness window. It uses `nativephp/mobile-network`'s `NetworkStatusChanged` and core's `AppForegrounded` when those exist, App Guard's `Foregrounded` until then, and re-reads the network when a screen opens or is shown again.
+- `Connectivity::fake()` drives offline, online and foreground returns in tests.
+- `Chrome::choice()` resolves counted chrome strings with Laravel plural forms. The nine connectivity and sync strings are in every shipped locale.
+
 ### Changed
 
+- `TracksFreshness` notices read offline state through `Connectivity`, so once a `NetworkStatusChanged` event has arrived they need no bridge call.
 - The `TracksFreshness` notice for offline with nothing cached, `You're offline. This will load when you're back online.`, uses the neutral tone instead of info. Callout's info tone uses the theme's primary colour, so in an app with a red brand colour it read as an error.
 
 ## 1.1.0-beta6 - 2026-11-13

@@ -15,6 +15,7 @@ sources:
   - lang/en/chrome.php
   - vendor/nativephp/mobile/src/Network.php
   - vendor/nativephp/mobile/src/Device.php
+  - src/Connectivity/ConnectivityManager.php
   - tests/Feature/TracksFreshnessTest.php
   - docs/how-to/show-data-freshness.md
 ---
@@ -75,8 +76,9 @@ public function notice(bool $offline): ?FreshnessNotice;
 
 ## Notice
 
-`freshnessNotice()` reads `Native\Mobile\Network::status()` and passes
-`offline` to `notice()`. The device counts as offline only when the status is
+`freshnessNotice()` reads `Connectivity::isOffline()`, which
+[Connectivity](connectivity.md) defines over `Native\Mobile\Network::status()`,
+and passes `offline` to `notice()`. The device counts as offline only when the status is
 an object without `error` whose `connected` is `false`. Without the Network
 plugin, when the read throws, or when it reports an error, connectivity is
 unknown and counts as online. With `nativephp/mobile-network#5`, Android Wi-Fi
@@ -137,9 +139,10 @@ The eight strings are package chrome: `try_again`, `freshness_updated`,
 
 ## Product boundary
 
-No fetching, caching, polling, timers, or revalidation. Refreshing when the
-device comes back online or the app returns to the foreground belongs to the
-designed `Connectivity` helper and its `revalidate()` hook. Consumer guidance
+No fetching, caching, polling, or timers. The trait also declares the
+`revalidate()` hook, which [Connectivity](connectivity.md) calls when the
+device comes back online or the app returns after longer than the screen's
+shortest window; `Freshness::window()` reports a tracker's window for that. Consumer guidance
 lives in [Show data freshness](../../docs/how-to/show-data-freshness.md). The
 wider offline design is in the
 [offline and stale-data design](../designs/2026-11-13-firstlight-offline-and-stale-data-design.md).

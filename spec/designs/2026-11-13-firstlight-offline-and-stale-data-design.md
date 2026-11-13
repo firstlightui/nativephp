@@ -19,6 +19,9 @@ sources:
   - src/Facades/Drafts.php
   - src/Concerns/TracksFreshness.php
   - src/Freshness/Freshness.php
+  - src/Connectivity/ConnectivityManager.php
+  - src/Connectivity/PendingChanges.php
+  - spec/reference/connectivity.md
   - vendor/nativephp/mobile/src/Edge/NativeComponent.php
   - vendor/nativephp/mobile/src/Edge/NativeRouter.php
   - https://github.com/NativePHP/mobile-network/pull/4
@@ -32,10 +35,13 @@ sources:
 Date: 2026-11-13
 
 Status: approved by the maintainer for 1.2. The five open decisions use the
-defaults recorded below until the maintainer changes them. `KeepsDrafts` is
-implemented and specified in [Kept drafts](../reference/kept-drafts.md). The
-other parts are designed, not implemented, and must not be described as
-shipped.
+defaults recorded below until the maintainer changes them. `KeepsDrafts`,
+`TracksFreshness`, and `Connectivity` with `PendingChanges` and the
+`revalidate()` hook are implemented and specified in
+[Kept drafts](../reference/kept-drafts.md),
+[Data freshness](../reference/data-freshness.md), and
+[Connectivity](../reference/connectivity.md). The showcase Offline demo and
+the app migrations are not done.
 
 ## Problem
 
@@ -66,8 +72,8 @@ Firstlight. There is no new plugin and no new catalogue tag.
 | iOS tab roots draw the nav subtitle | `nativephp/mobile` core | [mobile-air#673](https://github.com/NativePHP/mobile-air/pull/673), ready for review |
 | Drafts kept across navigation | Firstlight `KeepsDrafts` | implemented |
 | Dataset age notices | Firstlight `TracksFreshness` over Callout | implemented |
-| Connectivity, status line, `revalidate()` hook | Firstlight `Connectivity` | designed |
-| Display of an app's write queue | Firstlight `PendingChanges` contract | designed |
+| Connectivity, status line, `revalidate()` hook | Firstlight `Connectivity` | implemented |
+| Display of an app's write queue | Firstlight `PendingChanges` contract | implemented |
 | Write queue, API cache, conflict rules, data wipes | the apps | stays there |
 
 Each Firstlight piece is a PHP SuperNative extension over existing
@@ -226,11 +232,11 @@ protected function revalidate(): void
 ```
 
 The partial renders one `<firstlight:callout>` or nothing. The trait is
-opt-in, like `KeepsDrafts`. The `revalidate()` hook arrives with
-`Connectivity`. [Data freshness](../reference/data-freshness.md) is the
+opt-in, like `KeepsDrafts`. It declares the `revalidate()` hook that
+`Connectivity` calls. [Data freshness](../reference/data-freshness.md) is the
 current contract.
 
-### Connectivity and pending changes (designed)
+### Connectivity and pending changes (implemented)
 
 ```php
 use FirstlightUI\Facades\Connectivity;
@@ -254,8 +260,22 @@ interface PendingChanges
 }
 ```
 
-Tests drive transitions with `Connectivity::fake()->goOffline()` and
-`goOnline()`, on top of `mobile-network`'s FakeBridge macros.
+Tests drive transitions with `Connectivity::fake()->goOffline()`,
+`goOnline()`, and `foreground($secondsAway)`; the fake never reads the
+bridge. `Connectivity::syncFinished($synced, $failed)` sends the drain's
+outcome Feedback. [Connectivity](../reference/connectivity.md) is the current
+contract.
+
+Differences from the sketch, decided while implementing:
+
+- `revalidate()` lives on `TracksFreshness`, not on every screen, so it cannot
+  clash with an existing screen method and the foreground rule has freshness
+  windows to compare against.
+- A reconnect noticed when a new screen mounts drains the queue but does not
+  revalidate, because that screen loads anyway.
+- Once a `NetworkStatusChanged` has arrived, reads use it without a bridge
+  call; foreground returns and screen changes read the OS again, because
+  events are not replayed while the app is in the background.
 
 ## Decisions and defaults
 

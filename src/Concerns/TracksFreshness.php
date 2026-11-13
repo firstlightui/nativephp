@@ -3,18 +3,19 @@
 namespace FirstlightUI\Concerns;
 
 use DateTimeZone;
+use FirstlightUI\Connectivity\ConnectivityManager;
 use FirstlightUI\Freshness\Freshness;
 use FirstlightUI\Freshness\FreshnessNotice;
 use InvalidArgumentException;
 use LogicException;
 use Native\Mobile\Device;
-use Native\Mobile\Network;
 use Throwable;
 
 /**
  * Tracks how old each dataset on a screen is, and shows it in a Callout:
  * "Updated 12 minutes ago", "Showing data from 2:05 PM" while offline, or
- * "Couldn't refresh." with Try again. The screen still does all fetching.
+ * "Couldn't refresh." with Try again. The screen still does all fetching;
+ * Firstlight calls revalidate() when it may be time to fetch again.
  */
 trait TracksFreshness
 {
@@ -102,17 +103,32 @@ trait TracksFreshness
     }
 
     /**
-     * Offline only when the OS says so. Without the Network plugin, or when
-     * the read fails, the state is unknown and counts as online.
+     * Called when the device comes back online, and when the app returns from
+     * the background after longer than this screen's shortest freshness
+     * window. Override it to refresh what is stale; the default does nothing.
      */
-    private function deviceIsOffline(): bool
+    protected function revalidate(): void {}
+
+    /**
+     * Connectivity calls this on the screen on display: null after a
+     * reconnect, otherwise the seconds the app was in the background.
+     */
+    protected function revalidateFreshness(?int $secondsAway): void
     {
-        try {
-            $status = app(Network::class)->status();
-        } catch (Throwable) {
-            return false;
+        if ($secondsAway !== null) {
+            $windows = array_map(fn (Freshness $tracker): int => $tracker->window(), $this->freshnessTrackers);
+
+            if ($windows === [] || $secondsAway <= min($windows)) {
+                return;
+            }
         }
 
-        return $status !== null && ! isset($status->error) && ($status->connected ?? null) === false;
+        $this->revalidate();
+    }
+
+    /** Offline only when the OS says so; unknown counts as online. */
+    private function deviceIsOffline(): bool
+    {
+        return app(ConnectivityManager::class)->isOffline();
     }
 }

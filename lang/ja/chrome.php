@@ -57,4 +57,13 @@ return [
     'freshness_refresh_failed' => '更新できませんでした。',
     'freshness_failed_showing' => ':reason :time 時点のデータを表示しています。',
     'freshness_load_failed' => '読み込めませんでした。',
+    'connectivity_offline' => 'オフライン',
+    'connectivity_offline_waiting' => 'オフライン · 同期待ち :count 件',
+    'connectivity_syncing' => ':count 件の変更を同期中…',
+    'connectivity_failed' => '同期失敗 :count 件',
+    'sync_succeeded' => ':count 件の変更を同期しました。',
+    'sync_failed' => ':count 件の変更を同期できませんでした。',
+    'sync_review' => '確認',
+    'sync_waiting_label' => '同期待ち',
+    'sync_failed_label' => '同期失敗',
 ];
