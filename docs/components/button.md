@@ -7,6 +7,7 @@ sources:
   - nativephp.json
   - src/Components/Button.php
   - src/Elements/Button.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - tests/Feature/ButtonElementTest.php
   - vendor/nativephp/mobile-ui/src/Components/Button.php
   - vendor/nativephp/mobile-ui/src/Elements/Button.php
@@ -54,6 +55,7 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
 | `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
+| `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
 | `class` | `string` | External EDGE layout utilities. |
@@ -67,6 +69,8 @@ Button always has visible text. Use Icon Button for an icon-only action.
 ## State timing
 
 A press emits immediately. The native button keeps only transient platform press feedback; PHP owns the action result and publishes any subsequent `loading`, `disabled`, label, or layout state. Programmatic publications do not emit a press.
+
+Button plays no haptic unless it sets `haptic`. A `haptic` plays on the device without waiting for PHP: on touch down on Android, and as the tap fires on iOS. Use it where the press itself should be felt, such as `keypress` on a PIN keypad. Outcomes such as success or error belong to the action's result, through Feedback or `Haptics` in PHP.
 
 ## Disabled, loading, and failure behaviour
 

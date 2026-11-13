@@ -35,7 +35,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
    - Rows: `list`, `list-section`, `list-item` (with `trailing-actions`, `leading-actions`, `context-menu`)
    - Status: `status-label`, `badge`, `metric`, `progress`, `activity-indicator`, `callout`
    - Overlays: `confirmation-dialog`, `alert-dialog`, `bottom-sheet`, `modal`
-   - Outcomes: `Feedback::success('Saved')->send()` or `submit(successMessage: ...)`
+   - Outcomes: `Feedback::success('Saved')->send()` or `submit(successMessage: ...)`. Feedback, validation and the controls already play each platform's haptics; set `haptic="keypress"` only on keypad buttons, and use `Haptics::success()` or `error()` for an outcome with no Feedback (https://firstlightui.dev/docs/how-to/play-haptics)
 3. Validate with `$rules` or a Form Request class passed to `$this->validate()`; save with `$this->submit(action: ..., successMessage: ...)`. Throw `ValidationException::withMessages(['form' => ...])` for whole-form errors and render `<firstlight:callout error-for="form" />`.
 4. Gate actions with `$this->allows()`, `$this->denies()` and `$this->authorize()`. Disable, do not hide, destructive rows the Policy denies.
 5. Write a Pest test with `Native::visit()` and the Firstlight checks (`assertFieldError`, `assertListItem`, `pressListItem`, `confirmDialog`, `assertFeedbackSent`). Register them once with `FirstlightUI\Testing\ScreenAssertions::register()`.
@@ -49,6 +49,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
 - Gate who may open a screen in `mount()`; put the check in route middleware.
 - Pass loop indexes to callbacks, or delete from a swipe without confirmation.
 - Add `@nativeError`, try/catch around validation, or hard-coded colours.
+- Call `Device::vibrate()` for feedback, or set `haptic` on ordinary buttons.
 - Add props a component's reference does not list. Firstlight rejects unknown attributes with an exception; fix the markup instead of suppressing it.
 
 ## Theming

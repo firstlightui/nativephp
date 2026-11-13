@@ -6,6 +6,7 @@ audience: consumer
 sources:
   - src/Components/SwitchControl.php
   - src/Elements/SwitchControl.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - resources/ios/SwitchControl.swift
   - resources/ios/SwitchRenderer.swift
   - resources/android/SwitchControl.kt
@@ -63,6 +64,7 @@ class NotificationSettings extends NativeComponent
 | `disabled` | `bool` | Prevents interaction and change events. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 ## Events
@@ -127,6 +129,8 @@ takes precedence over helper text and is included in accessibility semantics.
 ## Platform behaviour
 
 iOS uses a genuine SwiftUI `Toggle` with the native switch style and system motion. Android uses a genuine Material 3 `Switch` inside a row-owned switch semantic target, preserving Material state layers and TalkBack behaviour. The public EDGE API and server-authoritative state contract are shared; native geometry, presentation, and interaction remain platform-specific.
+
+On iOS the native `Toggle` plays the system switch haptic. On Android, Switch plays `toggle-on` or `toggle-off` as the user proposes a change, before PHP accepts it. Both follow the device's haptics setting; `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 

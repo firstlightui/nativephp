@@ -7,6 +7,7 @@ sources:
   - spec/components/icon-button.md
   - src/Components/IconButton.php
   - src/Elements/IconButton.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - resources/ios/IconButtonControl.swift
   - resources/ios/IconButtonRenderer.swift
   - resources/android/IconButtonControl.kt
@@ -54,6 +55,7 @@ Icon Button is self-closing and has no visible text slot. Use
 | `size` | `sm`, `md`, or `lg` | Native glyph and container size. Defaults to `md`; the touch target remains at least 44 points or 48 dp. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |
+| `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 Blade documentation uses `icon-ios` and `icon-android`. The equivalent
@@ -73,6 +75,10 @@ public function addItem(): void
 
 Icon Button has no `value`, `native:model`, or `@change`. Disabled and loading
 buttons do not emit. Programmatic publications never emit a press.
+
+Icon Button plays no haptic unless it sets `haptic`, which plays on the device
+as the tap lands, without waiting for PHP: on touch down on Android, and as the
+tap fires on iOS. A keypad's delete key uses `haptic="keypress"`.
 
 ## Variants and sizes
 

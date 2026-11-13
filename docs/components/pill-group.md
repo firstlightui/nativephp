@@ -7,6 +7,7 @@ sources:
   - spec/components/pill-group.md
   - src/Components/PillGroup.php
   - src/Elements/PillGroup.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - src/Support/OptionNormalizer.php
   - resources/ios/PillGroupControl.swift
   - resources/ios/PillGroupRenderer.swift
@@ -104,6 +105,7 @@ public array $queues = ['mine'];
 | `disabled` | `bool` | Disables the complete group. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 ## Sizes
@@ -184,6 +186,8 @@ fallback.
 ## Platform behaviour
 
 iOS uses native SwiftUI capsule buttons in a wrapping layout or a horizontal `ScrollView`. Android uses Material 3 `FilterChip` controls in a wrapping `FlowRow` or a horizontally scrolling row. Both inherit NativePHP semantic theme tokens and preserve native press, focus, selection, disabled, and accessibility behaviour without exposing platform-widget props.
+
+On Android, each pill plays `toggle-on` or `toggle-off` as the user selects or clears it; iOS plays none. `haptic="none"` silences it. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 

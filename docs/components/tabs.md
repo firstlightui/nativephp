@@ -6,6 +6,7 @@ audience: consumer
 sources:
   - src/Components/Tabs.php
   - src/Elements/Tabs.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - resources/ios/TabsControl.swift
   - resources/ios/TabsRenderer.swift
   - resources/android/TabsControl.kt
@@ -81,6 +82,7 @@ A value-to-label map is enough when no tab needs a badge or availability:
 | `disabled` | `bool` | Disables every tab. |
 | `a11y-label` | `string` | Overrides `label` as the group's accessible name. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance for the group. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 Rich tabs accept these fields:
@@ -166,6 +168,8 @@ iOS uses a native `UISegmentedControl`. Place Tabs full width directly under the
 Android uses Material 3 `PrimaryTabRow` with its moving indicator and a Material 3 `Badge` after the label. When a label does not fit its equal share of the width on one line, including at large font scales, the row switches to Material's `PrimaryScrollableTabRow`, as `TabLayout` does in its automatic mode.
 
 Tabs does not pin itself under the top bar or animate between sections. Swiping between sections is not supported.
+
+On iOS, `UISegmentedControl` plays its own selection haptic. On Android, Tabs plays `selection` when the user picks another tab. `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 

@@ -4353,6 +4353,7 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
 | `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
+| `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
 | `class` | `string` | External EDGE layout utilities. |
@@ -4366,6 +4367,8 @@ Button always has visible text. Use Icon Button for an icon-only action.
 ## State timing
 
 A press emits immediately. The native button keeps only transient platform press feedback; PHP owns the action result and publishes any subsequent `loading`, `disabled`, label, or layout state. Programmatic publications do not emit a press.
+
+Button plays no haptic unless it sets `haptic`. A `haptic` plays on the device without waiting for PHP: on touch down on Android, and as the tap fires on iOS. Use it where the press itself should be felt, such as `keypress` on a PIN keypad. Outcomes such as success or error belong to the action's result, through Feedback or `Haptics` in PHP.
 
 ## Disabled, loading, and failure behaviour
 
@@ -4515,6 +4518,7 @@ The public identity is `FirstlightUI\Facades\Feedback`.
 | `->id(string $id)` | new `PendingFeedback` | Uses an application-owned stable ID. |
 | `->action(string $label, string $key)` | new `PendingFeedback` | Adds one visible labelled action and its application key. |
 | `->hold()` | new `PendingFeedback` | Keeps the item until action, manual dismissal, or programmatic removal. |
+| `->withoutHaptic()` | new `PendingFeedback` | Sends the item without its tone's haptic. |
 | `->send()` | `string` | Publishes the item and returns its authored or generated ID. |
 | `Feedback::dismiss(string $id)` | `bool` | Removes a pending or visible item; returns whether it existed. |
 
@@ -4553,6 +4557,8 @@ The four factories are the complete tone API:
 - `danger()` communicates a failed or destructive outcome.
 
 Tone controls native colour and a decorative semantic symbol. It does not change queue, timing, or event behaviour.
+
+When a tap, change or submit sends the item, `success()`, `warning()` and `danger()` also play the `success`, `warning` or `error` haptic. One interaction plays only its strongest outcome, so a danger item and a success item sent together play `error`. `message()` plays none, and nor does an item sent outside a user interaction, such as from a background event. Use `->withoutHaptic()` to keep one item silent. See [Play haptics](../how-to/play-haptics.md).
 
 ## Application events
 
@@ -4853,6 +4859,7 @@ class Registration extends NativeComponent
 | `disabled` | `bool` | Prevents proposals and change events while retaining the accepted value. |
 | `a11y-label` | `string` | Explicit accessible name when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 The camel-case authoring aliases `a11yLabel` and `a11yHint` are accepted and
@@ -4945,6 +4952,10 @@ SF Symbol state affordance. Android uses a genuine Material 3 `Checkbox` inside
 a row-owned checkbox target. The public EDGE API and server-authoritative state
 contract are shared, while geometry and interaction presentation remain native
 to each platform.
+
+On Android, Checkbox plays `toggle-on` or `toggle-off` as the user proposes a
+change; iOS plays none, as its own checkmarked rows do. `haptic="none"`
+silences it. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 
@@ -5865,6 +5876,7 @@ Icon Button is self-closing and has no visible text slot. Use
 | `size` | `sm`, `md`, or `lg` | Native glyph and container size. Defaults to `md`; the touch target remains at least 44 points or 48 dp. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |
+| `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 Blade documentation uses `icon-ios` and `icon-android`. The equivalent
@@ -5884,6 +5896,10 @@ public function addItem(): void
 
 Icon Button has no `value`, `native:model`, or `@change`. Disabled and loading
 buttons do not emit. Programmatic publications never emit a press.
+
+Icon Button plays no haptic unless it sets `haptic`, which plays on the device
+as the tap lands, without waiting for PHP: on touch down on Android, and as the
+tap fires on iOS. A keypad's delete key uses `haptic="keypress"`.
 
 ## Variants and sizes
 
@@ -6505,6 +6521,7 @@ public array $queues = ['mine'];
 | `disabled` | `bool` | Disables the complete group. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 ## Sizes
@@ -6585,6 +6602,8 @@ fallback.
 ## Platform behaviour
 
 iOS uses native SwiftUI capsule buttons in a wrapping layout or a horizontal `ScrollView`. Android uses Material 3 `FilterChip` controls in a wrapping `FlowRow` or a horizontally scrolling row. Both inherit NativePHP semantic theme tokens and preserve native press, focus, selection, disabled, and accessibility behaviour without exposing platform-widget props.
+
+On Android, each pill plays `toggle-on` or `toggle-off` as the user selects or clears it; iOS plays none. `haptic="none"` silences it. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 
@@ -6768,6 +6787,7 @@ public array $priorityOptions = [
 | `size` | `string` | `md` (default) or `lg`. `lg` is as tall as a Button with `size="lg"`. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 ## Sizes
@@ -6841,6 +6861,8 @@ option.
 ## Platform behaviour
 
 iOS uses a native SwiftUI field backed by `UISegmentedControl`. Android uses Material 3 `SingleChoiceSegmentedButtonRow` and `SegmentedButton`. The controls share behaviour and authored API while retaining platform-native styling, layout, and interaction.
+
+On iOS, `UISegmentedControl` plays its own selection haptic. On Android, Segmented plays `selection` when the user picks another segment. `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 
@@ -6920,6 +6942,7 @@ A value-to-label map is enough when no tab needs a badge or availability:
 | `disabled` | `bool` | Disables every tab. |
 | `a11y-label` | `string` | Overrides `label` as the group's accessible name. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance for the group. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 Rich tabs accept these fields:
@@ -7005,6 +7028,8 @@ iOS uses a native `UISegmentedControl`. Place Tabs full width directly under the
 Android uses Material 3 `PrimaryTabRow` with its moving indicator and a Material 3 `Badge` after the label. When a label does not fit its equal share of the width on one line, including at large font scales, the row switches to Material's `PrimaryScrollableTabRow`, as `TabLayout` does in its automatic mode.
 
 Tabs does not pin itself under the top bar or animate between sections. Swiping between sections is not supported.
+
+On iOS, `UISegmentedControl` plays its own selection haptic. On Android, Tabs plays `selection` when the user picks another tab. `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 
@@ -7295,6 +7320,7 @@ public float $dose = 5.0;
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `a11y-value` | `string` | Optional spoken value, such as a number with units; it is never shown visibly. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout for the complete field. |
 
 `min` must be less than `max`. The accepted value must be inside the inclusive
@@ -7345,6 +7371,10 @@ iOS uses a genuine stepped SwiftUI `Slider`. Android uses a genuine Material
 interior steps. Both platforms snap native gesture noise back to the authored
 grid and send the standard Float slider event.
 
+On iOS the SwiftUI `Slider` plays the system's own haptics. On Android, the
+thumb plays `tick` each time it snaps to another step. `haptic="none"` silences
+the Android haptic. See [Play haptics](../how-to/play-haptics.md).
+
 Slider deliberately has no range mode, vertical orientation, marks, ticks,
 visible value label, formatter, min/max captions, required metadata, size,
 variant, or colour/style escape props.
@@ -7392,6 +7422,7 @@ are strings and are rejected deliberately.
 | `disabled` | `bool` | Prevents decrement and increment proposals. |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout for the complete field. |
 
 `min` must be less than `max`. The accepted value must be within the inclusive
@@ -7450,6 +7481,9 @@ buttons with the label on the same row and the minus/value/plus controls at its
 trailing end. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press
 acceleration, required state, size, variant, colour, or style escape props.
+
+On Android, each step plays `selection`; iOS plays none. `haptic="none"`
+silences it. See [Play haptics](../how-to/play-haptics.md).
 
 ## Screenshots
 
@@ -8127,6 +8161,7 @@ class NotificationSettings extends NativeComponent
 | `disabled` | `bool` | Prevents interaction and change events. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 ## Events
@@ -8191,6 +8226,8 @@ takes precedence over helper text and is included in accessibility semantics.
 ## Platform behaviour
 
 iOS uses a genuine SwiftUI `Toggle` with the native switch style and system motion. Android uses a genuine Material 3 `Switch` inside a row-owned switch semantic target, preserving Material state layers and TalkBack behaviour. The public EDGE API and server-authoritative state contract are shared; native geometry, presentation, and interaction remain platform-specific.
+
+On iOS the native `Toggle` plays the system switch haptic. On Android, Switch plays `toggle-on` or `toggle-off` as the user proposes a change, before PHP accepts it. Both follow the device's haptics setting; `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 
@@ -8290,6 +8327,10 @@ alert, and the platforms act on it once. iOS moves
 VoiceOver focus and posts an announcement. Android acts while TalkBack is on:
 Text Field, Text Area, and Code Editor take input focus, and every field
 announces.
+
+A `@press` or `@submit` that adds messages also plays the `error` haptic, once
+for the interaction. Model sync and live revalidation while typing play none.
+See [Play haptics](../how-to/play-haptics.md).
 
 ## Participating fields
 

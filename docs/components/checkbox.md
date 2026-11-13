@@ -7,6 +7,7 @@ sources:
   - nativephp.json
   - src/Components/Checkbox.php
   - src/Elements/Checkbox.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - resources/ios/CheckboxControl.swift
   - resources/ios/CheckboxRenderer.swift
   - resources/android/CheckboxControl.kt
@@ -70,6 +71,7 @@ class Registration extends NativeComponent
 | `disabled` | `bool` | Prevents proposals and change events while retaining the accepted value. |
 | `a11y-label` | `string` | Explicit accessible name when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 The camel-case authoring aliases `a11yLabel` and `a11yHint` are accepted and
@@ -162,6 +164,10 @@ SF Symbol state affordance. Android uses a genuine Material 3 `Checkbox` inside
 a row-owned checkbox target. The public EDGE API and server-authoritative state
 contract are shared, while geometry and interaction presentation remain native
 to each platform.
+
+On Android, Checkbox plays `toggle-on` or `toggle-off` as the user proposes a
+change; iOS plays none, as its own checkmarked rows do. `haptic="none"`
+silences it. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 

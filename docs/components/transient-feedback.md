@@ -9,6 +9,7 @@ sources:
   - spec/screenshots.json
   - src/Facades/Feedback.php
   - src/Feedback/PendingFeedback.php
+  - src/Haptics/HapticsManager.php
   - src/Feedback/FeedbackManager.php
   - src/Feedback/FeedbackFake.php
   - src/Feedback/FeedbackStore.php
@@ -65,6 +66,7 @@ The public identity is `FirstlightUI\Facades\Feedback`.
 | `->id(string $id)` | new `PendingFeedback` | Uses an application-owned stable ID. |
 | `->action(string $label, string $key)` | new `PendingFeedback` | Adds one visible labelled action and its application key. |
 | `->hold()` | new `PendingFeedback` | Keeps the item until action, manual dismissal, or programmatic removal. |
+| `->withoutHaptic()` | new `PendingFeedback` | Sends the item without its tone's haptic. |
 | `->send()` | `string` | Publishes the item and returns its authored or generated ID. |
 | `Feedback::dismiss(string $id)` | `bool` | Removes a pending or visible item; returns whether it existed. |
 
@@ -103,6 +105,8 @@ The four factories are the complete tone API:
 - `danger()` communicates a failed or destructive outcome.
 
 Tone controls native colour and a decorative semantic symbol. It does not change queue, timing, or event behaviour.
+
+When a tap, change or submit sends the item, `success()`, `warning()` and `danger()` also play the `success`, `warning` or `error` haptic. One interaction plays only its strongest outcome, so a danger item and a success item sent together play `error`. `message()` plays none, and nor does an item sent outside a user interaction, such as from a background event. Use `->withoutHaptic()` to keep one item silent. See [Play haptics](../how-to/play-haptics.md).
 
 ## Application events
 

@@ -6,6 +6,7 @@ audience: consumer
 sources:
   - src/Components/Slider.php
   - src/Elements/Slider.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - src/Support/FiniteNumber.php
   - resources/ios/SliderControl.swift
   - resources/ios/SliderRenderer.swift
@@ -57,6 +58,7 @@ public float $dose = 5.0;
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `a11y-value` | `string` | Optional spoken value, such as a number with units; it is never shown visibly. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout for the complete field. |
 
 `min` must be less than `max`. The accepted value must be inside the inclusive
@@ -106,6 +108,10 @@ iOS uses a genuine stepped SwiftUI `Slider`. Android uses a genuine Material
 3 `Slider`; the validated interval count is translated to Material's count of
 interior steps. Both platforms snap native gesture noise back to the authored
 grid and send the standard Float slider event.
+
+On iOS the SwiftUI `Slider` plays the system's own haptics. On Android, the
+thumb plays `tick` each time it snaps to another step. `haptic="none"` silences
+the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 Slider deliberately has no range mode, vertical orientation, marks, ticks,
 visible value label, formatter, min/max captions, required metadata, size,

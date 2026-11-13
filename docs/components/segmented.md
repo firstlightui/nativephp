@@ -6,6 +6,7 @@ audience: consumer
 sources:
   - src/Components/Segmented.php
   - src/Elements/Segmented.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - src/Support/OptionNormalizer.php
   - resources/ios/SegmentedControl.swift
   - resources/ios/SegmentedRenderer.swift
@@ -56,6 +57,7 @@ public array $priorityOptions = [
 | `size` | `string` | `md` (default) or `lg`. `lg` is as tall as a Button with `size="lg"`. |
 | `a11y-label` | `string` | Explicit accessibility label when a visible label is inappropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
 ## Sizes
@@ -129,6 +131,8 @@ option.
 ## Platform behaviour
 
 iOS uses a native SwiftUI field backed by `UISegmentedControl`. Android uses Material 3 `SingleChoiceSegmentedButtonRow` and `SegmentedButton`. The controls share behaviour and authored API while retaining platform-native styling, layout, and interaction.
+
+On iOS, `UISegmentedControl` plays its own selection haptic. On Android, Segmented plays `selection` when the user picks another segment. `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
 

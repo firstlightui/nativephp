@@ -7,6 +7,7 @@ sources:
   - spec/components/stepper.md
   - src/Components/Stepper.php
   - src/Elements/Stepper.php
+  - src/Elements/Concerns/AcceptsHaptic.php
   - src/Support/FiniteNumber.php
   - resources/ios/StepperControl.swift
   - resources/ios/StepperRenderer.swift
@@ -49,6 +50,7 @@ are strings and are rejected deliberately.
 | `disabled` | `bool` | Prevents decrement and increment proposals. |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
+| `haptic` | `none` | Silences the haptic this control plays by default. Any other value throws. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout for the complete field. |
 
 `min` must be less than `max`. The accepted value must be within the inclusive
@@ -107,6 +109,9 @@ buttons with the label on the same row and the minus/value/plus controls at its
 trailing end. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press
 acceleration, required state, size, variant, colour, or style escape props.
+
+On Android, each step plays `selection`; iOS plays none. `haptic="none"`
+silences it. See [Play haptics](../how-to/play-haptics.md).
 
 ## Screenshots
 

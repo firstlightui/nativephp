@@ -10,6 +10,7 @@ sources:
   - src/Validation/FieldErrorBinder.php
   - src/Validation/ErrorSummary.php
   - src/Validation/ValidationAlert.php
+  - src/Haptics/HapticsManager.php
   - src/Elements/Callout.php
   - tests/Feature/ValidatesFieldsTest.php
 ---
@@ -99,6 +100,10 @@ alert, and the platforms act on it once. iOS moves
 VoiceOver focus and posts an announcement. Android acts while TalkBack is on:
 Text Field, Text Area, and Code Editor take input focus, and every field
 announces.
+
+A `@press` or `@submit` that adds messages also plays the `error` haptic, once
+for the interaction. Model sync and live revalidation while typing play none.
+See [Play haptics](../how-to/play-haptics.md).
 
 ## Participating fields
 

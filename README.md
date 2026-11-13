@@ -145,6 +145,8 @@ Concerns on `NativeComponent` connect Laravel to the native controls:
 - [`DestroysListItems`](https://firstlightui.dev/docs/how-to/destroy-list-items): authorized, confirmed deletion of List rows by stable key.
 - [`ScreenAssertions`](https://firstlightui.dev/docs/how-to/test-screens): Pest checks for field errors, List rows, Confirmation Dialogs, and Feedback on NativePHP's `Native::test()` harness, plus `php artisan make:firstlight-screen` to scaffold a screen and its test.
 
+Controls, Feedback and validation play each platform's own haptics, and follow the device's haptics setting. Buttons stay silent unless they set `haptic`, such as `keypress` on a PIN keypad, and `Haptics::success()` plays an outcome from PHP. See [Play haptics](https://firstlightui.dev/docs/how-to/play-haptics).
+
 Firstlight-owned labels use Laravel's lang files, and Date and Time pickers inherit the application locale and timezone. See [Localize chrome](https://firstlightui.dev/docs/how-to/localize).
 
 Warnings use the theme's `warning` / `on-warning` pair, with amber defaults independent of brand accent. List Item supports semantic icon tones and nullable optional text. See [Theming](https://firstlightui.dev/docs/getting-started/theming) and [List Item](https://firstlightui.dev/docs/components/list-item).
