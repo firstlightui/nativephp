@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -10,6 +11,8 @@ use Throwable;
 
 final class Checkbox extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.checkbox';
 
     private const EXCLUDED_ATTRIBUTES = [
@@ -38,6 +41,8 @@ final class Checkbox extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (self::EXCLUDED_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException(

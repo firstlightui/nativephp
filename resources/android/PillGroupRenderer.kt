@@ -162,6 +162,7 @@ object PillGroupRenderer {
         val isDark = isSystemInDarkTheme()
         val tokens = if (isDark) NativeUITheme.dark else NativeUITheme.light
         val configuration = rendererState.configuration
+        val haptics = rememberFirstlightHaptics(node)
 
         FirstlightPillGroupControl(
             labels = rendererState.configuration.optionLabels,
@@ -174,7 +175,12 @@ object PillGroupRenderer {
             helper = rendererState.configuration.helper,
             error = rendererState.configuration.error.takeIf(String::isNotEmpty),
             onSelection = { index ->
-                rendererState.userSelected(index)?.let(events::dispatch)
+                val wasSelected = rendererState.configuration.optionValues.getOrNull(index) in
+                    rendererState.configuration.selectedValues
+                rendererState.userSelected(index)?.let { event ->
+                    haptics.play(if (wasSelected) FirstlightHaptic.ToggleOff else FirstlightHaptic.ToggleOn)
+                    events.dispatch(event)
+                }
             },
             modifier = modifier,
             colors = pillGroupColors(tokens, configuration.tone, configuration.warningColors, isDark),

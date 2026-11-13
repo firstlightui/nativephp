@@ -28,7 +28,7 @@ object FirstlightButtonRenderer {
 
         com.nativephp.plugins.native_ui.ui.ButtonRenderer.Render(
             node,
-            modifier.clearAndSetSemantics {
+            modifier.firstlightPressHaptic(node, enabled = enabled && callbackId != 0).clearAndSetSemantics {
                 role = Role.Button
                 contentDescription = firstlightButtonDescription(node)
                 if (node.props.getBool("loading")) stateDescription = "Loading"

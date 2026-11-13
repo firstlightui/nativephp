@@ -2,11 +2,19 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 
 class Button extends \Native\Mobile\UI\Elements\Button
 {
+    use AcceptsHaptic;
+
+    protected function hapticPlaysOnPress(): bool
+    {
+        return true;
+    }
+
     protected string $type = 'firstlight.button';
 
     /** @var list<string> */
@@ -49,6 +57,8 @@ class Button extends \Native\Mobile\UI\Elements\Button
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (self::UNSUPPORTED_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException(

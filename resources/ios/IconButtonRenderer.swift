@@ -89,6 +89,9 @@ struct IconButtonRenderer: View {
                     return
                 }
 
+                if let haptic = FirstlightHaptic(rawValue: node.props.getString("haptic")) {
+                    FirstlightHaptics.shared.play(haptic)
+                }
                 KeyboardFocusPolicy.dispatchPress {
                     NativeUIBridge.sendPressEvent(callbackID, nodeId: nodeID)
                 }

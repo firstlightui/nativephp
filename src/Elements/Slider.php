@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use FirstlightUI\Support\FiniteNumber;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
@@ -11,6 +12,8 @@ use Throwable;
 
 final class Slider extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.slider';
 
     private const EXCLUDED_ATTRIBUTES = [
@@ -50,6 +53,8 @@ final class Slider extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (self::EXCLUDED_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException("Slider does not support the `{$attribute}` attribute.");

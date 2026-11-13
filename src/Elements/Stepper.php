@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use FirstlightUI\Support\FiniteNumber;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
@@ -11,6 +12,8 @@ use Throwable;
 
 final class Stepper extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.stepper';
 
     private const EXCLUDED_ATTRIBUTES = [
@@ -45,6 +48,8 @@ final class Stepper extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (self::EXCLUDED_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException("Stepper does not support the `{$attribute}` attribute.");

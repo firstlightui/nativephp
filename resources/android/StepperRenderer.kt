@@ -113,11 +113,23 @@ object StepperRenderer {
             LaunchedEffect(tree) { state.serverPublished(tree) }
         }
 
+        val haptics = rememberFirstlightHaptics(node)
+
         FirstlightStepperControl(
             state = state,
             tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
-            onDecrement = { state.decrement()?.let(events::dispatch) },
-            onIncrement = { state.increment()?.let(events::dispatch) },
+            onDecrement = {
+                state.decrement()?.let { event ->
+                    haptics.play(FirstlightHaptic.Selection)
+                    events.dispatch(event)
+                }
+            },
+            onIncrement = {
+                state.increment()?.let { event ->
+                    haptics.play(FirstlightHaptic.Selection)
+                    events.dispatch(event)
+                }
+            },
             modifier = modifier,
         )
     }

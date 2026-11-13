@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use FirstlightUI\Validation\FieldErrorBinder;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -10,6 +11,8 @@ use Throwable;
 
 class SwitchControl extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.switch';
 
     /** @var array<string, bool|string> */
@@ -30,6 +33,8 @@ class SwitchControl extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (['required', 'placement'] as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException(

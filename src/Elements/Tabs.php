@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -9,6 +10,8 @@ use Throwable;
 
 final class Tabs extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.tabs';
 
     private const MIN_TABS = 2;
@@ -49,6 +52,8 @@ final class Tabs extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (self::INCOMPATIBLE as $attribute => $reason) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException("Firstlight Tabs does not support `{$attribute}`: {$reason}.");

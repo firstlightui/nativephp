@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use FirstlightUI\Support\CallbackExpression;
 use FirstlightUI\Validation\FieldErrorBinder;
 use FirstlightUI\Support\NormalizedOption;
@@ -13,6 +14,8 @@ use Throwable;
 
 class Segmented extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.segmented';
 
     /** @var list<string> */
@@ -43,6 +46,8 @@ class Segmented extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         if (array_key_exists('options', $attrs)) {
             $this->options((array) $attrs['options']);
         }

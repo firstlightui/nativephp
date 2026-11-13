@@ -13,6 +13,7 @@ final readonly class FeedbackRecord
         public bool $hold,
         public ?string $actionLabel,
         public ?string $actionKey,
+        public bool $haptic = true,
     ) {
         self::ensureNotBlank($id, 'id');
         self::ensureNotBlank($message, 'message');

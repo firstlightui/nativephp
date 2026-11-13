@@ -2,11 +2,14 @@
 
 namespace FirstlightUI\Concerns;
 
+use FirstlightUI\Haptics\Haptic;
+use FirstlightUI\Haptics\HapticsManager;
 use FirstlightUI\Media\MediaValidation;
 use FirstlightUI\Media\MediaValue;
 use FirstlightUI\Validation\ErrorSummary;
 use FirstlightUI\Validation\FieldErrorBag;
 use FirstlightUI\Validation\ValidationAlert;
+use Illuminate\Container\Container;
 use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\Translator;
 use Illuminate\Validation\Factory as ValidatorFactory;
@@ -92,12 +95,18 @@ trait ValidatesFields
     /** Keep upstream's exception bookkeeping while recording accessibility alerts. */
     public function __invokeInteraction(string $method, array $parameters): mixed
     {
+        // The test harness's call() enters here without dispatchUiEvent().
+        $haptics = $this->interactionHaptics();
+        $haptics?->beginInteraction();
+
         try {
             return parent::__invokeInteraction($method, $parameters);
         } catch (ValidationException $exception) {
             $this->storeValidationException($exception);
 
             return null;
+        } finally {
+            $haptics?->endInteraction();
         }
     }
 
@@ -110,22 +119,38 @@ trait ValidatesFields
             $this->validationAlert = null;
         }
 
-        try {
-            parent::dispatchUiEvent($event);
-        } catch (ValidationException $exception) {
-            // Deferred listeners and drag-end callbacks bypass __invokeInteraction().
-            $this->storeValidationException($exception);
-        } finally {
-            $failed = $this->failedValidationKeys;
-            $this->failedValidationKeys = $outer;
-        }
+        // Outcome haptics played while handling the event, including the
+        // validation alert's, collapse to the strongest when it ends.
+        $haptics = $this->interactionHaptics();
+        $haptics?->beginInteraction();
 
-        if ($outer === null) {
-            $this->queueValidationAlert($failed, $event);
-        } else {
-            // A nested dispatch (for example to a child owner) reports to the outermost one.
-            $this->recordFailedValidation($failed);
+        try {
+            try {
+                parent::dispatchUiEvent($event);
+            } catch (ValidationException $exception) {
+                // Deferred listeners and drag-end callbacks bypass __invokeInteraction().
+                $this->storeValidationException($exception);
+            } finally {
+                $failed = $this->failedValidationKeys;
+                $this->failedValidationKeys = $outer;
+            }
+
+            if ($outer === null) {
+                $this->queueValidationAlert($failed, $event);
+            } else {
+                // A nested dispatch (for example to a child owner) reports to the outermost one.
+                $this->recordFailedValidation($failed);
+            }
+        } finally {
+            $haptics?->endInteraction();
         }
+    }
+
+    private function interactionHaptics(): ?HapticsManager
+    {
+        $container = Container::getInstance();
+
+        return $container->bound(HapticsManager::class) ? $container->make(HapticsManager::class) : null;
     }
 
     /**
@@ -153,6 +178,11 @@ trait ValidatesFields
             movesFocus: $submission,
             keys: $submission ? null : $failedKeys,
         );
+
+        // A rejected submission buzzes; live revalidation while typing does not.
+        if ($submission) {
+            $this->interactionHaptics()?->play(Haptic::Error);
+        }
     }
 
     /** Record hand-thrown messages without replacing a bag already updated by upstream validation. */

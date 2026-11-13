@@ -125,6 +125,7 @@ object TabsRenderer {
 
         val tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
         val configuration = state.configuration
+        val haptics = rememberFirstlightHaptics(node)
 
         FirstlightTabsControl(
             labels = configuration.labels,
@@ -133,7 +134,12 @@ object TabsRenderer {
             enabled = configuration.enabled,
             selectedIndex = configuration.selectedIndex,
             groupEnabled = !configuration.disabled,
-            onSelection = { index -> state.userSelected(index)?.let(events::dispatch) },
+            onSelection = { index ->
+                state.userSelected(index)?.let { event ->
+                    haptics.play(FirstlightHaptic.Selection)
+                    events.dispatch(event)
+                }
+            },
             colors = resolveTabsTokenColors(tokens),
             modifier = modifier,
             groupDescription = configuration.groupDescription,

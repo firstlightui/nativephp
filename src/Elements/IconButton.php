@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -11,6 +12,13 @@ use Native\Mobile\Icon\IosSymbol;
 
 final class IconButton extends Element
 {
+    use AcceptsHaptic;
+
+    protected function hapticPlaysOnPress(): bool
+    {
+        return true;
+    }
+
     protected string $type = 'firstlight.icon-button';
 
     /** @var list<string> */
@@ -66,6 +74,8 @@ final class IconButton extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         foreach (self::UNSUPPORTED_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {
                 throw new InvalidArgumentException(

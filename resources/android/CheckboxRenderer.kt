@@ -94,6 +94,7 @@ object FirstlightCheckboxRenderer {
 
         val configuration = state.configuration
         val tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
+        val haptics = rememberFirstlightHaptics(node)
 
         FirstlightCheckboxControl(
             value = configuration.value,
@@ -107,6 +108,7 @@ object FirstlightCheckboxRenderer {
             tokens = tokens,
             onProposal = {
                 state.proposeChange()?.let { event ->
+                    haptics.play(if (event.value) FirstlightHaptic.ToggleOn else FirstlightHaptic.ToggleOff)
                     NativeUIBridge.sendCheckboxChangeEvent(
                         event.callbackId,
                         event.nodeId,

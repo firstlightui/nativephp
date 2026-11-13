@@ -92,6 +92,7 @@ object SwitchRenderer {
 
         val configuration = state.configuration
         val tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
+        val haptics = rememberFirstlightHaptics(node)
 
         FirstlightSwitchControl(
             value = configuration.value,
@@ -104,6 +105,7 @@ object SwitchRenderer {
             tokens = tokens,
             onProposal = {
                 state.proposeChange()?.let { event ->
+                    haptics.play(if (event.value) FirstlightHaptic.ToggleOn else FirstlightHaptic.ToggleOff)
                     NativeUIBridge.sendToggleChangeEvent(
                         event.callbackId,
                         event.nodeId,

@@ -7,6 +7,16 @@ func registerFirstlightUI() {
         consumes: "firstlight.feedback-center",
         host: firstlightFeedbackCenterRootHost
     )
+    NativeRootHostRegistry.shared.register("firstlight.haptics", host: firstlightHapticsRootHost)
+}
+
+func firstlightHapticsRootHost(_ root: NativeUINode, _ content: AnyView) -> AnyView {
+    let input = FeedbackCenterUncheckedTransfer(value: content)
+    let output = MainActor.assumeIsolated {
+        FeedbackCenterUncheckedTransfer(value: AnyView(FirstlightSensoryFeedbackHost(content: input.value)))
+    }
+
+    return output.value
 }
 
 private struct FeedbackCenterUncheckedTransfer<Value>: @unchecked Sendable {

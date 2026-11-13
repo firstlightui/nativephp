@@ -90,7 +90,7 @@ object IconButtonRenderer {
                     NativeUIBridge.sendPressEvent(event.callbackId, event.nodeId)
                 }
             },
-            modifier = modifier,
+            modifier = modifier.firstlightPressHaptic(node, enabled = configuration.pressEvent() != null),
         )
     }
 }

@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use FirstlightUI\Exceptions\InvalidOption;
 use FirstlightUI\Support\CallbackExpression;
 use FirstlightUI\Support\WarningColors;
@@ -19,6 +20,8 @@ use Throwable;
 
 class PillGroup extends Element
 {
+    use AcceptsHaptic;
+
     protected string $type = 'firstlight.pill-group';
 
     /** @var list<string> */
@@ -75,6 +78,8 @@ class PillGroup extends Element
 
     public function applyAttributes(array $attrs): void
     {
+        $attrs = $this->applyHapticAttribute($attrs);
+
         $this->assertCompatibleAttributes($attrs);
 
         if (array_key_exists('options', $attrs)) {

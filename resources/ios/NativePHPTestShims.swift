@@ -5,6 +5,15 @@ import SwiftUI
 // the package renderers. NativePHP copies plugin sources into its Xcode target,
 // where SWIFT_PACKAGE is not defined and the real framework APIs are used.
 
+// NativePHP's BridgeRouter.swift types used by Firstlight's bridge functions.
+protocol BridgeFunction {
+    func execute(parameters: [String: Any]) throws -> [String: Any]
+}
+
+enum BridgeError: Error {
+    case invalidParameters(String)
+}
+
 enum SizeMode {
     static let fixed = 0
     static let wrap = 1

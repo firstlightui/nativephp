@@ -8,6 +8,7 @@ use FirstlightUI\Console\MakeScreenCommand;
 use FirstlightUI\Drafts\DraftStore;
 use FirstlightUI\Feedback\FeedbackManager;
 use FirstlightUI\Feedback\FeedbackStore;
+use FirstlightUI\Haptics\HapticsManager;
 use FirstlightUI\NativeComponents\FeedbackCenter;
 use Illuminate\Support\ServiceProvider;
 use Native\Mobile\Edge\ChromeContributorRegistry;
@@ -24,6 +25,7 @@ class FirstlightServiceProvider extends ServiceProvider
         $this->app->singleton(FeedbackManager::class);
         $this->app->singleton(DraftStore::class);
         $this->app->singleton(ConnectivityManager::class);
+        $this->app->singleton(HapticsManager::class);
 
         ComponentRegistry::register('firstlight-feedback-center', FeedbackCenter::class);
     }

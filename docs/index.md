@@ -59,6 +59,7 @@ recipes run inside.
 - [Keep drafts across navigation](how-to/keep-drafts.md) — Keep a screen's unsaved changes when the user goes back, and offer them when the screen reopens.
 - [Show connectivity and refresh on reconnect](how-to/show-connectivity.md) — Show Offline and sync status in the nav bar subtitle, display your app's write queue, and refresh stale data when the device comes back online.
 - [Show data freshness](how-to/show-data-freshness.md) — Tell users how old a screen's data is, that they're seeing cached data while offline, and that a refresh failed, with a Try again action.
+- [Play haptics](how-to/play-haptics.md) — Use the haptics Firstlight controls and Feedback already play, give keypads and buttons a touch haptic, play outcomes from PHP, and turn haptics off.
 - [Test screens](how-to/test-screens.md) — Scaffold a screen with `make:firstlight-screen` and test fields, lists, dialogs, and Feedback with `Native::test()`.
 - [Localize chrome](how-to/localize.md) — Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
 

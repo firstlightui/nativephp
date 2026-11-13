@@ -159,10 +159,18 @@ object FirstlightSliderRenderer {
             }
         }
 
+        val haptics = rememberFirstlightHaptics(node)
+
         FirstlightSliderControl(
             state = state,
             tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
-            onValueChange = { state.userChanged(it)?.let(events::dispatch) },
+            onValueChange = { value ->
+                val before = state.draft
+                val event = state.userChanged(value)
+                // One soft tick each time the thumb snaps to another step.
+                if (state.draft != before) haptics.play(FirstlightHaptic.Tick)
+                event?.let(events::dispatch)
+            },
             onValueChangeFinished = { state.finishEditing()?.let(events::dispatch) },
             modifier = modifier,
         )

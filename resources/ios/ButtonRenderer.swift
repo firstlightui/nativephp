@@ -18,6 +18,10 @@ struct FirstlightButtonRenderer: View {
                 tokens: themeStore.resolve(for: colorScheme),
                 onPress: {
                     guard configuration.isEnabled, configuration.callbackID != 0 else { return }
+                    // Firstlight draws ghost buttons, so the haptic plays with the action.
+                    if let haptic = FirstlightHaptic(rawValue: node.props.getString("haptic")) {
+                        FirstlightHaptics.shared.play(haptic)
+                    }
                     // Through the focus policy so a focused field's pending change
                     // reaches PHP before the press, as Mobile UI's Button does.
                     KeyboardFocusPolicy.dispatchPress {
@@ -26,7 +30,9 @@ struct FirstlightButtonRenderer: View {
                 }
             )
         } else {
+            // Mobile UI draws the other variants; the haptic rides alongside its tap.
             NativeUIButtonRenderer(node: labelNode)
+                .firstlightPressHaptic(node, enabled: !node.props.getBool("disabled") && !node.props.getBool("loading"))
         }
     }
 }

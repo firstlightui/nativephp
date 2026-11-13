@@ -278,6 +278,20 @@
             "self_closing": false
         }
     ],
+    "bridge_functions": [
+        {
+            "name": "Firstlight.Haptics.Play",
+            "android": "dev.firstlightui.plugins.firstlight_ui.FirstlightHapticsFunctions.Play",
+            "ios": "FirstlightHapticsFunctions.Play",
+            "description": "Play a Firstlight haptic or impact"
+        },
+        {
+            "name": "Firstlight.Haptics.SetEnabled",
+            "android": "dev.firstlightui.plugins.firstlight_ui.FirstlightHapticsFunctions.SetEnabled",
+            "ios": "FirstlightHapticsFunctions.SetEnabled",
+            "description": "Turn every Firstlight haptic on or off for this install"
+        }
+    ],
     "android": {
         "min_version": 29,
         "init_function": "dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI",

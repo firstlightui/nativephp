@@ -19,13 +19,26 @@ it('declares the Firstlight package identity', function () {
         ->and($manifest['ios']['min_version'])->toBe('18.2');
 });
 
-it('registers the Feedback Center root host without feature bridge functions', function () {
+it('registers the Feedback Center root host and only the haptics bridge functions', function () {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 2).'/nativephp.json'), true, flags: JSON_THROW_ON_ERROR);
 
     expect($manifest['ios']['init_function'])->toBe('registerFirstlightUI')
         ->and($manifest['android']['init_function'])->toBe('dev.firstlightui.plugins.firstlight_ui.registerFirstlightUI')
         ->and($manifest['android'])->not->toHaveKey('bridge_functions')
-        ->and($manifest['ios'])->not->toHaveKey('bridge_functions');
+        ->and($manifest['ios'])->not->toHaveKey('bridge_functions')
+        ->and(array_column($manifest['bridge_functions'], 'name'))->toBe(['Firstlight.Haptics.Play', 'Firstlight.Haptics.SetEnabled']);
+
+    $sources = fn (string $glob): string => implode("\n", array_map('file_get_contents', glob(dirname(__DIR__, 2).$glob)));
+    $ios = $sources('/resources/ios/*.swift');
+    $android = $sources('/resources/android/*.kt');
+
+    foreach ($manifest['bridge_functions'] as $function) {
+        [$iosOwner, $iosClass] = explode('.', $function['ios']);
+        $androidClass = substr($function['android'], strrpos($function['android'], '.') + 1);
+
+        expect($ios)->toContain("enum {$iosOwner} {", "class {$iosClass}: BridgeFunction")
+            ->and($android)->toContain('package '.substr($function['android'], 0, strrpos($function['android'], '.', -strlen($androidClass) - 2)), "class {$androidClass}(");
+    }
 });
 
 it('declares the iOS camera usage description Media needs on a physical device', function () {

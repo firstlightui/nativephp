@@ -170,6 +170,7 @@ object SegmentedRenderer {
 
         val tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light
         val selectedIndex = rendererState.selectedIndex
+        val haptics = rememberFirstlightHaptics(node)
 
         FirstlightSegmentedControl(
             labels = rendererState.configuration.optionLabels,
@@ -180,7 +181,10 @@ object SegmentedRenderer {
             helper = rendererState.configuration.helper,
             error = rendererState.configuration.error.takeIf(String::isNotEmpty),
             onSelection = { index ->
-                rendererState.userSelected(index)?.let(events::dispatch)
+                rendererState.userSelected(index)?.let { event ->
+                    haptics.play(FirstlightHaptic.Selection)
+                    events.dispatch(event)
+                }
             },
             modifier = modifier,
             colors = segmentedButtonColors(tokens),

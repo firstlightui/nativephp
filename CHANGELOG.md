@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Haptics. Success, warning and danger Feedback play the matching haptic when a tap, change or submit sent them, and a press or submit that leaves validation errors plays error. One interaction plays one outcome, the strongest. On Android, Switch, Checkbox and Pill Group play toggle haptics; Segmented, Tabs and Stepper play selection; and a stepped Slider ticks. iOS keeps its system haptics. Buttons stay silent unless they set `haptic`, such as `haptic="keypress"` on a PIN keypad, which plays on the device as the tap lands. `Haptics::success()`, `play()`, `impact()` and `setEnabled()` play from PHP or turn haptics off, `Feedback::...->withoutHaptic()` and `haptic="none"` keep things silent, and `Haptics::fake()` records them in tests. Every haptic is the platform's own pattern and follows the system haptics setting. See [Play haptics](docs/how-to/play-haptics.md).
+
 ## 1.1.0-beta7 - 2026-11-13
 
 ### Added
