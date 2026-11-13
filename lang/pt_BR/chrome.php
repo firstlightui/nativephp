@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Inserir sinal de igual',
     'insert_dollar_sign' => 'Inserir cifrão',
     'insert_underscore' => 'Inserir sublinhado',
+    'discard' => 'Descartar',
+    'restore_anyway' => 'Restaurar mesmo assim',
+    'draft_restored' => 'Suas alterações não salvas foram restauradas.',
+    'draft_changed' => 'Isto mudou desde a sua última edição. Suas alterações não salvas não foram restauradas.',
 ];

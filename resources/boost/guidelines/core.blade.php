@@ -30,6 +30,7 @@ When no SF Symbol or Material icon fits, install an SVG with `php artisan firstl
 - `firstlight:list` accepts only `firstlight:list-item` and `firstlight:list-section`. Settings screens that mix controls use `native:list` with `native:list-section` and put Firstlight controls inside.
 - Pass stable ids (model keys) into callbacks, never loop indexes.
 - Destructive actions open `firstlight:confirmation-dialog` and authorize in PHP; swipe and context-menu actions never delete on their own.
+- Edit screens don't ask "Discard changes?" on back; iOS closes them before PHP hears about it. Add `use FirstlightUI\Concerns\KeepsDrafts;`, return a `Draft` (or null when nothing is unsaved) from `draft()`, and call `$this->restoreDraft($key, basedOn: $version)` once the data has loaded.
 - Give every control an accessible name with `label` or `a11y-label`; Icon Button, Search Field and Progress refuse to render without `a11y-label`. Name actions by their consequence, such as "Delete post".
 - Colours come from the NativePHP theme in `config/native-ui.php` (`primary`/`on-primary` pairs and so on). Do not hard-code colours on Firstlight controls.
 

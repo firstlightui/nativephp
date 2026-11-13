@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Isgelijkteken invoegen',
     'insert_dollar_sign' => 'Dollarteken invoegen',
     'insert_underscore' => 'Liggend streepje invoegen',
+    'discard' => 'Verwerpen',
+    'restore_anyway' => 'Toch herstellen',
+    'draft_restored' => 'Je niet-opgeslagen wijzigingen zijn hersteld.',
+    'draft_changed' => 'Dit is gewijzigd sinds je het laatst bewerkte. Je niet-opgeslagen wijzigingen zijn niet hersteld.',
 ];

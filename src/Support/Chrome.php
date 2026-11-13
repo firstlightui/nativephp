@@ -56,6 +56,10 @@ final class Chrome
         'insert_equals' => 'Insert equals sign',
         'insert_dollar_sign' => 'Insert dollar sign',
         'insert_underscore' => 'Insert underscore',
+        'discard' => 'Discard',
+        'restore_anyway' => 'Restore anyway',
+        'draft_restored' => 'Restored your unsaved changes.',
+        'draft_changed' => "This changed since you last edited it. Your unsaved changes weren't restored.",
     ];
 
     public static function string(string $key): string

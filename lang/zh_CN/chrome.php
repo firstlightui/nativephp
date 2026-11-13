@@ -45,4 +45,8 @@ return [
     'insert_equals' => '插入等号',
     'insert_dollar_sign' => '插入美元符号',
     'insert_underscore' => '插入下划线',
+    'discard' => '放弃',
+    'restore_anyway' => '仍然恢复',
+    'draft_restored' => '已恢复未保存的更改。',
+    'draft_changed' => '自你上次编辑后内容已更改，未保存的更改未恢复。',
 ];

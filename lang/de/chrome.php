@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Gleichheitszeichen einfügen',
     'insert_dollar_sign' => 'Dollarzeichen einfügen',
     'insert_underscore' => 'Unterstrich einfügen',
+    'discard' => 'Verwerfen',
+    'restore_anyway' => 'Trotzdem wiederherstellen',
+    'draft_restored' => 'Deine ungespeicherten Änderungen wurden wiederhergestellt.',
+    'draft_changed' => 'Dies wurde seit deiner letzten Bearbeitung geändert. Deine ungespeicherten Änderungen wurden nicht wiederhergestellt.',
 ];

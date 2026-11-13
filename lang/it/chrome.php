@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Inserisci segno di uguale',
     'insert_dollar_sign' => 'Inserisci simbolo del dollaro',
     'insert_underscore' => 'Inserisci trattino basso',
+    'discard' => 'Elimina',
+    'restore_anyway' => 'Ripristina comunque',
+    'draft_restored' => 'Le modifiche non salvate sono state ripristinate.',
+    'draft_changed' => 'Il contenuto è cambiato dall’ultima modifica. Le modifiche non salvate non sono state ripristinate.',
 ];

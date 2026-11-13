@@ -4,6 +4,7 @@ namespace FirstlightUI;
 
 use FirstlightUI\Console\InstallIconCommand;
 use FirstlightUI\Console\MakeScreenCommand;
+use FirstlightUI\Drafts\DraftStore;
 use FirstlightUI\Feedback\FeedbackManager;
 use FirstlightUI\Feedback\FeedbackStore;
 use FirstlightUI\NativeComponents\FeedbackCenter;
@@ -20,6 +21,7 @@ class FirstlightServiceProvider extends ServiceProvider
     {
         $this->app->singleton(FeedbackStore::class);
         $this->app->singleton(FeedbackManager::class);
+        $this->app->singleton(DraftStore::class);
 
         ComponentRegistry::register('firstlight-feedback-center', FeedbackCenter::class);
     }

@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Insertar signo igual',
     'insert_dollar_sign' => 'Insertar signo de dólar',
     'insert_underscore' => 'Insertar guion bajo',
+    'discard' => 'Descartar',
+    'restore_anyway' => 'Restaurar de todos modos',
+    'draft_restored' => 'Se restauraron tus cambios sin guardar.',
+    'draft_changed' => 'Esto cambió desde tu última edición. Tus cambios sin guardar no se restauraron.',
 ];

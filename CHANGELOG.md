@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- `KeepsDrafts` keeps a screen's unsaved changes when it closes, by Back, an edge swipe, or any other way, and restores them when it reopens with a `Restored your unsaved changes.` message and a `Discard` action. A draft edited from an older version of the record isn't restored over the new one; a held warning offers `Restore anyway`. Drafts stay in memory, per screen and per `Drafts::scopeUsing()` scope, and `Drafts::flush()` forgets them on logout. The trait is opt-in. See [Keep drafts across navigation](docs/how-to/keep-drafts.md).
+
 ### Changed
 
 - Media's `@clear` is declared in `nativephp.json` as an `element_events` name, which NativePHP Mobile 4.7 compiles itself. Firstlight's precompiler no longer rewrites `@clear` by hand. Views need no change.

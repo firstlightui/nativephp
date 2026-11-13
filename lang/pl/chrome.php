@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Wstaw znak równości',
     'insert_dollar_sign' => 'Wstaw znak dolara',
     'insert_underscore' => 'Wstaw podkreślnik',
+    'discard' => 'Odrzuć',
+    'restore_anyway' => 'Przywróć mimo to',
+    'draft_restored' => 'Przywrócono niezapisane zmiany.',
+    'draft_changed' => 'Zawartość zmieniła się od ostatniej edycji. Niezapisane zmiany nie zostały przywrócone.',
 ];

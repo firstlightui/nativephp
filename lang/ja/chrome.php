@@ -45,4 +45,8 @@ return [
     'insert_equals' => '等号を挿入',
     'insert_dollar_sign' => 'ドル記号を挿入',
     'insert_underscore' => 'アンダースコアを挿入',
+    'discard' => '破棄',
+    'restore_anyway' => 'それでも復元',
+    'draft_restored' => '保存されていない変更を復元しました。',
+    'draft_changed' => '最後に編集した後で内容が変更されたため、保存されていない変更は復元されませんでした。',
 ];

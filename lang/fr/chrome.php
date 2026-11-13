@@ -45,4 +45,8 @@ return [
     'insert_equals' => 'Insérer un signe égal',
     'insert_dollar_sign' => 'Insérer un signe dollar',
     'insert_underscore' => 'Insérer un tiret bas',
+    'discard' => 'Ignorer',
+    'restore_anyway' => 'Restaurer quand même',
+    'draft_restored' => 'Vos modifications non enregistrées ont été restaurées.',
+    'draft_changed' => 'Ce contenu a changé depuis votre dernière modification. Vos modifications non enregistrées n’ont pas été restaurées.',
 ];

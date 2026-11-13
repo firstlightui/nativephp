@@ -54,7 +54,9 @@ The English file is `lang/en/chrome.php`. Keys are `confirm`, `cancel`, `ok`,
 `done`, `crop`, `zoom_in`, `zoom_out`, `choose_media`, `photo_library`,
 `camera`, `browse_files`, `show_password`, `hide_password`, `indent`,
 `outdent`, `undo`, `redo`, `toggle_comment`, and the Code Editor symbol names
-`insert_left_brace` through `insert_underscore` (one per key-row symbol).
+`insert_left_brace` through `insert_underscore` (one per key-row symbol), and
+the [kept drafts](kept-drafts.md) Feedback strings `discard`,
+`restore_anyway`, `draft_restored`, and `draft_changed`.
 
 `lang/en/validation.php` holds `summary`, a Laravel pluralised heading
 (`There is :count error.|There are :count errors.`) used by error-summary
