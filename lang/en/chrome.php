@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Restore anyway',
     'draft_restored' => 'Restored your unsaved changes.',
     'draft_changed' => "This changed since you last edited it. Your unsaved changes weren't restored.",
+    'try_again' => 'Try again',
+    'freshness_updated' => 'Updated :when',
+    'freshness_updated_at' => 'Updated at :time',
+    'freshness_showing' => 'Showing data from :time',
+    'freshness_offline_empty' => "You're offline. This will load when you're back online.",
+    'freshness_refresh_failed' => "Couldn't refresh.",
+    'freshness_failed_showing' => ':reason Showing data from :time.',
+    'freshness_load_failed' => "Couldn't load this.",
 ];

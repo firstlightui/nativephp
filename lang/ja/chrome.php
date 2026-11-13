@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'それでも復元',
     'draft_restored' => '保存されていない変更を復元しました。',
     'draft_changed' => '最後に編集した後で内容が変更されたため、保存されていない変更は復元されませんでした。',
+    'try_again' => '再試行',
+    'freshness_updated' => ':whenに更新',
+    'freshness_updated_at' => '更新: :time',
+    'freshness_showing' => ':time 時点のデータを表示中',
+    'freshness_offline_empty' => 'オフラインです。オンラインに戻ると読み込まれます。',
+    'freshness_refresh_failed' => '更新できませんでした。',
+    'freshness_failed_showing' => ':reason :time 時点のデータを表示しています。',
+    'freshness_load_failed' => '読み込めませんでした。',
 ];

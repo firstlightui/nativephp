@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- `TracksFreshness` tells users how old each dataset on a screen is, in a Callout above it: `Updated 12 minutes ago`, or `Updated at 2:05 PM` after an hour; `Showing data from 2:05 PM` while the device is offline; and `Couldn't refresh.` or the app's reason with a `Try again` action that calls the screen's retry method. The screen reports what it shows with `freshness($key, freshFor:)->showing()`, `refreshing()`, `refreshed()` and `failed()`, and includes `firstlight::native.freshness`. Firstlight never fetches. Offline notices need `nativephp/mobile-network`; without it the device counts as online. The trait is opt-in. See [Show data freshness](docs/how-to/show-data-freshness.md).
+- `Chrome::string()` takes `:name` replacements, and the eight freshness strings are in every shipped locale.
+
 ## 1.1.0-beta5 - 2026-11-13
 
 ### Added

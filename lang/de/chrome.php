@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Trotzdem wiederherstellen',
     'draft_restored' => 'Deine ungespeicherten Änderungen wurden wiederhergestellt.',
     'draft_changed' => 'Dies wurde seit deiner letzten Bearbeitung geändert. Deine ungespeicherten Änderungen wurden nicht wiederhergestellt.',
+    'try_again' => 'Erneut versuchen',
+    'freshness_updated' => 'Aktualisiert :when',
+    'freshness_updated_at' => 'Aktualisiert: :time',
+    'freshness_showing' => 'Stand: :time',
+    'freshness_offline_empty' => 'Du bist offline. Die Daten werden geladen, sobald du wieder online bist.',
+    'freshness_refresh_failed' => 'Aktualisierung fehlgeschlagen.',
+    'freshness_failed_showing' => ':reason Stand: :time.',
+    'freshness_load_failed' => 'Konnte nicht geladen werden.',
 ];

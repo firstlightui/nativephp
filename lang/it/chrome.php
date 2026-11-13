@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Ripristina comunque',
     'draft_restored' => 'Le modifiche non salvate sono state ripristinate.',
     'draft_changed' => 'Il contenuto è cambiato dall’ultima modifica. Le modifiche non salvate non sono state ripristinate.',
+    'try_again' => 'Riprova',
+    'freshness_updated' => 'Aggiornato :when',
+    'freshness_updated_at' => 'Aggiornato: :time',
+    'freshness_showing' => 'Dati aggiornati: :time',
+    'freshness_offline_empty' => 'Sei offline. Il contenuto verrà caricato quando tornerai online.',
+    'freshness_refresh_failed' => 'Impossibile aggiornare.',
+    'freshness_failed_showing' => ':reason Dati aggiornati: :time.',
+    'freshness_load_failed' => 'Impossibile caricare il contenuto.',
 ];

@@ -6,6 +6,7 @@ sources:
   - Constitution.md
   - spec/reference/catalogue-boundary.md
   - spec/reference/kept-drafts.md
+  - spec/reference/data-freshness.md
   - spec/reference/form-submit.md
   - spec/reference/package-locale.md
   - spec/components/callout.md
@@ -16,6 +17,8 @@ sources:
   - src/Drafts/Draft.php
   - src/Drafts/DraftStore.php
   - src/Facades/Drafts.php
+  - src/Concerns/TracksFreshness.php
+  - src/Freshness/Freshness.php
   - vendor/nativephp/mobile/src/Edge/NativeComponent.php
   - vendor/nativephp/mobile/src/Edge/NativeRouter.php
   - https://github.com/NativePHP/mobile-network/pull/4
@@ -62,7 +65,7 @@ Firstlight. There is no new plugin and no new catalogue tag.
 | `AppForegrounded(secondsAway)` and `AppBackgrounded` | `nativephp/mobile` core | [mobile-air#672](https://github.com/NativePHP/mobile-air/pull/672), ready for review |
 | iOS tab roots draw the nav subtitle | `nativephp/mobile` core | [mobile-air#673](https://github.com/NativePHP/mobile-air/pull/673), ready for review |
 | Drafts kept across navigation | Firstlight `KeepsDrafts` | implemented |
-| Dataset age notices | Firstlight `TracksFreshness` over Callout | designed |
+| Dataset age notices | Firstlight `TracksFreshness` over Callout | implemented |
 | Connectivity, status line, `revalidate()` hook | Firstlight `Connectivity` | designed |
 | Display of an app's write queue | Firstlight `PendingChanges` contract | designed |
 | Write queue, API cache, conflict rules, data wipes | the apps | stays there |
@@ -106,8 +109,8 @@ timezone, as Date Picker and Time Picker do.
 | --- | --- | --- | --- |
 | Loading, nothing cached | none (the app's placeholder) | | |
 | Fresh | none | | |
-| Stale and online | `Updated 12m ago`, or `Updated at 14:05` after an hour | neutral | none |
-| Offline with cached data | `Showing data from 14:05` (`from 3 Nov, 14:05` on an earlier day) | warning | none |
+| Stale and online | `Updated 12 minutes ago`, or `Updated at 14:05` after an hour | neutral | none |
+| Offline with cached data | `Showing data from 14:05`, with the date on an earlier day, in the app's locale | warning | none |
 | Offline, nothing cached | `You're offline. This will load when you're back online.` | info | none |
 | Refresh failed with cached data | `Couldn't refresh. Showing data from 14:05.` or the app's reason | warning | `Try again` |
 | Load failed, nothing cached | the app's message, or `Couldn't load this.` | danger | `Try again` |
@@ -201,10 +204,10 @@ Differences from the plan sketch, decided while implementing:
 - No `discardDraft()`: while a screen is live its draft is already out of the
   store, so leaving with `draft()` returning null is the whole discard.
 
-### Freshness (designed)
+### Freshness (implemented)
 
 ```php
-// On NativeComponent (TracksFreshness), keyed per dataset
+// Opt-in TracksFreshness, keyed per dataset
 $this->freshness('servers', freshFor: 60)->showing($cached?->fetchedAt);
 $this->freshness('servers')->refreshing();
 $this->freshness('servers')->refreshed($fetchedAt);
@@ -219,10 +222,13 @@ protected function revalidate(): void
 ```
 
 ```blade
-@include('firstlight::freshness', ['key' => 'servers'])
+@include('firstlight::native.freshness', ['notice' => $this->freshnessNotice('servers')])
 ```
 
-The partial renders one `<firstlight:callout>` or nothing.
+The partial renders one `<firstlight:callout>` or nothing. The trait is
+opt-in, like `KeepsDrafts`. The `revalidate()` hook arrives with
+`Connectivity`. [Data freshness](../reference/data-freshness.md) is the
+current contract.
 
 ### Connectivity and pending changes (designed)
 

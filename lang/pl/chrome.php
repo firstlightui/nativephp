@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Przywróć mimo to',
     'draft_restored' => 'Przywrócono niezapisane zmiany.',
     'draft_changed' => 'Zawartość zmieniła się od ostatniej edycji. Niezapisane zmiany nie zostały przywrócone.',
+    'try_again' => 'Spróbuj ponownie',
+    'freshness_updated' => 'Zaktualizowano :when',
+    'freshness_updated_at' => 'Zaktualizowano: :time',
+    'freshness_showing' => 'Stan na :time',
+    'freshness_offline_empty' => 'Jesteś offline. Dane wczytają się, gdy wrócisz do sieci.',
+    'freshness_refresh_failed' => 'Nie udało się odświeżyć.',
+    'freshness_failed_showing' => ':reason Stan na :time.',
+    'freshness_load_failed' => 'Nie udało się wczytać.',
 ];

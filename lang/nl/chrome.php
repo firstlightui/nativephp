@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Toch herstellen',
     'draft_restored' => 'Je niet-opgeslagen wijzigingen zijn hersteld.',
     'draft_changed' => 'Dit is gewijzigd sinds je het laatst bewerkte. Je niet-opgeslagen wijzigingen zijn niet hersteld.',
+    'try_again' => 'Opnieuw proberen',
+    'freshness_updated' => 'Bijgewerkt :when',
+    'freshness_updated_at' => 'Bijgewerkt: :time',
+    'freshness_showing' => 'Gegevens van :time',
+    'freshness_offline_empty' => 'Je bent offline. Dit wordt geladen zodra je weer online bent.',
+    'freshness_refresh_failed' => 'Vernieuwen mislukt.',
+    'freshness_failed_showing' => ':reason Gegevens van :time.',
+    'freshness_load_failed' => 'Kan dit niet laden.',
 ];

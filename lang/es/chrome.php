@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Restaurar de todos modos',
     'draft_restored' => 'Se restauraron tus cambios sin guardar.',
     'draft_changed' => 'Esto cambió desde tu última edición. Tus cambios sin guardar no se restauraron.',
+    'try_again' => 'Reintentar',
+    'freshness_updated' => 'Actualizado :when',
+    'freshness_updated_at' => 'Actualizado: :time',
+    'freshness_showing' => 'Mostrando datos de :time',
+    'freshness_offline_empty' => 'Sin conexión. Se cargará cuando vuelvas a estar en línea.',
+    'freshness_refresh_failed' => 'No se pudo actualizar.',
+    'freshness_failed_showing' => ':reason Mostrando datos de :time.',
+    'freshness_load_failed' => 'No se pudo cargar.',
 ];

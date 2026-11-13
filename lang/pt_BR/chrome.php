@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Restaurar mesmo assim',
     'draft_restored' => 'Suas alterações não salvas foram restauradas.',
     'draft_changed' => 'Isto mudou desde a sua última edição. Suas alterações não salvas não foram restauradas.',
+    'try_again' => 'Tentar novamente',
+    'freshness_updated' => 'Atualizado :when',
+    'freshness_updated_at' => 'Atualizado: :time',
+    'freshness_showing' => 'Mostrando dados de :time',
+    'freshness_offline_empty' => 'Você está offline. Isto será carregado quando você voltar a ficar online.',
+    'freshness_refresh_failed' => 'Não foi possível atualizar.',
+    'freshness_failed_showing' => ':reason Mostrando dados de :time.',
+    'freshness_load_failed' => 'Não foi possível carregar.',
 ];

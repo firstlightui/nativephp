@@ -49,4 +49,12 @@ return [
     'restore_anyway' => '仍然恢复',
     'draft_restored' => '已恢复未保存的更改。',
     'draft_changed' => '自你上次编辑后内容已更改，未保存的更改未恢复。',
+    'try_again' => '重试',
+    'freshness_updated' => ':when更新',
+    'freshness_updated_at' => '更新于 :time',
+    'freshness_showing' => '显示 :time 的数据',
+    'freshness_offline_empty' => '你已离线。恢复联网后将加载此内容。',
+    'freshness_refresh_failed' => '无法刷新。',
+    'freshness_failed_showing' => ':reason 显示 :time 的数据。',
+    'freshness_load_failed' => '无法加载。',
 ];

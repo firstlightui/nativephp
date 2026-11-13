@@ -49,4 +49,12 @@ return [
     'restore_anyway' => 'Restaurer quand même',
     'draft_restored' => 'Vos modifications non enregistrées ont été restaurées.',
     'draft_changed' => 'Ce contenu a changé depuis votre dernière modification. Vos modifications non enregistrées n’ont pas été restaurées.',
+    'try_again' => 'Réessayer',
+    'freshness_updated' => 'Mis à jour :when',
+    'freshness_updated_at' => 'Mis à jour : :time',
+    'freshness_showing' => 'Affichage des données de :time',
+    'freshness_offline_empty' => 'Vous êtes hors ligne. Le contenu se chargera dès que vous serez de nouveau en ligne.',
+    'freshness_refresh_failed' => 'Impossible d’actualiser.',
+    'freshness_failed_showing' => ':reason Affichage des données de :time.',
+    'freshness_load_failed' => 'Impossible de charger ce contenu.',
 ];

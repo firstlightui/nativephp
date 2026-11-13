@@ -56,7 +56,12 @@ The English file is `lang/en/chrome.php`. Keys are `confirm`, `cancel`, `ok`,
 `outdent`, `undo`, `redo`, `toggle_comment`, and the Code Editor symbol names
 `insert_left_brace` through `insert_underscore` (one per key-row symbol), and
 the [kept drafts](kept-drafts.md) Feedback strings `discard`,
-`restore_anyway`, `draft_restored`, and `draft_changed`.
+`restore_anyway`, `draft_restored`, and `draft_changed`, and the
+[data freshness](data-freshness.md) Callout strings `try_again`,
+`freshness_updated`, `freshness_updated_at`, `freshness_showing`,
+`freshness_offline_empty`, `freshness_refresh_failed`,
+`freshness_failed_showing`, and `freshness_load_failed`. Freshness strings
+take `:when`, `:time`, and `:reason` placeholders; translations keep them.
 
 `lang/en/validation.php` holds `summary`, a Laravel pluralised heading
 (`There is :count error.|There are :count errors.`) used by error-summary

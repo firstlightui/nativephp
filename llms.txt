@@ -45,6 +45,7 @@ every control the way they reach the platform's own apps.
 - [Paginate Firstlight lists](https://firstlightui.dev/docs/how-to/paginate-lists): Bind Laravel paginators to List pull-to-refresh and end-reached without a new Firstlight tag.
 - [Destroy Firstlight list items](https://firstlightui.dev/docs/how-to/destroy-list-items): Authorize Confirmation Dialog deletion of List rows by stable keys, then Feedback and list republish.
 - [Keep drafts across navigation](https://firstlightui.dev/docs/how-to/keep-drafts): Keep a screen's unsaved changes when the user goes back, and offer them when the screen reopens.
+- [Show data freshness](https://firstlightui.dev/docs/how-to/show-data-freshness): Tell users how old a screen's data is, that they're seeing cached data while offline, and that a refresh failed, with a Try again action.
 - [Test Firstlight screens](https://firstlightui.dev/docs/how-to/test-screens): Scaffold a screen with make:firstlight-screen and test its fields, lists, dialogs, and Feedback with Native::test().
 - [Localize Firstlight chrome](https://firstlightui.dev/docs/how-to/localize): Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
 

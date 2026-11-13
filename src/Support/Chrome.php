@@ -60,9 +60,18 @@ final class Chrome
         'restore_anyway' => 'Restore anyway',
         'draft_restored' => 'Restored your unsaved changes.',
         'draft_changed' => "This changed since you last edited it. Your unsaved changes weren't restored.",
+        'try_again' => 'Try again',
+        'freshness_updated' => 'Updated :when',
+        'freshness_updated_at' => 'Updated at :time',
+        'freshness_showing' => 'Showing data from :time',
+        'freshness_offline_empty' => "You're offline. This will load when you're back online.",
+        'freshness_refresh_failed' => "Couldn't refresh.",
+        'freshness_failed_showing' => ':reason Showing data from :time.',
+        'freshness_load_failed' => "Couldn't load this.",
     ];
 
-    public static function string(string $key): string
+    /** @param  array<string, string>  $replace  Values for `:name` placeholders. */
+    public static function string(string $key, array $replace = []): string
     {
         if (! array_key_exists($key, self::STRINGS)) {
             throw new InvalidArgumentException("Unknown Firstlight chrome string [{$key}].");
@@ -70,7 +79,7 @@ final class Chrome
 
         $translator = self::translator();
         if ($translator !== null) {
-            $translated = $translator->get('firstlight::chrome.'.$key);
+            $translated = $translator->get('firstlight::chrome.'.$key, $replace);
             if (is_string($translated)
                 && $translated !== ''
                 && $translated !== 'firstlight::chrome.'.$key) {
@@ -78,7 +87,12 @@ final class Chrome
             }
         }
 
-        return self::STRINGS[$key];
+        $pairs = [];
+        foreach ($replace as $name => $value) {
+            $pairs[':'.$name] = $value;
+        }
+
+        return strtr(self::STRINGS[$key], $pairs);
     }
 
     public static function applicationLocale(): ?string

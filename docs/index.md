@@ -57,6 +57,7 @@ recipes run inside.
 - [Paginate lists](how-to/paginate-lists.md) — Bind Laravel paginators to List pull-to-refresh and end-reached.
 - [Destroy list items](how-to/destroy-list-items.md) — Authorize Confirmation Dialog deletion of List rows by stable keys.
 - [Keep drafts across navigation](how-to/keep-drafts.md) — Keep a screen's unsaved changes when the user goes back, and offer them when the screen reopens.
+- [Show data freshness](how-to/show-data-freshness.md) — Tell users how old a screen's data is, that they're seeing cached data while offline, and that a refresh failed, with a Try again action.
 - [Test screens](how-to/test-screens.md) — Scaffold a screen with `make:firstlight-screen` and test fields, lists, dialogs, and Feedback with `Native::test()`.
 - [Localize chrome](how-to/localize.md) — Override Firstlight-owned chrome labels and inherit application locale and timezone for Date and Time pickers.
 
