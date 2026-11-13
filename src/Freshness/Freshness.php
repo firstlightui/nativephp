@@ -126,7 +126,7 @@ final class Freshness
         if ($offline) {
             return $cached
                 ? $this->make(Chrome::string('freshness_showing', ['time' => $this->clockTime($timezone)]), 'warning')
-                : $this->make(Chrome::string('freshness_offline_empty'), 'info');
+                : $this->make(Chrome::string('freshness_offline_empty'), 'neutral');
         }
 
         if ($this->failed) {

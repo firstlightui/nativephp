@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+- The `TracksFreshness` notice for offline with nothing cached, `You're offline. This will load when you're back online.`, uses the neutral tone instead of info. Callout's info tone uses the theme's primary colour, so in an app with a red brand colour it read as an error.
+
 ## 1.1.0-beta6 - 2026-11-13
 
 ### Added

@@ -142,7 +142,7 @@ it('says what time the data is from while offline, ahead of age and failures', f
     expect(freshnessNoticeOf($screen))->toBe(['warning', 'Showing data from Nov 3, 2026 2:05 PM', null]);
 
     $tracker->showing(null);
-    expect(freshnessNoticeOf($screen))->toBe(['info', "You're offline. This will load when you're back online.", null]);
+    expect(freshnessNoticeOf($screen))->toBe(['neutral', "You're offline. This will load when you're back online.", null]);
 });
 
 it('counts the device as online unless the OS says it is offline', function (?array $status, bool $offline) {

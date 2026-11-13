@@ -111,7 +111,7 @@ timezone, as Date Picker and Time Picker do.
 | Fresh | none | | |
 | Stale and online | `Updated 12 minutes ago`, or `Updated at 14:05` after an hour | neutral | none |
 | Offline with cached data | `Showing data from 14:05`, with the date on an earlier day, in the app's locale | warning | none |
-| Offline, nothing cached | `You're offline. This will load when you're back online.` | info | none |
+| Offline, nothing cached | `You're offline. This will load when you're back online.` | neutral | none |
 | Refresh failed with cached data | `Couldn't refresh. Showing data from 14:05.` or the app's reason | warning | `Try again` |
 | Load failed, nothing cached | the app's message, or `Couldn't load this.` | danger | `Try again` |
 | Reconnecting | the old notice stays until the refresh lands | | |

@@ -87,12 +87,16 @@ Rules apply in this order; the first match wins:
 | State | Message | Tone | Action |
 | --- | --- | --- | --- |
 | Offline, data cached | `Showing data from :time` | warning | none |
-| Offline, nothing cached | `You're offline. This will load when you're back online.` | info | none |
+| Offline, nothing cached | `You're offline. This will load when you're back online.` | neutral | none |
 | Failed, data cached | `:reason Showing data from :time.`, with `Couldn't refresh.` as the default reason | warning | `Try again` when a retry was given |
 | Failed, nothing cached | the reason, or `Couldn't load this.` | danger | `Try again` when a retry was given |
 | Stale under an hour | `Updated :when` | neutral | none |
 | Stale an hour or more | `Updated at :time` | neutral | none |
 | Fresh, or nothing cached while online | no notice | | |
+
+The offline notice with nothing cached is neutral, not info: Callout's info
+tone uses the theme's primary colour, which in a red-branded app reads as an
+error.
 
 Offline wins over a failure: while offline, the failure's cause is already
 known and `Try again` cannot succeed. Nothing cached while online and not
