@@ -73,6 +73,15 @@ final class BottomSheetRendererTests: XCTestCase {
     }
 
     func testPinnedFooterKeepsItsIntrinsicHeightAndLeavesTheBodyScrollable() throws {
+        // iOS 26 and later pin the footer with a safe-area bar, earlier iOS
+        // with an inset; both must keep the footer to its own height.
+        try assertPinnedFooterKeepsItsIntrinsicHeight()
+        firstlightSnapshotsDrawWithoutGlass = true
+        defer { firstlightSnapshotsDrawWithoutGlass = false }
+        try assertPinnedFooterKeepsItsIntrinsicHeight()
+    }
+
+    private func assertPinnedFooterKeepsItsIntrinsicHeight() throws {
         // Mobile UI columns accept the whole proposed height, like this footer.
         var footerHeight: CGFloat = 0
         let layout = FirstlightBottomSheetLayout(

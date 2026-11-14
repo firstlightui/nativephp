@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+- A Bottom Sheet's pinned footer needs no background of its own. On iOS 26 and later it is a system safe-area bar, so body content that scrolls under it blurs away, as under Apple's toolbars, instead of showing through behind the footer. Before iOS 26 Firstlight fills it with the theme surface. Footers that paint `bg-theme-surface` still work but show an opaque band across the glass sheet on iOS 26 and later.
+
 ## 1.1.0-beta9 - 2026-11-14
 
 ### Added

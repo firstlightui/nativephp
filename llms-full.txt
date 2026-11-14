@@ -5616,15 +5616,18 @@ Mobile UI column. Do not wrap the body and footer in a single outer child.
             <native:text class="text-theme-on-surface">{{ $item['label'] }}</native:text>
         @endforeach
     </native:column>
-    <native:column class="w-full p-4 gap-3 bg-theme-surface">
+    <native:column class="w-full p-4 gap-3">
         <native:text class="text-theme-on-surface">Total: {{ $formattedTotal }}</native:text>
         <firstlight:button label="Save" @press="saveBill" />
     </native:column>
 </firstlight:bottom-sheet>
 ```
 
-The app supplies the items, formatted total and handlers. Keep the footer
-compact; body content must have space to scroll. PHP owns Save and whether
+The app supplies the items, formatted total and handlers. The footer needs no
+background: on iOS 26 and later the system blurs body content that scrolls
+under it, as under Apple's toolbars, and earlier iOS and Android give it the
+sheet's surface. Keep the footer compact; body content must have space to
+scroll. PHP owns Save and whether
 the sheet closes. Native dismissal and its callback remain unchanged.
 
 ## Platform expression

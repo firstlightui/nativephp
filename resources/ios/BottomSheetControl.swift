@@ -36,7 +36,8 @@ struct FirstlightBottomSheetControl<Content: View, Footer: View>: View {
                     footer: footer,
                     content: content,
                     onContentHeight: { contentHeight = $0 },
-                    onFooterHeight: { footerHeight = $0 }
+                    onFooterHeight: { footerHeight = $0 },
+                    footerSurface: tokens.surface
                 )
                 .presentationDetents([firstlightBottomSheetDetent(contentHeight: contentHeight + footerHeight)])
                 .presentationDragIndicator(.visible)
@@ -47,12 +48,14 @@ struct FirstlightBottomSheetControl<Content: View, Footer: View>: View {
     }
 }
 
-/// The sheet's scrolling body with the optional pinned footer inset below it.
+/// The sheet's scrolling body with the optional pinned footer below it.
 struct FirstlightBottomSheetLayout<Content: View, Footer: View>: View {
     @ViewBuilder let footer: () -> Footer
     @ViewBuilder let content: () -> Content
     var onContentHeight: (CGFloat) -> Void = { _ in }
     var onFooterHeight: (CGFloat) -> Void = { _ in }
+    /// Fills the footer before iOS 26, so body content never shows through.
+    var footerSurface: Color = .clear
 
     var body: some View {
         ScrollView {
@@ -65,9 +68,9 @@ struct FirstlightBottomSheetLayout<Content: View, Footer: View>: View {
         .scrollBounceBehavior(.basedOnSize)
         // Outside the ScrollView, so scrolled content never runs up under the indicator.
         .padding(.top, firstlightBottomSheetTopInset)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .modifier(FirstlightBottomSheetFooterBar(surface: footerSurface) {
             // The Mobile UI column inside the footer accepts the full
-            // proposed height; without this the inset takes the sheet and
+            // proposed height; without this the bar takes the sheet and
             // the body ScrollView is squeezed out of view.
             footer()
                 // The footer floats over the sheet, so its buttons take glass.
@@ -75,6 +78,33 @@ struct FirstlightBottomSheetLayout<Content: View, Footer: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onFooterHeight($0) }
+        })
+    }
+}
+
+/// Pins the footer below the scrolling body. On iOS 26 and later it is a
+/// safe-area bar, so the system's scroll edge effect blurs body content
+/// scrolling under it, as under Apple's own toolbars, and the footer needs
+/// no background. Before 26 it is an inset filled with the theme surface.
+private struct FirstlightBottomSheetFooterBar<Bar: View>: ViewModifier {
+    let surface: Color
+    @ViewBuilder let bar: () -> Bar
+
+    func body(content: Content) -> some View {
+        #if compiler(>=6.2)
+        if firstlightUsesLiquidGlass, #available(iOS 26.0, *) {
+            content.safeAreaBar(edge: .bottom, spacing: 0) { bar() }
+        } else {
+            fallback(content)
+        }
+        #else
+        fallback(content)
+        #endif
+    }
+
+    private func fallback(_ content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            bar().background(surface.ignoresSafeArea(edges: .bottom))
         }
     }
 }

@@ -95,8 +95,10 @@ scaling because it is measured from the rendered content.
   drag handle does on Android; the detent includes the band. Content sits
   below the band in a `ScrollView` that only bounces when it overflows. Swipe
   down and taps on the dimmed background dismiss it.
-  A pinned footer uses a bottom safe-area inset and contributes to the
-  measured content-height detent.
+  A pinned footer contributes to the measured content-height detent. On
+  iOS 26+ it is a bottom `safeAreaBar`, so the system scroll edge effect
+  blurs body content scrolled under it and the footer draws no background;
+  before 26 it is a bottom safe-area inset filled with the theme surface.
 - Android renders a Firstlight Material 3 `ModalBottomSheet` with
   theme-sourced surface and scrim. The sheet is sized to its content and
   skips the partially expanded stop, so content taller than half the screen
