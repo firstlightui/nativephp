@@ -1,6 +1,5 @@
 <?php
 
-use FirstlightUI\AppGuard\Events\Foregrounded;
 use FirstlightUI\Concerns\TracksFreshness;
 use FirstlightUI\Connectivity\ConnectivityManager;
 use FirstlightUI\Connectivity\ConnectivityState;
@@ -14,6 +13,7 @@ use Illuminate\Container\Container;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
 use Native\Mobile\Edge\ElementRegistry;
+use Native\Mobile\Events\App\AppForegrounded;
 use Native\Mobile\Events\Screen\ScreenMounted;
 use Native\Mobile\Events\Screen\ScreenResumed;
 use Native\Mobile\Testing\Native;
@@ -218,7 +218,7 @@ it('reads the OS again on foreground, because changes in the background are not 
     $screen->emitNative(NetworkStatusChanged::class, networkEvent(false))->assertSee('Offline');
 
     // Online again while the app was away; the event for it never arrived.
-    $screen->emitNative(Foregrounded::class, ['secondsAway' => 5, 'shielded' => false])
+    $screen->emitNative(AppForegrounded::class, ['secondsAway' => 5])
         ->assertSee('No status');
 
     expect($screen->get('revalidations'))->toBe(1);
@@ -228,7 +228,7 @@ it('revalidates on foreground only after longer than the shortest freshness wind
     ConnectivityServersScreen::$windows = $windows;
     $screen = connectivityScreen();
 
-    $screen->emitNative(Foregrounded::class, ['secondsAway' => $secondsAway, 'shielded' => false])
+    $screen->emitNative(AppForegrounded::class, ['secondsAway' => $secondsAway])
         ->assertRerendered();
 
     expect($screen->get('revalidations'))->toBe($revalidations);
@@ -248,7 +248,7 @@ it('catches a reconnect that no event reported when the app returns or a screen 
     // Back in the foreground, still offline, then online by the next resume.
     // (Illuminate Foundation is not installed here, so the router's lifecycle
     // events are dispatched by name; the listeners ignore their payload.)
-    $screen->emitNative(Foregrounded::class, ['secondsAway' => 5, 'shielded' => false]);
+    $screen->emitNative(AppForegrounded::class, ['secondsAway' => 5]);
     $screen->bridge()->respondTo('Network.Status', ['connected' => true, 'type' => 'wifi']);
     app('events')->dispatch(ScreenResumed::class);
     expect([$screen->get('revalidations'), $queue->syncs])->toBe([1, 1]);
@@ -265,7 +265,7 @@ it('catches a reconnect that no event reported when the app returns or a screen 
     $screen->bridge()->respondTo('Network.Status', ['connected' => false, 'type' => 'unknown']);
     app('events')->dispatch(ScreenResumed::class);
     $screen->bridge()->respondTo('Network.Status', ['connected' => true, 'type' => 'wifi']);
-    $screen->emitNative(Foregrounded::class, ['secondsAway' => 600, 'shielded' => false]);
+    $screen->emitNative(AppForegrounded::class, ['secondsAway' => 600]);
     expect([$screen->get('revalidations'), $queue->syncs])->toBe([2, 3]);
 });
 

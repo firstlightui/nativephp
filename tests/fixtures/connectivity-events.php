@@ -1,8 +1,15 @@
 <?php
 
 // The events Connectivity listens for, from packages Firstlight does not
-// require: nativephp/mobile-network#4 and firstlightui/app-guard. Core's
-// AppForegrounded (mobile-air#672) is left undefined, as on mobile 4.7.0.
+// require: nativephp/mobile-network#4. Core's
+// AppForegrounded (mobile 4.8) uses Laravel's Dispatchable trait, which only
+// laravel/framework provides, so a stand-in trait is declared here.
+
+namespace Illuminate\Foundation\Events {
+    if (! trait_exists(Dispatchable::class)) {
+        trait Dispatchable {}
+    }
+}
 
 namespace NativePHP\Network\Events {
     use Native\Mobile\Events\Concerns\BroadcastsGlobally;
@@ -16,17 +23,6 @@ namespace NativePHP\Network\Events {
                 public bool $isExpensive = false,
                 public bool $isConstrained = false,
             ) {}
-        }
-    }
-}
-
-namespace FirstlightUI\AppGuard\Events {
-    use Native\Mobile\Events\Concerns\BroadcastsGlobally;
-
-    if (! class_exists(Foregrounded::class)) {
-        final class Foregrounded implements BroadcastsGlobally
-        {
-            public function __construct(public int $secondsAway, public bool $shielded) {}
         }
     }
 }

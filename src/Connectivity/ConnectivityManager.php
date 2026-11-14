@@ -28,9 +28,6 @@ class ConnectivityManager
     /** Core's foreground event (mobile-air#672). */
     public const APP_FOREGROUNDED = 'Native\\Mobile\\Events\\App\\AppForegrounded';
 
-    /** App Guard's foreground event, used while core has none. */
-    public const APP_GUARD_FOREGROUNDED = 'FirstlightUI\\AppGuard\\Events\\Foregrounded';
-
     /** The action key of the "Review" button on the failed-sync Feedback. */
     public const REVIEW_ACTION = 'firstlight-sync-review';
 
@@ -145,12 +142,6 @@ class ConnectivityManager
 
         $events->listen(self::NETWORK_CHANGED, static fn (object $event) => $self()->networkChanged($event));
         $events->listen(self::APP_FOREGROUNDED, static fn (object $event) => $self()->foregrounded($event));
-        $events->listen(self::APP_GUARD_FOREGROUNDED, static function (object $event) use ($self): void {
-            // Core sends its own event as well once it has one; react once.
-            if (! class_exists(self::APP_FOREGROUNDED)) {
-                $self()->foregrounded($event);
-            }
-        });
         $events->listen(ScreenMounted::class, static fn () => $self()->screenShown(resumed: false));
         $events->listen(ScreenResumed::class, static fn () => $self()->screenShown(resumed: true));
     }

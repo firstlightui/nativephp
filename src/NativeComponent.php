@@ -10,6 +10,7 @@ use FirstlightUI\Concerns\ValidatesFields;
 use Native\Mobile\Edge\Element;
 use Native\Mobile\Edge\NativeComponent as EdgeNativeComponent;
 use Native\Mobile\Edge\NativeElementCollector;
+use Native\Mobile\Edge\Transition;
 
 class NativeComponent extends EdgeNativeComponent
 {
@@ -24,8 +25,6 @@ class NativeComponent extends EdgeNativeComponent
     private static int $responseRevision = 0;
 
     private bool $leavingScreen = false;
-
-    private bool $publishingFinalState = false;
 
     /**
      * True when nothing is below this screen on PHP's navigation stack.
@@ -53,12 +52,12 @@ class NativeComponent extends EdgeNativeComponent
      * drops it: a changed frame reaching iOS mid-pop re-pushes the screen the
      * user just left (a second back transition over a blank page).
      */
-    public function back(): static
+    public function back(Transition|string|null $transition = null): static
     {
         $this->leavingScreen = true;
 
         try {
-            return parent::back();
+            return parent::back($transition);
         } finally {
             $this->leavingScreen = false;
         }
@@ -66,39 +65,10 @@ class NativeComponent extends EdgeNativeComponent
 
     protected function wrapWithChrome(Element $content): Element
     {
-        $root = parent::wrapWithChrome($content)->setProp(
+        return parent::wrapWithChrome($content)->setProp(
             'firstlight_response_revision',
             $this->leavingScreen ? self::$responseRevision : ++self::$responseRevision,
         );
-
-        if ($this->publishingFinalState) {
-            return $this->closeFirstlightOverlays($root);
-        }
-
-        return $root;
-    }
-
-    protected function publishFinalState(): void
-    {
-        $this->publishingFinalState = true;
-
-        try {
-            parent::publishFinalState();
-        } finally {
-            $this->publishingFinalState = false;
-        }
-    }
-
-    /** Close only the farewell copy: a screen may retain its Element tree on the navigation stack. */
-    private function closeFirstlightOverlays(Element $element): Element
-    {
-        $element = clone $element;
-
-        if ($element instanceof Elements\BottomSheet || $element instanceof Elements\Modal) {
-            $element->visible(false);
-        }
-
-        return $element->setChildren(array_map($this->closeFirstlightOverlays(...), $element->getChildren()));
     }
 
     /** Streaming bypasses the revision-bearing Element response. */

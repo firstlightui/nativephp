@@ -55,10 +55,8 @@ device token in secure storage. Return a redirect to refuse the screen. A
 redirect to a native route replaces the refused screen with that one; a
 redirect to any other URL leaves the native screens for the web view.
 
-Return the redirect yourself rather than relying on Laravel's `auth`
-middleware. With NativePHP Mobile 4.7.0, `auth` refusing a guest during
-in-app navigation sends the user to the app's `start_url` instead of the
-`login` route.
+Laravel's `auth` middleware also works: from NativePHP Mobile 4.8, a guest it
+refuses goes to your `login` route.
 
 ## 2. Register the routes
 

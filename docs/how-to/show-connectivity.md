@@ -58,9 +58,7 @@ public function navBar(NativeComponent $screen): ?NavBar
 ```
 
 `statusLine()` returns null when there's nothing to say, which leaves no
-subtitle. On iOS, NativePHP Mobile 4.7 doesn't draw the subtitle on a tab
-root yet; [mobile-air#673](https://github.com/NativePHP/mobile-air/pull/673)
-fixes it.
+subtitle.
 
 Anywhere else, `Connectivity::isOffline()` is true only when the OS says the
 device is offline.
@@ -85,10 +83,8 @@ The screen [Show data freshness](show-data-freshness.md) builds needs only
 this method. Data loaded a few seconds ago is still fresh, so returning from
 the camera, which counts as leaving the app on Android, costs nothing.
 
-Firstlight hears the app return from NativePHP's `AppForegrounded` event, or
-from App Guard's `Foregrounded` on NativePHP Mobile versions without it.
-Without either, it still notices a reconnect when a screen opens or is shown
-again after Back.
+Firstlight hears the app return from NativePHP's `AppForegrounded` event. It
+also notices a reconnect when a screen opens or is shown again after Back.
 
 ## Show your write queue
 

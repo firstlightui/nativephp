@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Requires `nativephp/mobile` `^4.8`. Mobile 4.8 closes Firstlight's Bottom Sheets and Modals when a screen navigates away, which Firstlight did itself before, and Connectivity now hears only core's `AppForegrounded`, not App Guard's `Foregrounded`.
+- `FirstlightUI\NativeComponent::back()` takes Mobile 4.8's optional `$transition`.
 - A Bottom Sheet's pinned footer needs no background of its own. On iOS 26 and later it is a system safe-area bar, so body content that scrolls under it blurs away, as under Apple's toolbars, instead of showing through behind the footer. Before iOS 26 Firstlight fills it with the theme surface. Footers that paint `bg-theme-surface` still work but show an opaque band across the glass sheet on iOS 26 and later.
 
 ## 1.1.0-beta9 - 2026-11-14

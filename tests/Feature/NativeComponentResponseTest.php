@@ -155,6 +155,9 @@ beforeEach(function () {
     ComponentRegistry::reset();
     ElementRegistry::reset();
     ElementRegistry::register('response_switch', SwitchControl::class);
+    // NativePHP registers every nativephp.json component like this at boot.
+    ElementRegistry::register('firstlight.bottom-sheet', \FirstlightUI\Elements\BottomSheet::class);
+    ElementRegistry::register('firstlight.modal', \FirstlightUI\Elements\Modal::class);
 });
 
 afterEach(function () {
@@ -218,7 +221,7 @@ it('leaves detached partials unstamped', function () {
         ->and($fragment['children'][0]['props']['value'])->toBeFalse();
 });
 
-it('closes Firstlight overlays in the farewell frame without changing the model or retained tree', function (string $action) {
+it('lets NativePHP close Firstlight overlays in the farewell frame without changing the model or retained tree', function (string $action) {
     $screen = Native::test(ResponseOverlayScreen::class);
     $initial = $screen->tree();
 

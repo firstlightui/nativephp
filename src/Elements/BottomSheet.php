@@ -10,6 +10,12 @@ class BottomSheet extends \Native\Mobile\UI\Elements\BottomSheet
 {
     protected string $type = 'firstlight.bottom-sheet';
 
+    /** NativePHP closes it in a screen's last frame, so an open sheet never covers the next screen. */
+    public static function closesOnNavigation(): bool
+    {
+        return true;
+    }
+
     /** @var list<string> */
     private const UNSUPPORTED_ATTRIBUTES = [
         'value',

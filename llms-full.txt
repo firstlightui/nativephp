@@ -1554,7 +1554,7 @@ Jetpack Compose controls.
 
 Start with a NativePHP Mobile 4 application that meets the [current compatibility requirements](../reference/compatibility.md).
 
-Use NativePHP Mobile `^4.7.0` and Mobile UI `^0.9.0`, with iOS 18.2+ or
+Use NativePHP Mobile `^4.8.0` and Mobile UI `^0.9.0`, with iOS 18.2+ or
 Android API 29+. Firstlight screens must
 extend `FirstlightUI\NativeComponent` for the
 [response-revision contract](../reference/compatibility.md#runtime-response-contract).
@@ -2048,10 +2048,8 @@ device token in secure storage. Return a redirect to refuse the screen. A
 redirect to a native route replaces the refused screen with that one; a
 redirect to any other URL leaves the native screens for the web view.
 
-Return the redirect yourself rather than relying on Laravel's `auth`
-middleware. With NativePHP Mobile 4.7.0, `auth` refusing a guest during
-in-app navigation sends the user to the app's `start_url` instead of the
-`login` route.
+Laravel's `auth` middleware also works: from NativePHP Mobile 4.8, a guest it
+refuses goes to your `login` route.
 
 ## 2. Register the routes
 
@@ -3238,9 +3236,7 @@ public function navBar(NativeComponent $screen): ?NavBar
 ```
 
 `statusLine()` returns null when there's nothing to say, which leaves no
-subtitle. On iOS, NativePHP Mobile 4.7 doesn't draw the subtitle on a tab
-root yet; [mobile-air#673](https://github.com/NativePHP/mobile-air/pull/673)
-fixes it.
+subtitle.
 
 Anywhere else, `Connectivity::isOffline()` is true only when the OS says the
 device is offline.
@@ -3265,10 +3261,8 @@ The screen [Show data freshness](show-data-freshness.md) builds needs only
 this method. Data loaded a few seconds ago is still fresh, so returning from
 the camera, which counts as leaving the app on Android, costs nothing.
 
-Firstlight hears the app return from NativePHP's `AppForegrounded` event, or
-from App Guard's `Foregrounded` on NativePHP Mobile versions without it.
-Without either, it still notices a reconnect when a screen opens or is shown
-again after Back.
+Firstlight hears the app return from NativePHP's `AppForegrounded` event. It
+also notices a reconnect when a screen opens or is shown again after Back.
 
 ## Show your write queue
 
@@ -4717,7 +4711,7 @@ Both platforms own one visible item and the same FIFO/event contract. Native exp
 
 ## Compatibility
 
-Transient Feedback supports the package versions and platform floors in the current [compatibility reference](../reference/compatibility.md): PHP 8.4, NativePHP Mobile 4.7, NativePHP Mobile UI 0.9, iOS 18.2 or later, and Android API 29 or later. Both Firstlight native hosts must be compiled into the application.
+Transient Feedback supports the package versions and platform floors in the current [compatibility reference](../reference/compatibility.md): PHP 8.4, NativePHP Mobile 4.8, NativePHP Mobile UI 0.9, iOS 18.2 or later, and Android API 29 or later. Both Firstlight native hosts must be compiled into the application.
 
 ## Screenshots
 
@@ -8481,7 +8475,7 @@ The command is registered only when the application runs in the console.
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.7.0` |
+| NativePHP Mobile | `^4.8.0` |
 | NativePHP Mobile UI | `^0.9.0` |
 | iOS application target | iOS 18.2 or later |
 | Android application target | API 29 or later |
@@ -8497,6 +8491,11 @@ Firstlight uses, and compiles Media's `@clear` from the manifest's
 `element_events`; Mobile UI 0.9 requires Mobile 4.7. `ValidatesFields` extends
 upstream `ValidatesInput`, and native and Firstlight fields share the current
 `FieldErrors` bag. Existing Firstlight screen code does not need a trait swap.
+
+Mobile 4.8 supplies the `AppForegrounded` event Connectivity listens for, and
+closes every open Bottom Sheet and Modal in a screen's last frame when it
+navigates away, including Firstlight's, which opt in through
+`closesOnNavigation()`.
 
 ## Runtime response contract
 

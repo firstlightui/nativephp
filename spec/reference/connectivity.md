@@ -117,10 +117,8 @@ when that screen uses `TracksFreshness`:
    nothing does not revalidate. A foreground return that is also a reconnect
    revalidates once.
 
-The foreground events are core's `Native\Mobile\Events\App\AppForegrounded`
-(mobile-air#672) and, while that class does not exist,
-`FirstlightUI\AppGuard\Events\Foregrounded` from App Guard. Without either,
-only reconnects and resumes are noticed. On Android, returning from the system
+The foreground event is core's `Native\Mobile\Events\App\AppForegrounded`
+(mobile-air#672, NativePHP Mobile 4.8). On Android, returning from the system
 camera or a Custom Tab counts as a foreground return.
 
 Firstlight registers Laravel listeners for these events by class name in

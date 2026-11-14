@@ -19,7 +19,7 @@ sources:
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
-| NativePHP Mobile | `^4.7.0` |
+| NativePHP Mobile | `^4.8.0` |
 | NativePHP Mobile UI | `^0.9.0` |
 | iOS application target | iOS 18.2 or later |
 | Android application target | API 29 or later |
@@ -35,6 +35,11 @@ Firstlight uses, and compiles Media's `@clear` from the manifest's
 `element_events`; Mobile UI 0.9 requires Mobile 4.7. `ValidatesFields` extends
 upstream `ValidatesInput`, and native and Firstlight fields share the current
 `FieldErrors` bag. Existing Firstlight screen code does not need a trait swap.
+
+Mobile 4.8 supplies the `AppForegrounded` event Connectivity listens for, and
+closes every open Bottom Sheet and Modal in a screen's last frame when it
+navigates away, including Firstlight's, which opt in through
+`closesOnNavigation()`.
 
 ## Runtime response contract
 

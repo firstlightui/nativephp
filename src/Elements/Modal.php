@@ -10,6 +10,12 @@ class Modal extends \Native\Mobile\UI\Elements\Modal
 {
     protected string $type = 'firstlight.modal';
 
+    /** NativePHP closes it in a screen's last frame, so an open modal never covers the next screen. */
+    public static function closesOnNavigation(): bool
+    {
+        return true;
+    }
+
     /** @var list<string> */
     private const UNSUPPORTED_ATTRIBUTES = [
         'value',
