@@ -125,7 +125,8 @@ dark mode, increased contrast, and right-to-left layout.
 ## Platform behaviour
 
 iOS presents a genuine graphical SwiftUI `DatePicker` restricted to calendar
-dates, with explicit Cancel and Confirm actions. On iPhone it opens in a sheet
+dates, with explicit Cancel and Confirm actions, which are Liquid Glass buttons
+on iOS 26 and later. On iPhone it opens in a sheet
 sized to the calendar and actions, which grows with Dynamic Type; on iPad it
 opens in a popover anchored to the field. Android presents the Material 3 `DatePickerDialog` from a
 read-only Material field. Android maps Material's selected UTC-midnight cell

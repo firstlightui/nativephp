@@ -55,6 +55,7 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
 | `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
+| `glass` | `regular` or `prominent` | On iOS 26 and later, draws the button in Liquid Glass: `regular` is clear glass with a system label colour that stays legible over light or dark content, and `prominent` is glass filled with the variant's colour. For actions that float over content, such as over a photo or map. Earlier iOS and Android keep the variant's usual look. |
 | `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
@@ -76,7 +77,7 @@ Button plays no haptic unless it sets `haptic`. A `haptic` plays on the device w
 
 Disabled and loading buttons do not emit. Loading replaces the ordinary content with native progress presentation while retaining the action's accessible context.
 
-A missing, `null`, empty, or whitespace-only label throws an `InvalidArgumentException`. `disabled` and `loading` require real booleans. Unsupported variants or sizes also throw. Attached menus, custom typography, Liquid Glass classes, navigation directives, field props or bindings, long press, double tap, press-down, and press-up callbacks are outside this component's contract and fail rather than silently widening the API.
+A missing, `null`, empty, or whitespace-only label throws an `InvalidArgumentException`. `disabled` and `loading` require real booleans. Unsupported variants or sizes also throw. Attached menus, custom typography, the Mobile UI `glass` class (use the `glass` prop), unknown `glass` styles, navigation directives, field props or bindings, long press, double tap, press-down, and press-up callbacks are outside this component's contract and fail rather than silently widening the API.
 
 ## Accessibility
 
@@ -85,6 +86,8 @@ The visible text is the accessible name by default. `a11y-label` replaces it, an
 ## Platform behaviour
 
 iOS uses the official Mobile UI SwiftUI `Button` renderer for every variant except `ghost`, with native button styles, control sizes, progress presentation, icon layout, VoiceOver metadata, and semantic theme tokens. On iOS, `ghost` uses a Firstlight renderer: the same plain, tinted SwiftUI `Button`, with at least a 44-point touch target. Mobile UI's plain ghost button only responds to taps on its text. Android uses the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer, wrapped by Firstlight so TalkBack reaches one named Button node, with native state layers, progress presentation, icon layout, TalkBack metadata, and semantic theme tokens.
+
+On iOS 26 and later, buttons in a Bottom Sheet footer take Liquid Glass without `glass`: `secondary` and `ghost` as regular glass, the others as prominent glass. Elsewhere a button is only glass when it sets `glass`, because Apple keeps Liquid Glass for controls that float over content.
 
 The shared variants express the same intent without forcing pixel parity. `destructive` is currently a semantic visual variant; Firstlight does not expose an Apple-only action-role prop.
 

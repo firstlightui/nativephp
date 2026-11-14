@@ -84,6 +84,9 @@ final class DatePickerSnapshotTests: XCTestCase {
     }
 
     func testPresentedPickerIsSizedToItsContentOnIPhone() {
+        // Off-screen snapshots cannot draw Liquid Glass; see firstlightSnapshotsDrawWithoutGlass.
+        firstlightSnapshotsDrawWithoutGlass = true
+        defer { firstlightSnapshotsDrawWithoutGlass = false }
         var heights: [String: CGFloat] = [:]
         for (name, scheme, size) in [
             ("light", ColorScheme.light, DynamicTypeSize.large),

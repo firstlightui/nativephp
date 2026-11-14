@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Button and Icon Button take `glass="regular"` or `glass="prominent"`, which draws them in Liquid Glass on iOS 26 and later. Prominent glass is filled with the variant's colour; regular glass keeps a system label colour, so it stays legible over light or dark content. Use it for actions that float over content. Earlier iOS and Android keep the variant's usual look. The Mobile UI `glass` class stays unsupported.
+
+### Changed
+
+- On iOS 26 and later, Firstlight's floating surfaces use Liquid Glass, as Apple's own do: Bottom Sheet is the system glass sheet instead of an opaque surface, and Buttons and Icon Buttons in its footer take glass; Transient Feedback is a glass notice with glass buttons, tinted for a warning; and the Date Picker, Time Picker and Media crop sheet actions are glass buttons. Segmented and Tabs show the system's selected segment, which becomes a glass lens while dragged, instead of a primary-coloured fill. Earlier iOS and Android are unchanged. Reduce Transparency and Increase Contrast apply automatically.
+
 ## 1.1.0-beta8 - 2026-11-13
 
 ### Added

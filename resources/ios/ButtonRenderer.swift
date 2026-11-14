@@ -8,14 +8,20 @@ struct FirstlightButtonRenderer: View {
 
     @ObservedObject private var themeStore = NativeUITheme.shared
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.firstlightFloatingGlass) private var floatingGlass
 
     var body: some View {
         let labelNode = firstlightButtonLabelNode(node)
-        if node.props.getString("variant") == "ghost" {
+        let variant = node.props.getString("variant", default: "primary")
+        let glass = firstlightUsesLiquidGlass
+            ? FirstlightGlassStyle(node: node) ?? (floatingGlass ? FirstlightGlassStyle(floatingVariant: variant) : nil)
+            : nil
+        if variant == "ghost" {
             let configuration = ButtonGhostConfiguration(node: labelNode)
             FirstlightGhostButtonControl(
                 configuration: configuration,
                 tokens: themeStore.resolve(for: colorScheme),
+                glass: glass,
                 onPress: {
                     guard configuration.isEnabled, configuration.callbackID != 0 else { return }
                     // Firstlight draws ghost buttons, so the haptic plays with the action.
@@ -31,7 +37,8 @@ struct FirstlightButtonRenderer: View {
             )
         } else {
             // Mobile UI draws the other variants; the haptic rides alongside its tap.
-            NativeUIButtonRenderer(node: labelNode)
+            NativeUIButtonRenderer(node: firstlightGlassNode(labelNode, style: glass))
+                .modifier(FirstlightRegularGlassLabel(active: glass == .regular))
                 .firstlightPressHaptic(node, enabled: !node.props.getBool("disabled") && !node.props.getBool("loading"))
         }
     }
@@ -61,4 +68,45 @@ func firstlightButtonLabelNode(_ node: NativeUINode) -> NativeUINode {
         children: node.children,
         variants: node.variants
     )
+}
+
+/// Mobile UI draws `.glass` or `.glassProminent` from its `glass` flags (bit 0
+/// on, bit 1 prominent). Firstlight publishes a named style instead and sets
+/// the flags only on this private copy, and only where glass draws, so earlier
+/// iOS keeps the variant's look and the host never adds a second glass layer.
+func firstlightGlassNode(_ node: NativeUINode, style: FirstlightGlassStyle?) -> NativeUINode {
+    guard let style else { return node }
+
+    var props = node.props.rawMap
+    props["glass"] = style == .prominent ? 3 : 1
+
+    return NativeUINode(
+        id: node.id,
+        type: node.type,
+        layout: node.layout,
+        style: node.style,
+        props: GenericProps(props),
+        onPress: node.onPress,
+        onLongPress: node.onLongPress,
+        children: node.children,
+        variants: node.variants
+    )
+}
+
+/// Regular glass takes its light or dark look from what is behind it, so a
+/// theme colour chosen for the screen's appearance can vanish on it: a dark
+/// mode token is light, and so is glass over bright content. The label uses
+/// the system's primary style, which the glass keeps legible, and colour
+/// stays with prominent glass. Mobile UI tints the regular glass label with
+/// the variant, which this outer style replaces.
+struct FirstlightRegularGlassLabel: ViewModifier {
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        if active {
+            content.foregroundStyle(.primary)
+        } else {
+            content
+        }
+    }
 }

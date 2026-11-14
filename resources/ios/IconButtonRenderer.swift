@@ -16,6 +16,7 @@ struct IconButtonRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let accessibilityHint: String
     let callbackID: Int
+    let glass: FirstlightGlassStyle?
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -32,6 +33,7 @@ struct IconButtonRendererConfiguration: Equatable {
         accessibilityLabel = node.props.getString("a11y_label")
         accessibilityHint = node.props.getString("a11y_hint")
         callbackID = node.onPress
+        glass = FirstlightGlassStyle(node: node)
     }
 
     var isEnabled: Bool {
@@ -71,6 +73,7 @@ struct IconButtonRenderer: View {
 
     @ObservedObject private var themeStore = NativeUITheme.shared
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.firstlightFloatingGlass) private var floatingGlass
     @State private var state: IconButtonRendererState
 
     init(node: NativeUINode) {
@@ -84,6 +87,10 @@ struct IconButtonRenderer: View {
         FirstlightIconButtonControl(
             configuration: configuration,
             tokens: themeStore.resolve(for: colorScheme),
+            glass: firstlightUsesLiquidGlass
+                ? configuration.glass
+                    ?? (floatingGlass ? FirstlightGlassStyle(floatingVariant: configuration.variant.rawValue) : nil)
+                : nil,
             onPress: {
                 guard case let .press(callbackID, nodeID) = configuration.pressEvent() else {
                     return

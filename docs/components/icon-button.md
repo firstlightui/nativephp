@@ -55,6 +55,7 @@ Icon Button is self-closing and has no visible text slot. Use
 | `size` | `sm`, `md`, or `lg` | Native glyph and container size. Defaults to `md`; the touch target remains at least 44 points or 48 dp. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |
+| `glass` | `regular` or `prominent` | On iOS 26 and later, draws the button in Liquid Glass: `regular` is clear glass with a system icon colour that stays legible over light or dark content, and `prominent` is glass filled with the variant's colour. For actions that float over content, such as over a photo or map. Earlier iOS and Android keep the variant's usual look. |
 | `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
@@ -88,6 +89,10 @@ Android uses `FilledIconButton`, `FilledTonalIconButton`, or `IconButton`
 according to intent. `sm`, `md`, and `lg` scale the visible glyph and native
 container without shrinking the accessible interaction target.
 
+On iOS 26 and later, `glass` switches to the system `.glass` or
+`.glassProminent` style, and Icon Buttons in a Bottom Sheet footer take glass
+without it. Reduce Transparency and Increase Contrast apply automatically.
+
 ## Loading and disabled behaviour
 
 `loading` keeps the explicit accessible name, substitutes a native progress
@@ -108,7 +113,8 @@ targets of at least 44 points on iOS and 48 dp on Android.
 Firstlight rejects missing or blank icons, missing or blank accessibility
 labels, missing `@press`, non-boolean state props, invalid variants and sizes,
 unsupported platform icon values, visible labels or slots, trailing icons,
-menus, navigation directives, extra gesture callbacks, bindings, field props,
+menus, the Mobile UI `glass` class (use the `glass` prop) and unknown `glass`
+styles, navigation directives, extra gesture callbacks, bindings, field props,
 and per-control colour or typography escape hatches.
 
 ## Compatibility

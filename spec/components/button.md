@@ -50,12 +50,13 @@ Firstlight includes Button because consumers reasonably expect a coherent UI lib
 | `loading` | Replaces ordinary content with native progress presentation and prevents presses. Defaults to `false`. |
 | `icon` | Optional leading cross-platform icon name. |
 | `icon-trailing` | Optional trailing cross-platform icon name. |
+| `glass` | Optional `regular` or `prominent`. Liquid Glass on iOS 26+ (`.glass` / `.glassProminent`); no effect on earlier iOS or Android. Published as `glass_style`. |
 | `a11y-label` | Optional screen-reader replacement for the visible label. |
 | `a11y-hint` | Optional supplementary screen-reader context. |
 | `@press` | Emits the action through NativePHP's official press callback seam. |
 | `class` | External EDGE layout only. |
 
-Icon-only actions are excluded and belong to Icon Button. Attached menus, custom font and line-height props, Liquid Glass classes, navigation directives, field props or bindings, long press, double tap, press-down, and press-up callbacks are not part of the Firstlight Button contract.
+Icon-only actions are excluded and belong to Icon Button. Attached menus, custom font and line-height props, the Mobile UI `glass` class, navigation directives, field props or bindings, long press, double tap, press-down, and press-up callbacks are not part of the Firstlight Button contract.
 
 ## State and failure behaviour
 
@@ -70,6 +71,7 @@ The visible label is the default accessible name. `a11y-label` replaces it and `
 ## Platform expression
 
 - iOS delegates to the official Mobile UI SwiftUI `Button` renderer with native control sizing, button styles, disabled behaviour, progress presentation, icons, VoiceOver metadata, and semantic theme tokens.
+- On iOS 26+, a `glass` style, or a Bottom Sheet footer, sets Mobile UI's `glass` flags on the renderer's private copy of the node, so the official renderer draws `.glass` or `.glassProminent`. `ghost` with glass uses the same system styles in the Firstlight renderer. Regular glass labels use the system's primary style rather than the variant colour, so they stay legible over light or dark content.
 - Android delegates to the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer with native state layers, disabled behaviour, progress presentation, icons, TalkBack metadata, and semantic theme tokens.
 
 `destructive` currently expresses visual and product intent through the shared semantic variant. The adapter does not add a separate Apple-only `ButtonRole` prop.

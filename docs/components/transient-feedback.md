@@ -253,7 +253,7 @@ Disabled, loading, model binding, rich content, multiple actions, icons, per-pla
 
 ## Platform behaviour
 
-iOS presents a bottom SwiftUI material notice with semantic SF Symbols, native buttons, safe-area spacing, Dynamic Type, and a reduced-motion-aware transition. Android presents a bottom Material 3 `Snackbar` with semantic tone treatment, navigation-bar and IME padding, responsive action layout, and TalkBack live-region behaviour.
+iOS presents a bottom SwiftUI notice with semantic SF Symbols, native buttons, safe-area spacing, Dynamic Type, and a reduced-motion-aware transition. On iOS 26 and later the notice and its buttons are Liquid Glass, tinted for a warning; before iOS 26 the notice is a material card. Android presents a bottom Material 3 `Snackbar` with semantic tone treatment, navigation-bar and IME padding, responsive action layout, and TalkBack live-region behaviour.
 
 Both platforms own one visible item and the same FIFO/event contract. Native expression differs by platform; Firstlight guarantees behavioural parity rather than identical geometry. Held and actionable items expose a dismiss control whose visible and accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md).
 

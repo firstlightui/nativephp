@@ -108,8 +108,10 @@ iOS uses a SwiftUI `.sheet` with a drag indicator and a height detent
 measured from the content. Android uses Material 3 `ModalBottomSheet` sized to
 its content without the half-height stop. Both keep a band for the drag
 indicator above your content, so a sheet's top padding starts below the
-indicator, as its side padding starts at the sheet edge. Theme tokens own
-surface and scrim colour.
+indicator, as its side padding starts at the sheet edge. On iOS 26 and later
+the sheet is the system's Liquid Glass, which turns opaque at full height, and
+Buttons and Icon Buttons in its footer take glass. Before iOS 26 and on Android,
+theme tokens own surface and scrim colour.
 
 iOS places the footer in a bottom safe-area inset. Android keeps it below the
 bounded scrolling body. Both retain their native sheet chrome and insets.

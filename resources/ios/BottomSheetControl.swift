@@ -40,7 +40,7 @@ struct FirstlightBottomSheetControl<Content: View, Footer: View>: View {
                 )
                 .presentationDetents([firstlightBottomSheetDetent(contentHeight: contentHeight + footerHeight)])
                 .presentationDragIndicator(.visible)
-                .presentationBackground(tokens.surface)
+                .modifier(FirstlightBottomSheetBackground(surface: tokens.surface))
                 .accessibilityElement(children: .contain)
                 .modifier(BottomSheetAccessibilityLabel(label: accessibilityLabel))
             }
@@ -70,9 +70,25 @@ struct FirstlightBottomSheetLayout<Content: View, Footer: View>: View {
             // proposed height; without this the inset takes the sheet and
             // the body ScrollView is squeezed out of view.
             footer()
+                // The footer floats over the sheet, so its buttons take glass.
+                .environment(\.firstlightFloatingGlass, true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onFooterHeight($0) }
+        }
+    }
+}
+
+/// The system's Liquid Glass sheet on iOS 26 and later, which turns opaque at
+/// full height; the theme surface before.
+private struct FirstlightBottomSheetBackground: ViewModifier {
+    let surface: Color
+
+    func body(content: Content) -> some View {
+        if firstlightUsesLiquidGlass {
+            content
+        } else {
+            content.presentationBackground(surface)
         }
     }
 }

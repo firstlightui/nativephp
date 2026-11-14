@@ -137,7 +137,6 @@ it('rejects Mobile UI escape hatches outside the Firstlight contract', function 
     ['line-height', 1.2],
     ['line-height-px', 24],
     ['menu', []],
-    ['glass', 1],
     ['_longPress', 'showOptions'],
     ['_doubleTap', 'saveTwice'],
     ['_pressDown', 'pressed'],
@@ -151,6 +150,25 @@ it('rejects Mobile UI escape hatches outside the Firstlight contract', function 
     ['error', 'Unable to save'],
     ['required', true],
 ])->throws(InvalidArgumentException::class, 'does not support');
+
+it('publishes the named glass style for iOS 26 Liquid Glass', function (string $style) {
+    expect(collectButton([
+        'label' => 'Save',
+        'glass' => $style,
+    ])['props']['glass_style'])->toBe($style);
+})->with(['regular', 'prominent']);
+
+it('publishes no glass style unless one is named', function () {
+    expect(collectButton(['label' => 'Save'])['props'])->not->toHaveKey('glass_style');
+});
+
+it('refuses the glass class and unknown glass styles', function (mixed $value, string $message) {
+    expect(fn () => collectButton(['label' => 'Save', 'glass' => $value]))
+        ->toThrow(InvalidArgumentException::class, $message);
+})->with([
+    'class utility flags' => [1, 'the `glass` class is not supported'],
+    'unknown style' => ['clear', 'Unsupported glass [clear]'],
+]);
 
 it('requires real booleans for disabled and loading state', function (string $attribute, mixed $value) {
     collectButton([

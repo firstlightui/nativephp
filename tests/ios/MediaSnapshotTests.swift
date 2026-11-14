@@ -253,6 +253,9 @@ final class MediaSnapshotTests: XCTestCase {
     }
 
     func testCropSheetExposesZoomAndActionControls() {
+        // Off-screen snapshots cannot draw Liquid Glass; see firstlightSnapshotsDrawWithoutGlass.
+        firstlightSnapshotsDrawWithoutGlass = true
+        defer { firstlightSnapshotsDrawWithoutGlass = false }
         let view = FirstlightMediaCropSheet(
             image: UIImage(),
             policy: .optionalFreeform,

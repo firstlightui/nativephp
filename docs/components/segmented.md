@@ -132,6 +132,8 @@ option.
 
 iOS uses a native SwiftUI field backed by `UISegmentedControl`. Android uses Material 3 `SingleChoiceSegmentedButtonRow` and `SegmentedButton`. The controls share behaviour and authored API while retaining platform-native styling, layout, and interaction.
 
+On iOS 26 and later the selected segment is the system's Liquid Glass thumb, which turns into a glass lens while it is dragged. Before iOS 26 it is filled with the theme's primary colour, with `on-primary` text or black or white when that contrast is too low.
+
 On iOS, `UISegmentedControl` plays its own selection haptic. On Android, Segmented plays `selection` when the user picks another segment. `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility

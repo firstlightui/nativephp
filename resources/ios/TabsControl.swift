@@ -155,7 +155,8 @@ struct FirstlightTabsSegmentedControl: UIViewRepresentable {
         }
 
         control.isEnabled = !disabled && !titles.isEmpty
-        control.selectedSegmentTintColor = tokens.tintColor
+        // The system thumb on Liquid Glass, as Segmented draws it.
+        control.selectedSegmentTintColor = firstlightUsesLiquidGlass ? nil : tokens.tintColor
 
         let titleFont = FirstlightSegmentedControl.titleFont(compatibleWith: control.traitCollection)
         control.setTitleTextAttributes(
@@ -163,7 +164,10 @@ struct FirstlightTabsSegmentedControl: UIViewRepresentable {
             for: .normal
         )
         control.setTitleTextAttributes(
-            [.font: titleFont, .foregroundColor: tokens.selectedTextColor],
+            [
+                .font: titleFont,
+                .foregroundColor: firstlightUsesLiquidGlass ? tokens.unselectedTextColor : tokens.selectedTextColor,
+            ],
             for: .selected
         )
         control.setTitleTextAttributes(

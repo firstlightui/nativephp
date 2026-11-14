@@ -4353,6 +4353,7 @@ The same authored tag works on iOS and Android. A self-closing form with a `labe
 | `icon-ios`, `icon-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the leading icon. |
 | `icon-trailing` | `string` | Optional trailing cross-platform icon name. |
 | `icon-trailing-ios`, `icon-trailing-android` | `IosSymbol`, `AndroidSymbol`, or `string` | Optional per-platform override for the trailing icon. |
+| `glass` | `regular` or `prominent` | On iOS 26 and later, draws the button in Liquid Glass: `regular` is clear glass with a system label colour that stays legible over light or dark content, and `prominent` is glass filled with the variant's colour. For actions that float over content, such as over a photo or map. Earlier iOS and Android keep the variant's usual look. |
 | `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `a11y-label` | `string` | Replaces the visible text as the accessible name. |
 | `a11y-hint` | `string` | Adds supplementary VoiceOver or TalkBack context. |
@@ -4374,7 +4375,7 @@ Button plays no haptic unless it sets `haptic`. A `haptic` plays on the device w
 
 Disabled and loading buttons do not emit. Loading replaces the ordinary content with native progress presentation while retaining the action's accessible context.
 
-A missing, `null`, empty, or whitespace-only label throws an `InvalidArgumentException`. `disabled` and `loading` require real booleans. Unsupported variants or sizes also throw. Attached menus, custom typography, Liquid Glass classes, navigation directives, field props or bindings, long press, double tap, press-down, and press-up callbacks are outside this component's contract and fail rather than silently widening the API.
+A missing, `null`, empty, or whitespace-only label throws an `InvalidArgumentException`. `disabled` and `loading` require real booleans. Unsupported variants or sizes also throw. Attached menus, custom typography, the Mobile UI `glass` class (use the `glass` prop), unknown `glass` styles, navigation directives, field props or bindings, long press, double tap, press-down, and press-up callbacks are outside this component's contract and fail rather than silently widening the API.
 
 ## Accessibility
 
@@ -4383,6 +4384,8 @@ The visible text is the accessible name by default. `a11y-label` replaces it, an
 ## Platform behaviour
 
 iOS uses the official Mobile UI SwiftUI `Button` renderer for every variant except `ghost`, with native button styles, control sizes, progress presentation, icon layout, VoiceOver metadata, and semantic theme tokens. On iOS, `ghost` uses a Firstlight renderer: the same plain, tinted SwiftUI `Button`, with at least a 44-point touch target. Mobile UI's plain ghost button only responds to taps on its text. Android uses the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer, wrapped by Firstlight so TalkBack reaches one named Button node, with native state layers, progress presentation, icon layout, TalkBack metadata, and semantic theme tokens.
+
+On iOS 26 and later, buttons in a Bottom Sheet footer take Liquid Glass without `glass`: `secondary` and `ghost` as regular glass, the others as prominent glass. Elsewhere a button is only glass when it sets `glass`, because Apple keeps Liquid Glass for controls that float over content.
 
 The shared variants express the same intent without forcing pixel parity. `destructive` is currently a semantic visual variant; Firstlight does not expose an Apple-only action-role prop.
 
@@ -4705,7 +4708,7 @@ Disabled, loading, model binding, rich content, multiple actions, icons, per-pla
 
 ## Platform behaviour
 
-iOS presents a bottom SwiftUI material notice with semantic SF Symbols, native buttons, safe-area spacing, Dynamic Type, and a reduced-motion-aware transition. Android presents a bottom Material 3 `Snackbar` with semantic tone treatment, navigation-bar and IME padding, responsive action layout, and TalkBack live-region behaviour.
+iOS presents a bottom SwiftUI notice with semantic SF Symbols, native buttons, safe-area spacing, Dynamic Type, and a reduced-motion-aware transition. On iOS 26 and later the notice and its buttons are Liquid Glass, tinted for a warning; before iOS 26 the notice is a material card. Android presents a bottom Material 3 `Snackbar` with semantic tone treatment, navigation-bar and IME padding, responsive action layout, and TalkBack live-region behaviour.
 
 Both platforms own one visible item and the same FIFO/event contract. Native expression differs by platform; Firstlight guarantees behavioural parity rather than identical geometry. Held and actionable items expose a dismiss control whose visible and accessibility labels are package chrome; see [Localize chrome](../how-to/localize.md).
 
@@ -5301,7 +5304,8 @@ TalkBack actions menu). Each action moves a tenth of the region.
 ## Platform behaviour
 
 iOS offers Photo Library (PhotosPicker) and Camera in a confirmation dialog,
-uses `fileImporter` for documents, and shows a Firstlight SwiftUI crop sheet.
+uses `fileImporter` for documents, and shows a Firstlight SwiftUI crop sheet, whose actions are Liquid Glass buttons
+on iOS 26 and later.
 Android offers Photo Library (the system photo picker) and Camera (the system
 camera app) in a Material bottom sheet, uses the system document picker, and
 shows a Firstlight Compose crop dialog. Picked files are copied to the app's
@@ -5626,8 +5630,10 @@ iOS uses a SwiftUI `.sheet` with a drag indicator and a height detent
 measured from the content. Android uses Material 3 `ModalBottomSheet` sized to
 its content without the half-height stop. Both keep a band for the drag
 indicator above your content, so a sheet's top padding starts below the
-indicator, as its side padding starts at the sheet edge. Theme tokens own
-surface and scrim colour.
+indicator, as its side padding starts at the sheet edge. On iOS 26 and later
+the sheet is the system's Liquid Glass, which turns opaque at full height, and
+Buttons and Icon Buttons in its footer take glass. Before iOS 26 and on Android,
+theme tokens own surface and scrim colour.
 
 iOS places the footer in a bottom safe-area inset. Android keeps it below the
 bounded scrolling body. Both retain their native sheet chrome and insets.
@@ -5754,7 +5760,8 @@ dark mode, increased contrast, and right-to-left layout.
 ## Platform behaviour
 
 iOS presents a genuine graphical SwiftUI `DatePicker` restricted to calendar
-dates, with explicit Cancel and Confirm actions. On iPhone it opens in a sheet
+dates, with explicit Cancel and Confirm actions, which are Liquid Glass buttons
+on iOS 26 and later. On iPhone it opens in a sheet
 sized to the calendar and actions, which grows with Dynamic Type; on iPad it
 opens in a popover anchored to the field. Android presents the Material 3 `DatePickerDialog` from a
 read-only Material field. Android maps Material's selected UTC-midnight cell
@@ -5812,7 +5819,8 @@ confirmation, so blur, lazy, and debounce modes are rejected. It deliberately
 does not expose min/max, seconds, steps, ranges, hour-format overrides,
 presentation styles, clear affordances, read-only state, icons, or colours.
 Sheet Confirm and Cancel labels are package chrome, not Blade attributes; see
-[Localize chrome](../how-to/localize.md).
+[Localize chrome](../how-to/localize.md). On iOS 26 and later the sheet's Confirm and Cancel
+are Liquid Glass buttons.
 
 ## Validation and accessibility
 
@@ -5876,6 +5884,7 @@ Icon Button is self-closing and has no visible text slot. Use
 | `size` | `sm`, `md`, or `lg` | Native glyph and container size. Defaults to `md`; the touch target remains at least 44 points or 48 dp. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |
+| `glass` | `regular` or `prominent` | On iOS 26 and later, draws the button in Liquid Glass: `regular` is clear glass with a system icon colour that stays legible over light or dark content, and `prominent` is glass filled with the variant's colour. For actions that float over content, such as over a photo or map. Earlier iOS and Android keep the variant's usual look. |
 | `haptic` | a `FirstlightUI\Haptics\Haptic` case or its name, such as `keypress` | Haptic the device plays as the tap lands, before PHP runs. Silent by default; `none` is accepted. See [Play haptics](../how-to/play-haptics.md). |
 | `class` | `string` | External EDGE layout utilities. |
 
@@ -5909,6 +5918,10 @@ Android uses `FilledIconButton`, `FilledTonalIconButton`, or `IconButton`
 according to intent. `sm`, `md`, and `lg` scale the visible glyph and native
 container without shrinking the accessible interaction target.
 
+On iOS 26 and later, `glass` switches to the system `.glass` or
+`.glassProminent` style, and Icon Buttons in a Bottom Sheet footer take glass
+without it. Reduce Transparency and Increase Contrast apply automatically.
+
 ## Loading and disabled behaviour
 
 `loading` keeps the explicit accessible name, substitutes a native progress
@@ -5929,7 +5942,8 @@ targets of at least 44 points on iOS and 48 dp on Android.
 Firstlight rejects missing or blank icons, missing or blank accessibility
 labels, missing `@press`, non-boolean state props, invalid variants and sizes,
 unsupported platform icon values, visible labels or slots, trailing icons,
-menus, navigation directives, extra gesture callbacks, bindings, field props,
+menus, the Mobile UI `glass` class (use the `glass` prop) and unknown `glass`
+styles, navigation directives, extra gesture callbacks, bindings, field props,
 and per-control colour or typography escape hatches.
 
 ## Compatibility
@@ -6862,6 +6876,8 @@ option.
 
 iOS uses a native SwiftUI field backed by `UISegmentedControl`. Android uses Material 3 `SingleChoiceSegmentedButtonRow` and `SegmentedButton`. The controls share behaviour and authored API while retaining platform-native styling, layout, and interaction.
 
+On iOS 26 and later the selected segment is the system's Liquid Glass thumb, which turns into a glass lens while it is dragged. Before iOS 26 it is filled with the theme's primary colour, with `on-primary` text or black or white when that contrast is too low.
+
 On iOS, `UISegmentedControl` plays its own selection haptic. On Android, Segmented plays `selection` when the user picks another segment. `haptic="none"` silences the Android haptic. See [Play haptics](../how-to/play-haptics.md).
 
 ## Compatibility
@@ -7023,7 +7039,7 @@ Tabs fails before publication when `tabs` is not an array, has one or more than 
 
 ## Platform behaviour
 
-iOS uses a native `UISegmentedControl`. Place Tabs full width directly under the navigation bar: iOS insets the segmented control by the system margin, while the Android tab row spans the width. Segments size to their labels, and a visible count follows the label, such as `Deployments (2)`. VoiceOver receives the group as a tab bar with one selectable tab per segment. Like Segmented, segment titles stop growing at accessibility text sizes and may truncate; VoiceOver still reads each full name.
+iOS uses a native `UISegmentedControl`, with the system's Liquid Glass thumb on iOS 26 and later and the theme's primary colour before. Place Tabs full width directly under the navigation bar: iOS insets the segmented control by the system margin, while the Android tab row spans the width. Segments size to their labels, and a visible count follows the label, such as `Deployments (2)`. VoiceOver receives the group as a tab bar with one selectable tab per segment. Like Segmented, segment titles stop growing at accessibility text sizes and may truncate; VoiceOver still reads each full name.
 
 Android uses Material 3 `PrimaryTabRow` with its moving indicator and a Material 3 `Badge` after the label. When a label does not fit its equal share of the width on one line, including at large font scales, the row switches to Material's `PrimaryScrollableTabRow`, as `TabLayout` does in its automatic mode.
 

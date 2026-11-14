@@ -188,7 +188,7 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         XCTAssertEqual(control.accessibilityLabel, "Document queue, required")
         XCTAssertEqual(control.accessibilityHint, "Changes the active queue")
         XCTAssertEqual(control.accessibilityValue, "Mine, selected. All")
-        XCTAssertEqual(control.selectedSegmentTintColor, .systemTeal)
+        XCTAssertEqual(control.selectedSegmentTintColor, firstlightUsesLiquidGlass ? nil : .systemTeal)
         XCTAssertNotNil(control.titleTextAttributes(for: .normal)?[.font])
         XCTAssertNotNil(control.titleTextAttributes(for: .selected)?[.font])
     }
@@ -201,18 +201,24 @@ final class SegmentedControlSnapshotTests: XCTestCase {
         XCTAssertEqual(titleColor(named: "selectedTextColor", in: representable), .white)
         XCTAssertEqual(titleColor(named: "disabledTextColor", in: representable), .secondaryLabel)
         XCTAssertEqual(control.titleTextAttributes(for: .normal)?[.foregroundColor] as? UIColor, .label)
-        XCTAssertEqual(control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor, .white)
+        XCTAssertEqual(
+            control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor,
+            firstlightUsesLiquidGlass ? .label : .white
+        )
         XCTAssertEqual(control.titleTextAttributes(for: .disabled)?[.foregroundColor] as? UIColor, .secondaryLabel)
     }
 
-    func testSelectedSemanticTitleColorIsPreservedOnIOS26() {
+    func testLiquidGlassKeepsTheSystemThumbAndItsLabelColour() {
         guard #available(iOS 26.0, *) else {
-            return XCTFail("This contrast regression test requires iOS 26")
+            return XCTFail("This Liquid Glass test requires iOS 26")
         }
 
         let control = makeRepresentable(onSelection: { _ in }).makeControl()
 
-        XCTAssertEqual(control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor, .white)
+        // A tint would replace the system thumb, and its glass drag lens, with a flat fill.
+        XCTAssertNil(control.selectedSegmentTintColor)
+        // The system thumb is light, so the selected title keeps the unselected colour, not onPrimary.
+        XCTAssertEqual(control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor, .label)
     }
 
     func testDefaultThemeSelectedForegroundsMeetNormalTextContrast() {
@@ -298,11 +304,13 @@ final class SegmentedControlSnapshotTests: XCTestCase {
 
         XCTAssertEqual(alpha(of: tokens.tintColor), 1)
         XCTAssertEqual(alpha(of: tokens.selectedTextColor), 1)
-        XCTAssertEqual(alpha(of: control.selectedSegmentTintColor!), 1)
-        XCTAssertEqual(
-            control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor,
-            tokens.selectedTextColor
-        )
+        if !firstlightUsesLiquidGlass {
+            XCTAssertEqual(alpha(of: control.selectedSegmentTintColor!), 1)
+            XCTAssertEqual(
+                control.titleTextAttributes(for: .selected)?[.foregroundColor] as? UIColor,
+                tokens.selectedTextColor
+            )
+        }
         XCTAssertGreaterThanOrEqual(contrastRatio(tokens.selectedTextColor, tokens.tintColor), 4.5)
     }
 

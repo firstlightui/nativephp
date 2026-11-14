@@ -90,6 +90,8 @@ final class GenericProps: Equatable {
         (map[key] as? [String]) ?? []
     }
 
+    var rawMap: [String: Any] { map }
+
     static func == (lhs: GenericProps, rhs: GenericProps) -> Bool {
         NSDictionary(dictionary: lhs.map).isEqual(to: rhs.map)
     }

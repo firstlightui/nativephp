@@ -103,29 +103,40 @@ final class IconButtonSnapshotTests: XCTestCase {
         )
     }
 
+    func testGlassStyleDecodesOnlyTheNamedStyles() {
+        XCTAssertNil(IconButtonRendererConfiguration(node: makeNode()).glass)
+        XCTAssertEqual(IconButtonRendererConfiguration(node: makeNode(glass: "regular")).glass, .regular)
+        XCTAssertEqual(IconButtonRendererConfiguration(node: makeNode(glass: "prominent")).glass, .prominent)
+        XCTAssertNil(IconButtonRendererConfiguration(node: makeNode(glass: "clear")).glass)
+    }
+
     private func makeNode(
         icon: String = "plus.circle",
         variant: String = "success",
         size: String = "lg",
         disabled: Bool = false,
         loading: Bool = false,
-        callbackID: Int = 41
+        callbackID: Int = 41,
+        glass: String? = nil
     ) -> NativeUINode {
-        NativeUINode(
+        var props: [String: Any] = [
+            "icon": icon,
+            "icon_variant": "outlined",
+            "variant": variant,
+            "size": size,
+            "disabled": disabled,
+            "loading": loading,
+            "a11y_label": "Add item",
+            "a11y_hint": "Adds a blank item",
+        ]
+        props["glass_style"] = glass
+
+        return NativeUINode(
             id: 7,
             type: "firstlight.icon-button",
             layout: nil,
             style: nil,
-            props: GenericProps([
-                "icon": icon,
-                "icon_variant": "outlined",
-                "variant": variant,
-                "size": size,
-                "disabled": disabled,
-                "loading": loading,
-                "a11y_label": "Add item",
-                "a11y_hint": "Adds a blank item",
-            ]),
+            props: GenericProps(props),
             onPress: callbackID,
             onLongPress: 0,
             children: []

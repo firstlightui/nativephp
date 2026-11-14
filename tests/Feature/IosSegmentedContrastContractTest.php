@@ -1,6 +1,6 @@
 <?php
 
-it('derives opaque selected segment colors from the semantic theme without an iOS 26 appearance override', function () {
+it('derives opaque selected segment colors from the semantic theme for the pre-Liquid Glass thumb', function () {
     $control = file_get_contents(dirname(__DIR__, 2).'/resources/ios/SegmentedControl.swift');
     $renderer = file_get_contents(dirname(__DIR__, 2).'/resources/ios/SegmentedRenderer.swift');
 
@@ -12,6 +12,11 @@ it('derives opaque selected segment colors from the semantic theme without an iO
         ->toContain('opaqueComposite')
         ->toContain('contrastSafeSelectedTextColor')
         ->toContain('for: .selected')
-        ->toContain('for: .disabled')
-        ->not->toContain('#available(iOS 26.0, *)');
+        ->toContain('for: .disabled');
 });
+
+it('leaves the selected segment to the system thumb on Liquid Glass', function (string $file) {
+    $source = file_get_contents(dirname(__DIR__, 2).'/resources/ios/'.$file);
+
+    expect($source)->toMatch('/selectedSegmentTintColor = firstlightUsesLiquidGlass \? nil : /');
+})->with(['SegmentedControl.swift', 'TabsControl.swift']);

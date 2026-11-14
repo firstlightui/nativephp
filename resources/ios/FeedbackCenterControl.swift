@@ -222,7 +222,7 @@ struct FirstlightFeedbackCenterControl: View {
                 } label: {
                     FeedbackCenterButtonLabel(renderingPolicy: action)
                 }
-                .buttonStyle(.bordered)
+                .firstlightGlassButtonStyle(prominent: false)
                 .controlSize(.regular)
                 .tint(accentColor)
                 .accessibilityLabel(Text(action.accessibilityLabel))
@@ -235,7 +235,7 @@ struct FirstlightFeedbackCenterControl: View {
                 } label: {
                     FeedbackCenterButtonLabel(renderingPolicy: dismiss)
                 }
-                .buttonStyle(.bordered)
+                .firstlightGlassButtonStyle(prominent: false)
                 .controlSize(.regular)
                 .tint(warningPair?.foreground)
                 .accessibilityLabel(Text(dismiss.accessibilityLabel))
@@ -270,16 +270,44 @@ private extension View {
             .padding(.trailing, 10)
             .padding(.vertical, 10)
             .foregroundStyle(warning?.foreground ?? tokens.onSurface)
+            .modifier(FeedbackCenterNoticeSurface(warningBackground: warning?.background))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// The notice floats over the screen, in the controls layer, so iOS 26 and
+/// later draw it on Liquid Glass, tinted with the warning colour for a warning.
+/// Earlier iOS keeps the material card with its hairline and shadow.
+private struct FeedbackCenterNoticeSurface: ViewModifier {
+    let warningBackground: Color?
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+    }
+
+    func body(content: Content) -> some View {
+        #if compiler(>=6.2)
+        if firstlightUsesLiquidGlass, #available(iOS 26.0, *) {
+            content.glassEffect(warningBackground.map { Glass.regular.tint($0) } ?? .regular, in: shape)
+        } else {
+            fallback(content)
+        }
+        #else
+        fallback(content)
+        #endif
+    }
+
+    private func fallback(_ content: Content) -> some View {
+        content
             .background(
-                warning.map { AnyShapeStyle($0.background) } ?? AnyShapeStyle(Material.regular),
-                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                warningBackground.map { AnyShapeStyle($0) } ?? AnyShapeStyle(Material.regular),
+                in: shape
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                shape
                     .stroke(Color(uiColor: .separator).opacity(0.35), lineWidth: 0.5)
                     .allowsHitTesting(false)
             }
             .shadow(color: .black.opacity(0.12), radius: 14, y: 5)
-            .fixedSize(horizontal: false, vertical: true)
     }
 }

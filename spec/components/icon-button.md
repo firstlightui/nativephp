@@ -55,6 +55,7 @@ actions use `<firstlight:button>`.
 | `size` | `sm`, `md` (default), or `lg`; the interaction target never shrinks below platform minimums. |
 | `disabled` | Prevents presses and applies native disabled semantics. Defaults to `false`. |
 | `loading` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |
+| `glass` | Optional `regular` or `prominent`. Liquid Glass on iOS 26+; no effect on earlier iOS or Android. Published as `glass_style`. |
 | `@press` | Required standard NativePHP action callback. |
 | `class` | External EDGE layout only. |
 
@@ -100,7 +101,11 @@ focus, press feedback, contrast, and a target of at least 44 points on iOS or
 
 - iOS uses a genuine SwiftUI `Button` containing an icon-only `Label` or
   `Image`, Apple-native button styles, semantic theme tint, control sizing,
-  progress presentation, and an explicit 44-point minimum target.
+  progress presentation, and an explicit 44-point minimum target. On iOS 26+,
+  `glass` (or a Bottom Sheet footer) selects `.glass` or `.glassProminent`.
+  Prominent glass is filled with the variant's colour; regular glass uses the
+  system's primary label style so it stays legible whatever is behind it. The
+  minimum target is unchanged.
 - Android uses the Material 3 Icon Button family: `IconButton` for `ghost`,
   `FilledTonalIconButton` for `secondary`, and `FilledIconButton` for primary,
   destructive, and success intent. It preserves Material pressed/disabled

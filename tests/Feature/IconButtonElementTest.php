@@ -114,6 +114,15 @@ it('accepts every documented variant and size', function (string $variant, strin
     ['ghost', 'md'],
 ]);
 
+it('publishes the named glass style for iOS 26 Liquid Glass', function (string $style) {
+    expect(collectIconButton([
+        'icon' => 'plus',
+        'a11y-label' => 'Add item',
+        '_press' => 'addItem',
+        'glass' => $style,
+    ])['props']['glass_style'])->toBe($style);
+})->with(['regular', 'prominent']);
+
 it('resolves shared and platform icon choices through IconResolver', function () {
     $unknown = IconButton::make()
         ->icon('plus', IconButtonTestIosIcon::Add, IconButtonTestAndroidIcon::Add)
@@ -205,6 +214,8 @@ it('requires strict booleans strings enums and platform icon types', function (a
     'integer loading' => [['loading' => 1], '`loading` must be a boolean'],
     'invalid variant' => [['variant' => 'accent'], 'Unsupported Icon Button variant [accent]'],
     'invalid size' => [['size' => 'xl'], 'Unsupported Icon Button size [xl]'],
+    'glass class flags' => [['glass' => 1], 'the `glass` class is not supported'],
+    'unknown glass' => [['glass' => 'clear'], 'Unsupported glass [clear]'],
     'invalid ios icon' => [['icon-ios' => 42], '`icon-ios` must be an IosSymbol or string'],
     'invalid android icon' => [['icon-android' => []], '`icon-android` must be an AndroidSymbol or string'],
 ]);

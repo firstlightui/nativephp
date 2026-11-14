@@ -2,12 +2,14 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\AcceptsGlass;
 use FirstlightUI\Elements\Concerns\AcceptsHaptic;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 
 class Button extends \Native\Mobile\UI\Elements\Button
 {
+    use AcceptsGlass;
     use AcceptsHaptic;
 
     protected function hapticPlaysOnPress(): bool
@@ -31,7 +33,6 @@ class Button extends \Native\Mobile\UI\Elements\Button
         'line-height-px',
         'lineHeightPx',
         'menu',
-        'glass',
         '_longPress',
         '_doubleTap',
         '_pressDown',
@@ -58,6 +59,7 @@ class Button extends \Native\Mobile\UI\Elements\Button
     public function applyAttributes(array $attrs): void
     {
         $attrs = $this->applyHapticAttribute($attrs);
+        $attrs = $this->applyGlassAttribute($attrs);
 
         foreach (self::UNSUPPORTED_ATTRIBUTES as $attribute) {
             if (array_key_exists($attribute, $attrs)) {

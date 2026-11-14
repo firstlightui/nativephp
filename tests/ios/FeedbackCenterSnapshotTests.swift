@@ -121,6 +121,9 @@ final class FeedbackCenterSnapshotTests: XCTestCase {
     }
 
     func testLightDarkToneActionHoldLongCopyAndAccessibilitySnapshots() {
+        // Off-screen snapshots cannot draw Liquid Glass; see firstlightSnapshotsDrawWithoutGlass.
+        firstlightSnapshotsDrawWithoutGlass = true
+        defer { firstlightSnapshotsDrawWithoutGlass = false }
         let cases: [(String, FeedbackCenterItemConfiguration)] = [
             ("default", configuration(message: "Changes saved")),
             ("success-action", configuration(

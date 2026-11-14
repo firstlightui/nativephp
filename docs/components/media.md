@@ -184,7 +184,8 @@ TalkBack actions menu). Each action moves a tenth of the region.
 ## Platform behaviour
 
 iOS offers Photo Library (PhotosPicker) and Camera in a confirmation dialog,
-uses `fileImporter` for documents, and shows a Firstlight SwiftUI crop sheet.
+uses `fileImporter` for documents, and shows a Firstlight SwiftUI crop sheet, whose actions are Liquid Glass buttons
+on iOS 26 and later.
 Android offers Photo Library (the system photo picker) and Camera (the system
 camera app) in a Material bottom sheet, uses the system document picker, and
 shows a Firstlight Compose crop dialog. Picked files are copied to the app's

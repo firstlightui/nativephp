@@ -50,6 +50,8 @@ struct FirstlightIconButtonMetrics: Equatable {
 struct FirstlightIconButtonControl: View {
     let configuration: IconButtonRendererConfiguration
     let tokens: NativeUITokens
+    /// Set only where Liquid Glass draws; nil keeps the variant's look.
+    var glass: FirstlightGlassStyle? = nil
     let onPress: () -> Void
 
     let iconIsDecorative = true
@@ -58,6 +60,46 @@ struct FirstlightIconButtonControl: View {
     var metrics: FirstlightIconButtonMetrics { configuration.size.metrics }
 
     var body: some View {
+        if let glass {
+            glassButton(glass)
+        } else {
+            variantButton
+        }
+    }
+
+    /// The variant's fill and the label drawn on it.
+    private var variantColors: (fill: Color, onFill: Color) {
+        switch configuration.variant {
+        case .primary, .ghost: (tokens.primary, tokens.onPrimary)
+        case .secondary: (tokens.surfaceVariant, tokens.onSurfaceVariant)
+        case .destructive: (tokens.destructive, tokens.onDestructive)
+        case .success: (tokens.success, tokens.onSuccess)
+        }
+    }
+
+    /// Prominent glass fills with the variant's colour. Regular glass draws
+    /// the icon in the system's primary style, which the glass keeps legible
+    /// over bright or dark content (see FirstlightRegularGlassLabel). Disabled
+    /// uses the same token pair as the other paths.
+    private func glassButton(_ glass: FirstlightGlassStyle) -> some View {
+        let colors = variantColors
+        let prominent = glass == .prominent
+        let foreground: Color = if configuration.disabled {
+            tokens.onSurfaceVariant
+        } else if prominent {
+            colors.onFill
+        } else {
+            .primary
+        }
+
+        return button
+            .firstlightGlassButtonStyle(prominent: prominent)
+            .tint(configuration.disabled ? tokens.surfaceVariant : colors.fill)
+            .foregroundStyle(foreground)
+    }
+
+    @ViewBuilder
+    private var variantButton: some View {
         switch configuration.variant {
         case .ghost:
             button

@@ -163,7 +163,7 @@ Tabs fails before publication when `tabs` is not an array, has one or more than 
 
 ## Platform behaviour
 
-iOS uses a native `UISegmentedControl`. Place Tabs full width directly under the navigation bar: iOS insets the segmented control by the system margin, while the Android tab row spans the width. Segments size to their labels, and a visible count follows the label, such as `Deployments (2)`. VoiceOver receives the group as a tab bar with one selectable tab per segment. Like Segmented, segment titles stop growing at accessibility text sizes and may truncate; VoiceOver still reads each full name.
+iOS uses a native `UISegmentedControl`, with the system's Liquid Glass thumb on iOS 26 and later and the theme's primary colour before. Place Tabs full width directly under the navigation bar: iOS insets the segmented control by the system margin, while the Android tab row spans the width. Segments size to their labels, and a visible count follows the label, such as `Deployments (2)`. VoiceOver receives the group as a tab bar with one selectable tab per segment. Like Segmented, segment titles stop growing at accessibility text sizes and may truncate; VoiceOver still reads each full name.
 
 Android uses Material 3 `PrimaryTabRow` with its moving indicator and a Material 3 `Badge` after the label. When a label does not fit its equal share of the width on one line, including at large font scales, the row switches to Material's `PrimaryScrollableTabRow`, as `TabLayout` does in its automatic mode.
 

@@ -372,7 +372,9 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
         }
 
         control.isEnabled = !disabled && !labels.isEmpty
-        control.selectedSegmentTintColor = tintColor
+        // Liquid Glass draws its own thumb, which becomes a glass lens while
+        // dragged; a tint replaces it with a flat fill, so it is set only before 26.
+        control.selectedSegmentTintColor = firstlightUsesLiquidGlass ? nil : tintColor
         control.isAccessibilityElement = true
         control.accessibilityLabel = required
             ? "\(accessibilityLabel), required".nilIfEmpty
@@ -397,7 +399,7 @@ struct FirstlightSegmentedControl: UIViewRepresentable {
             for: .normal
         )
         control.setTitleTextAttributes(
-            [.font: titleFont, .foregroundColor: selectedTextColor],
+            [.font: titleFont, .foregroundColor: firstlightUsesLiquidGlass ? unselectedTextColor : selectedTextColor],
             for: .selected
         )
         control.setTitleTextAttributes(

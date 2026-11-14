@@ -55,7 +55,8 @@ confirmation, so blur, lazy, and debounce modes are rejected. It deliberately
 does not expose min/max, seconds, steps, ranges, hour-format overrides,
 presentation styles, clear affordances, read-only state, icons, or colours.
 Sheet Confirm and Cancel labels are package chrome, not Blade attributes; see
-[Localize chrome](../how-to/localize.md).
+[Localize chrome](../how-to/localize.md). On iOS 26 and later the sheet's Confirm and Cancel
+are Liquid Glass buttons.
 
 ## Validation and accessibility
 

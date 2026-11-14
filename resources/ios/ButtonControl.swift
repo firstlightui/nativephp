@@ -42,6 +42,7 @@ struct ButtonGhostConfiguration: Equatable {
 struct FirstlightGhostButtonControl: View {
     let configuration: ButtonGhostConfiguration
     let tokens: NativeUITokens
+    var glass: FirstlightGlassStyle? = nil
     let onPress: () -> Void
 
     static let minimumTarget: CGFloat = 44
@@ -60,6 +61,32 @@ struct FirstlightGhostButtonControl: View {
     }
 
     var body: some View {
+        if let glass {
+            // A glass ghost takes the system glass button's own height, as
+            // the other variants do, rather than the plain label's 44 pt frame.
+            label(minimumHeight: nil)
+                .firstlightGlassButtonStyle(prominent: glass == .prominent)
+                .tint(configuration.isEnabled ? tokens.primary : tokens.surfaceVariant)
+                .foregroundStyle(glassForeground(glass))
+                .disabled(!configuration.isEnabled)
+                .modifier(GhostButtonAccessibility(configuration: configuration))
+        } else {
+            label(minimumHeight: Self.minimumTarget)
+                .buttonStyle(.plain)
+                .foregroundStyle(configuration.isEnabled ? tokens.primary : tokens.onSurfaceVariant)
+                .disabled(!configuration.isEnabled)
+                .modifier(GhostButtonAccessibility(configuration: configuration))
+        }
+    }
+
+    private func glassForeground(_ glass: FirstlightGlassStyle) -> Color {
+        guard configuration.isEnabled else { return tokens.onSurfaceVariant }
+
+        // Regular glass keeps a system label; see FirstlightRegularGlassLabel.
+        return glass == .prominent ? tokens.onPrimary : .primary
+    }
+
+    private func label(minimumHeight: CGFloat?) -> some View {
         Button(action: onPress) {
             HStack(spacing: 8) {
                 if configuration.loading {
@@ -81,14 +108,10 @@ struct FirstlightGhostButtonControl: View {
             }
             .frame(
                 maxWidth: configuration.fillsAllocatedWidth ? .infinity : nil,
-                minHeight: Self.minimumTarget
+                minHeight: minimumHeight
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(configuration.isEnabled ? tokens.primary : tokens.onSurfaceVariant)
-        .disabled(!configuration.isEnabled)
-        .modifier(GhostButtonAccessibility(configuration: configuration))
     }
 }
 

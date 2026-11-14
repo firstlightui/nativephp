@@ -583,14 +583,16 @@ struct FirstlightMediaCropSheet: View {
 
                 HStack {
                     Button(cancelLabel, action: onCancel)
+                        .firstlightGlassButtonStyle(prominent: false, bordered: false)
                         .frame(minHeight: 44)
                     Spacer()
                     if policy.allowsSkip {
                         Button(skipLabel, action: onSkip)
+                            .firstlightGlassButtonStyle(prominent: false, bordered: false)
                             .frame(minHeight: 44)
                     }
                     Button(confirmLabel, action: onConfirm)
-                        .buttonStyle(.borderedProminent)
+                        .firstlightGlassButtonStyle(prominent: true)
                         .frame(minHeight: 44)
                 }
                 .padding(.horizontal)
