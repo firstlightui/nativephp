@@ -355,9 +355,11 @@ final class DocumentationScreenshotCapture
                         "android-{$appearance}-{$slug}-stop",
                         ['adb', '-s', $request->androidSerial, 'shell', 'am', 'force-stop', $androidAppId],
                     );
+                    // Emulators without hardware keys reject monkey's default
+                    // system-key event share (exit 251), so request none.
                     $this->execute(
                         "android-{$appearance}-{$slug}-launch",
-                        ['adb', '-s', $request->androidSerial, 'shell', 'monkey', '-p', $androidAppId, '-c', 'android.intent.category.LAUNCHER', '1'],
+                        ['adb', '-s', $request->androidSerial, 'shell', 'monkey', '-p', $androidAppId, '--pct-syskeys', '0', '-c', 'android.intent.category.LAUNCHER', '1'],
                     );
                     $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} {$slug} capture");
                     $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $component['name'], $component['manifest']);
