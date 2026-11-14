@@ -50,6 +50,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
 - Pass loop indexes to callbacks, or delete from a swipe without confirmation.
 - Add `@nativeError`, try/catch around validation, or hard-coded colours.
 - Call `Device::vibrate()` for feedback, or set `haptic` on ordinary buttons.
+- Set `glass` on buttons in ordinary content, or use the Mobile UI `glass` class. Glass is for actions floating over a photo or map; sheets, Feedback and segmented controls already take it on iOS 26 and later.
 - Add props a component's reference does not list. Firstlight rejects unknown attributes with an exception; fix the markup instead of suppressing it.
 
 ## Theming

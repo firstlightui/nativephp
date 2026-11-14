@@ -45,6 +45,8 @@ Set both the background token and its `on-*` content token. This example uses th
 
 The `primary` pair colours filled actions, selected states, and key accents. Surface, outline, destructive, success, accent, and disabled-state colours use their corresponding semantic tokens from the published configuration.
 
+On iOS 26 and later, Firstlight's floating surfaces are Liquid Glass, as Apple's own are. Bottom Sheet and Transient Feedback take their colour from the content behind them rather than from `surface`, and Segmented and Tabs show the system's selected segment rather than a `primary` fill. Prominent glass buttons are still filled with their variant's colour, and a warning Feedback is tinted with the warning colour. Earlier iOS and Android use the theme colours as before.
+
 Dark values are optional because NativePHP can derive them from the light theme. Define explicit dark overrides when brand perception or contrast needs a tuned pair. Keep text and icons at a contrast ratio of at least 4.5:1 against their background token.
 
 Theme colours accept CSS hex values, Tailwind palette names such as `violet-600`, and opacity modifiers such as `violet-600/15`.

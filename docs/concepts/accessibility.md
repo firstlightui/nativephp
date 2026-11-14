@@ -64,6 +64,7 @@ Because the controls are native, these work without any Firstlight code:
 | Screen reader | VoiceOver roles, values, and states | TalkBack roles, values, and states |
 | Larger text | Dynamic Type, including accessibility sizes | System font scale |
 | Appearance | Light, dark, and Increased Contrast | Light, dark, and high-contrast text |
+| Transparency | Reduce Transparency, which makes Liquid Glass surfaces on iOS 26 and later frosted and more opaque | Not applicable |
 | Motion | Reduce Motion | Remove animations |
 | Reading direction | Right-to-left layout | Right-to-left layout |
 | Dialogs and sheets | System focus trapping and action order | System focus trapping and action order |
