@@ -320,6 +320,22 @@ it('registers the production component catalogue with canonical renderers', func
             'ios_renderer' => 'BottomSheetRenderer',
             'self_closing' => false,
         ],
+        [
+            'type' => 'firstlight.toolbar',
+            'element' => 'FirstlightUI\\Elements\\Toolbar',
+            'blade' => 'FirstlightUI\\Components\\Toolbar',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.ToolbarRenderer',
+            'ios_renderer' => 'ToolbarRenderer',
+            'self_closing' => false,
+        ],
+        [
+            'type' => 'firstlight.toolbar-item',
+            'element' => 'FirstlightUI\\Elements\\ToolbarItem',
+            'blade' => 'FirstlightUI\\Components\\ToolbarItem',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.ToolbarItemRenderer',
+            'ios_renderer' => 'ToolbarItemRenderer',
+            'self_closing' => true,
+        ],
     ]);
 });
 

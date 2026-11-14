@@ -6,10 +6,10 @@ use Native\Mobile\Edge\NativeTagPrecompiler;
 
 final class FirstlightTagPrecompiler
 {
-    private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|tabs|status-label|metric|callout|badge|button|icon-button|list-item|pill-group|choice-group|progress|activity-indicator|text-field|search-field|text-area|code-editor|media|date-picker|time-picker|select|slider|stepper|switch|checkbox|alert-dialog|confirmation-dialog)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
+    private const FIRSTLIGHT_SELF_CLOSING_TAG = '~<\s*firstlight\s*:\s*(segmented|tabs|status-label|metric|callout|badge|button|icon-button|list-item|pill-group|choice-group|progress|activity-indicator|text-field|search-field|text-area|code-editor|media|date-picker|time-picker|select|slider|stepper|switch|checkbox|alert-dialog|confirmation-dialog|toolbar-item)(?=\s|/>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)/>~s';
 
     /** @var list<string> */
-    private const NESTED_PAIRED_CONTAINER_TAGS = ['list-section', 'list', 'bottom-sheet', 'modal'];
+    private const NESTED_PAIRED_CONTAINER_TAGS = ['list-section', 'list', 'bottom-sheet', 'modal', 'toolbar'];
 
     private const FIRSTLIGHT_PAIRED_BUTTON_TAG = '~<\s*firstlight\s*:\s*(button)(?=\s|>)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</\s*firstlight\s*:\s*\1\s*>~s';
 

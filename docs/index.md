@@ -103,6 +103,8 @@ recipes run inside.
 - [Text Field](components/text-field.md) — Configure native single-line editing, input hints, icons, and synchronisation.
 - [Text Area](components/text-area.md) — Configure native multiline editing, line bounds, validation, accessibility, and synchronisation.
 - [Code Editor](components/code-editor.md) — Edit JSON, YAML, env, and plain text with native indentation, a key row, and follow mode for live logs.
+- [Toolbar](components/toolbar.md) — Give a screen a bottom row of icon actions with one separate primary action, drawn by each platform's own toolbar.
+- [Toolbar Item](components/toolbar-item.md) — Configure one toolbar action, menu or primary action with badges, disabled state and accessibility.
 - [Switch](components/switch.md) — Configure native boolean settings, server-authoritative state, and accessibility.
 
 ## Reference

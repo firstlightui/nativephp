@@ -91,6 +91,8 @@ every control the way they reach the platform's own apps.
 - [Text Field](https://firstlightui.dev/docs/components/text-field): Public API, focused editing, semantic input hints, icons, accessibility, and platform behaviour for Firstlight Text Field.
 - [Text Area](https://firstlightui.dev/docs/components/text-area): Public API, multiline editing, line bounds, synchronisation, accessibility, and native platform behaviour for Firstlight Text Area.
 - [Code Editor](https://firstlightui.dev/docs/components/code-editor): Public API, language-aware indentation, key row, follow mode, synchronisation, accessibility, and native platform behaviour for Firstlight Code Editor.
+- [Toolbar](https://firstlightui.dev/docs/components/toolbar): A screen's bottom row of icon actions, drawn as the system bottom toolbar on iOS and a Material 3 floating toolbar on Android.
+- [Toolbar Item](https://firstlightui.dev/docs/components/toolbar-item): One icon action, menu or primary action inside a Toolbar, with badges, disabled state, haptics and accessibility.
 - [Switch](https://firstlightui.dev/docs/components/switch): Public API, state, accessibility, validation, compatibility, and visual evidence for Firstlight Switch.
 
 ## Reference

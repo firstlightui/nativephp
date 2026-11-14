@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Toolbar: `<firstlight:toolbar>` with up to five `<firstlight:toolbar-item>` icon actions and one `primary` action, for a screen's bottom row of actions, such as the one in Notes. Items take `menu`, `badge`, `disabled` and `haptic`. On iOS they join the navigation stack's own bottom toolbar, which iOS 26 draws as a Liquid Glass group with the primary action in its own glass. On Android Firstlight floats a Material 3 floating toolbar with the primary action as its FAB, and hides it while content scrolls down. Needs a native-chrome layout, the default in NativePHP Mobile 4.8, and on a tab's root screen `$hidesTabBar`, because iOS draws the tab bar over the bottom toolbar.
+
 ### Changed
 
 - Requires `nativephp/mobile` `^4.8`. Mobile 4.8 closes Firstlight's Bottom Sheets and Modals when a screen navigates away, which Firstlight did itself before, and Connectivity now hears only core's `AppForegrounded`, not App Guard's `Foregrounded`.

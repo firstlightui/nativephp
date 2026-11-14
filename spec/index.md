@@ -47,6 +47,7 @@ sources:
 - [Status Label component contract](components/status-label.md) — Defines the display-only API, tones, diagnostics, accessibility, and native expression.
 - [Metric component contract](components/metric.md) — Defines a static measurement with tabular figures and one accessible description.
 - [Text Area component contract](components/text-area.md) — Defines focused multiline editing, line bounds, sync policies, accessibility, and the paired-renderer boundary.
+- [Toolbar component contract](components/toolbar.md) — Defines the bottom toolbar of actions, item and menu wire props, iOS bottom-bar and Android floating-toolbar expression, and unverified behaviour.
 - [Text Field component contract](components/text-field.md) — Defines focused single-line editing, sync policies, input masks, icons and trailing actions, accessibility, and the paired-renderer boundary.
 - [Search Field component contract](components/search-field.md) — Defines focused query editing, native search and clear affordances, sync policies, accessibility, and the paired-renderer boundary.
 - [Code Editor component contract](components/code-editor.md) — Defines focused code editing, shared indentation and scroll-anchor fixtures, key row, follow mode, and the paired-renderer boundary.

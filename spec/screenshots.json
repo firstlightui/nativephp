@@ -353,6 +353,26 @@
                 "android-light": "docs/screenshots/bottom-sheet/android-light.png",
                 "android-dark": "docs/screenshots/bottom-sheet/android-dark.png"
             }
+        },
+        "toolbar": {
+            "route": "/captures/toolbar",
+            "test": "php artisan test tests/Feature/ToolbarCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/toolbar/ios-light.png",
+                "ios-dark": "docs/screenshots/toolbar/ios-dark.png",
+                "android-light": "docs/screenshots/toolbar/android-light.png",
+                "android-dark": "docs/screenshots/toolbar/android-dark.png"
+            }
+        },
+        "toolbar-item": {
+            "route": "/captures/toolbar-item",
+            "test": "php artisan test tests/Feature/ToolbarItemCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/toolbar-item/ios-light.png",
+                "ios-dark": "docs/screenshots/toolbar-item/ios-dark.png",
+                "android-light": "docs/screenshots/toolbar-item/android-light.png",
+                "android-dark": "docs/screenshots/toolbar-item/android-dark.png"
+            }
         }
     }
 }
