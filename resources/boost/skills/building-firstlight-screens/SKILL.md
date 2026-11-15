@@ -32,7 +32,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
    - Booleans: `switch` (settings, applies now), `checkbox` (forms and consent)
    - Numbers and dates: `stepper`, `slider`, `date-picker`, `time-picker`
    - Files: `media` (image or document mode)
-   - Rows: `list`, `list-section`, `list-item` (with `trailing-actions`, `leading-actions`, `context-menu`)
+   - Rows: `list`, `list-section`, `list-item` (with `navigates`, `trailing-actions`, `leading-actions`, `context-menu`)
    - Status: `status-label`, `badge`, `metric`, `progress`, `activity-indicator`, `callout`
    - Overlays: `confirmation-dialog`, `alert-dialog`, `bottom-sheet`, `modal`
    - Outcomes: `Feedback::success('Saved')->send()` or `submit(successMessage: ...)`. Feedback, validation and the controls already play each platform's haptics; set `haptic="keypress"` only on keypad buttons, and use `Haptics::success()` or `error()` for an outcome with no Feedback (https://firstlightui.dev/docs/how-to/play-haptics)
@@ -40,6 +40,19 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
 4. Gate actions with `$this->allows()`, `$this->denies()` and `$this->authorize()`. Disable, do not hide, destructive rows the Policy denies.
 5. Write a Pest test with `Native::visit()` and the Firstlight checks (`assertFieldError`, `assertListItem`, `pressListItem`, `confirmDialog`, `assertFeedbackSent`). Register them once with `FirstlightUI\Testing\ScreenAssertions::register()`.
 6. Run the tests. Then run the app on both an iOS simulator and an Android emulator before calling the screen done.
+
+## Platform conventions
+
+Firstlight's defaults follow Apple's Human Interface Guidelines (https://developer.apple.com/design/human-interface-guidelines/) and Material 3 (https://m3.material.io/). Keep screens inside them:
+
+- Targets: controls already give at least 44 × 44 pt on iOS and 48 × 48 dp on Android. Do not shrink them with fixed sizes (https://developer.apple.com/design/human-interface-guidelines/accessibility, https://m3.material.io/foundations/designing/structure).
+- Tabs: use a tab bar for three to five top-level destinations; with two, use a `segmented` control on one screen (https://m3.material.io/components/navigation-bar/guidelines, https://developer.apple.com/design/human-interface-guidelines/tab-bars).
+- Search: put a screen's main search in the nav bar. Return `NavBarOptions::make()->searchBar(placeholder: ..., onQuery: 'search')` from the screen's `navigationOptions()` and reload the list in `search(string $query)`. Use `search-field` only for filters inside content (https://developer.apple.com/design/human-interface-guidelines/search-fields, https://m3.material.io/components/search/overview).
+- Rows that open another screen: set `navigates` on the List Item. iOS draws its disclosure chevron and Android draws none, as Material lists show none. Never author a `chevron-right` trailing icon (https://developer.apple.com/design/human-interface-guidelines/lists-and-tables, https://m3.material.io/components/lists/guidelines).
+- Icon buttons: leave `variant` unset for ordinary actions, which draws a plain icon. Use `primary` only for a screen's one main icon action (https://m3.material.io/components/icon-buttons/guidelines).
+- Empty and no-results states: centre a short headline with a hint, and an action if one helps, instead of a lone line of text (https://developer.apple.com/design/human-interface-guidelines/searching).
+- Colour: keep `primary` visibly different from `destructive`, so errors never look like the brand colour (https://m3.material.io/styles/color/roles).
+- Text: let Dynamic Type and Android font scale grow text; do not fix the height of rows that hold text.
 
 ## Never
 

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- List Item: `navigates` marks a row that opens another screen. iOS draws its system disclosure chevron after any trailing text or status; Android draws nothing, because Material 3 list rows show no chevron. Use it in place of a `chevron-right` trailing icon, which it cannot be combined with. `make:firstlight-screen --list` rows set it.
+
+### Changed
+
+- Icon Button: an icon button with no `variant` is now `ghost`, a plain icon in the primary colour, like Material 3's standard icon button and an iOS plain button. It was `primary`, a filled circle. Set `variant="primary"` on a screen's one main icon action to keep the filled look. Targets stay at least 44 pt on iOS and 48 dp on Android.
+- Button on iOS: `secondary` draws as SwiftUI's `.bordered` style, a light tint of the secondary colour with the label in that colour, which is Apple's emphasis for secondary actions. It was a second filled button. Android's tonal button is unchanged, and glass secondary buttons keep Liquid Glass.
+- Icon Button on Android: icons are drawn at their size's glyph size (16, 20 or 24 dp). They were drawn at 24 dp inside smaller boxes, which clipped the bottom of glyphs such as share and lock and made `lg` no larger than `md`.
+- Search Field: an omitted `autocapitalize` now means `none` on both platforms, as in the system search bars. iOS capitalised the first letter before, and Android capitalised sentences.
+- Search Field on Android draws a Material 3 search bar: a filled `surface-variant` pill at least 56 dp tall with no outline. It was an outlined field shaped like a pill.
+- The searchable-list how-to searches from the navigation bar with Mobile's `NavBarOptions::searchBar()`, as both platforms do for a screen's main search, and centres its no-results state as a headline and a hint. Rows in the how-tos use `navigates`.
+- The `building-firstlight-screens` skill now has a Platform conventions section citing Apple's Human Interface Guidelines and Material 3, covering targets, tabs, nav-bar search, `navigates` rows, icon buttons, empty states, colour and text scaling. `firstlight-init` offers three to five tabs and suggests a segmented control for two destinations.
+
 ## 1.1.0-beta10 - 2026-11-14
 
 ### Added

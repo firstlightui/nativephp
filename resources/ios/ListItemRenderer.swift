@@ -61,6 +61,7 @@ struct ListItemRendererConfiguration: Equatable {
     let statusTone: StatusLabelTone
     let state: String
     let stateLabel: String
+    let navigates: Bool
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -91,6 +92,7 @@ struct ListItemRendererConfiguration: Equatable {
         statusTone = StatusLabelTone(rawValue: node.props.getString("trailing_status_tone")) ?? .neutral
         state = node.props.getString("state", default: "normal")
         stateLabel = node.props.getString("state_label")
+        navigates = node.props.getBool("navigates")
     }
 
     var isEnabled: Bool {

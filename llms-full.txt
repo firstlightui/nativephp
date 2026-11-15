@@ -155,9 +155,15 @@ Save the view as `resources/views/native/post.blade.php`:
 
 # Build a Searchable List Screen
 
-This recipe builds the index screen most apps need: a search field above a
-list of records, with pull-to-refresh, infinite scrolling, a tap that opens
-the record, and a swipe action that deletes it after native confirmation.
+This recipe builds the index screen most apps need: a list of records searched
+from the navigation bar, with pull-to-refresh, infinite scrolling, a tap that
+opens the record, and a swipe action that deletes it after native confirmation.
+
+Search lives in the bar because both platforms put a screen's main search
+there: Apple's [Search fields](https://developer.apple.com/design/human-interface-guidelines/search-fields)
+guidance and Material 3 [Search](https://m3.material.io/components/search/overview).
+Keep [Search Field](../components/search-field.md) for filters inside content,
+such as a field in a form or a sheet.
 
 This recipe runs unchanged in the
 [showcase app](https://github.com/firstlightui/showcase), where
@@ -202,6 +208,7 @@ use App\Models\Post;
 use FirstlightUI\NativeComponent;
 use FirstlightUI\Pagination\ListPage;
 use Illuminate\View\View;
+use Native\Mobile\Edge\Layouts\Builders\NavBarOptions;
 
 class PostsScreen extends NativeComponent
 {
@@ -212,8 +219,14 @@ class PostsScreen extends NativeComponent
         $this->reload();
     }
 
-    public function updatedQuery(): void
+    public function navigationOptions(): ?NavBarOptions
     {
+        return NavBarOptions::make()->searchBar(placeholder: 'Search posts', onQuery: 'search');
+    }
+
+    public function search(string $query): void
+    {
+        $this->query = $query;
         $this->reload();
     }
 
@@ -271,8 +284,9 @@ class PostsScreen extends NativeComponent
 }
 ```
 
-`updatedQuery()` runs whenever PHP accepts a new query, so the list restarts
-from page one for each search. Keys passed to `openPost()` and
+`navigationOptions()` adds a search bar to the layout's nav bar for this screen
+only. The bar calls `search()` with the query 300 ms after typing stops, and
+the list restarts from page one for each search. Keys passed to `openPost()` and
 `requestDeletion()` are model ids, never loop positions.
 
 ## 3. Write the view
@@ -281,29 +295,18 @@ Save this as `resources/views/native/posts.blade.php`:
 
 ```blade
 <native:column class="w-full flex-1 bg-theme-background">
-    <firstlight:search-field
-        placeholder="Search posts"
-        a11y-label="Search posts"
-        native:model.debounce.300ms="query"
-        class="mx-4 my-2"
-    />
-
     @if (count($listItems) === 0)
-        <firstlight:status-label
-            label="{{ $query === '' ? 'No posts yet' : 'No matching posts' }}"
-            tone="neutral"
-            class="mx-4"
-        />
-    @endif
-
+        <native:column class="w-full flex-1 items-center justify-center gap-2 p-8">
+            <native:text class="text-lg font-semibold text-center text-theme-on-surface">{{ $query === '' ? 'No posts yet' : 'No matching posts' }}</native:text>
+            <native:text class="text-sm text-center text-theme-on-surface-variant">{{ $query === '' ? 'Posts you write appear here.' : 'Check the spelling or try a different search.' }}</native:text>
+        </native:column>
+    @else
     <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1 bg-theme-background">
         @foreach ($listItems as $post)
             <firstlight:list-item
                 :headline="$post->title"
                 :supporting="$post->excerpt"
-                trailing-icon="chevron-right"
-                trailing-icon-ios="chevron.right"
-                trailing-icon-android="chevron_right"
+                navigates
                 @press="openPost({{ $post->id }})"
                 :trailing-actions="[
                     ['method' => 'requestDeletion('.$post->id.')', 'label' => 'Delete', 'role' => 'destructive'],
@@ -311,6 +314,7 @@ Save this as `resources/views/native/posts.blade.php`:
             />
         @endforeach
     </firstlight:list>
+    @endif
 
     <firstlight:confirmation-dialog
         :visible="$confirmingListDestruction"
@@ -329,8 +333,9 @@ Save this as `resources/views/native/posts.blade.php`:
 
 | Behaviour | iOS | Android |
 | --- | --- | --- |
-| Search | `UISearchTextField` with the system clear button | Material 3 search field with the search IME action |
-| Rows | SwiftUI `List` rows with dividers | `LazyColumn` Material list items with dividers |
+| Search | `.searchable` in the navigation bar, Liquid Glass on iOS 26 and later | Filled Material 3 search bar in the top app bar |
+| Rows | Disclosure chevron from `navigates` | No chevron, as Material lists show none |
+| List | SwiftUI `List` rows with dividers | `LazyColumn` Material list items with dividers |
 | Refresh | System pull-to-refresh | Material pull-to-refresh |
 | Delete | Trailing swipe action, then a native confirmation dialog | Trailing swipe action, then a native confirmation dialog |
 | Feedback | "Post deleted" through Transient Feedback | "Post deleted" through Transient Feedback |
@@ -346,8 +351,8 @@ swipe gesture.
   with `:disabled` instead, as described in [Authorize actions](authorize-actions.md).
 - Full swipes never delete. The swipe only opens the confirmation dialog, and
   PHP authorizes again before deleting.
-- Use `native:model.debounce.300ms` for search so each keystroke does not
-  query the database.
+- Keep the search debounce (300 ms by default; `debounceMs` on `searchBar()`)
+  so each keystroke does not query the database.
 
 ## Adapt the recipe
 
@@ -355,7 +360,10 @@ swipe gesture.
   deletion methods.
 - **Cursor pagination:** pass `$page->cursor` to `cursorPaginate()`, as shown
   in [Paginate lists](paginate-lists.md#cursor-pagination).
-- **Search on submit instead of while typing:** bind `native:model.lazy="query"`.
+- **In-content filter instead of screen search:** put a
+  [Search Field](../components/search-field.md) bound with
+  `native:model.debounce.300ms="query"` above the list and reload from
+  `updatedQuery()`.
 
 --- Source: docs/how-to/build-a-large-list-screen.md ---
 
@@ -487,9 +495,7 @@ The row view receives `$index` and renders one ordinary List Item:
 <firstlight:list-item
     :headline="$contact->name"
     :supporting="$contact->email"
-    trailing-icon="chevron-right"
-    trailing-icon-ios="chevron.right"
-    trailing-icon-android="chevron_right"
+    navigates
     @press="openContact({{ $contact->id }})"
 />
 ```
@@ -885,9 +891,7 @@ Save this as `resources/views/native/settings.blade.php`:
         <native:column class="w-full bg-theme-surface">
             <firstlight:list-item
                 headline="Privacy"
-                trailing-icon="chevron-right"
-                trailing-icon-ios="chevron.right"
-                trailing-icon-android="chevron_right"
+                navigates
                 @press="openPrivacy"
             />
         </native:column>
@@ -904,7 +908,7 @@ Save this as `resources/views/native/settings.blade.php`:
 | Dividers | Between rows when the list sets `separator` | Always between rows in a card |
 | Switches | SwiftUI `Toggle` | Material 3 `Switch` |
 | Digest | Native menu picker | Material 3 exposed dropdown |
-| Privacy row | List Item row with a chevron | Material list item with a chevron |
+| Privacy row | List Item row with the system disclosure chevron | Material list item without a chevron, as Material rows show none |
 
 ## Rules to keep
 
@@ -1963,9 +1967,7 @@ Pass `custom:<name>` to any icon attribute:
 <firstlight:list-item
     headline="Greenhouse"
     leading-icon="custom:plant-2"
-    trailing-icon="chevron-right"
-    trailing-icon-ios="chevron.right"
-    trailing-icon-android="chevron_right"
+    navigates
     @press="openGreenhouse"
 />
 
@@ -4380,7 +4382,7 @@ The visible text is the accessible name by default. `a11y-label` replaces it, an
 
 ## Platform behaviour
 
-iOS uses the official Mobile UI SwiftUI `Button` renderer for every variant except `ghost`, with native button styles, control sizes, progress presentation, icon layout, VoiceOver metadata, and semantic theme tokens. On iOS, `ghost` uses a Firstlight renderer: the same plain, tinted SwiftUI `Button`, with at least a 44-point touch target. Mobile UI's plain ghost button only responds to taps on its text. Android uses the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer, wrapped by Firstlight so TalkBack reaches one named Button node, with native state layers, progress presentation, icon layout, TalkBack metadata, and semantic theme tokens.
+iOS uses the official Mobile UI SwiftUI `Button` renderer for `primary`, `destructive`, `success` and glass buttons, with native button styles, control sizes, progress presentation, icon layout, VoiceOver metadata, and semantic theme tokens. On iOS, `ghost` uses a Firstlight renderer: the same plain, tinted SwiftUI `Button`, with at least a 44-point touch target. Mobile UI's plain ghost button only responds to taps on its text. `secondary` without glass also uses a Firstlight renderer: SwiftUI's `.bordered` style, a light tint of the secondary colour with the label in that colour. Apple uses this lower emphasis for secondary actions, where Mobile UI draws a second filled button. On Android, `secondary` is Material 3's `FilledTonalButton`, the same emphasis. Android uses the official Mobile UI Material 3 `Button`, `FilledTonalButton`, or `TextButton` renderer, wrapped by Firstlight so TalkBack reaches one named Button node, with native state layers, progress presentation, icon layout, TalkBack metadata, and semantic theme tokens.
 
 On iOS 26 and later, buttons in a Bottom Sheet footer take Liquid Glass without `glass`: `secondary` and `ghost` as regular glass, the others as prominent glass. Elsewhere a button is only glass when it sets `glass`, because Apple keeps Liquid Glass for controls that float over content.
 
@@ -5880,7 +5882,7 @@ Icon Button is self-closing and has no visible text slot. Use
 | `icon-android` | `AndroidSymbol|string` | Optional Android override; typed filled or outlined variants are preserved on the wire. |
 | `a11y-label` | non-empty `string` | Required accessible action name. Firstlight never derives it from the machine icon name. |
 | `a11y-hint` | `string` | Optional supplementary VoiceOver or TalkBack guidance. |
-| `variant` | `primary`, `secondary`, `destructive`, `success`, or `ghost` | Semantic action intent. Defaults to `primary`. |
+| `variant` | `primary`, `secondary`, `destructive`, `success`, or `ghost` | Semantic action intent. Defaults to `ghost`, the plain icon button both platforms use by default; use `primary` only for the screen's main action. |
 | `size` | `sm`, `md`, or `lg` | Native glyph and container size. Defaults to `md`; the touch target remains at least 44 points or 48 dp. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |
@@ -5977,9 +5979,7 @@ Material 3 List Item on Android.
     leading-icon="person"
     leading-icon-ios="person.crop.circle"
     leading-icon-android="account_circle"
-    trailing-icon="chevron-right"
-    trailing-icon-ios="chevron.right"
-    trailing-icon-android="chevron_right"
+    navigates
     a11y-hint="Opens account settings"
     :disabled="! $canManageAccount"
     @press="openAccount"
@@ -6009,6 +6009,7 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
 | `trailing-status` | non-empty `string` | Display-only Status Label inside the row's single target. |
 | `trailing-status-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Status meaning; defaults to `neutral` and requires `trailing-status`. |
+| `navigates` | `bool` | Marks a row that opens another screen. iOS draws its disclosure chevron after any trailing text or status; Android draws nothing, as Material rows show no chevron. Cannot be combined with `trailing-icon`. Defaults to `false`. |
 | `state` | `normal`, `provisional`, `pending-removal` | Normal (default), subdued provisional text, or struck-through headline/supporting text. Does not disable actions. |
 | `state-label` | non-empty `string` | Required spoken meaning for a nonnormal state. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
@@ -6020,7 +6021,9 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `class` | `string` | External EDGE layout utilities. |
 
 Choose at most one leading source: icon, avatar, monogram, or label. Choose at most
-one trailing affordance: icon, text, or status. Supporting text and both edges may be
+one trailing affordance: icon, text, or status. Use `navigates` rather than a
+`chevron-right` trailing icon for rows that push a screen, so each platform shows
+its own convention. Supporting text and both edges may be
 omitted for a headline-only row.
 
 Blade examples use kebab-case names. The equivalent `leadingIcon`,
@@ -6029,7 +6032,7 @@ Blade examples use kebab-case names. The equivalent `leadingIcon`,
 aliases are also accepted for parity with NativePHP authoring.
 
 The new attributes also accept matching camelCase aliases and fluent setters:
-`leadingLabel()`, `trailingStatus()`, `trailingStatusTone()`, `state()` and
+`leadingLabel()`, `trailingStatus()`, `trailingStatusTone()`, `navigates()`, `state()` and
 `stateLabel()`.
 
 ## Status and pending state
@@ -7086,7 +7089,7 @@ keyboard, selection, clear, focus, and accessibility behaviour.
 | `value` / `native:model` | `string` | Published query; omission defaults to `''`. |
 | `placeholder` | `string` | Empty-query prompt; never the accessible name. |
 | `disabled` | `bool` | Prevents focus, editing, clearing, change, and submit. |
-| `autocapitalize` | enum string | `none`, `sentences`, `words`, or `characters`; omission keeps platform policy. |
+| `autocapitalize` | enum string | `none`, `sentences`, `words`, or `characters`; omission means `none`, as in the system search bars. |
 | `autocorrect` | `bool` | Explicitly enables or disables correction; omission keeps platform policy. |
 | `a11y-label` | non-empty `string` | Required accessible name. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
@@ -7139,7 +7142,7 @@ accessible name and meets the 44-point iOS or 48-dp Android target baseline.
 
 iOS embeds `UISearchTextField`, so UIKit owns search chrome, the search and clear
 affordances, cursor, selection, marked text, keyboard, and Dynamic Type. Android
-uses a Material 3 search-field composition with `TextFieldValue`, the search IME
+draws a Material 3 search bar, a filled pill with no outline, with `TextFieldValue`, the search IME
 action, Material search/clear affordances, Compose semantics, and font scaling.
 
 ## Screenshots

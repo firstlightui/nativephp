@@ -137,6 +137,14 @@ final class ListItem extends Element
             $this->disabled($attrs['disabled']);
         }
 
+        if (array_key_exists('navigates', $attrs)) {
+            if (! is_bool($attrs['navigates'])) {
+                throw new InvalidArgumentException('Firstlight List Item `navigates` must be a boolean.');
+            }
+
+            $this->navigates($attrs['navigates']);
+        }
+
         $this->applyLeadingAttributes($attrs);
         $this->applyTrailingAttributes($attrs);
         $this->applyAccessibilityAttributes($attrs);
@@ -475,6 +483,21 @@ final class ListItem extends Element
         return $this;
     }
 
+    /**
+     * Marks a row that opens another screen. iOS draws its disclosure
+     * indicator; Material rows show none, so Android draws nothing.
+     */
+    public function navigates(bool $value = true): static
+    {
+        if ($value) {
+            $this->listItemProps['navigates'] = true;
+        } else {
+            unset($this->listItemProps['navigates']);
+        }
+
+        return $this;
+    }
+
     public function a11yLabel(string $value): static
     {
         if (trim($value) === '') {
@@ -504,6 +527,9 @@ final class ListItem extends Element
         }
         if (isset($this->listItemProps['trailing_status_tone']) && ($this->listItemProps['trailing_type'] ?? '') !== 'status') {
             throw new InvalidArgumentException('Firstlight List Item `trailing-status-tone` requires `trailing-status`.');
+        }
+        if (($this->listItemProps['navigates'] ?? false) && ($this->listItemProps['trailing_type'] ?? '') === 'icon') {
+            throw new InvalidArgumentException('Firstlight List Item `navigates` draws the platform disclosure; remove `trailing-icon`.');
         }
         $headline = $this->listItemProps['headline'] ?? null;
         if (! is_string($headline) || trim($headline) === '') {

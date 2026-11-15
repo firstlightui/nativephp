@@ -147,9 +147,7 @@ Save this as `resources/views/native/settings.blade.php`:
         <native:column class="w-full bg-theme-surface">
             <firstlight:list-item
                 headline="Privacy"
-                trailing-icon="chevron-right"
-                trailing-icon-ios="chevron.right"
-                trailing-icon-android="chevron_right"
+                navigates
                 @press="openPrivacy"
             />
         </native:column>
@@ -166,7 +164,7 @@ Save this as `resources/views/native/settings.blade.php`:
 | Dividers | Between rows when the list sets `separator` | Always between rows in a card |
 | Switches | SwiftUI `Toggle` | Material 3 `Switch` |
 | Digest | Native menu picker | Material 3 exposed dropdown |
-| Privacy row | List Item row with a chevron | Material list item with a chevron |
+| Privacy row | List Item row with the system disclosure chevron | Material list item without a chevron, as Material rows show none |
 
 ## Rules to keep
 

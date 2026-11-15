@@ -98,6 +98,8 @@ data class ListItemRendererConfiguration(
     val statusTone: String = "neutral",
     val state: String = "normal",
     val stateLabel: String = "",
+    // `navigates` is not read: Material rows draw no disclosure indicator, so the
+    // iOS-only chevron has no Android expression (Constitution V.4).
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,

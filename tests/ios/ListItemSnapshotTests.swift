@@ -133,6 +133,16 @@ final class ListItemSnapshotTests: XCTestCase {
         XCTAssertTrue(configuration.isEnabled)
     }
 
+    func testNavigatesIsReadAlongsideTrailingTextAndDefaultsOff() {
+        let navigating = ListItemRendererConfiguration(node: makeNode(
+            trailingType: "text", trailingValue: "Weekly", iconProps: ["navigates": true]
+        ))
+
+        XCTAssertTrue(navigating.navigates)
+        XCTAssertEqual(navigating.trailingType, .text)
+        XCTAssertFalse(ListItemRendererConfiguration(node: makeNode()).navigates)
+    }
+
     func testMalformedContentTypesDefensivelyRenderAsAbsent() {
         let configuration = ListItemRendererConfiguration(node: makeNode(
             leadingType: "control",

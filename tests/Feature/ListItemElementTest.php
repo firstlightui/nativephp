@@ -64,6 +64,25 @@ it('publishes meaningful leading labels, status and pending removal without disa
     ])->and($tree['on_press'])->toBeGreaterThan(0);
 });
 
+it('publishes navigates beside trailing metadata and omits it when false', function () {
+    $navigating = collectListItem([
+        'headline' => 'Digest', 'trailing-text' => 'Weekly', 'navigates' => true, '_press' => 'openDigest',
+    ]);
+    $plain = ListItem::make('Digest')->navigates()->navigates(false)->onPress('openDigest')->toArray(new CallbackRegistry);
+
+    expect($navigating['props'])->toMatchArray([
+        'navigates' => true, 'trailing_type' => 'text', 'trailing_value' => 'Weekly',
+    ])->and($plain['props'])->not->toHaveKey('navigates');
+});
+
+it('rejects navigates with a trailing icon or a non-boolean value', function (array $attributes, string $message) {
+    expect(fn () => collectListItem(['headline' => 'Account', '_press' => 'openAccount', ...$attributes]))
+        ->toThrow(InvalidArgumentException::class, $message);
+})->with([
+    [['navigates' => true, 'trailing-icon' => 'chevron-right'], 'remove `trailing-icon`'],
+    [['navigates' => 'yes'], '`navigates` must be a boolean'],
+]);
+
 it('requires spoken meaning for a nonnormal row state', function () {
     collectListItem(['headline' => 'Patient', 'state' => 'provisional', '_press' => 'openPatient']);
 })->throws(InvalidArgumentException::class, 'state-label');

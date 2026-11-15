@@ -79,6 +79,7 @@ struct FirstlightListItemControl: View {
                 }
 
                 if !stackedStatus { trailingContent }
+                if configuration.navigates { disclosureIndicator }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -171,6 +172,14 @@ struct FirstlightListItemControl: View {
             .frame(width: 40, height: 40)
             .accessibilityHidden(true)
         }
+    }
+
+    /// The system disclosure indicator that UIKit and SwiftUI navigation rows draw.
+    private var disclosureIndicator: some View {
+        Image(systemName: "chevron.forward")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+            .accessibilityHidden(true)
     }
 
     @ViewBuilder

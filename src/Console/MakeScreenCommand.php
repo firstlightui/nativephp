@@ -196,6 +196,7 @@ class MakeScreenCommand extends Command
                             <firstlight:list-item
                                 :headline="$item->title"
                                 :disabled="$this->denies('delete', $item)"
+                                navigates
                                 @press="open({{ $item->id }})"
                                 :trailing-actions="[
                                     ['method' => 'requestDeletion('.$item->id.')', 'label' => 'Delete', 'role' => 'destructive'],
@@ -203,7 +204,7 @@ class MakeScreenCommand extends Command
                             />
                 BLADE
                 : <<<'BLADE'
-                            <firstlight:list-item :headline="$item->title" @press="open({{ $item->id }})" />
+                            <firstlight:list-item :headline="$item->title" navigates @press="open({{ $item->id }})" />
                 BLADE;
 
             $sections[] = <<<BLADE

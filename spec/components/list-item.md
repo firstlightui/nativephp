@@ -23,7 +23,9 @@ published metadata while native code owns transient press feedback and swipe
 reveal state.
 
 List Item is not a generic row layout, collection container, selectable row,
-navigation destination, or host for arbitrary controls. List and List Section
+navigation destination, or host for arbitrary controls. `navigates` is a
+presentation hint for a row whose `@press` opens a screen; PHP still performs the
+navigation. List and List Section
 arrange List Items; swipe-enabled rows require a List host.
 
 ## Public API
@@ -35,9 +37,7 @@ arrange List Items; swipe-enabled rows require a List host.
     leading-icon="person"
     leading-icon-ios="person.crop.circle"
     leading-icon-android="account_circle"
-    trailing-icon="chevron-right"
-    trailing-icon-ios="chevron.right"
-    trailing-icon-android="chevron_right"
+    navigates
     a11y-hint="Opens account settings"
     :disabled="! $canManageAccount"
     @press="openAccount"
@@ -62,6 +62,7 @@ arrange List Items; swipe-enabled rows require a List host.
 | `trailing-text` | Optional nullable metadata. Non-empty text is mutually exclusive with `trailing-icon`; null/empty/whitespace omit it. |
 | `trailing-status` | Nonblank Status Label content, mutually exclusive with trailing icon/text. |
 | `trailing-status-tone` | Existing neutral/info/success/warning/danger semantic tone, defaults neutral; requires a status. |
+| `navigates` | Optional boolean, default false, `navigates()` fluent setter. Marks a row that opens another screen. iOS draws the system disclosure indicator (`chevron.forward`, footnote semibold, tertiary label colour, hidden from VoiceOver) after any trailing text or status, as UIKit navigation rows do. Android draws nothing: Material 3 list items show no disclosure indicator, and Article V.4 forbids imitating it. Combining it with `trailing-icon` fails. Publishes `navigates: true` only when set. |
 | `state` | normal (default), provisional (secondary foreground), or pending-removal (struck-through headline/supporting); actions remain enabled unless separately disabled. |
 | `state-label` | Required nonblank authored spoken meaning for nonnormal state; platform state/value semantics, independent of accessible-name override. |
 | `leading-actions`, `trailing-actions` | Optional arrays of labelled callback descriptors; see Swipe actions below. |

@@ -33,9 +33,7 @@ Material 3 List Item on Android.
     leading-icon="person"
     leading-icon-ios="person.crop.circle"
     leading-icon-android="account_circle"
-    trailing-icon="chevron-right"
-    trailing-icon-ios="chevron.right"
-    trailing-icon-android="chevron_right"
+    navigates
     a11y-hint="Opens account settings"
     :disabled="! $canManageAccount"
     @press="openAccount"
@@ -65,6 +63,7 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `trailing-text` | nullable `string` | Optional short metadata; null, empty, and whitespace-only strings omit it. |
 | `trailing-status` | non-empty `string` | Display-only Status Label inside the row's single target. |
 | `trailing-status-tone` | `neutral`, `info`, `success`, `warning`, `danger` | Status meaning; defaults to `neutral` and requires `trailing-status`. |
+| `navigates` | `bool` | Marks a row that opens another screen. iOS draws its disclosure chevron after any trailing text or status; Android draws nothing, as Material rows show no chevron. Cannot be combined with `trailing-icon`. Defaults to `false`. |
 | `state` | `normal`, `provisional`, `pending-removal` | Normal (default), subdued provisional text, or struck-through headline/supporting text. Does not disable actions. |
 | `state-label` | non-empty `string` | Required spoken meaning for a nonnormal state. |
 | `leading-actions` | `array` of action descriptors | Optional actions revealed from the logical leading edge inside List. |
@@ -76,7 +75,9 @@ slot: arbitrary text, controls, and layouts cannot be nested inside the row.
 | `class` | `string` | External EDGE layout utilities. |
 
 Choose at most one leading source: icon, avatar, monogram, or label. Choose at most
-one trailing affordance: icon, text, or status. Supporting text and both edges may be
+one trailing affordance: icon, text, or status. Use `navigates` rather than a
+`chevron-right` trailing icon for rows that push a screen, so each platform shows
+its own convention. Supporting text and both edges may be
 omitted for a headline-only row.
 
 Blade examples use kebab-case names. The equivalent `leadingIcon`,
@@ -85,7 +86,7 @@ Blade examples use kebab-case names. The equivalent `leadingIcon`,
 aliases are also accepted for parity with NativePHP authoring.
 
 The new attributes also accept matching camelCase aliases and fluent setters:
-`leadingLabel()`, `trailingStatus()`, `trailingStatusTone()`, `state()` and
+`leadingLabel()`, `trailingStatus()`, `trailingStatusTone()`, `navigates()`, `state()` and
 `stateLabel()`.
 
 ## Status and pending state

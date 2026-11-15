@@ -105,9 +105,7 @@ Pass `custom:<name>` to any icon attribute:
 <firstlight:list-item
     headline="Greenhouse"
     leading-icon="custom:plant-2"
-    trailing-icon="chevron-right"
-    trailing-icon-ios="chevron.right"
-    trailing-icon-android="chevron_right"
+    navigates
     @press="openGreenhouse"
 />
 
