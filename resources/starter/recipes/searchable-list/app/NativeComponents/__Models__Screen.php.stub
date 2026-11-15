@@ -1,0 +1,107 @@
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\__Model__;
+use FirstlightUI\NativeComponent;
+use FirstlightUI\Pagination\ListPage;
+use Illuminate\View\View;
+@starter(create)
+use Native\Mobile\Edge\Layouts\Builders\NavAction;
+@endstarter
+
+class __Models__Screen extends NativeComponent
+{
+    public string $query = '';
+
+    public function mount(): void
+    {
+        $this->reload();
+    }
+
+    /** Runs when a screen pushed on top of this one closes, so new and changed __labels__ show. */
+    public function onResume(): void
+    {
+        parent::onResume();
+
+        $this->reload();
+    }
+
+    public function updatedQuery(): void
+    {
+        $this->reload();
+    }
+
+    public function reload(): void
+    {
+        $this->refreshList(fn (ListPage $page) => $this->__models__($page));
+    }
+
+    public function loadMore(): void
+    {
+        $this->loadMoreList(fn (ListPage $page) => $this->__models__($page));
+    }
+
+    public function open__Model__(int $id): void
+    {
+        $this->navigate('/__route__/'.$id);
+    }
+@starter(create)
+
+    /** @return list<NavAction> */
+    public function navActions(): array
+    {
+        return [
+            NavAction::make('create')
+                ->label('New __label__')
+                ->a11yLabel('New __label__')
+                ->icon(ios: 'plus', android: 'add')
+                ->press('create'),
+        ];
+    }
+
+    public function create(): void
+    {
+        $this->navigate('/__route__/create');
+    }
+@endstarter
+@starter(deletable)
+
+    public function requestDeletion(int $id): void
+    {
+        $this->requestDestructiveListAction($id, 'delete');
+    }
+
+    public function cancelDeletion(): void
+    {
+        $this->cancelDestructiveListAction();
+    }
+
+    public function delete__Model__(): void
+    {
+        $this->confirmDestructiveListAction(
+            destroy: fn (__Model__ $__model__) => $__model__->delete(),
+            ability: 'delete',
+            successMessage: '__Label__ deleted',
+        );
+    }
+@endstarter
+
+    public function navTitle(): string
+    {
+        return '__Labels__';
+    }
+
+    public function render(): View
+    {
+        return view('native.__route__');
+    }
+
+    private function __models__(ListPage $page)
+    {
+        return __Model__::query()
+            ->when($this->query !== '', fn ($query) => $query->where('title', 'like', '%'.$this->query.'%'))
+            ->latest()
+            ->paginate(perPage: 20, page: $page->page);
+    }
+}

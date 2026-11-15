@@ -1680,10 +1680,21 @@ single stack, a screen for each part of the app built from a
 [recipe](../how-to/build-a-list-detail-flow.md), and the NativePHP plugins that
 fit. It then proposes the app name, app ID, brand colour, icon, splash, locale,
 and minimum OS, and you change any of them in your reply. It writes the plan to
-`firstlight-starter.json` and builds nothing until you confirm it. Then it
-installs the plugins you accepted, scaffolds each screen with a Pest test, runs
-the test suite, and lists what is left for you in `STARTER.md`, such as signing
-and store listings.
+`firstlight-starter.json` and builds nothing until you confirm it. Then it runs:
+
+```bash
+php artisan firstlight:starter
+```
+
+The command installs the plugins you accepted, sets the app's name, ID,
+colours, locale, timezone and permission text, and writes the native-chrome
+layout and each screen with its Pest test. It lists what is left for you in
+`STARTER.md`, such as signing, store listings, and any screen it has no
+template for yet, which the agent then builds from its recipe. Running it again
+keeps files you have changed unless you pass `--force`. You can also write the
+plan yourself, starting from
+`vendor/firstlightui/nativephp/resources/starter/firstlight-starter.example.json`,
+and run the command without an agent.
 
 The skill picks plugins from a list shipped with Firstlight at
 `vendor/firstlightui/nativephp/resources/starter/plugins.json`, which says

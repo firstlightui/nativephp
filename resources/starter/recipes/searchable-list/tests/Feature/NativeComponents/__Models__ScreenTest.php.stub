@@ -1,0 +1,101 @@
+<?php
+
+use App\Models\__Model__;
+@starter(deletable)
+use FirstlightUI\Facades\Feedback;
+@endstarter
+use Native\Mobile\Testing\Native;
+
+function seed__Models__(int $count): void
+{
+    foreach (range(1, $count) as $i) {
+        __Model__::factory()->create([
+            'title' => "Sample __label__ {$i}",
+            'created_at' => now()->subMinutes($i),
+        ]);
+    }
+}
+
+it('loads the first page and appends the next on end reached', function () {
+    seed__Models__(30);
+
+    Native::visit('/__route__')
+        ->assertListItemCount(20)
+        ->assertListItem('Sample __label__ 1')
+        ->assertMissingListItem('Sample __label__ 21')
+        ->call('loadMore')
+        ->assertListItemCount(30)
+        ->assertListItem('Sample __label__ 30');
+});
+
+it('restarts the list from page one for each search', function () {
+    seed__Models__(30);
+
+    Native::visit('/__route__')
+        ->set('query', '__label__ 3')
+        ->assertListItem('Sample __label__ 3')
+        ->assertListItem('Sample __label__ 30')
+        ->assertMissingListItem('Sample __label__ 1')
+        ->set('query', 'nothing matches')
+        ->assertListItemCount(0)
+        ->assertSee('No matching __labels__');
+});
+
+it('says when there are no __labels__ yet', function () {
+    Native::visit('/__route__')
+        ->assertListItemCount(0)
+        ->assertSee('No __labels__ yet');
+});
+
+it('opens the detail screen for the pressed row', function () {
+    seed__Models__(2);
+
+    Native::visit('/__route__')
+        ->pressListItem('Sample __label__ 2')
+        ->assertNavigatedTo('/__route__/'.__Model__::where('title', 'Sample __label__ 2')->value('id'));
+});
+@starter(create)
+
+it('shows a new __label__ when the create screen closes', function () {
+    Native::visit('/__route__')
+        ->call('create')
+        ->assertNavigatedTo('/__route__/create')
+        ->follow()
+        ->set('title', 'A brand new __label__')
+        ->set('body', 'A body long enough to pass validation.')
+        ->call('save')
+        ->goBack()
+        ->assertListItem('A brand new __label__');
+});
+@endstarter
+@starter(deletable)
+
+it('deletes a row only after native confirmation', function () {
+    Feedback::fake();
+    seed__Models__(2);
+
+    $screen = Native::visit('/__route__')
+        ->pressListItem('Sample __label__ 1', 'Delete')
+        ->assertConfirmationDialog('Delete __label__?');
+
+    expect(__Model__::where('title', 'Sample __label__ 1')->exists())->toBeTrue();
+
+    $screen->confirmDialog()
+        ->assertNoConfirmationDialog()
+        ->assertMissingListItem('Sample __label__ 1')
+        ->assertFeedbackSent('__Label__ deleted');
+
+    expect(__Model__::where('title', 'Sample __label__ 1')->exists())->toBeFalse();
+});
+
+it('keeps the row when deletion is cancelled', function () {
+    seed__Models__(2);
+
+    Native::visit('/__route__')
+        ->pressListItem('Sample __label__ 1', 'Delete')
+        ->cancelDialog()
+        ->assertListItem('Sample __label__ 1');
+
+    expect(__Model__::where('title', 'Sample __label__ 1')->exists())->toBeTrue();
+});
+@endstarter

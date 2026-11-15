@@ -1,0 +1,73 @@
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\__Model__;
+use FirstlightUI\Concerns\KeepsDrafts;
+use FirstlightUI\Drafts\Draft;
+use FirstlightUI\NativeComponent;
+use Illuminate\View\View;
+
+class Edit__Model__Screen extends NativeComponent
+{
+    use KeepsDrafts;
+
+    public __Model__ $__model__;
+
+    public string $title = '';
+
+    public string $body = '';
+
+    /** @var array<string, string> */
+    protected array $rules = [
+        'title' => 'required|min:3',
+        'body' => 'required',
+    ];
+
+    public function mount(): void
+    {
+        $this->title = $this->__model__->title;
+        $this->body = $this->__model__->body;
+
+        $this->restoreDraft("__view__:{$this->__model__->id}", basedOn: $this->__model__->updated_at?->toISOString());
+    }
+
+    protected function draft(): ?Draft
+    {
+        if ($this->title === $this->__model__->title && $this->body === $this->__model__->body) {
+            return null;
+        }
+
+        return new Draft(
+            "__view__:{$this->__model__->id}",
+            ['title' => $this->title, 'body' => $this->body],
+            basedOn: $this->__model__->updated_at?->toISOString(),
+        );
+    }
+
+    public function save(): void
+    {
+        $saved = $this->submit(
+            action: fn () => $this->__model__->update([
+                'title' => $this->title,
+                'excerpt' => str($this->body)->limit(60)->toString(),
+                'body' => $this->body,
+            ]),
+            successMessage: '__Label__ saved',
+        );
+
+        if ($saved) {
+            $this->back();
+        }
+    }
+
+    public function navTitle(): string
+    {
+        return 'Edit __label__';
+    }
+
+    public function render(): View
+    {
+        return view('native.edit-__view__');
+    }
+}

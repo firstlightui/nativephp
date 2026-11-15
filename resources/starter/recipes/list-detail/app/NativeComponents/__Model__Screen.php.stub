@@ -1,0 +1,79 @@
+<?php
+
+namespace App\NativeComponents;
+
+use App\Models\__Model__;
+use FirstlightUI\NativeComponent;
+use Illuminate\View\View;
+@starter(navactions)
+use Native\Mobile\Edge\Layouts\Builders\NavAction;
+@endstarter
+@starter(share)
+use Native\Mobile\Facades\Share;
+@endstarter
+
+class __Model__Screen extends NativeComponent
+{
+    public __Model__ $__model__;
+@starter(edit)
+
+    /** Runs when the edit screen closes, so saved changes show. */
+    public function onResume(): void
+    {
+        parent::onResume();
+
+        $this->__model__->refresh();
+    }
+@endstarter
+@starter(navactions)
+
+    /** @return list<NavAction> */
+    public function navActions(): array
+    {
+        return [
+@starter(share)
+            NavAction::make('share')
+                ->label('Share')
+                ->a11yLabel('Share __label__')
+                ->icon(ios: 'square.and.arrow.up', android: 'share')
+                ->press('share'),
+@endstarter
+@starter(edit)
+            NavAction::make('edit')
+                ->label('Edit')
+                ->a11yLabel('Edit __label__')
+                ->press('edit'),
+@endstarter
+        ];
+    }
+@endstarter
+@starter(share)
+
+    /** Opens the system share sheet with a link that opens this __label__ in the app. */
+    public function share(): void
+    {
+        Share::url(
+            $this->__model__->title,
+            $this->__model__->excerpt,
+            config('nativephp.deeplink_scheme').'://__route__/'.$this->__model__->id,
+        );
+    }
+@endstarter
+@starter(edit)
+
+    public function edit(): void
+    {
+        $this->navigate('/__route__/'.$this->__model__->id.'/edit');
+    }
+@endstarter
+
+    public function navTitle(): string
+    {
+        return $this->__model__->title;
+    }
+
+    public function render(): View
+    {
+        return view('native.__view__');
+    }
+}

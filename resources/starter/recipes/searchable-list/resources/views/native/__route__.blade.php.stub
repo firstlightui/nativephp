@@ -1,0 +1,47 @@
+<native:column class="w-full flex-1 bg-theme-background">
+    <firstlight:search-field
+        placeholder="Search __labels__"
+        a11y-label="Search __labels__"
+        native:model.debounce.300ms="query"
+        class="mx-4 my-2"
+    />
+
+    @if (count($listItems) === 0)
+        <firstlight:status-label
+            label="{{ $query === '' ? 'No __labels__ yet' : 'No matching __labels__' }}"
+            tone="neutral"
+            class="mx-4"
+        />
+    @endif
+
+    <firstlight:list separator @refresh="reload" @endReached="loadMore" class="flex-1 bg-theme-background">
+        @foreach ($listItems as $__model__)
+            <firstlight:list-item
+                :headline="$__model__->title"
+                :supporting="$__model__->excerpt"
+                trailing-icon="chevron-right"
+                trailing-icon-ios="chevron.right"
+                trailing-icon-android="chevron_right"
+                @press="open__Model__({{ $__model__->id }})"
+@starter(deletable)
+                :trailing-actions="[
+                    ['method' => 'requestDeletion('.$__model__->id.')', 'label' => 'Delete', 'role' => 'destructive'],
+                ]"
+@endstarter
+            />
+        @endforeach
+    </firstlight:list>
+@starter(deletable)
+
+    <firstlight:confirmation-dialog
+        :visible="$confirmingListDestruction"
+        title="Delete __label__?"
+        message="This action cannot be undone."
+        confirm-label="Delete"
+        cancel-label="Keep __label__"
+        tone="destructive"
+        @press="delete__Model__"
+        @dismiss="cancelDeletion"
+    />
+@endstarter
+</native:column>

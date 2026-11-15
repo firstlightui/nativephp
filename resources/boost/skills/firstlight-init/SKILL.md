@@ -72,31 +72,41 @@ Show one table of proposed values and let the developer change any row by reply.
 - **Deep link scheme** (`NATIVEPHP_DEEPLINK_SCHEME`): the app slug, lowercase letters and digits. Plugins whose `setup` mentions it need it.
 - **Brand colour:** offer three colours that suit the description, or take the developer's. Pick `on-primary` and check the pair is at least 4.5:1 contrast; when it fails, suggest the nearest shade that passes. Dark mode is derived unless the developer asks to tune it.
 - **Appearance** (`NATIVEPHP_APPEARANCE`): `system`.
-- **Icon:** a 1024 × 1024 square PNG the developer provides, written to `public/icon.png`. Without one, and with GD available in PHP, generate a placeholder from the brand colour and the app's initial, and list real artwork as left to do.
-- **Splash:** the brand colour with the icon, written to `public/splash.png` and `public/splash-dark.png`, at least 375 × 667 for iOS. Offer an animated splash plugin only when the developer asks for one.
+- **Icon:** the path to a square PNG of at least 1024 × 1024 with no transparency, or none for a placeholder in the brand colour that the developer replaces before release.
+- **Splash:** a placeholder in the brand colour, which the developer can replace. Offer an animated splash plugin only when the developer asks for one.
 - **Locale:** `APP_LOCALE` and `APP_FALLBACK_LOCALE`. Firstlight's own chrome ships in de, en, es, fr, it, ja, nl, pl, pt_BR and zh_CN; for another locale, say its chrome strings need translating (https://firstlightui.dev/docs/how-to/localize).
-- **Timezone:** `APP_TIMEZONE` from the developer's machine. Date and Time pickers follow `config('app.timezone')`, so make `config/app.php` read `env('APP_TIMEZONE', 'UTC')` if it doesn't already.
+- **Timezone:** the developer's IANA timezone, such as `Australia/Sydney`. Date and Time pickers follow it.
 - **Minimum OS:** iOS 18.2 and Android API 29 (`NATIVEPHP_ANDROID_MIN_SDK=29`), raised to the highest `ios.min` or `android.min` among the chosen plugins.
 - **Permission text:** one sentence for each usage description the chosen controls and plugins need, worded for this app, such as "Fieldwork uses the camera to add photos to a job." Media's camera needs `NSCameraUsageDescription`; plugins list theirs under `usage_descriptions`. These go in `permissions` in `config/nativephp.php`.
 
 ## 5. Confirm the plan
 
-Write the plan to `firstlight-starter.json` in the app root, in the shape of `vendor/firstlightui/nativephp/resources/starter/firstlight-starter.example.json`, with `accepted: true` only on plugins the developer said yes to. Show it, and wait for the developer to confirm before writing anything else. Keep the file in the app as the record of what was chosen.
+Write the plan to `firstlight-starter.json` in the app root, in the shape of `vendor/firstlightui/nativephp/resources/starter/firstlight-starter.example.json`:
+
+- One `records` entry per main record, named as a singular StudlyCase model such as `WorkOrder`. Avoid names whose table Laravel already uses, such as `Job`, `User` or `Session`.
+- One `screens` entry per screen, giving its recipe id and, for record screens, its record. Give each list both `how-to/build-a-searchable-list-screen` and `how-to/build-a-list-detail-flow`.
+- `accepted: true` only on plugins the developer said yes to.
+
+Show the plan and wait for the developer to confirm it before you write anything else. Keep the file in the app as the record of what was chosen.
 
 ## 6. Build it
 
-1. **Plugins.** For each accepted plugin, `composer require <package>` then `php artisan native:plugin:register <package>`. For an accepted paid plugin, first add the repository with `composer config repositories.nativephp-plugins composer https://plugins.nativephp.com` if `composer.json` lacks it. Paid plugins download only for an account that has bought them, using the buyer's email and licence key. Never ask for the key, read it, print it or write it to a file. If Composer fails with 401 or 403, leave the plugin out, build the rest, and add these steps to the hand-over: buy the plugin on its marketplace page, run `composer config http-basic.plugins.nativephp.com <email> <licence-key>` themselves (the key is on https://nativephp.com/dashboard/purchased-plugins), then `composer require` and `native:plugin:register`.
-2. **Identity.** Set the essentials in `.env` and the same keys with safe values in `.env.example`. Set `NATIVEPHP_ANDROID_COLOR_PRIMARY` and `NATIVEPHP_ANDROID_COLOR_ON_PRIMARY` to the brand pair. Write the icon and splash files and the permission text.
-3. **Theme.** `php artisan vendor:publish --tag=native-ui-config`, then set `primary` and `on-primary` in `config/native-ui.php` for light, and dark if requested. Leave other tokens alone. See https://firstlightui.dev/docs/getting-started/theming.
-4. **Layout.** Create `app/NativeComponents/Layouts/AppLayout.php` exactly as in `how-to/build-a-list-detail-flow`. For tabs, add `tabBar()` with one `Tab::link()` per tab.
-5. **Records.** For each record: model, migration, factory, Policy, and a seeder with a few example records so the first run shows data.
-6. **Screens.** Copy each screen's class, view and route from its recipe, renamed to the record. Register routes with `->layout(AppLayout::class)`, and register `/<records>/create` before `/<records>/{<record>}`. Wire each accepted plugin as its recipe shows, for example App Guard's `app-lock` middleware and lock screen.
-7. **Tests.** Add `FirstlightUI\Testing\ScreenAssertions::register();` to `tests/Pest.php` and one Pest test per screen covering its main path and its failure path, such as a validation error or a cancelled delete. Paid plugins' facades must not be needed for the tests to pass.
+Run `php artisan firstlight:starter`. It checks the plan and lists every problem at once; fix the plan with the developer and run it again. Then it:
+
+- Installs and registers each accepted plugin. A paid plugin downloads only for an account that has bought it, with the buyer's email and licence key in Composer's auth. Never ask for the key, read it, print it or write it to a file. When Composer refuses, the command leaves the plugin out, restores `composer.json` and `composer.lock`, and puts the purchase steps in `STARTER.md`.
+- Writes the app name, app ID, colours, locale, timezone and minimum SDK to `.env` and `.env.example`, makes `config/app.php` read `APP_TIMEZONE`, sets `primary` and `on-primary` in `config/native-ui.php`, and adds the permission text to `config/nativephp.php`.
+- Draws a placeholder icon and splash when none exist, and copies the plan's `icon` when it is a square PNG of at least 1024 × 1024.
+- Writes `AppLayout` with native chrome and the tabs, then each record's model, migration, factory, Policy and seeder, and each screen's class, view and Pest test from its recipe. It registers the routes in `routes/mobile.php` with create routes before record routes.
+- Writes `STARTER.md` with each screen and its recipe, the installed plugins (with the community notice), the screens to build next, and what is left for the developer.
+
+Running it again is safe: it leaves files the developer has changed alone and lists them, unless you pass `--force`. Use `--skip-plugins` when you have installed the plugins yourself.
+
+Then build each screen under "Build next" in `STARTER.md` by hand from its recipe, renamed to its record, with a Pest test in `tests/Feature/NativeComponents/` covering its main path and its failure path. Wire each accepted plugin that no generated screen uses as its recipe shows, for example App Guard's `app-lock` middleware and lock screen.
 
 ## 7. Verify and hand over
 
 - Run `php artisan migrate --seed` and the test suite. Fix failures before continuing.
-- Write `STARTER.md` in the app root listing each screen and its recipe, each plugin and why it is there (with the community notice for community plugins), and what is left for the developer: signing and builds (Bifrost, or `php artisan native:credentials`), the App Store Connect app record and Play Console listing, store screenshots and privacy answers, real icon and splash artwork if a placeholder was used, paid plugins they accepted but couldn't install, the back end and sign-in, push keys if they chose push, and the version and build numbers.
+- Add to `STARTER.md` anything the command couldn't know: the back end and sign-in, and push keys if they chose push.
 - Ask the developer to run the app on an iOS simulator and an Android emulator with `php artisan native:run` and check the large title, back navigation, tabs, field errors and deletion on both.
 - Summarise what was created and suggest the next screen to build. From here, follow the `building-firstlight-screens` skill.
 

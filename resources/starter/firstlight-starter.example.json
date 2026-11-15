@@ -1,5 +1,5 @@
 {
-    "description": "Field technicians see the day's jobs, add photos and notes to a job, and keep working without signal.",
+    "description": "Field technicians see the day's work orders, add notes to one, and keep working without signal.",
     "app": {
         "name": "Fieldwork",
         "id": "com.acme.fieldwork",
@@ -16,20 +16,19 @@
     "layout": {
         "type": "tabs",
         "tabs": [
-            {"label": "Jobs", "url": "/jobs", "icon": "list"},
+            {"label": "Work orders", "url": "/work-orders", "icon": "list"},
             {"label": "Settings", "url": "/settings", "icon": "settings"}
         ]
     },
     "records": [
-        {"model": "Job", "deletable": true, "delete_rule": "Only the technician assigned to the job"}
+        {"model": "WorkOrder", "deletable": true, "delete_rule": "Only the technician assigned to the work order."}
     ],
     "screens": [
-        {"class": "JobsScreen", "route": "/jobs", "recipe": "how-to/build-a-searchable-list-screen"},
-        {"class": "CreateJobScreen", "route": "/jobs/create", "recipe": "how-to/build-a-form-screen"},
-        {"class": "JobScreen", "route": "/jobs/{job}", "recipe": "how-to/build-a-list-detail-flow"},
-        {"class": "EditJobScreen", "route": "/jobs/{job}/edit", "recipe": "how-to/keep-drafts"},
-        {"class": "JobPhotoScreen", "route": "/jobs/{job}/photo", "recipe": "how-to/build-a-photo-upload-screen"},
-        {"class": "SettingsScreen", "route": "/settings", "recipe": "how-to/build-a-settings-screen"}
+        {"recipe": "how-to/build-a-searchable-list-screen", "record": "WorkOrder"},
+        {"recipe": "how-to/build-a-form-screen", "record": "WorkOrder"},
+        {"recipe": "how-to/build-a-list-detail-flow", "record": "WorkOrder"},
+        {"recipe": "how-to/keep-drafts", "record": "WorkOrder"},
+        {"recipe": "how-to/build-a-settings-screen"}
     ],
     "plugins": [
         {"package": "nativephp/mobile-network", "accepted": true},
@@ -38,6 +37,6 @@
         {"package": "nativephp/mobile-biometrics", "accepted": false}
     ],
     "permissions": {
-        "NSCameraUsageDescription": "Fieldwork uses the camera to add photos to a job."
+        "NSCameraUsageDescription": "Fieldwork uses the camera to add photos to a work order."
     }
 }

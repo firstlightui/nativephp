@@ -1,0 +1,58 @@
+<?php
+
+use App\Models\__Model__;
+use App\NativeComponents\Edit__Model__Screen;
+use FirstlightUI\Facades\Drafts;
+use FirstlightUI\Facades\Feedback;
+use Native\Mobile\Testing\Native;
+use Native\Mobile\Testing\TestableComponent;
+
+beforeEach(function () {
+    Drafts::flush();
+    Feedback::fake();
+});
+
+function leaveEdit__Model__(TestableComponent $screen): void
+{
+    $screen->pressBack()->assertWentBack();
+    $screen->instance()->unmount();
+}
+
+it('keeps an unsaved edit when the user goes back, and restores it on reopen', function () {
+    $__model__ = __Model__::factory()->create(['title' => 'First title', 'body' => 'The saved body.']);
+
+    leaveEdit__Model__(Native::visit("/__route__/{$__model__->id}/edit")->set('body', 'An unsaved edit.'));
+
+    Native::visit("/__route__/{$__model__->id}/edit")
+        ->assertSet('body', 'An unsaved edit.')
+        ->assertSet('title', 'First title')
+        ->assertFeedbackSent('Restored your unsaved changes.');
+
+    expect($__model__->fresh()->body)->toBe('The saved body.');
+});
+
+it('keeps nothing once the edit is saved', function () {
+    $__model__ = __Model__::factory()->create();
+
+    $screen = Native::visit("/__route__/{$__model__->id}/edit")
+        ->set('body', 'A saved edit.')
+        ->call('save')
+        ->assertFeedbackSent('__Label__ saved')
+        ->assertWentBack();
+    $screen->instance()->unmount();
+
+    expect(Drafts::has(Edit__Model__Screen::class, "__view__:{$__model__->id}"))->toBeFalse()
+        ->and($__model__->fresh()->body)->toBe('A saved edit.');
+});
+
+it('does not save an empty title', function () {
+    $__model__ = __Model__::factory()->create(['title' => 'First title']);
+
+    Native::visit("/__route__/{$__model__->id}/edit")
+        ->set('title', '')
+        ->call('save')
+        ->assertFieldError('title')
+        ->assertNoFeedbackSent();
+
+    expect($__model__->fresh()->title)->toBe('First title');
+});

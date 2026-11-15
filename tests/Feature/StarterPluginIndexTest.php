@@ -93,35 +93,14 @@ it('keeps versions and prices out of the index', function () {
     }
 });
 
-it('gives an example plan the init skill can follow', function () {
-    $index = collect(starterFile('plugins.json')['plugins'])->keyBy('package');
-    $plan = starterFile('firstlight-starter.example.json');
+it('gives an example plan the starter command accepts', function () {
+    $plan = FirstlightUI\Starter\StarterPlan::fromArray(
+        starterFile('firstlight-starter.example.json'),
+        starterFile('plugins.json'),
+    );
 
-    expect($plan['app']['id'])->toMatch('/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/')
-        ->and($plan)->not->toHaveKey('version');
-
-    $accepted = [];
-
-    foreach ($plan['plugins'] as $choice) {
-        expect($index)->toHaveKey($choice['package']);
-
-        if ($choice['accepted']) {
-            expect($index[$choice['package']]['status'])->toBe('available');
-            $accepted[] = $index[$choice['package']]['android']['min'];
-        }
-    }
-
-    expect($plan['android_min_sdk'])->toBeGreaterThanOrEqual(max(29, ...$accepted));
-
-    foreach ($plan['screens'] as $screen) {
-        expect(dirname(__DIR__, 2)."/docs/{$screen['recipe']}.md")->toBeFile();
-    }
-
-    $routes = array_column($plan['screens'], 'route');
-
-    foreach ($plan['layout']['tabs'] as $tab) {
-        expect($routes)->toContain($tab['url']);
-    }
+    expect(array_column($plan->screens(), 'route'))
+        ->toBe(['/work-orders', '/work-orders/create', '/work-orders/{workOrder}', '/work-orders/{workOrder}/edit', '/settings']);
 });
 
 it('points the init skill at the shipped index and example plan', function () {

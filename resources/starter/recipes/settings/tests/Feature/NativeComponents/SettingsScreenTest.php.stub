@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Support\Facades\Cache;
+use Native\Mobile\Testing\Native;
+
+it('shows the stored settings', function () {
+    Cache::forever('settings.marketing', true);
+    Cache::forever('settings.digest', 'daily');
+
+    Native::visit('/settings')
+        ->assertSet('notifications', true)
+        ->assertSet('marketing', true)
+        ->assertSet('digest', 'daily');
+});
+
+it('saves each change as soon as it is made', function () {
+    Native::visit('/settings')
+        ->set('notifications', false)
+        ->set('digest', 'never');
+
+    expect(Cache::get('settings.notifications'))->toBeFalse()
+        ->and(Cache::get('settings.digest'))->toBe('never')
+        ->and(Cache::get('settings.marketing'))->toBeNull();
+});
