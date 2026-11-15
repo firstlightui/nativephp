@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- The `firstlight-init` skill starts a new app from a description. It proposes tabs or a single stack, recipe screens and NativePHP plugins, then collects the app name, app ID, brand colour, icon, splash, locale and minimum OS, writes the plan to `firstlight-starter.json`, and builds only after the developer confirms. It picks plugins from `resources/starter/plugins.json`, which lists what each Firstlight, NativePHP and community plugin does on iOS and Android and which Firstlight features make a plugin unnecessary. Free plugins are included when the app needs them; paid plugins are only offered and installed after a yes, and the app works without them; community plugins come with a no-warranty notice. Without a NativePHP plugins licence, an accepted paid plugin is left out and `STARTER.md` gives the steps to buy and add it.
+
+### Fixed
+
+- `firstlight-init` sets the app timezone through `config('app.timezone')`, which Laravel's default `config/app.php` hard-codes to UTC, so Date and Time pickers now follow the timezone the developer chose.
+
 ## 1.1.0-beta10 - 2026-11-14
 
 ### Added
