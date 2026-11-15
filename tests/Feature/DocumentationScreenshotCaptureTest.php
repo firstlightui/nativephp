@@ -513,6 +513,125 @@ it('uses manifest readiness text when a modal hides the Android route title', fu
     }
 });
 
+/**
+ * A capture fixture whose Context Menu entry long-presses "Message from Alex"
+ * until "Pin" shows, on a runner whose menu opens only when $opens is true.
+ *
+ * @return array{0: array{package: string, showcase: string}, 1: FakeCaptureCommandRunner}
+ */
+function longPressCaptureFixture(bool $opens = true): array
+{
+    $fixture = screenshotCaptureFixture();
+    $manifestPath = $fixture['package'].'/spec/screenshots.json';
+    $manifest = json_decode((string) file_get_contents($manifestPath), true);
+    $manifest['components']['context-menu'] = [
+        'route' => '/captures/context-menu',
+        'test' => 'php artisan test tests/Feature/ContextMenuCaptureTest.php',
+        'long-press' => ['text' => 'Message from Alex', 'until' => 'Pin'],
+        'outputs' => array_map(
+            fn (string $variant): string => "docs/screenshots/context-menu/{$variant}.png",
+            ['ios-light' => 'ios-light', 'ios-dark' => 'ios-dark', 'android-light' => 'android-light', 'android-dark' => 'android-dark'],
+        ),
+    ];
+    file_put_contents($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    mkdir($fixture['package'].'/docs/screenshots/context-menu', 0777, true);
+
+    [$normalRunner] = successfulCaptureRunner($fixture);
+    $iosOpen = false;
+    $androidOpen = false;
+    $runner = new FakeCaptureCommandRunner(function (array $command, ?string $cwd) use ($normalRunner, $opens, &$iosOpen, &$androidOpen): array {
+        $ok = fn (string $stdout = ''): array => ['exitCode' => 0, 'stdout' => $stdout, 'stderr' => ''];
+
+        if ($command === ['axe', 'describe-ui', '--udid', 'IOS-1']) {
+            $row = ['AXLabel' => 'Message from Alex, Long-press for more actions', 'frame' => ['x' => 16, 'y' => 100, 'width' => 368, 'height' => 41], 'children' => []];
+            $menu = $iosOpen ? [['AXLabel' => 'Pin', 'frame' => ['x' => 40, 'y' => 300, 'width' => 250, 'height' => 44]]] : [];
+
+            return $ok(json_encode([['AXLabel' => 'Firstlight Showcase', 'frame' => ['x' => 0, 'y' => 0, 'width' => 402, 'height' => 874], 'children' => [$row, ...$menu]]]));
+        }
+        if (array_slice($command, 0, 2) === ['axe', 'touch']) {
+            $iosOpen = $opens;
+
+            return $ok();
+        }
+        if ($command === ['adb', '-s', 'emulator-5554', 'exec-out', 'uiautomator', 'dump', '/dev/tty']) {
+            $menu = $androidOpen ? '<node text="Pin" package="dev.firstlightui.showcase" bounds="[48,900][700,1044]" />' : '';
+
+            return $ok('<hierarchy><node text="Firstlight Context Menu" package="dev.firstlightui.showcase" bounds="[0,100][1080,220]" />'
+                .'<node index="0" text="" content-desc="Message from Alex. Long-press for more actions" package="dev.firstlightui.showcase" bounds="[0,250][1080,351]" />'
+                .$menu.'</hierarchy>');
+        }
+        if (array_slice($command, 0, 6) === ['adb', '-s', 'emulator-5554', 'shell', 'input', 'swipe']) {
+            $androidOpen = $opens;
+
+            return $ok();
+        }
+        if ($command === ['sleep', '1'] || str_contains(implode(' ', $command), 'ContextMenuCaptureTest.php')) {
+            return $ok();
+        }
+
+        return $normalRunner->run($command, $cwd);
+    });
+
+    return [$fixture, $runner];
+}
+
+function contextMenuCaptureRequest(array $fixture): CaptureRequest
+{
+    return new CaptureRequest('ContextMenu', $fixture['package'], $fixture['showcase'], 'IOS-1', 'emulator-5554', false, false);
+}
+
+it('long-presses the manifest target on both platforms and captures the opened menu', function () {
+    [$fixture, $runner] = longPressCaptureFixture();
+
+    try {
+        $report = (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(contextMenuCaptureRequest($fixture));
+        $commands = array_column($runner->calls, 'command');
+        $iosPresses = array_keys(array_filter($commands, fn (array $command): bool => array_slice($command, 0, 2) === ['axe', 'touch']));
+        $androidPresses = array_keys(array_filter($commands, fn (array $command): bool => array_slice($command, 4, 2) === ['input', 'swipe']));
+        $firstIosShot = array_key_first(array_filter($commands, fn (array $command): bool => array_slice($command, 2, 2) === ['io', 'IOS-1']));
+        $firstAndroidShot = array_key_first(array_filter($commands, fn (array $command): bool => in_array('screencap', $command, true)));
+
+        // The centre of the row's frame and bounds; once open, the menu is not pressed again.
+        expect($iosPresses)->toHaveCount(1)
+            ->and($commands[$iosPresses[0]])->toBe(['axe', 'touch', '-x', '200', '-y', '121', '--down', '--up', '--delay', '1.5', '--udid', 'IOS-1'])
+            ->and($iosPresses[0])->toBeLessThan($firstIosShot)
+            ->and($androidPresses)->toHaveCount(1)
+            ->and($commands[$androidPresses[0]])->toBe(['adb', '-s', 'emulator-5554', 'shell', 'input', 'swipe', '540', '300', '540', '300', '1500'])
+            ->and($androidPresses[0])->toBeLessThan($firstAndroidShot)
+            ->and(array_map('is_file', $report->outputs))->each->toBeTrue();
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+    }
+});
+
+it('publishes nothing when a long press does not open its menu', function () {
+    [$fixture, $runner] = longPressCaptureFixture(opens: false);
+
+    try {
+        expect(fn () => (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(contextMenuCaptureRequest($fixture)))
+            ->toThrow(RuntimeException::class, 'iOS long press did not show: Pin')
+            ->and(glob($fixture['package'].'/docs/screenshots/context-menu/*.png'))->toBe([]);
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+    }
+});
+
+it('rejects a long press without the text that shows it worked', function () {
+    [$fixture, $runner] = longPressCaptureFixture();
+    $manifestPath = $fixture['package'].'/spec/screenshots.json';
+    $manifest = json_decode((string) file_get_contents($manifestPath), true);
+    unset($manifest['components']['context-menu']['long-press']['until']);
+    file_put_contents($manifestPath, json_encode($manifest));
+
+    try {
+        expect(fn () => (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(contextMenuCaptureRequest($fixture)))
+            ->toThrow(RuntimeException::class, 'needs non-empty `text` and `until`')
+            ->and($runner->calls)->toBe([]);
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+    }
+});
+
 it('captures multiple components by platform appearance after only one build per platform', function () {
     $fixture = screenshotCaptureFixture();
     $iosContainer = dirname($fixture['package']).'/ios-container';

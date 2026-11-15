@@ -123,6 +123,11 @@
         "list-item-context-menu": {
             "route": "/captures/list-item-context-menu",
             "test": "php artisan test tests/Feature/ListItemContextMenuCaptureTest.php",
+            "ready-text": "Firstlight Context Menu",
+            "long-press": {
+                "text": "Message from Alex",
+                "until": "Pin"
+            },
             "outputs": {
                 "ios-light": "docs/screenshots/list-item-context-menu/ios-light.png",
                 "ios-dark": "docs/screenshots/list-item-context-menu/ios-dark.png",

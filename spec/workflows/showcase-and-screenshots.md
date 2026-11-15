@@ -30,11 +30,16 @@ A capture fixture must:
 
 - use fixed, neutral authored values with no user, tenant, credential, or time-dependent data;
 - include representative documented states such as selected, disabled, and error where applicable;
-- fit in one phone viewport without interaction or scrolling to reveal required evidence;
+- fit in one phone viewport without scrolling, and without interaction unless the entry declares `long-press`;
 - publish a deterministic native tree that the focused showcase test verifies;
 - use the same authored example on iOS and Android.
 
 Keep broad dogfooding and interaction scenarios in the showcase even when the compact capture route displays only representative states.
+
+An entry may also declare:
+
+- `ready-text`: the Android text that shows the route has rendered, when it is not the default `Firstlight <Component Name>` title, such as a dialog's heading or a shorter nav title.
+- `long-press`: `{ "text": ..., "until": ... }` for state that only a gesture reveals, such as a List Item context menu. Before each capture the guard long-presses the centre of the element whose accessibility label (iOS) or text or content description (Android) is `text`, then waits until `until`, such as a menu item, is on screen. It fails without publishing when `until` never shows. iOS uses [AXe](https://github.com/cameroncooke/AXe) (`brew install cameroncooke/axe/axe`), because the Simulator has no input command of its own; Android uses `adb shell input swipe`.
 
 ## Preconditions
 

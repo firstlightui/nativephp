@@ -101,6 +101,7 @@ final class DocumentationScreenshotCapture
                     "ios-{$appearance}-appearance",
                     ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $appearance],
                 );
+                $this->openIosLongPress($request->iosUdid, $manifest, "ios-{$appearance}");
                 $this->captureStable(
                     "ios-{$appearance}",
                     ['xcrun', 'simctl', 'io', $request->iosUdid, 'screenshot'],
@@ -115,6 +116,7 @@ final class DocumentationScreenshotCapture
                     ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $mode],
                 );
                 $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} capture");
+                $this->openAndroidLongPress($request->androidSerial, $manifest, "android-{$appearance}");
                 $this->captureStable(
                     "android-{$appearance}",
                     ['adb', '-s', $request->androidSerial, 'exec-out', 'screencap', '-p'],
@@ -327,6 +329,7 @@ final class DocumentationScreenshotCapture
                         ['xcrun', 'simctl', 'launch', $request->iosUdid, $androidAppId],
                     );
                     $this->execute("ios-{$appearance}-{$slug}-route-wait", ['sleep', '3']);
+                    $this->openIosLongPress($request->iosUdid, $component['manifest'], "ios-{$appearance}-{$slug}");
                     $this->captureStable(
                         "ios-{$appearance}-{$slug}",
                         ['xcrun', 'simctl', 'io', $request->iosUdid, 'screenshot'],
@@ -363,6 +366,7 @@ final class DocumentationScreenshotCapture
                     );
                     $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} {$slug} capture");
                     $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $component['name'], $component['manifest']);
+                    $this->openAndroidLongPress($request->androidSerial, $component['manifest'], "android-{$appearance}-{$slug}");
                     $this->captureStable(
                         "android-{$appearance}-{$slug}",
                         ['adb', '-s', $request->androidSerial, 'exec-out', 'screencap', '-p'],
@@ -510,6 +514,14 @@ final class DocumentationScreenshotCapture
         }
         if (array_key_exists('ready-text', $entry) && (! is_string($entry['ready-text']) || trim($entry['ready-text']) === '')) {
             throw new RuntimeException("Invalid screenshot readiness text for {$slug}.");
+        }
+        if (array_key_exists('long-press', $entry)) {
+            $press = $entry['long-press'];
+            foreach (['text', 'until'] as $key) {
+                if (! is_array($press) || ! is_string($press[$key] ?? null) || trim($press[$key]) === '') {
+                    throw new RuntimeException("Screenshot long-press for {$slug} needs non-empty `text` and `until` strings.");
+                }
+            }
         }
 
         return [$slug, $entry];
@@ -750,6 +762,134 @@ final class DocumentationScreenshotCapture
         }
 
         throw new RuntimeException("Android capture route did not render: {$title}");
+    }
+
+    /**
+     * Long-presses the element labelled `long-press.text`, such as a List Item
+     * with a context menu, and waits until `long-press.until`, such as one of
+     * the menu's items, is on screen, so the capture shows the menu open. The
+     * Simulator has no input command of its own, so iOS uses AXe
+     * (`brew install cameroncooke/axe/axe`). Nothing happens when `until` is
+     * already showing.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private function openIosLongPress(string $udid, array $manifest, string $label): void
+    {
+        $press = $manifest['long-press'] ?? null;
+        if (! is_array($press)) {
+            return;
+        }
+        if ($this->iosElementCenter($udid, $press['until'], "{$label}-long-press-check") !== null) {
+            return;
+        }
+
+        $center = null;
+        for ($attempt = 1; $attempt <= 10 && $center === null; $attempt++) {
+            if ($attempt > 1) {
+                $this->execute("{$label}-long-press-target-wait-{$attempt}", ['sleep', '1']);
+            }
+            $center = $this->iosElementCenter($udid, $press['text'], "{$label}-long-press-target-{$attempt}");
+        }
+        if ($center === null) {
+            throw new RuntimeException("iOS long-press target is not on screen: {$press['text']}");
+        }
+
+        $this->execute("{$label}-long-press", [
+            'axe', 'touch', '-x', (string) $center[0], '-y', (string) $center[1],
+            '--down', '--up', '--delay', '1.5', '--udid', $udid,
+        ]);
+
+        for ($attempt = 1; $attempt <= 10; $attempt++) {
+            if ($this->iosElementCenter($udid, $press['until'], "{$label}-long-press-open-{$attempt}") !== null) {
+                return;
+            }
+            $this->execute("{$label}-long-press-open-wait-{$attempt}", ['sleep', '1']);
+        }
+
+        throw new RuntimeException("iOS long press did not show: {$press['until']}");
+    }
+
+    /** @return array{0: int, 1: int}|null The centre, in points, of the first element labelled $text. */
+    private function iosElementCenter(string $udid, string $text, string $label): ?array
+    {
+        try {
+            $tree = json_decode($this->execute($label, ['axe', 'describe-ui', '--udid', $udid])['stdout'], true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new RuntimeException('Unable to parse the iOS accessibility tree.', previous: $exception);
+        }
+
+        $pending = is_array($tree) ? (array_is_list($tree) ? $tree : [$tree]) : [];
+        while ($pending !== []) {
+            $element = array_shift($pending);
+            if (! is_array($element)) {
+                continue;
+            }
+            $name = (string) ($element['AXLabel'] ?? '');
+            $frame = $element['frame'] ?? null;
+            if (($name === $text || str_starts_with($name, $text.',')) && is_array($frame)) {
+                return [
+                    (int) round((float) $frame['x'] + (float) $frame['width'] / 2),
+                    (int) round((float) $frame['y'] + (float) $frame['height'] / 2),
+                ];
+            }
+            array_push($pending, ...(is_array($element['children'] ?? null) ? $element['children'] : []));
+        }
+
+        return null;
+    }
+
+    /**
+     * Android counterpart of openIosLongPress(): a held `input swipe` on the
+     * centre of the node whose text or content description is
+     * `long-press.text`.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private function openAndroidLongPress(string $serial, array $manifest, string $label): void
+    {
+        $press = $manifest['long-press'] ?? null;
+        if (! is_array($press)) {
+            return;
+        }
+        if ($this->androidNodeCenter($serial, $press['until'], "{$label}-long-press-check") !== null) {
+            return;
+        }
+
+        $center = $this->androidNodeCenter($serial, $press['text'], "{$label}-long-press-target");
+        if ($center === null) {
+            throw new RuntimeException("Android long-press target is not on screen: {$press['text']}");
+        }
+
+        [$x, $y] = array_map('strval', $center);
+        $this->execute("{$label}-long-press", ['adb', '-s', $serial, 'shell', 'input', 'swipe', $x, $y, $x, $y, '1500']);
+
+        for ($attempt = 1; $attempt <= 10; $attempt++) {
+            if ($this->androidNodeCenter($serial, $press['until'], "{$label}-long-press-open-{$attempt}") !== null) {
+                return;
+            }
+            $this->execute("{$label}-long-press-open-wait-{$attempt}", ['adb', '-s', $serial, 'shell', 'sleep', '1']);
+        }
+
+        throw new RuntimeException("Android long press did not show: {$press['until']}");
+    }
+
+    /** @return array{0: int, 1: int}|null The centre, in pixels, of the first node labelled $text. */
+    private function androidNodeCenter(string $serial, string $text, string $label): ?array
+    {
+        $hierarchy = $this->execute($label, ['adb', '-s', $serial, 'exec-out', 'uiautomator', 'dump', '/dev/tty'])['stdout'];
+        $escaped = htmlspecialchars($text, ENT_QUOTES | ENT_XML1);
+
+        preg_match_all('/<node\b[^>]*>/', $hierarchy, $nodes);
+        foreach ($nodes[0] as $node) {
+            $named = str_contains($node, 'text="'.$escaped.'"')
+                || preg_match('/content-desc="'.preg_quote($escaped, '/').'(?:[,.][^"]*)?"/', $node) === 1;
+            if ($named && preg_match('/bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/', $node, $bounds) === 1) {
+                return [intdiv((int) $bounds[1] + (int) $bounds[3], 2), intdiv((int) $bounds[2] + (int) $bounds[4], 2)];
+            }
+        }
+
+        return null;
     }
 
     /** @param array<string, mixed> $manifest */
