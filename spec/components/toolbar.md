@@ -85,7 +85,7 @@ its end and shows it on scrolling back.
 material3 1.4.0, which NativePHP's Compose BOM 2025.12.00 resolves, has
 `FloatingToolbarTokens` but no `HorizontalFloatingToolbar`. Firstlight draws it
 to those tokens: a 64dp full-radius `surfaceContainer` pill with 8dp ends and
-4dp between `IconButton`s, and 8dp to a `secondaryContainer`
+4dp between `IconButton`s, and 8dp to a `primary`
 `FloatingActionButton` for the primary item. Replace it with
 `HorizontalFloatingToolbar` once NativePHP's BOM ships it. The host is
 registered before Feedback Center so snackbars draw above the toolbar.

@@ -83,8 +83,11 @@ internal fun ToolbarPrimaryAction(item: ToolbarItemConfiguration, onPress: (Int,
                 if (item.menu.isEmpty()) onPress(item.callbackId, item) else expanded = true
             },
             shape = MaterialTheme.shapes.large,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            // The theme's primary token, which Native UI maps, rather than
+            // Material's secondaryContainer, which apps never theme: that
+            // drew Material 3's baseline lavender in every app.
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(),
             modifier = Modifier
                 .alpha(if (item.enabled) 1f else 0.38f)

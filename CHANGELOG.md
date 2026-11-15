@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.0-beta12 - 2026-11-15
+
+### Fixed
+
+- Toolbar on Android: the primary action's floating action button takes the theme's `primary` and `on-primary` colours. It used Material's `secondaryContainer`, which Native UI never maps from the app's theme, so it drew Material 3's baseline lavender in every app.
+
 ## 1.1.0-beta11 - 2026-11-15
 
 ### Added
