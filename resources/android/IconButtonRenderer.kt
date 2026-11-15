@@ -35,7 +35,7 @@ data class IconButtonRendererConfiguration(
         icon = node.props.getString("icon"),
         iconVariant = node.props.getString("icon_variant"),
         variant = FirstlightIconButtonVariant.fromWire(
-            node.props.getString("variant", "primary"),
+            node.props.getString("variant", "ghost"),
         ),
         size = FirstlightIconButtonSize.fromWire(node.props.getString("size", "md")),
         disabled = node.props.getBool("disabled"),

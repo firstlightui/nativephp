@@ -87,7 +87,7 @@ it('publishes stable defaults', function () {
 
     expect($tree['props'])->toBe([
         'a11y_label' => 'Add item',
-        'variant' => 'primary',
+        'variant' => 'ghost',
         'size' => 'md',
         'disabled' => false,
         'loading' => false,

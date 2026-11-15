@@ -43,7 +43,7 @@ class IconButtonContractTest {
     fun `malformed variant and size defensively use stable defaults`() {
         val configuration = IconButtonRendererConfiguration(node(variant = "accent", size = "xl"))
 
-        assertEquals(FirstlightIconButtonVariant.Primary, configuration.variant)
+        assertEquals(FirstlightIconButtonVariant.Ghost, configuration.variant)
         assertEquals(FirstlightIconButtonSize.Medium, configuration.size)
     }
 

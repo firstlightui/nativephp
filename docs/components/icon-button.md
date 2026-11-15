@@ -51,7 +51,7 @@ Icon Button is self-closing and has no visible text slot. Use
 | `icon-android` | `AndroidSymbol|string` | Optional Android override; typed filled or outlined variants are preserved on the wire. |
 | `a11y-label` | non-empty `string` | Required accessible action name. Firstlight never derives it from the machine icon name. |
 | `a11y-hint` | `string` | Optional supplementary VoiceOver or TalkBack guidance. |
-| `variant` | `primary`, `secondary`, `destructive`, `success`, or `ghost` | Semantic action intent. Defaults to `primary`. |
+| `variant` | `primary`, `secondary`, `destructive`, `success`, or `ghost` | Semantic action intent. Defaults to `ghost`, the plain icon button both platforms use by default; use `primary` only for the screen's main action. |
 | `size` | `sm`, `md`, or `lg` | Native glyph and container size. Defaults to `md`; the touch target remains at least 44 points or 48 dp. |
 | `disabled` | `bool` | Prevents interaction and exposes native disabled state. Defaults to `false`. |
 | `loading` | `bool` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |

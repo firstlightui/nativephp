@@ -51,7 +51,7 @@ actions use `<firstlight:button>`.
 | `icon-android` | Optional `AndroidSymbol|string` Android override; typed variants are preserved. |
 | `a11y-label` | Required non-empty accessible action name. It is never derived from the icon name. |
 | `a11y-hint` | Optional supplementary screen-reader context. |
-| `variant` | `primary` (default), `secondary`, `destructive`, `success`, or `ghost`. |
+| `variant` | `primary`, `secondary`, `destructive`, `success`, or `ghost` (default). Ghost is SwiftUI's plain icon button and Material 3's standard `IconButton`, the default on both platforms; filled variants are for the screen's main action. |
 | `size` | `sm`, `md` (default), or `lg`; the interaction target never shrinks below platform minimums. |
 | `disabled` | Prevents presses and applies native disabled semantics. Defaults to `false`. |
 | `loading` | Replaces the glyph with native progress, announces loading, and prevents duplicate presses. Defaults to `false`. |

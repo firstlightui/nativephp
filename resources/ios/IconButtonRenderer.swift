@@ -23,8 +23,8 @@ struct IconButtonRendererConfiguration: Equatable {
         icon = node.props.getString("icon")
         iconVariant = node.props.getString("icon_variant")
         variant = FirstlightIconButtonVariant(
-            rawValue: node.props.getString("variant", default: "primary")
-        ) ?? .primary
+            rawValue: node.props.getString("variant", default: "ghost")
+        ) ?? .ghost
         size = FirstlightIconButtonSize(
             rawValue: node.props.getString("size", default: "md")
         ) ?? .medium

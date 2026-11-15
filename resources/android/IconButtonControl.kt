@@ -30,7 +30,7 @@ enum class FirstlightIconButtonVariant(val wireName: String) {
     companion object {
         fun fromWire(value: String): FirstlightIconButtonVariant = entries.firstOrNull {
             it.wireName == value
-        } ?: Primary
+        } ?: Ghost
     }
 }
 
@@ -88,10 +88,12 @@ fun FirstlightIconButtonControl(
                 color = LocalContentColor.current,
             )
         } else {
+            // `size`, not `Modifier.size`: the glyph's font size comes from
+            // `size` (default 24 dp), so a smaller modifier box clips it.
             MaterialIcon(
                 name = configuration.icon,
                 contentDescription = null,
-                modifier = Modifier.size(metrics.iconSize),
+                size = metrics.iconSize,
             )
         }
     }

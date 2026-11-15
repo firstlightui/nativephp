@@ -63,7 +63,7 @@ final class IconButton extends Element
 
     /** @var array<string, mixed> */
     private array $iconButtonProps = [
-        'variant' => 'primary',
+        'variant' => 'ghost',
         'size' => 'md',
         'disabled' => false,
         'loading' => false,

@@ -33,7 +33,7 @@ final class IconButtonSnapshotTests: XCTestCase {
             size: "xl"
         ))
 
-        XCTAssertEqual(configuration.variant, .primary)
+        XCTAssertEqual(configuration.variant, .ghost)
         XCTAssertEqual(configuration.size, .medium)
     }
 
