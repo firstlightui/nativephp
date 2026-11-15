@@ -8,7 +8,7 @@ it('declares the Firstlight package identity', function () {
         ->and($composer['type'])->toBe('nativephp-ui-plugin')
         ->and($composer['require']['php'])->toBe('^8.4')
         ->and($composer['require']['nativephp/mobile'])->toBe('^4.8')
-        ->and($composer['require']['nativephp/mobile-ui'])->toBe('^0.9')
+        ->and($composer['require']['nativephp/mobile-ui'])->toBe('^0.10')
         ->and($composer['require-dev']['pestphp/pest'])->toBe('^5.0')
         ->and($composer['autoload']['psr-4'])->toBe(['FirstlightUI\\' => 'src/'])
         ->and($manifest['name'])->toBe('firstlightui/nativephp')

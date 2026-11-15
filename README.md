@@ -48,7 +48,7 @@ Each recipe is a complete screen. Each one runs unchanged in the [showcase app](
 | --- | --- |
 | PHP | `^8.4` |
 | NativePHP Mobile | `^4.8.0` |
-| NativePHP Mobile UI | `^0.9.0` |
+| NativePHP Mobile UI | `^0.10.0` |
 | iOS / Android targets | iOS 18.2+ / API 29+ |
 
 See [Compatibility](https://firstlightui.dev/docs/reference/compatibility) for the full table.

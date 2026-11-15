@@ -20,7 +20,7 @@ sources:
 | --- | --- |
 | PHP | `^8.4` |
 | NativePHP Mobile | `^4.8.0` |
-| NativePHP Mobile UI | `^0.9.0` |
+| NativePHP Mobile UI | `^0.10.0` |
 | iOS application target | iOS 18.2 or later |
 | Android application target | API 29 or later |
 | Firstlight Swift package | iOS 18.2 or later |
@@ -32,7 +32,7 @@ After changing NativePHP versions, run `composer update` and `php artisan native
 
 Mobile 4.7 supplies the validation and Android focused-input flush seams
 Firstlight uses, and compiles Media's `@clear` from the manifest's
-`element_events`; Mobile UI 0.9 requires Mobile 4.7. `ValidatesFields` extends
+`element_events`. Mobile UI 0.10 requires Mobile 4.8. `ValidatesFields` extends
 upstream `ValidatesInput`, and native and Firstlight fields share the current
 `FieldErrors` bag. Existing Firstlight screen code does not need a trait swap.
 
