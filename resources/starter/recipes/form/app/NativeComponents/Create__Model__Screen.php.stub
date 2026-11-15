@@ -22,7 +22,7 @@ class Create__Model__Screen extends NativeComponent
 
                 if (__Model__::query()->where('title', $this->title)->exists()) {
                     throw ValidationException::withMessages([
-                        'form' => 'A __label__ with this title already exists.',
+                        'form' => '__A_label__ with this title already exists.',
                     ]);
                 }
 

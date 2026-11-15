@@ -1,0 +1,24 @@
+{
+    "description": "Private journal with an app lock: my own dated entries, and nobody else should read them if they pick up my phone.",
+    "app": {"name": "Daybook", "id": "com.example.daybook", "deeplink_scheme": "daybook", "appearance": "system"},
+    "theme": {"light": {"primary": "#6D28D9", "on-primary": "#FFFFFF"}, "dark": null},
+    "icon": null,
+    "locale": {"locale": "en", "fallback": "en", "timezone": "Europe/London"},
+    "android_min_sdk": 29,
+    "layout": {"type": "stack"},
+    "records": [{"model": "Entry", "deletable": true, "delete_rule": "Only the person who wrote the entry."}],
+    "screens": [
+        {"recipe": "how-to/build-a-searchable-list-screen", "record": "Entry"},
+        {"recipe": "how-to/build-a-list-detail-flow", "record": "Entry"},
+        {"recipe": "how-to/build-a-form-screen", "record": "Entry"},
+        {"recipe": "how-to/keep-drafts", "record": "Entry"},
+        {"recipe": "how-to/build-an-app-lock-screen"},
+        {"recipe": "how-to/guard-screens"},
+        {"recipe": "how-to/build-a-settings-screen"}
+    ],
+    "plugins": [
+        {"package": "firstlightui/app-guard", "accepted": true},
+        {"package": "nativephp/mobile-biometrics", "accepted": false}
+    ],
+    "permissions": {}
+}

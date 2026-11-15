@@ -1,0 +1,24 @@
+{
+    "description": "Event check-in: door staff search a list of thousands of attendees by name and mark each one as checked in.",
+    "app": {"name": "Doorlist", "id": "com.example.doorlist", "deeplink_scheme": "doorlist", "appearance": "system"},
+    "theme": {"light": {"primary": "#B91C1C", "on-primary": "#FFFFFF"}, "dark": null},
+    "icon": null,
+    "locale": {"locale": "en", "fallback": "en", "timezone": "America/New_York"},
+    "android_min_sdk": 29,
+    "layout": {
+        "type": "tabs",
+        "tabs": [
+            {"label": "Attendees", "url": "/attendees", "icon": "people"},
+            {"label": "Settings", "url": "/settings", "icon": "settings"}
+        ]
+    },
+    "records": [{"model": "Attendee", "deletable": false}],
+    "screens": [
+        {"recipe": "how-to/build-a-searchable-list-screen", "record": "Attendee"},
+        {"recipe": "how-to/build-a-list-detail-flow", "record": "Attendee"},
+        {"recipe": "how-to/build-a-large-list-screen", "record": "Attendee"},
+        {"recipe": "how-to/build-a-settings-screen"}
+    ],
+    "plugins": [],
+    "permissions": {}
+}

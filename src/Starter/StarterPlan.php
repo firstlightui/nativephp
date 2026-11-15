@@ -88,8 +88,12 @@ final class StarterPlan
     {
         $label = Str::lower(Str::headline($model));
         $labels = Str::plural($label);
+        // "an entry", "a work order"; a u that sounds like "you", as in unit or user, takes "a".
+        $article = preg_match('/^(?:[aeio]|u(?!ni|s[eu]|ti))/', $label) === 1 ? 'an' : 'a';
 
         return [
+            '__a_label__' => "{$article} {$label}",
+            '__A_label__' => Str::ucfirst($article)." {$label}",
             '__Model__' => $model,
             '__Models__' => Str::pluralStudly($model),
             '__model__' => Str::camel($model),

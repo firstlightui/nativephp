@@ -111,7 +111,12 @@ it('names a multi-word record the way Laravel would', function () {
         '__table__' => 'work_orders',
         '__labels__' => 'work orders',
         '__Label__' => 'Work order',
+        '__a_label__' => 'a work order',
     ]);
+
+    expect(StarterPlan::names('Entry')['__A_label__'])->toBe('An entry')
+        ->and(StarterPlan::names('Unit')['__a_label__'])->toBe('a unit')
+        ->and(StarterPlan::names('Update')['__a_label__'])->toBe('an update');
 });
 
 it('keeps only the template sections whose options are on', function () {
@@ -218,6 +223,24 @@ it('writes the app identity, theme, permissions, screens and routes from the pla
         ->and($read('tests/Pest.php'))->toContain('ScreenAssertions::register()')
         ->and($read('STARTER.md'))->toContain('`nativephp/mobile-network` (free)', 'Only the technician assigned to the work order. It allows everyone');
 });
+
+// bin/check-starter-apps builds these into real apps before a release; this keeps them valid plans.
+it('builds each end-to-end fixture plan', function (string $fixture) {
+    $this->base = starterFixtureApp();
+    $plan = json_decode(file_get_contents(dirname(__DIR__)."/fixtures/starter/{$fixture}.json"), true, flags: JSON_THROW_ON_ERROR);
+    buildStarter($this->base, $plan);
+    $env = file_get_contents($this->base.'/.env');
+    $starter = file_get_contents($this->base.'/STARTER.md');
+
+    // The app opens on its first tab, or on its first record's list in a stack.
+    $start = $plan['layout']['tabs'][0]['url'] ?? '/'.StarterPlan::names($plan['records'][0]['model'])['__route__'];
+
+    expect($env)->toContain("NATIVEPHP_APP_ID={$plan['app']['id']}\n", "APP_LOCALE={$plan['locale']['locale']}\n", "NATIVEPHP_START_URL={$start}\n");
+
+    foreach (StarterPlan::fromArray($plan, starterIndex())->manualScreens() as $screen) {
+        expect($starter)->toContain("[{$screen['recipe']}]");
+    }
+})->with(['field-service', 'private-journal', 'event-check-in', 'polish-utility']);
 
 it('runs again without touching files the developer changed, and says which it kept', function () {
     $this->base = starterFixtureApp();

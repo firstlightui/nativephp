@@ -26,7 +26,7 @@ it('shows a form-level error for a duplicate title', function () {
         ->set('body', 'A body long enough to pass.')
         ->call('save')
         ->assertNoFieldError('title')
-        ->assertElement('firstlight.callout', fn (array $node) => ($node['props']['message'] ?? null) === 'A __label__ with this title already exists.');
+        ->assertElement('firstlight.callout', fn (array $node) => ($node['props']['message'] ?? null) === '__A_label__ with this title already exists.');
 
     expect(__Model__::count())->toBe(1);
 });

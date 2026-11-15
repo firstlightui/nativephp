@@ -355,7 +355,7 @@ final class StarterBuilder
         }
 
         if ($record['deletable'] ?? false) {
-            $this->result['todo'][] = "Write who may delete a {$names['__label__']} in `app/Policies/{$names['__Model__']}Policy.php`".(isset($record['delete_rule']) ? ': '.rtrim($record['delete_rule'], '.') : '').'. It allows everyone until you do.';
+            $this->result['todo'][] = "Write who may delete {$names['__a_label__']} in `app/Policies/{$names['__Model__']}Policy.php`".(isset($record['delete_rule']) ? ': '.rtrim($record['delete_rule'], '.') : '').'. It allows everyone until you do.';
         }
 
         $this->writeSeederCall($names['__Model__'].'Seeder');

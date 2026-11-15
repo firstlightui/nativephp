@@ -8,7 +8,7 @@ use App\Models\User;
 class __Model__Policy
 {
     /**
-     * Who may delete a __label__: __delete_rule__
+     * Who may delete __a_label__: __delete_rule__
      */
     public function delete(?User $user, __Model__ $__model__): bool
     {
