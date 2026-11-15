@@ -21,6 +21,8 @@ struct BottomSheetRendererConfiguration: Equatable {
     let accessibilityLabel: String
     let dismissCallback: Int
     let pinnedFooter: Bool
+    let title: String
+    let closeLabel: String
 
     init(node: NativeUINode) {
         nodeID = node.id
@@ -28,6 +30,8 @@ struct BottomSheetRendererConfiguration: Equatable {
         accessibilityLabel = node.props.getString("a11y_label")
         dismissCallback = node.props.getCallbackId("on_dismiss")
         pinnedFooter = node.props.getBool("pinned_footer")
+        title = node.props.getString("title")
+        closeLabel = node.props.getString("close_label")
     }
 }
 
@@ -45,7 +49,7 @@ struct BottomSheetRendererState {
         isPresented = configuration.visible
     }
 
-    /// Swipe-down or scrim dismissal. Emits once; PHP then publishes `visible=false`.
+    /// Swipe-down, scrim or close-button dismissal. Emits once; PHP then publishes `visible=false`.
     mutating func systemDismiss() -> BottomSheetRendererEvent? {
         guard isPresented else { return nil }
 
@@ -102,6 +106,8 @@ struct BottomSheetRenderer: View {
                 }
             ),
             accessibilityLabel: state.configuration.accessibilityLabel,
+            title: published.title,
+            closeLabel: published.closeLabel,
             tokens: themeStore.resolve(for: colorScheme),
             footer: {
                 if published.pinnedFooter, let child = node.children.last {

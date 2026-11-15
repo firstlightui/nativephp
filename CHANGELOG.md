@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Bottom Sheet: `title` draws the sheet's heading the way each platform draws its own sheets. iOS puts the content under an inline navigation bar with the title and the system close button, which runs `@dismiss` like a swipe down; Android shows Material 3 `titleLarge` heading text under the drag handle, with no close button. `close-label` sets the close button's VoiceOver label, which defaults to the new translated `firstlight::chrome.close` string. Drop any title row you authored inside the sheet. Mobile UI 0.10 added `title` to its own Bottom Sheet, so Firstlight's inherited it; Firstlight's renderers now draw it.
 - List Item: `navigates` marks a row that opens another screen. iOS draws its system disclosure chevron after any trailing text or status; Android draws nothing, because Material 3 list rows show no chevron. Use it in place of a `chevron-right` trailing icon, which it cannot be combined with. `make:firstlight-screen --list` rows set it.
 
 ### Changed

@@ -37,16 +37,19 @@ Confirmation Dialog remains the confirm/cancel decision contract.
 ```blade
 <firstlight:bottom-sheet
     :visible="$showingFilters"
+    title="Filters"
     a11y-label="Filters"
     @dismiss="closeFilters"
 >
-    <firstlight:status-label label="Filters" />
+    <firstlight:status-label label="Unread only" />
 </firstlight:bottom-sheet>
 ```
 
 | Prop or event | Contract |
 | --- | --- |
 | `visible` | Server-published presentation request. Defaults to unpublished/`false` in the native renderer. |
+| `title` | Optional non-empty string; `title()` is the fluent form. iOS wraps the sheet in a navigation stack with an inline title and the system close button (`role: .close` with Liquid Glass, `xmark.circle.fill` before) at `cancellationAction`; the detent adds the bar's measured height in place of the drag-indicator band. Android draws `titleLarge` text with heading semantics under the drag handle, outside the scrolling body, and no close button (Material 3 modal bottom sheets have none). |
+| `close-label` | Optional non-empty string, camelCase alias and `closeLabel()` supported; only valid with `title`. Published as `close_label`, defaulting to the `firstlight::chrome.close` string, and read by VoiceOver for the iOS close button. Android ignores it. |
 | `pinned-footer` | Strict bool, default false. When true, at least two direct children are required; the final direct child stays outside the scrolling body. CamelCase alias and `pinnedFooter()` are supported. |
 | `a11y-label` | Optional non-empty accessible name for the sheet. The `a11yLabel` alias is accepted. |
 | `a11y-hint` | Optional non-empty supplementary guidance. The `a11yHint` alias is accepted. |
@@ -69,7 +72,8 @@ user-dismissible through native drag and outside/back dismissal.
 ## Empty, action, and failure behaviour
 
 An unpublished or `visible=false` sheet occupies no presentation. Drag down,
-outside tap, or system back emits `@dismiss` once. Handlers must set
+outside tap, system back, or the iOS close button of a titled sheet emits
+`@dismiss` once. Handlers must set
 `visible` to `false`. Programmatic publication of `visible=false` is the
 accepted closed state.
 

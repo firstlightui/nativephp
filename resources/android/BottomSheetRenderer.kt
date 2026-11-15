@@ -14,6 +14,7 @@ data class BottomSheetRendererConfiguration(
     val accessibilityLabel: String,
     val dismissCallback: Int,
     val pinnedFooter: Boolean = false,
+    val title: String = "",
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
@@ -21,6 +22,7 @@ data class BottomSheetRendererConfiguration(
         accessibilityLabel = node.props.getString("a11y_label"),
         dismissCallback = node.props.getCallbackId("on_dismiss"),
         pinnedFooter = node.props.getBool("pinned_footer"),
+        title = node.props.getString("title"),
     )
 }
 

@@ -5,6 +5,7 @@ return [
     'cancel' => 'Annuleren',
     'ok' => 'OK',
     'dismiss' => 'Sluiten',
+    'close' => 'Sluiten',
     'dismiss_feedback' => 'Melding sluiten',
     'clear' => 'Wissen',
     'clear_search' => 'Zoekopdracht wissen',

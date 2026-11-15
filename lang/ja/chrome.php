@@ -5,6 +5,7 @@ return [
     'cancel' => 'キャンセル',
     'ok' => 'OK',
     'dismiss' => '閉じる',
+    'close' => '閉じる',
     'dismiss_feedback' => 'メッセージを閉じる',
     'clear' => '消去',
     'clear_search' => '検索を消去',

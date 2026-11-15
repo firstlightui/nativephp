@@ -5,6 +5,7 @@ return [
     'cancel' => 'Anuluj',
     'ok' => 'OK',
     'dismiss' => 'Zamknij',
+    'close' => 'Zamknij',
     'dismiss_feedback' => 'Zamknij komunikat',
     'clear' => 'Wyczyść',
     'clear_search' => 'Wyczyść wyszukiwanie',

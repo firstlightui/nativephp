@@ -134,3 +134,36 @@ it('registers paired Firstlight renderers rather than the Mobile UI adapter', fu
     ])->and(collect($manifest['components'])->firstWhere('type', 'firstlight.bottom-sheet'))
         ->not->toHaveKey('adapter');
 });
+
+it('publishes a title with the package close label', function () {
+    $tree = collectBottomSheet(['title' => 'Filters', '_dismiss' => 'closeSheet']);
+
+    expect($tree['props']['title'])->toBe('Filters')
+        ->and($tree['props']['close_label'])->toBe('Close');
+});
+
+it('keeps an authored close label', function (string $attribute) {
+    $tree = collectBottomSheet(['title' => 'Filtres', $attribute => 'Fermer', '_dismiss' => 'closeSheet']);
+
+    expect($tree['props']['close_label'])->toBe('Fermer');
+})->with(['close-label', 'closeLabel']);
+
+it('leaves an untitled sheet without title chrome', function () {
+    $tree = collectBottomSheet(['_dismiss' => 'closeSheet']);
+
+    expect($tree['props'])->not->toHaveKey('title')
+        ->and($tree['props'])->not->toHaveKey('close_label');
+});
+
+it('rejects an empty title', function (mixed $value) {
+    collectBottomSheet(['title' => $value, '_dismiss' => 'closeSheet']);
+})->with(['empty' => [''], 'blank' => ['  '], 'boolean' => [true]])
+    ->throws(InvalidArgumentException::class, '`title` must be a non-empty string');
+
+it('rejects a close label on an untitled sheet', function () {
+    collectBottomSheet(['close-label' => 'Close', '_dismiss' => 'closeSheet']);
+})->throws(InvalidArgumentException::class, 'needs a `title`');
+
+it('rejects an empty fluent title', function () {
+    BottomSheet::make()->title(' ')->onDismiss('closeSheet')->toArray(new CallbackRegistry);
+})->throws(InvalidArgumentException::class, '`title` must be a non-empty string');

@@ -5,6 +5,7 @@ return [
     'cancel' => '取消',
     'ok' => '好',
     'dismiss' => '关闭',
+    'close' => '关闭',
     'dismiss_feedback' => '关闭提示',
     'clear' => '清除',
     'clear_search' => '清除搜索',

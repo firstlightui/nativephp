@@ -14,6 +14,75 @@ final class BottomSheetRendererTests: XCTestCase {
         XCTAssertEqual(configuration.dismissCallback, 31)
     }
 
+    func testConfigurationDecodesTheTitleAndCloseLabel() {
+        let titled = BottomSheetRendererConfiguration(node: node(title: "Filters", closeLabel: "Fermer"))
+        XCTAssertEqual(titled.title, "Filters")
+        XCTAssertEqual(titled.closeLabel, "Fermer")
+
+        let untitled = BottomSheetRendererConfiguration(node: node())
+        XCTAssertEqual(untitled.title, "")
+        XCTAssertEqual(untitled.closeLabel, "")
+    }
+
+    func testTitledSheetShowsAnInlineBarWithTheCloseButton() throws {
+        try assertTitledSheetShowsAnInlineBar()
+        firstlightSnapshotsDrawWithoutGlass = true
+        defer { firstlightSnapshotsDrawWithoutGlass = false }
+        try assertTitledSheetShowsAnInlineBar()
+    }
+
+    private func assertTitledSheetShowsAnInlineBar() throws {
+        var barHeight: CGFloat = 0
+        var closed = 0
+        let sheet = FirstlightBottomSheetTitleBar(
+            title: "Filters",
+            closeLabel: "Fermer",
+            surface: .white,
+            close: { closed += 1 },
+            onBarHeight: { barHeight = $0 }
+        ) {
+            FirstlightBottomSheetLayout(footer: { EmptyView() }, content: { Text("Unread only") }, topInset: 0)
+        }
+        let host = UIHostingController(rootView: sheet)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 600))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+
+        let bar = try XCTUnwrap(first(UINavigationBar.self, in: host.view))
+        XCTAssertEqual(bar.topItem?.title, "Filters")
+        XCTAssertEqual(bar.topItem?.largeTitleDisplayMode, .never)
+        XCTAssertGreaterThan(barHeight, 0)
+        XCTAssertEqual(closed, 0)
+    }
+
+    func testUntitledSheetHasNoBar() {
+        var measured = false
+        let sheet = FirstlightBottomSheetTitleBar(
+            title: "",
+            closeLabel: "",
+            surface: .white,
+            close: {},
+            onBarHeight: { _ in measured = true }
+        ) {
+            FirstlightBottomSheetLayout(footer: { EmptyView() }, content: { Text("Unread only") })
+        }
+        let host = UIHostingController(rootView: sheet)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 600))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+
+        XCTAssertNil(first(UINavigationBar.self, in: host.view))
+        XCTAssertFalse(measured)
+    }
+
+    private func first<View: UIView>(_ type: View.Type, in view: UIView) -> View? {
+        if let match = view as? View { return match }
+        return view.subviews.lazy.compactMap { self.first(type, in: $0) }.first
+    }
+
     func testVisibleSheetPresentsOnceTheHostAppears() {
         var state = BottomSheetRendererState(node: node())
         XCTAssertFalse(state.isPresented)
@@ -134,18 +203,24 @@ final class BottomSheetRendererTests: XCTestCase {
         id: Int = 1,
         visible: Bool = true,
         label: String = "Filters sheet",
+        title: String? = nil,
+        closeLabel: String? = nil,
         children: [NativeUINode] = []
     ) -> NativeUINode {
-        NativeUINode(
+        var props: [String: Any] = [
+            "visible": visible,
+            "a11y_label": label,
+            "on_dismiss": 31,
+        ]
+        if let title { props["title"] = title }
+        if let closeLabel { props["close_label"] = closeLabel }
+
+        return NativeUINode(
             id: id,
             type: "firstlight.bottom-sheet",
             layout: nil,
             style: nil,
-            props: GenericProps([
-                "visible": visible,
-                "a11y_label": label,
-                "on_dismiss": 31,
-            ]),
+            props: GenericProps(props),
             onPress: 0,
             onLongPress: 0,
             children: children

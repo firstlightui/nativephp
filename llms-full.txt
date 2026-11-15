@@ -5551,23 +5551,43 @@ decision.
 ```blade
 <firstlight:bottom-sheet
     :visible="$showingFilters"
+    title="Filters"
     a11y-label="Filters"
     @dismiss="closeFilters"
 >
-    <native:text class="text-lg font-semibold text-theme-on-surface">Filters</native:text>
+    <native:column class="w-full p-4 gap-3">
+        <firstlight:switch label="Unread only" native:model="unreadOnly" />
+    </native:column>
 </firstlight:bottom-sheet>
 ```
 
 The dismiss handler should set `$showingFilters` to `false`.
 
-The visible title is ordinary text styled as a heading. Mobile UI text has no
-heading role yet, so screen readers announce the surface by its `a11y-label`.
+## Title
+
+`title` gives the sheet the heading each platform draws for its own sheets,
+so don't author a title row of your own:
+
+- **iOS** puts the content under an inline navigation bar with the title in
+  the middle and the system close button on the leading edge, as Apple's
+  sheets do. With Liquid Glass the close button is the system's glass
+  button; before iOS 26 it is the filled circle sheets used then. Tapping it
+  runs `@dismiss`, like a swipe down.
+- **Android** shows the title as Material 3 `titleLarge` heading text under
+  the drag handle. Material's modal bottom sheet has no close button: it
+  closes on a swipe down, a tap outside or back.
+
+Screen readers announce the title as a heading on both platforms. VoiceOver
+reads the close button as Firstlight's translated "Close"; set `close-label`
+to use your own wording. A sheet without `title` has no bar or heading.
 
 ## Props
 
 | API | Accepted type | Purpose |
 | --- | --- | --- |
 | `visible` | `bool` | Server-controlled presentation request. Defaults to closed. |
+| `title` | non-empty `string` | The sheet's heading: an inline navigation bar with a close button on iOS, heading text under the drag handle on Android. Defaults to untitled. |
+| `close-label` | non-empty `string` | What VoiceOver reads for the iOS close button. Defaults to Firstlight's translated "Close"; needs `title`. |
 | `pinned-footer` | `bool` | Keeps the final direct child outside the scrolling body. Defaults to `false`; requires at least two direct children. |
 | `a11y-label` | non-empty `string` | Accessible name for the sheet. |
 | `a11y-hint` | non-empty `string` | Supplementary screen-reader guidance. |
@@ -5576,7 +5596,7 @@ heading role yet, so screen readers announce the surface by its `a11y-label`.
 ## Events
 
 `@dismiss` is required. It runs when the user drags the sheet down, taps
-outside, or uses system back. Set the bound visibility property to `false` in
+outside, uses system back, or taps a titled sheet's close button on iOS. Set the bound visibility property to `false` in
 that handler.
 
 When a Firstlight screen navigates away, its farewell response closes the sheet

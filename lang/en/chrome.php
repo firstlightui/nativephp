@@ -5,6 +5,7 @@ return [
     'cancel' => 'Cancel',
     'ok' => 'OK',
     'dismiss' => 'Dismiss',
+    'close' => 'Close',
     'dismiss_feedback' => 'Dismiss feedback',
     'clear' => 'Clear',
     'clear_search' => 'Clear search',

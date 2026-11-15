@@ -3,6 +3,8 @@ package dev.firstlightui.plugins.firstlight_ui.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -113,6 +115,34 @@ class BottomSheetTest {
     }
 
     @Test
+    fun `a title is a heading above the scrolling body`() = runComposeUiTest {
+        val children = (2..25).map { child(it, "Filter $it", 64) }
+        setContent {
+            MaterialTheme {
+                FirstlightBottomSheetRenderer.Render(sheetNode(children = children, title = "Filters"), Modifier)
+            }
+        }
+
+        val heading = SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)
+        onNode(heading).assertIsDisplayed()
+        val title = onNodeWithText("Filters").getBoundsInRoot()
+        assertTrue(title.bottom <= onNodeWithText("Filter 2").getBoundsInRoot().top)
+        onNodeWithText("Filter 25").performScrollTo().assertIsDisplayed()
+        assertEquals(title, onNodeWithText("Filters").getBoundsInRoot())
+    }
+
+    @Test
+    fun `an untitled sheet has no heading`() = runComposeUiTest {
+        setContent {
+            MaterialTheme {
+                FirstlightBottomSheetRenderer.Render(sheetNode(children = listOf(child(2, "Unread only", 64))), Modifier)
+            }
+        }
+
+        onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).assertDoesNotExist()
+    }
+
+    @Test
     fun `configuration decodes presentation and dismissal`() {
         val configuration = BottomSheetRendererConfiguration(sheetNode())
 
@@ -136,7 +166,12 @@ class BottomSheetTest {
         onNodeWithText("Filters").assertDoesNotExist()
     }
 
-    private fun sheetNode(visible: Boolean = true, children: List<NativeUINode> = emptyList(), pinnedFooter: Boolean = false) = NativeUINode(
+    private fun sheetNode(
+        visible: Boolean = true,
+        children: List<NativeUINode> = emptyList(),
+        pinnedFooter: Boolean = false,
+        title: String? = null,
+    ) = NativeUINode(
         id = 1,
         type = "firstlight.bottom-sheet",
         props = GenericProps(mapOf(
@@ -144,7 +179,7 @@ class BottomSheetTest {
             "a11y_label" to "Filters sheet",
             "on_dismiss" to 31,
             "pinned_footer" to pinnedFooter,
-        )),
+        ) + (if (title != null) mapOf("title" to title) else emptyMap())),
         children = children,
     )
 
