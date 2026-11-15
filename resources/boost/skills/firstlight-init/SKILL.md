@@ -17,7 +17,7 @@ Get a developer from an app idea to a running, themed, tested NativePHP app buil
 
 These hold in every step.
 
-- **Status.** Propose only `available` plugins. Mention a `preview` plugin as coming, with its repository link and no install step. Leave out `unreleased` plugins.
+- **Status.** Propose only `available` plugins. Mention a `preview` plugin as coming, with its repository or marketplace link and no install step. Leave out `unreleased` plugins.
 - **Free plugins** that the app needs go in the proposal's *Included* group.
 - **Paid plugins** go only in *Offered*, never in *Included*, each marked **Paid** with its marketplace link and its `without` text, so the developer sees what the app does if they decline. Install one only after the developer says yes to that plugin by name.
 - **Community plugins** (`source: community`) carry this notice every time you propose one: "Community plugin. Neither Firstlight nor NativePHP maintains or warrants it. Check its licence and repository before you ship it."

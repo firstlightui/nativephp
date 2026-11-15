@@ -42,8 +42,13 @@ class AppLayout extends NativeLayout
             return null;
         }
 
-        return TabBar::make()
+        $tabs = TabBar::make()
 __tab_links__;
+
+        // The selected tab takes the brand colour from config/native-ui.php, in light and dark mode.
+        $primary = theme('primary');
+
+        return is_string($primary) ? $tabs->activeColor($primary) : $tabs;
     }
 @endstarter
 }

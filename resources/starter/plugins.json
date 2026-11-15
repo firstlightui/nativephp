@@ -287,7 +287,7 @@
             "name": "Share Sheet",
             "source": "community",
             "pricing": "paid",
-            "status": "available",
+            "status": "preview",
             "purpose": "Receives links, text, photos and files shared into the app from other apps.",
             "use_cases": ["save links or photos from other apps", "share into the app", "clip or collect content"],
             "ios": {"min": "18.0", "does": "A Share Extension in the system share sheet."},
