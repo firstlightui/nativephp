@@ -43,6 +43,7 @@ recipes run inside.
 ## Get started
 
 - [Installation](getting-started/installation.md) — Install Firstlight and Laravel Boost, and make the native renderers available to a NativePHP application.
+- [Start a new app](getting-started/start-a-new-app.md) — Describe your app to a coding agent, confirm the plan it proposes, and get a themed NativePHP app with Firstlight screens, the plugins it needs, and Pest tests.
 - [Build with a coding agent](getting-started/build-with-a-coding-agent.md) — What the Boost guideline, the `firstlight-init` and `building-firstlight-screens` skills, and `llms.txt` give your agent.
 - [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.

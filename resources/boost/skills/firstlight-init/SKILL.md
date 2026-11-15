@@ -26,20 +26,25 @@ These hold in every step.
 
 ## 1. Check the starting point
 
-- **No app yet:** suggest NativePHP's starter, then Firstlight and Boost:
+- **No app yet:** suggest a new Laravel app with Firstlight, Pest and Boost:
 
   ```bash
-  laravel new my-app --using=nativephp/mobile-starter --no-node
+  composer create-project laravel/laravel my-app
   cd my-app
   composer require firstlightui/nativephp
+  php artisan vendor:publish --tag=nativephp-plugins-provider
+  php artisan native:plugin:register nativephp/mobile-ui
   php artisan native:plugin:register firstlightui/nativephp
+  composer remove phpunit/phpunit --dev
+  composer require pestphp/pest pestphp/pest-plugin-laravel --dev -W
+  vendor/bin/pest --init
   composer require laravel/boost --dev
   php artisan boost:install
   ```
 
-  The starter registers Mobile UI and loads `routes/mobile.php`. Replace its example Home screen and delete or rewrite its `tests/Feature/NativeHomeTest.php`.
+  The generated tests are Pest tests, so the app needs Pest. NativePHP loads `routes/mobile.php` itself. Don't start from `nativephp/mobile-starter`: it requires NativePHP Mobile 3, and Firstlight needs Mobile 4.8.
 - **Existing app:** confirm `nativephp/mobile`, `nativephp/mobile-ui` and `firstlightui/nativephp` are required and registered (`php artisan native:plugin:list`), PHP is `^8.4`, and targets are iOS 18.2+ and Android API 29+ (https://firstlightui.dev/docs/reference/compatibility). Note what is already set (app ID, theme, layout, screens). Keep it unless the developer asks you to change it, and say so in the proposal.
-- Native screens are registered in whichever routes file the app already uses for `Route::native()`; in a new starter app that is `routes/mobile.php`.
+- Native screens are registered in whichever routes file the app already uses for `Route::native()`; in a new app that is `routes/mobile.php`.
 
 ## 2. Ask what the app is
 

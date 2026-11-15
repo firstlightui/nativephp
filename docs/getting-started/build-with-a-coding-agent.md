@@ -75,7 +75,9 @@ The guideline keeps an agent on the same path as the recipes:
 
 ## Ask for an app
 
-With Boost installed, describe the app rather than the controls. For example:
+With Boost installed, describe the app rather than the controls.
+[Start a new app](start-a-new-app.md) walks through the whole process. For
+example:
 
 > Start a Firstlight app for field technicians. They see the day's jobs, add
 > photos and notes, and keep working without signal.

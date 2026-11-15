@@ -31,6 +31,7 @@ every control the way they reach the platform's own apps.
 ## Get started
 
 - [Install Firstlight UI](https://firstlightui.dev/docs/getting-started/installation): Install Firstlight and Laravel Boost, register the NativePHP plugin, and rebuild the native projects.
+- [Start a new app](https://firstlightui.dev/docs/getting-started/start-a-new-app): Describe your app to a coding agent, confirm the plan it proposes, and get a themed NativePHP app with Firstlight screens, the plugins it needs, and Pest tests.
 - [Build with a coding agent](https://firstlightui.dev/docs/getting-started/build-with-a-coding-agent): What the Boost guideline, the firstlight-init and building-firstlight-screens skills, and llms.txt give your coding agent, and how to set them up.
 - [Add your first Firstlight component](https://firstlightui.dev/docs/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
 - [Theme Firstlight components](https://firstlightui.dev/docs/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
