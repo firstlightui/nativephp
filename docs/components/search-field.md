@@ -42,7 +42,7 @@ keyboard, selection, clear, focus, and accessibility behaviour.
 | `value` / `native:model` | `string` | Published query; omission defaults to `''`. |
 | `placeholder` | `string` | Empty-query prompt; never the accessible name. |
 | `disabled` | `bool` | Prevents focus, editing, clearing, change, and submit. |
-| `autocapitalize` | enum string | `none`, `sentences`, `words`, or `characters`; omission keeps platform policy. |
+| `autocapitalize` | enum string | `none`, `sentences`, `words`, or `characters`; omission means `none`, as in the system search bars. |
 | `autocorrect` | `bool` | Explicitly enables or disables correction; omission keeps platform policy. |
 | `a11y-label` | non-empty `string` | Required accessible name. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
@@ -95,7 +95,7 @@ accessible name and meets the 44-point iOS or 48-dp Android target baseline.
 
 iOS embeds `UISearchTextField`, so UIKit owns search chrome, the search and clear
 affordances, cursor, selection, marked text, keyboard, and Dynamic Type. Android
-uses a Material 3 search-field composition with `TextFieldValue`, the search IME
+draws a Material 3 search bar, a filled pill with no outline, with `TextFieldValue`, the search IME
 action, Material search/clear affordances, Compose semantics, and font scaling.
 
 ## Screenshots

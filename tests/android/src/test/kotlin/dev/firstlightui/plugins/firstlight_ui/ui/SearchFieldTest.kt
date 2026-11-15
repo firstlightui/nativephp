@@ -12,6 +12,8 @@ import com.nativephp.mobile.ui.nativerender.NativeUITree
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.nativephp.plugins.native_ui.NativeUITheme
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
@@ -29,6 +31,15 @@ class SearchFieldTest {
         assertEquals(41, configuration.onChangeCallback)
         assertEquals(42, configuration.onSubmitCallback)
         assertEquals("Clear search", configuration.clearA11yLabel)
+    }
+
+    @Test fun `omitted autocapitalize leaves queries uncapitalized as system search bars do`() {
+        val options = searchFieldKeyboardOptions(SearchFieldRendererConfiguration(node(autocapitalize = null)))
+        assertEquals(KeyboardCapitalization.None, options.capitalization)
+        assertEquals(
+            KeyboardCapitalization.Sentences,
+            searchFieldKeyboardOptions(SearchFieldRendererConfiguration(node(autocapitalize = "sentences"))).capitalization,
+        )
     }
 
     @Test fun `focused acknowledgements preserve selection composition and corrections wait`() {
@@ -76,6 +87,7 @@ class SearchFieldTest {
                         configuration = SearchFieldRendererConfiguration(node()),
                         draft = TextFieldValue("Referral"),
                         onValueChange = {}, onClear = {}, onSubmit = {},
+                        tokens = NativeUITheme.light,
                     )
                 }
             }
@@ -86,13 +98,14 @@ class SearchFieldTest {
         value: String = "cardiology",
         syncMode: String = "live",
         disabled: Boolean = false,
+        autocapitalize: String? = "words",
     ) = NativeUINode(
         id = 7,
-        props = GenericProps(mapOf(
+        props = GenericProps(listOfNotNull(
             "value" to value,
             "placeholder" to "Search specialties",
             "disabled" to disabled,
-            "autocapitalize" to "words",
+            autocapitalize?.let { "autocapitalize" to it },
             "autocorrect_policy" to "disabled",
             "sync_mode" to syncMode,
             "debounce_ms" to 300,
@@ -100,7 +113,7 @@ class SearchFieldTest {
             "a11y_hint" to "Enter a specialty name",
             "on_change" to 41,
             "on_submit" to 42,
-        )),
+        ).toMap()),
     )
 
     private fun tree(target: NativeUINode) = NativeUITree(

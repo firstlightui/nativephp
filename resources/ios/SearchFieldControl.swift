@@ -120,7 +120,7 @@ func configureSearchTextField(
     case "sentences": .sentences
     case "words": .words
     case "characters": .allCharacters
-    default: .sentences
+    default: .none
     }
     field.autocorrectionType = switch configuration.autocorrectPolicy {
     case "enabled": .yes

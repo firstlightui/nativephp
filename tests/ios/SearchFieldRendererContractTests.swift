@@ -77,6 +77,14 @@ final class SearchFieldRendererContractTests: XCTestCase {
         XCTAssertEqual(firstlightSearchFieldMinimumHeight, 36)
     }
 
+    func testOmittedAutocapitalizeLeavesQueriesUncapitalizedAsSystemSearchBarsDo() {
+        let field = FirstlightSearchTextField()
+        configureSearchTextField(field, configuration: SearchFieldRendererConfiguration(node: node(autocapitalize: nil)))
+        XCTAssertEqual(field.autocapitalizationType, .none)
+        configureSearchTextField(field, configuration: SearchFieldRendererConfiguration(node: node(autocapitalize: "sentences")))
+        XCTAssertEqual(field.autocapitalizationType, .sentences)
+    }
+
     func testDisabledFieldDimsTextAndSearchGlyphAndEnablingRestoresThem() {
         let field = FirstlightSearchTextField()
         configureSearchTextField(field, configuration: SearchFieldRendererConfiguration(node: node(disabled: true)))
@@ -100,26 +108,28 @@ final class SearchFieldRendererContractTests: XCTestCase {
     private func node(
         value: String = "cardiology",
         syncMode: String = "live",
-        disabled: Bool = false
+        disabled: Bool = false,
+        autocapitalize: String? = "words"
     ) -> NativeUINode {
-        NativeUINode(
+        var props: [String: Any] = [
+            "value": value,
+            "placeholder": "Search specialties",
+            "disabled": disabled,
+            "autocorrect_policy": "disabled",
+            "sync_mode": syncMode,
+            "debounce_ms": 300,
+            "a11y_label": "Search specialties",
+            "a11y_hint": "Enter a specialty name",
+            "on_change": 41,
+            "on_submit": 42,
+        ]
+        if let autocapitalize { props["autocapitalize"] = autocapitalize }
+        return NativeUINode(
             id: 7,
             type: "firstlight_search_field",
             layout: nil,
             style: nil,
-            props: GenericProps([
-                "value": value,
-                "placeholder": "Search specialties",
-                "disabled": disabled,
-                "autocapitalize": "words",
-                "autocorrect_policy": "disabled",
-                "sync_mode": syncMode,
-                "debounce_ms": 300,
-                "a11y_label": "Search specialties",
-                "a11y_hint": "Enter a specialty name",
-                "on_change": 41,
-                "on_submit": 42,
-            ]),
+            props: GenericProps(props),
             onPress: 0,
             onLongPress: 0,
             children: []

@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.nativephp.plugins.native_ui.NativeUITheme
 import androidx.compose.ui.text.input.TextFieldValue
 import com.nativephp.mobile.ui.nativerender.NativeUIBridge
 import com.nativephp.mobile.ui.nativerender.NativeUINode
@@ -169,6 +171,7 @@ object SearchFieldRenderer {
             onValueChange = { state.userChanged(it)?.let(events::dispatch) },
             onClear = { state.clear()?.let(events::dispatch) },
             onSubmit = { state.submit().forEach(events::dispatch) },
+            tokens = if (isSystemInDarkTheme()) NativeUITheme.dark else NativeUITheme.light,
             modifier = modifier.onFocusChanged {
                 focusChanged(it.isFocused)
             },
@@ -178,10 +181,10 @@ object SearchFieldRenderer {
 
 internal fun searchFieldKeyboardOptions(configuration: SearchFieldRendererConfiguration) = KeyboardOptions(
     capitalization = when (configuration.autocapitalize) {
-        "none" -> KeyboardCapitalization.None
+        "sentences" -> KeyboardCapitalization.Sentences
         "words" -> KeyboardCapitalization.Words
         "characters" -> KeyboardCapitalization.Characters
-        else -> KeyboardCapitalization.Sentences
+        else -> KeyboardCapitalization.None
     },
     autoCorrectEnabled = when (configuration.autocorrectPolicy) {
         "enabled" -> true

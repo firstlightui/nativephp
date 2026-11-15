@@ -54,7 +54,7 @@ Text Field.
 | `value` / `native:model` | Strict string; omission defaults to `''`. |
 | `placeholder` | Empty-query prompt; never the accessible name. |
 | `disabled` | Prevents editing, clearing, change, and submit. |
-| `autocapitalize` | `none`, `sentences`, `words`, or `characters`. |
+| `autocapitalize` | `none` (default, as in the system search bars), `sentences`, `words`, or `characters`. |
 | `autocorrect` | Explicitly enables or disables platform autocorrection. |
 | `a11y-label` | Required, non-empty accessible name. |
 | `a11y-hint` | Additional VoiceOver or TalkBack guidance. |
@@ -124,11 +124,12 @@ state. The search glyph is decorative. The clear action carries the localised
   Dynamic Type. Disabled fields use tertiary label text, dim the glyph to 0.38
   alpha, and hide the clear button. Server publications are applied only
   outside marked text and keep the selection offsets.
-- Android uses Material 3 `OutlinedTextField` with `singleLine = true`, a
-  `CircleShape` container at least 48 dp tall, a leading `search`
+- Android draws a Material 3 search bar: a filled `TextField` with
+  `singleLine = true`, a `CircleShape` `surface-variant` container at least
+  56 dp tall with no outline or focus indicator, a leading `search`
   `MaterialIcon`, a trailing `close` `IconButton` of at least 48 dp while the
   query is non-empty, `TextFieldValue` selection and composition, and
-  `ImeAction.Search`. Omitted `autocapitalize` maps to sentences.
+  `ImeAction.Search`. Omitted `autocapitalize` maps to none on both platforms.
 
 ## Renderer decision
 
