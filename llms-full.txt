@@ -1807,6 +1807,12 @@ The `primary` pair colours filled actions, selected states, and key accents. Sur
 
 On iOS 26 and later, Firstlight's floating surfaces are Liquid Glass, as Apple's own are. Bottom Sheet and Transient Feedback take their colour from the content behind them rather than from `surface`, and Segmented and Tabs show the system's selected segment rather than a `primary` fill. Prominent glass buttons are still filled with their variant's colour, and a warning Feedback is tinted with the warning colour. Earlier iOS and Android use the theme colours as before.
 
+Keep `destructive` visibly different from `primary`. Destructive buttons and field errors use it, so with a red brand, errors that match the brand colour read as decoration rather than a problem. The showcase pairs its Dawn 700 primary `#AE1515` with Material Red 700 `#D32F2F` in light mode, which is brighter and still meets 4.5:1 on white and on filled-field greys:
+
+```php
+'light' => ['destructive' => '#D32F2F', 'on-destructive' => '#FFFFFF'],
+```
+
 Dark values are optional because NativePHP can derive them from the light theme. Define explicit dark overrides when brand perception or contrast needs a tuned pair. Keep text and icons at a contrast ratio of at least 4.5:1 against their background token.
 
 Theme colours accept CSS hex values, Tailwind palette names such as `violet-600`, and opacity modifiers such as `violet-600/15`.
