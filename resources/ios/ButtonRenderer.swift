@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// iOS renderer for `firstlight.button`. Ghost buttons use Firstlight's
-/// control for a 44 pt target; every other variant stays on the official
-/// Mobile UI renderer the Button adapter wraps.
+/// control for a 44 pt target, and secondary buttons without glass use
+/// Firstlight's bordered control for Apple's secondary emphasis; every other
+/// variant stays on the official Mobile UI renderer the Button adapter wraps.
 struct FirstlightButtonRenderer: View {
     let node: NativeUINode
 
@@ -16,30 +17,42 @@ struct FirstlightButtonRenderer: View {
         let glass = firstlightUsesLiquidGlass
             ? FirstlightGlassStyle(node: node) ?? (floatingGlass ? FirstlightGlassStyle(floatingVariant: variant) : nil)
             : nil
+        let configuration = FirstlightButtonConfiguration(node: labelNode)
         if variant == "ghost" {
-            let configuration = ButtonGhostConfiguration(node: labelNode)
             FirstlightGhostButtonControl(
                 configuration: configuration,
                 tokens: themeStore.resolve(for: colorScheme),
                 glass: glass,
-                onPress: {
-                    guard configuration.isEnabled, configuration.callbackID != 0 else { return }
-                    // Firstlight draws ghost buttons, so the haptic plays with the action.
-                    if let haptic = FirstlightHaptic(rawValue: node.props.getString("haptic")) {
-                        FirstlightHaptics.shared.play(haptic)
-                    }
-                    // Through the focus policy so a focused field's pending change
-                    // reaches PHP before the press, as Mobile UI's Button does.
-                    KeyboardFocusPolicy.dispatchPress {
-                        NativeUIBridge.sendPressEvent(configuration.callbackID, nodeId: configuration.nodeID)
-                    }
-                }
+                onPress: press(configuration)
+            )
+        } else if variant == "secondary" && glass == nil {
+            // Before iOS 26 a glass secondary also lands here, matching Mobile
+            // UI's own `.bordered` fallback for regular glass.
+            FirstlightSecondaryButtonControl(
+                configuration: configuration,
+                tokens: themeStore.resolve(for: colorScheme),
+                onPress: press(configuration)
             )
         } else {
             // Mobile UI draws the other variants; the haptic rides alongside its tap.
             NativeUIButtonRenderer(node: firstlightGlassNode(labelNode, style: glass))
                 .modifier(FirstlightRegularGlassLabel(active: glass == .regular))
                 .firstlightPressHaptic(node, enabled: !node.props.getBool("disabled") && !node.props.getBool("loading"))
+        }
+    }
+
+    private func press(_ configuration: FirstlightButtonConfiguration) -> () -> Void {
+        {
+            guard configuration.isEnabled, configuration.callbackID != 0 else { return }
+            // Firstlight draws this button, so the haptic plays with the action.
+            if let haptic = FirstlightHaptic(rawValue: node.props.getString("haptic")) {
+                FirstlightHaptics.shared.play(haptic)
+            }
+            // Through the focus policy so a focused field's pending change
+            // reaches PHP before the press, as Mobile UI's Button does.
+            KeyboardFocusPolicy.dispatchPress {
+                NativeUIBridge.sendPressEvent(configuration.callbackID, nodeId: configuration.nodeID)
+            }
         }
     }
 }

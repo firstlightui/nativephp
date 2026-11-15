@@ -28,7 +28,7 @@ final class ButtonGhostTests: XCTestCase {
                 if variant == "ghost" {
                     XCTAssertGreaterThanOrEqual(geometry.frame.height, 44)
                     let control = UIHostingController(rootView: FirstlightGhostButtonControl(
-                        configuration: ButtonGhostConfiguration(node: firstlightButtonLabelNode(node)),
+                        configuration: FirstlightButtonConfiguration(node: firstlightButtonLabelNode(node)),
                         tokens: .fallback,
                         onPress: {}
                     ))
@@ -37,6 +37,16 @@ final class ButtonGhostTests: XCTestCase {
                         fitted.width, width, accuracy: 1,
                         "the ghost label/target itself must expand, not just the renderer's outer frame"
                     )
+                } else if variant == "secondary" {
+                    // The tonal slate fill is too unsaturated for coloredSpan,
+                    // so measure the bordered control's own fitted width.
+                    let control = UIHostingController(rootView: FirstlightSecondaryButtonControl(
+                        configuration: FirstlightButtonConfiguration(node: firstlightButtonLabelNode(node)),
+                        tokens: .fallback,
+                        onPress: {}
+                    ))
+                    let fitted = control.sizeThatFits(in: CGSize(width: width, height: 160))
+                    XCTAssertEqual(fitted.width, width, accuracy: 1, "secondary capsule must expand: \(layout)")
                 } else {
                     XCTAssertEqual(
                         geometry.paintedWidth, width, accuracy: 2,
@@ -156,7 +166,7 @@ final class ButtonGhostTests: XCTestCase {
     func testGhostKeepsA44PointTargetAtEverySize() {
         for size in ["sm", "md", "lg"] {
             let host = UIHostingController(rootView: FirstlightGhostButtonControl(
-                configuration: ButtonGhostConfiguration(node: makeNode(size: size)),
+                configuration: FirstlightButtonConfiguration(node: makeNode(size: size)),
                 tokens: .fallback,
                 onPress: {}
             ))
@@ -167,8 +177,74 @@ final class ButtonGhostTests: XCTestCase {
         }
     }
 
+    func testSecondaryDrawsALightTonalFillRatherThanASolidOne() {
+        // Mobile UI drew secondary as `.borderedProminent`: a solid #475569
+        // capsule. Apple's secondary emphasis is `.bordered`, a light tint.
+        let host = UIHostingController(rootView: FirstlightSecondaryButtonControl(
+            configuration: FirstlightButtonConfiguration(node: makeNode(variant: "secondary")),
+            tokens: .fallback,
+            onPress: {}
+        ))
+        host.overrideUserInterfaceStyle = .light
+        host.view.backgroundColor = .white
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map(UIWindow.init(windowScene:)) ?? UIWindow()
+        window.frame = CGRect(x: 0, y: 0, width: 360, height: 120)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.setNeedsLayout()
+        host.view.layoutIfNeeded()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let image = UIGraphicsImageRenderer(bounds: host.view.bounds, format: format).image { context in
+            UIColor.white.setFill()
+            context.fill(host.view.bounds)
+            host.view.layer.render(in: context.cgContext)
+        }
+
+        // Find the capsule's bounds, then step a few points in from its
+        // leading edge on its middle row: inside the fill, clear of the label.
+        let pixels = rgbPixels(of: image)
+        let width = Int(host.view.bounds.width)
+        let tinted = pixels.indices.filter { (pixels[$0].min() ?? 255) < 252 }
+        guard let first = tinted.first, let last = tinted.last else {
+            return XCTFail("secondary drew nothing")
+        }
+        let row = (first / width + last / width) / 2
+        guard let edge = (0..<width).first(where: { (pixels[row * width + $0].min() ?? 255) < 252 }) else {
+            return XCTFail("no capsule on its own middle row")
+        }
+        let pixel = pixels[row * width + edge + 4]
+        XCTAssertGreaterThan(pixel.min() ?? 0, 180, "fill must be a light tint, not solid secondary: \(pixel)")
+    }
+
+    private func rgbPixels(of image: UIImage) -> [[Int]] {
+        guard let cgImage = image.cgImage else { return [] }
+        let width = cgImage.width
+        let height = cgImage.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = bytes.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+            ) else { return false }
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn else { return [] }
+        return (0..<(width * height)).map { bytes[($0 * 4)...($0 * 4 + 2)].map(Int.init) }
+    }
+
     func testConfigurationDecodesTheActionContract() {
-        let configuration = ButtonGhostConfiguration(node: makeNode())
+        let configuration = FirstlightButtonConfiguration(node: makeNode())
 
         XCTAssertEqual(configuration.nodeID, 12)
         XCTAssertEqual(configuration.label, "settings recipe")
@@ -176,8 +252,8 @@ final class ButtonGhostTests: XCTestCase {
         XCTAssertEqual(configuration.accessibilityHint, "Opens the bundled article")
         XCTAssertEqual(configuration.callbackID, 52)
         XCTAssertTrue(configuration.isEnabled)
-        XCTAssertFalse(ButtonGhostConfiguration(node: makeNode(disabled: true)).isEnabled)
-        XCTAssertFalse(ButtonGhostConfiguration(node: makeNode(loading: true)).isEnabled)
+        XCTAssertFalse(FirstlightButtonConfiguration(node: makeNode(disabled: true)).isEnabled)
+        XCTAssertFalse(FirstlightButtonConfiguration(node: makeNode(loading: true)).isEnabled)
     }
 
     private func makeNode(

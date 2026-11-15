@@ -212,6 +212,8 @@ final class NativeElementBridge {
 struct NativeUITokens: Equatable {
     let primary: Color
     let onPrimary: Color
+    let secondary: Color
+    let onSecondary: Color
     let surface: Color
     let onSurface: Color
     let background: Color
@@ -228,6 +230,8 @@ struct NativeUITokens: Equatable {
     init(
         primary: Color,
         onPrimary: Color,
+        secondary: Color = .clear,
+        onSecondary: Color = .clear,
         surface: Color,
         onSurface: Color,
         background: Color = .clear,
@@ -243,6 +247,8 @@ struct NativeUITokens: Equatable {
     ) {
         self.primary = primary
         self.onPrimary = onPrimary
+        self.secondary = secondary
+        self.onSecondary = onSecondary
         self.surface = surface
         self.onSurface = onSurface
         self.background = background
@@ -260,6 +266,9 @@ struct NativeUITokens: Equatable {
     static let fallback = NativeUITokens(
         primary: Color(uiColor: .systemTeal),
         onPrimary: Color(uiColor: .white),
+        // Mobile UI's light secondary pair, #475569 on white.
+        secondary: Color(red: 71 / 255.0, green: 85 / 255.0, blue: 105 / 255.0),
+        onSecondary: .white,
         surface: Color(uiColor: .systemBackground),
         onSurface: Color(uiColor: .label),
         surfaceVariant: Color(uiColor: .secondarySystemBackground),
