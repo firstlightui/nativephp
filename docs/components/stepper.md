@@ -104,7 +104,9 @@ receive the accepted value, hint, helper or error, disabled state, and named
 decrease/increase actions. At a boundary, only the unavailable direction is
 disabled.
 
-iOS uses the genuine SwiftUI Stepper. Android uses Material 3 outlined icon
+iOS uses the genuine SwiftUI Stepper, whose segments are 32 points tall;
+Firstlight extends each one to a 44-point target, so a tap just above or below
+the stepper steps by the half it lands on. Android uses Material 3 outlined icon
 buttons with the label on the same row and the minus/value/plus controls at its
 trailing end. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press

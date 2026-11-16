@@ -7765,7 +7765,9 @@ receive the accepted value, hint, helper or error, disabled state, and named
 decrease/increase actions. At a boundary, only the unavailable direction is
 disabled.
 
-iOS uses the genuine SwiftUI Stepper. Android uses Material 3 outlined icon
+iOS uses the genuine SwiftUI Stepper, whose segments are 32 points tall;
+Firstlight extends each one to a 44-point target, so a tap just above or below
+the stepper steps by the half it lands on. Android uses Material 3 outlined icon
 buttons with the label on the same row and the minus/value/plus controls at its
 trailing end. Stepper deliberately has no custom
 icons, formatter, min/max captions, wraparound, orientation, long-press
@@ -8751,7 +8753,7 @@ When `disabled` is `true`, Switch stays visible with its accepted on/off state a
 
 ## Accessibility
 
-Provide a visible `label` or an explicit `a11y-label`; Firstlight warns during development when both are blank. The native controls expose the setting name, on/off value, disabled state, optional hint, and error semantics. SwiftUI provides a minimum 44-point target; the Material 3 row provides a minimum 48-dp target and one TalkBack switch focus stop.
+Provide a visible `label` or an explicit `a11y-label`; Firstlight warns during development when both are blank. The native controls expose the setting name, on/off value, disabled state, optional hint, and error semantics. On iOS the whole row is a target of at least 44 points, so tapping the label also toggles; the Material 3 row provides a minimum 48-dp target and one TalkBack switch focus stop.
 
 ## Validation and failure behaviour
 

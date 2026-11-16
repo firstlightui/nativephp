@@ -42,6 +42,11 @@ struct FirstlightSwitchControl: View {
         .tint(tokens.primary)
         .disabled(disabled)
         .frame(maxWidth: .infinity, minHeight: 44)
+        // The system switch takes taps only on its 51×31 pt track. The whole row toggles, as on
+        // Android, so a switch without a label still has a full-height target; the switch's own
+        // gesture keeps taps and drags on the track.
+        .contentShape(Rectangle())
+        .onTapGesture { if !disabled { onProposal() } }
         .modifier(SwitchAccessibilityLabelModifier(label: accessibilityLabel))
         .modifier(SwitchAccessibilityHintModifier(hint: accessibilityHint))
         .modifier(SwitchAccessibilityErrorModifier(value: value, error: error))

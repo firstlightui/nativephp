@@ -4,20 +4,32 @@ struct FirstlightStepperControl: View {
     @Binding var state: StepperRendererState
     let tokens: NativeUITokens
     let onEvent: @MainActor (StepperRendererEvent) -> Void
+    @Environment(\.layoutDirection) private var layoutDirection
+
+    @State private var stepperSize: CGSize = .zero
 
     private var configuration: StepperRendererConfiguration { state.configuration }
+    private var isInert: Bool { configuration.disabled || state.isAwaitingPublication }
+
+    /// A tap in the 44 pt frame but outside the system stepper, which handles its own taps.
+    private func stepFromBand(_ location: CGPoint) {
+        guard !isInert, stepperSize.height > 0 else { return }
+        let band = (max(44, stepperSize.height) - stepperSize.height) / 2
+        guard location.y < band || location.y > band + stepperSize.height else { return }
+        let decrements = (location.x < stepperSize.width / 2) != (layoutDirection == .rightToLeft)
+        (decrements ? decrementAction : incrementAction)?()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Stepper(
-                onIncrement: incrementAction,
-                onDecrement: decrementAction
-            ) {
+            HStack(spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     if !configuration.label.isEmpty {
                         Text(configuration.label)
                             .foregroundStyle(tokens.onSurface)
                             .fixedSize(horizontal: false, vertical: true)
+                            // The stepper below carries the label, value and hint for VoiceOver.
+                            .accessibilityHidden(true)
                     }
 
                     Spacer(minLength: 12)
@@ -27,11 +39,26 @@ struct FirstlightStepperControl: View {
                         .foregroundStyle(tokens.onSurface)
                         .accessibilityHidden(true)
                 }
+
+                Stepper(
+                    onIncrement: incrementAction,
+                    onDecrement: decrementAction
+                ) {
+                    EmptyView()
+                }
+                .labelsHidden()
+                .fixedSize()
+                .onGeometryChange(for: CGSize.self) { $0.size } action: { stepperSize = $0 }
+                .disabled(isInert)
+                .accessibilityLabel(Text(configuration.accessibilityLabel))
+                .accessibilityHint(Text(accessibilityHint))
+                .accessibilityValue(Text(configuration.displayValue))
+                // The system stepper is 32 pt tall at every text size. Taps in the band above and
+                // below it step too, by the half they land in, so each segment is a 44 pt target.
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+                .gesture(SpatialTapGesture().onEnded { tap in stepFromBand(tap.location) })
             }
-            .disabled(configuration.disabled || state.isAwaitingPublication)
-            .accessibilityLabel(Text(configuration.accessibilityLabel))
-            .accessibilityHint(Text(accessibilityHint))
-            .accessibilityValue(Text(configuration.displayValue))
             .firstlightValidationFocusTarget()
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error

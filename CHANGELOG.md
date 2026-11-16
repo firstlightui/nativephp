@@ -23,6 +23,8 @@ These come from the iOS device pass on an iPhone 16 Pro running iOS 27.0.1.
   - The Activity Indicator keeps its size beside long text instead of drawing over it, on both platforms.
 - iOS with Increase Contrast: Text Field and Text Area draw a visible outline.
 - Pill Group on iOS: in right-to-left languages, wrapping groups start from the right edge.
+- Switch on iOS: the whole row toggles, as on Android, so a switch without a label has a full-width 44 pt target instead of only its 51×31 pt track.
+- Stepper on iOS: each segment is a 44 pt target. A tap just above or below the 32 pt system stepper steps by the half it lands on, and VoiceOver reads the stepper's name once.
 
 ### Known issues
 

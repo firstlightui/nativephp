@@ -115,7 +115,7 @@ When `disabled` is `true`, Switch stays visible with its accepted on/off state a
 
 ## Accessibility
 
-Provide a visible `label` or an explicit `a11y-label`; Firstlight warns during development when both are blank. The native controls expose the setting name, on/off value, disabled state, optional hint, and error semantics. SwiftUI provides a minimum 44-point target; the Material 3 row provides a minimum 48-dp target and one TalkBack switch focus stop.
+Provide a visible `label` or an explicit `a11y-label`; Firstlight warns during development when both are blank. The native controls expose the setting name, on/off value, disabled state, optional hint, and error semantics. On iOS the whole row is a target of at least 44 points, so tapping the label also toggles; the Material 3 row provides a minimum 48-dp target and one TalkBack switch focus stop.
 
 ## Validation and failure behaviour
 
