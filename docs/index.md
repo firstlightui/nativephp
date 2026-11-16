@@ -39,6 +39,7 @@ recipes run inside.
 - [Build a settings screen](how-to/build-a-settings-screen.md) — Group switches and pickers in native sections that save on change.
 - [Build a photo upload screen](how-to/build-a-photo-upload-screen.md) — Crop, validate, and save a photo to a model only when the user taps Save.
 - [Build an app lock screen](how-to/build-an-app-lock-screen.md) — Hide the app in the app switcher, lock it after time away, and unlock with Face ID, Touch ID, or a fingerprint.
+- [Add Siri and app icon shortcuts](how-to/add-app-shortcuts.md) — Open screens or run PHP from Siri, Spotlight, the Shortcuts app, and the app icon's long-press menu, even when the app is closed.
 
 ## Get started
 

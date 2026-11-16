@@ -27,6 +27,7 @@ every control the way they reach the platform's own apps.
 - [Build a settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen): Recipe for a grouped settings screen with native section headers and footers, Switch and Select rows, and save-on-change.
 - [Build a photo upload screen](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen): Recipe for a Media field that crops a photo, validates it with Laravel rules, and saves it to a model only when the user taps Save.
 - [Build an app lock screen](https://firstlightui.dev/docs/how-to/build-an-app-lock-screen): Recipe for a lock screen that covers the app in the app switcher, locks it after time in the background, and unlocks with Face ID, Touch ID, or a fingerprint.
+- [Add Siri and app icon shortcuts](https://firstlightui.dev/docs/how-to/add-app-shortcuts): Recipe for shortcuts that open a screen or run PHP from Siri, Spotlight, the Shortcuts app, and the app icon's long-press menu, even when the app is closed.
 
 ## Get started
 
