@@ -17,6 +17,7 @@ struct FirstlightBottomToolbar: ViewModifier {
                     ToolbarItem(placement: .bottomBar) {
                         FirstlightToolbarButton(item: item, onPress: onPress)
                             .badge(item.badge.isEmpty ? nil : Text(item.badge))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     }
                 }
                 if let primary = configuration.primary {
@@ -25,6 +26,7 @@ struct FirstlightBottomToolbar: ViewModifier {
                         ToolbarItem(placement: .bottomBar) {
                             FirstlightToolbarButton(item: primary, onPress: onPress)
                                 .badge(primary.badge.isEmpty ? nil : Text(primary.badge))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         }
                     }
                 }

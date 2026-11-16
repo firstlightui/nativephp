@@ -19,7 +19,7 @@ These come from the iOS device pass on an iPhone 16 Pro running iOS 27.0.1.
 - iOS at accessibility text sizes:
   - Text Area grows its line height with the text.
   - List Item monograms show their initials instead of an ellipsis.
-  - Toolbar badges stay small enough to leave their icon visible.
+  - Toolbar badges stay small enough to leave their icon visible, including the system badge on iOS 26's bottom bar.
   - Select and Date Picker chips stack their label, value and chevron instead of breaking words.
   - The Activity Indicator keeps its size beside long text instead of drawing over it, on both platforms.
 - iOS with Increase Contrast: Text Field and Text Area draw a visible outline.
