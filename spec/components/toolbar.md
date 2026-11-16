@@ -67,6 +67,11 @@ SwiftUI keeps a bar button whose `ForEach` identity is unchanged, with its old
 badge and enabled state, so items are keyed by their whole configuration and a
 republished tree replaces them; `testBarItemsFollowARepublishedTree` covers
 it.
+At the accessibility text sizes the system badge grows with the text and can
+cover its icon on device (iPhone 16 Pro, iOS 27.0.1, device pass row 505).
+`.dynamicTypeSize` caps on the button or the `ToolbarItem` shrink it in the
+simulator but not on device, so they were removed. Accepted as system behaviour
+for 1.1 (wojt, 2026-11-16); revisit in 1.2.
 
 mobile-air hides the tab bar on pushed tab levels, so the bottom toolbar shows
 there. A tab root keeps the tab bar, which covers the bottom toolbar; the screen

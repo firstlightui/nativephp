@@ -8609,6 +8609,11 @@ iOS does not draw it. Android draws a Material badge on the icon, and TalkBack
 reads its text after the action name. Keep badge text short, such as a count,
 because it cannot be given separate spoken wording.
 
+At the accessibility text sizes iOS draws the system badge larger with the text,
+and it can cover most of its item's icon. VoiceOver still reads the count, and a
+long press on the item shows its name in the large content viewer. Firstlight
+keeps the system badge rather than drawing its own.
+
 ## Accessibility
 
 Every item requires `a11y-label`; icon names are never read. On iOS the item

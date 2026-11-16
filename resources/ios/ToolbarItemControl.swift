@@ -29,9 +29,6 @@ struct FirstlightToolbarButton: View {
         }
         .disabled(!item.isEnabled)
         .accessibilityLabel(item.accessibilityLabel)
-        // System bars stop growing at the accessibility sizes, where long press shows the large
-        // content viewer instead; without the cap the badge outgrows the bar and covers its icon.
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     /// The title is kept so an overflowed item and the long-press label read
