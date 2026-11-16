@@ -65,6 +65,9 @@ struct TextFieldRendererConfiguration {
     let onSubmitCallback: Int
     let onPressCallback: Int
 
+    /// Masked and read-only fields use a UIKit text field, which sees each edit before it applies.
+    var usesUIKitInput: Bool { mask != nil || readOnly }
+
     init(node: NativeUINode) {
         let props = node.props
         nodeID = node.id
@@ -232,6 +235,11 @@ struct TextFieldRenderer: View {
     @State private var state: TextFieldRendererState
     @State private var focusToken = UUID()
     @State private var maskedRefocus = 0
+    /// Set briefly after the clear or reveal button of a focused field, so the blur that tap
+    /// causes returns focus instead of publishing. NativePHP resigns the keyboard on any tap
+    /// outside the text input, and reveal also swaps the secure input for a plain one.
+    @State private var accessoryRefocus = false
+    @State private var lastBlur: Date?
     private let events: TextFieldRendererEvents
 
     init(node: NativeUINode, events: TextFieldRendererEvents = .native) {
@@ -255,8 +263,8 @@ struct TextFieldRenderer: View {
             isFocused: $focused,
             tokens: themeStore.resolve(for: colorScheme),
             onClear: {
+                keepFocusThroughAccessory()
                 if let event = state.clear() { events.send(event) }
-                if state.configuration.mask != nil { maskedRefocus += 1 }
             },
             onTrailingPress: {
                 let configuration = state.configuration
@@ -276,10 +284,18 @@ struct TextFieldRenderer: View {
                 if let event = state.maskedTextReplaced(text) { events.send(event) }
                 return state.display
             },
-            onMaskedFocusChanged: focusChanged
+            onMaskedFocusChanged: focusChanged,
+            onRevealToggled: keepFocusThroughAccessory
         )
         .modifier(FirstlightFocusedFieldScroll(nodeID: validationNodeID, focused: state.isFocused))
-        .onChange(of: focused) { _, value in focusChanged(value) }
+        .onChange(of: focused) { _, value in
+            if !value && accessoryRefocus {
+                DispatchQueue.main.async { focused = true }
+                return
+            }
+            if value { accessoryRefocus = false } else { lastBlur = Date() }
+            focusChanged(value)
+        }
         .onDisappear { KeyboardFocusPolicy.fieldBlurred(focusToken) }
         .firstlightValidationAlert(nodeID: validationNodeID)
         .onReceive(bridge.$currentTree.compactMap { $0 }) { tree in
@@ -292,10 +308,27 @@ struct TextFieldRenderer: View {
         }
     }
 
-    private func focusChanged(_ value: Bool) {
-        KeyboardFocusPolicy.firstlightFieldFocusChanged(value, token: focusToken) {
-            if let event = state.flush() { events.send(event) }
+    private func flush() {
+        if let event = state.flush() { events.send(event) }
+    }
+
+    /// Keeps the field focused through its own clear or reveal tap, when it was focused as the
+    /// tap began. NativePHP's resign may have blurred the field just before this action runs.
+    private func keepFocusThroughAccessory() {
+        // The UIKit input checks for itself whether it lost focus that moment.
+        if state.configuration.usesUIKitInput {
+            maskedRefocus += 1
+            return
         }
+        let blurredByTap = lastBlur.map { Date().timeIntervalSince($0) < 0.4 } ?? false
+        guard state.isFocused || blurredByTap else { return }
+        accessoryRefocus = true
+        DispatchQueue.main.async { focused = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { accessoryRefocus = false }
+    }
+
+    private func focusChanged(_ value: Bool) {
+        KeyboardFocusPolicy.firstlightFieldFocusChanged(value, token: focusToken, flush: flush)
         if let event = state.focusChanged(value) { events.send(event) }
     }
 }

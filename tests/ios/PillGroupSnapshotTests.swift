@@ -428,34 +428,24 @@ final class PillGroupRendererContractTests: XCTestCase {
         XCTAssertNotNil(renderer.body)
     }
 
-    func testFlowLayoutWrapsAndMirrorsForRightToLeft() {
+    func testFlowLayoutWrapsFromTheLeadingEdge() {
         let sizes = [
             CGSize(width: 70, height: 44),
             CGSize(width: 60, height: 44),
             CGSize(width: 80, height: 44),
         ]
 
-        let leftToRight = PillFlowLayout.frames(
+        // SwiftUI mirrors these placements in right-to-left, so they are the same in both directions.
+        let frames = PillFlowLayout.frames(
             containerWidth: 150,
             sizes: sizes,
             horizontalSpacing: 8,
-            verticalSpacing: 8,
-            layoutDirection: .leftToRight
-        )
-        let rightToLeft = PillFlowLayout.frames(
-            containerWidth: 150,
-            sizes: sizes,
-            horizontalSpacing: 8,
-            verticalSpacing: 8,
-            layoutDirection: .rightToLeft
+            verticalSpacing: 8
         )
 
-        XCTAssertEqual(leftToRight[0].origin, CGPoint(x: 0, y: 0))
-        XCTAssertEqual(leftToRight[1].origin, CGPoint(x: 78, y: 0))
-        XCTAssertEqual(leftToRight[2].origin, CGPoint(x: 0, y: 52))
-        XCTAssertEqual(rightToLeft[0].origin, CGPoint(x: 80, y: 0))
-        XCTAssertEqual(rightToLeft[1].origin, CGPoint(x: 12, y: 0))
-        XCTAssertEqual(rightToLeft[2].origin, CGPoint(x: 70, y: 52))
+        XCTAssertEqual(frames[0].origin, CGPoint(x: 0, y: 0))
+        XCTAssertEqual(frames[1].origin, CGPoint(x: 78, y: 0))
+        XCTAssertEqual(frames[2].origin, CGPoint(x: 0, y: 52))
     }
 
     private func makeNode(

@@ -7,6 +7,7 @@ use FirstlightUI\Concerns\DestroysListItems;
 use FirstlightUI\Concerns\PaginatesLists;
 use FirstlightUI\Concerns\SubmitsForms;
 use FirstlightUI\Concerns\ValidatesFields;
+use FirstlightUI\Elements\Slider;
 use Native\Mobile\Edge\Element;
 use Native\Mobile\Edge\NativeComponent as EdgeNativeComponent;
 use Native\Mobile\Edge\NativeElementCollector;
@@ -18,11 +19,16 @@ class NativeComponent extends EdgeNativeComponent
     use DestroysListItems;
     use PaginatesLists;
     use SubmitsForms;
-    use ValidatesFields;
+    use ValidatesFields {
+        ValidatesFields::dispatchUiEvent as dispatchValidatedUiEvent;
+    }
 
     // Shared across screen instances: navigating/remounting must not reuse
     // the previous frame's revision within the same PHP runtime.
     private static int $responseRevision = 0;
+
+    /** NativePHP's SLIDER_CHANGE event type. */
+    private const SLIDER_CHANGE_EVENT = 9;
 
     private bool $leavingScreen = false;
 
@@ -69,6 +75,19 @@ class NativeComponent extends EdgeNativeComponent
             'firstlight_response_revision',
             $this->leavingScreen ? self::$responseRevision : ++self::$responseRevision,
         );
+    }
+
+    /** Rounds a Firstlight Slider's 32-bit native value to its step's precision, then validates as usual. */
+    protected function dispatchUiEvent(array $event): void
+    {
+        if (($event['type'] ?? null) === self::SLIDER_CHANGE_EVENT && isset($this->nativeCallbacks)) {
+            $decimals = Slider::changeDecimals($this->nativeCallbacks->kind((int) ($event['callback_id'] ?? 0)));
+            if ($decimals !== null) {
+                $event['value'] = round((float) ($event['value'] ?? 0.0), $decimals);
+            }
+        }
+
+        $this->dispatchValidatedUiEvent($event);
     }
 
     /** Streaming bypasses the revision-bearing Element response. */

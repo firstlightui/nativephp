@@ -63,8 +63,9 @@ struct FirstlightPillGroupTokens {
     }
 }
 
+/// Lays pills out in rows from the leading edge. SwiftUI mirrors a custom layout's placements
+/// in right-to-left, so the frames are always computed left to right.
 struct PillFlowLayout: Layout {
-    var layoutDirection: LayoutDirection = .leftToRight
     var horizontalSpacing: CGFloat = 8
     var verticalSpacing: CGFloat = 8
 
@@ -84,8 +85,7 @@ struct PillFlowLayout: Layout {
             containerWidth: width,
             sizes: sizes,
             horizontalSpacing: horizontalSpacing,
-            verticalSpacing: verticalSpacing,
-            layoutDirection: layoutDirection
+            verticalSpacing: verticalSpacing
         )
 
         return CGSize(
@@ -107,8 +107,7 @@ struct PillFlowLayout: Layout {
             containerWidth: bounds.width,
             sizes: sizes,
             horizontalSpacing: horizontalSpacing,
-            verticalSpacing: verticalSpacing,
-            layoutDirection: layoutDirection
+            verticalSpacing: verticalSpacing
         )
 
         for (subview, frame) in zip(subviews, frames) {
@@ -124,8 +123,7 @@ struct PillFlowLayout: Layout {
         containerWidth: CGFloat,
         sizes: [CGSize],
         horizontalSpacing: CGFloat,
-        verticalSpacing: CGFloat,
-        layoutDirection: LayoutDirection
+        verticalSpacing: CGFloat
     ) -> [CGRect] {
         guard !sizes.isEmpty else { return [] }
 
@@ -155,20 +153,12 @@ struct PillFlowLayout: Layout {
 
         for rowIndex in rows.indices {
             let indices = rows[rowIndex]
-            var x: CGFloat = layoutDirection == .rightToLeft
-                ? containerWidth
-                : 0
+            var x: CGFloat = 0
 
             for index in indices {
                 let size = sizes[index]
-                if layoutDirection == .rightToLeft {
-                    x -= size.width
-                    frames[index] = CGRect(origin: CGPoint(x: x, y: y), size: size)
-                    x -= horizontalSpacing
-                } else {
-                    frames[index] = CGRect(origin: CGPoint(x: x, y: y), size: size)
-                    x += size.width + horizontalSpacing
-                }
+                frames[index] = CGRect(origin: CGPoint(x: x, y: y), size: size)
+                x += size.width + horizontalSpacing
             }
 
             y += rowHeights[rowIndex] + verticalSpacing
@@ -179,7 +169,6 @@ struct PillFlowLayout: Layout {
 }
 
 struct FirstlightPillGroupField: View {
-    @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.displayScale) private var displayScale
@@ -252,7 +241,6 @@ struct FirstlightPillGroupField: View {
             }
         } else {
             PillFlowLayout(
-                layoutDirection: layoutDirection,
                 horizontalSpacing: 8,
                 verticalSpacing: 8
             ) { pills }

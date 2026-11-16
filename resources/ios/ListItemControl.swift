@@ -163,8 +163,10 @@ struct FirstlightListItemControl: View {
         case .monogram:
             ZStack {
                 Circle().fill(tokens.primary)
+                // A fixed size: the circle keeps its 40-point slot so trailing metadata stays reserved, and
+                // initials that grew with Dynamic Type would only truncate to an ellipsis inside it.
                 Text(configuration.leadingValue.uppercased())
-                    .font(.headline.weight(.semibold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(tokens.onPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)

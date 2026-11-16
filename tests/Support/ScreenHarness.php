@@ -103,6 +103,7 @@ function bootFirstlightScreenHarness(Container $container, string $viewPath): ar
         'list' => 'ListContainer',
         'list-item' => 'ListItem',
         'confirmation-dialog' => 'ConfirmationDialog',
+        'slider' => 'Slider',
     ] as $tag => $class) {
         $blade->component("native-firstlight-{$tag}", "FirstlightUI\\Components\\{$class}");
         ElementRegistry::register("firstlight.{$tag}", "FirstlightUI\\Elements\\{$class}");

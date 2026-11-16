@@ -18,8 +18,17 @@ struct FirstlightTextFieldControl: View {
     let onMaskedEdit: (Range<Int>, String) -> (text: String, caret: Int?)
     let onMaskedTextReplaced: (String) -> String
     let onMaskedFocusChanged: (Bool) -> Void
+    /// Called after the reveal button swapped the secure and plain inputs.
+    var onRevealToggled: () -> Void = {}
     @State private var maskedFocusRequest = 0
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    /// Errors draw a destructive edge; Increase Contrast adds an edge the faint fill does not give.
+    private var outlineColor: Color {
+        if !configuration.error.isEmpty { return tokens.destructive }
+        return contrast == .increased ? tokens.onSurfaceVariant : .clear
+    }
 
     private var supportingColor: Color {
         let preferred: Color = if !configuration.error.isEmpty { tokens.destructive }
@@ -65,14 +74,14 @@ struct FirstlightTextFieldControl: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         guard !configuration.disabled else { return }
-                        if configuration.mask != nil { maskedFocusRequest += 1 }
+                        if configuration.usesUIKitInput { maskedFocusRequest += 1 }
                         else { isFocused.wrappedValue = true }
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(configuration.error.isEmpty ? Color.clear : tokens.destructive, lineWidth: 1)
+                    .stroke(outlineColor, lineWidth: 1)
             }
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error
@@ -85,7 +94,7 @@ struct FirstlightTextFieldControl: View {
         }
         .opacity(configuration.disabled ? 0.6 : 1)
         .toolbar {
-            if configuration.mask == nil && isFocused.wrappedValue && needsDoneAccessory(configuration.keyboard) {
+            if !configuration.usesUIKitInput && isFocused.wrappedValue && needsDoneAccessory(configuration.keyboard) {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button(configuration.doneLabel) {
@@ -99,11 +108,13 @@ struct FirstlightTextFieldControl: View {
     }
 
     @ViewBuilder private var input: some View {
-        if configuration.mask != nil {
+        if configuration.usesUIKitInput {
             // UIKit reports each edit's exact range before applying it, so the renderer can
             // insert literals, drop rejected characters, and place the caret in one step.
+            // A read-only field uses it too: it rejects every edit but keeps selection and copy.
             FirstlightMaskedTextInput(
                 configuration: configuration,
+                revealed: revealed,
                 text: maskedText,
                 refocus: maskedRefocus,
                 focusRequest: maskedFocusRequest,
@@ -113,10 +124,7 @@ struct FirstlightTextFieldControl: View {
                 onSubmit: onSubmit
             )
         } else if configuration.secure && !revealed {
-            SecureField(
-                configuration.placeholder,
-                text: configuration.readOnly ? .constant(text) : $text
-            )
+            SecureField(configuration.placeholder, text: $text)
                 .textContentType(resolveContentType(configuration.contentType))
                 .keyboardType(resolveKeyboard(configuration.keyboard))
                 .textInputAutocapitalization(resolveCapitalization(configuration.autocapitalize))
@@ -125,10 +133,7 @@ struct FirstlightTextFieldControl: View {
                 .onSubmit(onSubmit)
                 .focused(isFocused)
         } else {
-            TextField(
-                configuration.placeholder,
-                text: configuration.readOnly ? .constant(text) : $text
-            )
+            TextField(configuration.placeholder, text: $text)
                 .textContentType(resolveContentType(configuration.contentType))
                 .keyboardType(resolveKeyboard(configuration.keyboard))
                 .textInputAutocapitalization(resolveCapitalization(configuration.autocapitalize))
@@ -146,7 +151,10 @@ struct FirstlightTextFieldControl: View {
             actionButton(
                 symbol: revealed ? "eye.slash" : "eye",
                 label: revealed ? configuration.hidePasswordA11yLabel : configuration.showPasswordA11yLabel,
-                action: { revealed.toggle() }
+                action: {
+                    revealed.toggle()
+                    onRevealToggled()
+                }
             )
         } else if !configuration.trailingIcon.isEmpty {
             if configuration.onPressCallback != 0 {
@@ -165,7 +173,10 @@ struct FirstlightTextFieldControl: View {
 
     private func actionButton(symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            NativeIconView(symbol, pointSize: 17, relativeTo: .body).frame(minWidth: 44, minHeight: 44)
+            // A plain button takes taps only on opaque pixels; the shape makes the whole 44 pt frame count.
+            NativeIconView(symbol, pointSize: 17, relativeTo: .body)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(label))
@@ -175,6 +186,7 @@ struct FirstlightTextFieldControl: View {
 
 struct FirstlightMaskedTextInput: UIViewRepresentable {
     let configuration: TextFieldRendererConfiguration
+    var revealed = false
     let text: String
     let refocus: Int
     var focusRequest = 0
@@ -216,7 +228,13 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
         field.isEnabled = !configuration.disabled
         field.keyboardType = resolveKeyboard(configuration.keyboard)
         field.textContentType = resolveContentType(configuration.contentType)
-        if needsDoneAccessory(configuration.keyboard) {
+        field.isSecureTextEntry = configuration.secure && configuration.mask == nil && !revealed
+        // A read-only field takes focus for selection and copy but shows no keyboard.
+        if configuration.readOnly != (field.inputView != nil) {
+            field.inputView = configuration.readOnly ? UIView(frame: .zero) : nil
+            if field.isFirstResponder { field.reloadInputViews() }
+        }
+        if needsDoneAccessory(configuration.keyboard) && !configuration.readOnly {
             if field.doneAccessory == nil {
                 let toolbar = UIToolbar()
                 toolbar.items = [
@@ -264,6 +282,7 @@ struct FirstlightMaskedTextInput: UIViewRepresentable {
 
         func textField(_ field: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
             // Marked text is composed natively and conformed when it is committed.
+            if input?.configuration.readOnly == true { return false }
             guard let input, field.markedTextRange == nil,
                   let current = field.text, let bounds = Range(range, in: current)
             else { return true }

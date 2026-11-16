@@ -6,6 +6,7 @@ use DateTimeZone;
 use FirstlightUI\Connectivity\ConnectivityManager;
 use FirstlightUI\Freshness\Freshness;
 use FirstlightUI\Freshness\FreshnessNotice;
+use FirstlightUI\Freshness\RerenderTimer;
 use InvalidArgumentException;
 use LogicException;
 use Native\Mobile\Device;
@@ -57,9 +58,17 @@ trait TracksFreshness
             return null;
         }
 
+        $offline = $this->deviceIsOffline();
+
+        // Nothing else re-renders an open screen, so schedule the frame that updates the notice.
+        $milliseconds = $tracker->millisecondsUntilNoticeChanges($offline);
+        if ($milliseconds !== null) {
+            RerenderTimer::after($milliseconds);
+        }
+
         // Only a notice with a clock time needs the phone's timezone.
         return $tracker->notice(
-            $this->deviceIsOffline(),
+            $offline,
             $tracker->fetchedAt() === null ? null : $this->deviceTimezone(),
         );
     }

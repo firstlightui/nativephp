@@ -166,6 +166,28 @@ final class Freshness
         ]), 'neutral');
     }
 
+    /**
+     * Milliseconds until notice() would say something else with nothing reported: when the
+     * data turns stale, then each minute of "Updated N minutes ago". Null when it never changes
+     * on its own: offline, failed, nothing cached, or past the hour, when it shows a clock time.
+     * Milliseconds, because notice() compares at full precision: whole seconds would wake a
+     * timer just before the boundary and leave the notice a minute behind.
+     */
+    public function millisecondsUntilNoticeChanges(bool $offline): ?int
+    {
+        if ($offline || $this->failed || $this->fetchedAt === null) {
+            return null;
+        }
+
+        $age = max(0, CarbonImmutable::now()->getTimestampMs() - $this->fetchedAt->getTimestampMs());
+
+        if ($age < $this->freshFor * 1000) {
+            return $this->freshFor * 1000 - $age;
+        }
+
+        return $age >= 3_600_000 ? null : 60_000 - $age % 60_000;
+    }
+
     private function make(string $message, string $tone, ?string $actionLabel = null): FreshnessNotice
     {
         return new FreshnessNotice($this->key, $message, $tone, $actionLabel);

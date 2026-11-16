@@ -42,6 +42,16 @@ it('publishes the default medium indicator with its required accessibility label
         ->and($tree['props'])->not->toHaveKeys(['on_change', 'on_submit', 'on_press']);
 });
 
+it('keeps its size beside long text unless the author asks it to shrink', function () {
+    expect(collectActivityIndicator([
+        'a11y-label' => 'Loading patient details',
+    ])['layout']['flex_shrink'])->toBe(0.0)
+        ->and(collectActivityIndicator([
+            'a11y-label' => 'Loading patient details',
+            'flexShrink' => 1,
+        ])['layout']['flex_shrink'])->toBe(1.0);
+});
+
 it('accepts every stable size', function (string $size) {
     expect(collectActivityIndicator([
         'size' => $size,

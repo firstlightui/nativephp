@@ -72,11 +72,29 @@ it('publishes the complete compact action contract', function () {
         ])
         ->and($tree['layout']['margin'])->toBe(8.0)
         ->and($tree['style'] ?? [])->toBe([])
-        ->and($registry->resolve($tree['on_press']))->toBe([
-            'method' => 'addItem',
-            'args' => [],
-        ]);
+        // Mobile runs any press on the node from its own tap gesture, so an
+        // inactive button must not carry one.
+        ->and($tree)->not->toHaveKey('on_press');
 });
+
+it('publishes its press only while it can be pressed', function (array $state, bool $pressable) {
+    $registry = new CallbackRegistry;
+    $tree = collectIconButton([
+        'icon' => 'plus',
+        'a11y-label' => 'Add item',
+        '_press' => 'addItem',
+        ...$state,
+    ], $registry);
+
+    expect(isset($tree['on_press']))->toBe($pressable);
+    if ($pressable) {
+        expect($registry->resolve($tree['on_press']))->toBe(['method' => 'addItem', 'args' => []]);
+    }
+})->with([
+    'active' => [[], true],
+    'disabled' => [['disabled' => true], false],
+    'loading' => [['loading' => true], false],
+]);
 
 it('publishes stable defaults', function () {
     $tree = collectIconButton([

@@ -111,6 +111,16 @@ final class ActivityIndicator extends Element
         return $this->indicatorProps;
     }
 
+    /**
+     * The spinner draws at its control size whatever width it is given, so it
+     * must not shrink beside long text in a row (flex-shrink defaults to 1);
+     * an authored `shrink` class still wins.
+     */
+    protected function layoutDefaults(): array
+    {
+        return ['flex_shrink' => 0.0];
+    }
+
     public function getStyle(): array
     {
         return [];

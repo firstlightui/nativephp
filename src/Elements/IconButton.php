@@ -4,6 +4,7 @@ namespace FirstlightUI\Elements;
 
 use FirstlightUI\Elements\Concerns\AcceptsGlass;
 use FirstlightUI\Elements\Concerns\AcceptsHaptic;
+use FirstlightUI\Elements\Concerns\PublishesPressOnlyWhenActive;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -15,10 +16,16 @@ final class IconButton extends Element
 {
     use AcceptsGlass;
     use AcceptsHaptic;
+    use PublishesPressOnlyWhenActive;
 
     protected function hapticPlaysOnPress(): bool
     {
         return true;
+    }
+
+    protected function acceptsPress(): bool
+    {
+        return ! $this->iconButtonProps['disabled'] && ! $this->iconButtonProps['loading'];
     }
 
     protected string $type = 'firstlight.icon-button';

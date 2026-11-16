@@ -64,6 +64,13 @@ it('publishes meaningful leading labels, status and pending removal without disa
     ])->and($tree['on_press'])->toBeGreaterThan(0);
 });
 
+it('publishes no press for a disabled row, which Mobile would otherwise run', function () {
+    $tree = collectListItem(['headline' => 'Managed account', 'disabled' => true, '_press' => 'openAccount']);
+
+    expect($tree['props']['disabled'])->toBeTrue()
+        ->and($tree)->not->toHaveKey('on_press');
+});
+
 it('publishes navigates beside trailing metadata and omits it when false', function () {
     $navigating = collectListItem([
         'headline' => 'Digest', 'trailing-text' => 'Weekly', 'navigates' => true, '_press' => 'openDigest',
@@ -123,10 +130,7 @@ it('publishes the complete application row contract', function () {
         ])
         ->and($tree['layout']['margin'])->toBe(8.0)
         ->and($tree['style'] ?? [])->toBe([])
-        ->and($registry->resolve($tree['on_press']))->toBe([
-            'method' => 'openAccount',
-            'args' => [],
-        ]);
+        ->and($tree)->not->toHaveKey('on_press');
 });
 
 it('publishes stable defaults for a headline-only row', function () {

@@ -25,6 +25,9 @@ final class Slider extends Element
         'style', 'variant', 'size',
     ];
 
+    /** Callback kind that carries the decimal places a change is rounded to. */
+    private const CHANGE_KIND_PREFIX = 'firstlight.slider.decimals:';
+
     /** @var array<string, bool|float|int|string> */
     private array $inputProps = [
         'step' => 1.0,
@@ -230,10 +233,36 @@ final class Slider extends Element
 
         $props = $this->inputProps;
         if ($this->changeCallback !== null) {
-            $props['on_change'] = $registry->register($this->changeCallback);
+            $id = $registry->register($this->changeCallback);
+            // Sliders sharing a handler share its id, so keep the finest precision among them.
+            $decimals = max(self::decimals($min), self::decimals($step), self::changeDecimals($registry->kind($id)) ?? 0);
+            $registry->register($this->changeCallback, self::CHANGE_KIND_PREFIX.$decimals);
+            $props['on_change'] = $id;
         }
 
         return $props;
+    }
+
+    /**
+     * Decimal places to round a native change to, from its callback kind; null for other kinds.
+     *
+     * Renderers send the value as a 32-bit Float, so a 0.1 step arrives as 0.30000001192...
+     * Rounding to the grid's own precision gives the handler the value the person chose.
+     */
+    public static function changeDecimals(?string $kind): ?int
+    {
+        if ($kind === null || ! str_starts_with($kind, self::CHANGE_KIND_PREFIX)) {
+            return null;
+        }
+
+        return (int) substr($kind, strlen(self::CHANGE_KIND_PREFIX));
+    }
+
+    private static function decimals(float $number): int
+    {
+        $fraction = strstr(rtrim(sprintf('%.15F', abs($number)), '0'), '.');
+
+        return $fraction === false ? 0 : strlen($fraction) - 1;
     }
 
     public function getStyle(): array

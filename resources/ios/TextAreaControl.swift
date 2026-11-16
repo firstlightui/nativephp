@@ -6,13 +6,22 @@ struct FirstlightTextAreaControl: View {
     @Binding var text: String
     let isFocused: FocusState<Bool>.Binding
     let tokens: NativeUITokens
+    /// One line of body text, which grows with Dynamic Type so min-lines and max-lines keep their meaning.
+    @ScaledMetric(relativeTo: .body) private var lineHeight: CGFloat = 22
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var minimumHeight: CGFloat {
-        CGFloat(configuration.minLines) * 22 + 18
+        CGFloat(configuration.minLines) * lineHeight + 18
     }
 
     var maximumHeight: CGFloat {
-        CGFloat(configuration.maxLines) * 22 + 18
+        CGFloat(configuration.maxLines) * lineHeight + 18
+    }
+
+    private var outline: (color: Color, width: CGFloat) {
+        if !configuration.error.isEmpty { return (tokens.destructive, 1) }
+        // Increase Contrast asks for edges that do not rely on a faint separator.
+        return contrast == .increased ? (tokens.onSurfaceVariant, 1) : (Color(uiColor: .separator), 0.5)
     }
 
     var body: some View {
@@ -58,10 +67,7 @@ struct FirstlightTextAreaControl: View {
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(
-                        configuration.error.isEmpty ? Color(uiColor: .separator) : tokens.destructive,
-                        lineWidth: configuration.error.isEmpty ? 0.5 : 1,
-                    )
+                    .stroke(outline.color, lineWidth: outline.width)
             }
 
             let supporting = configuration.error.isEmpty ? configuration.helper : configuration.error

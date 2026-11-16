@@ -5,6 +5,7 @@ struct FirstlightDatePickerControl: View {
     @Binding var state: DatePickerRendererState
     let tokens: NativeUITokens
     let onConfirm: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var configuration: DatePickerRendererConfiguration { state.configuration }
 
@@ -20,7 +21,11 @@ struct FirstlightDatePickerControl: View {
                 state.open()
             } label: {
                 let chip = configuration.variant == "chip"
-                let row = HStack(spacing: 8) {
+                // As in Select: at accessibility sizes a chip's parts stack rather than break words.
+                let stack = chip && dynamicTypeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+                    : AnyLayout(HStackLayout(spacing: 8))
+                let row = stack {
                     if chip && !configuration.label.isEmpty {
                         Text(configuration.required ? "\(configuration.label) *" : configuration.label)
                             .foregroundStyle(tokens.onSurfaceVariant)

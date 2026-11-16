@@ -7,6 +7,8 @@ use Native\Mobile\Edge\ElementRegistry;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\NativeTagPrecompiler;
 
+require_once __DIR__.'/../Support/ScreenHarness.php';
+
 beforeEach(function () {
     NativeElementCollector::reset();
     ElementRegistry::reset();
@@ -283,3 +285,45 @@ it('declares collision-safe paired renderer manifest identifiers', function () {
         'self_closing' => true,
     ]);
 });
+
+it('hands handlers the chosen step value rather than the renderer float', function () {
+    $views = sys_get_temp_dir().'/firstlight-slider-'.bin2hex(random_bytes(8));
+    mkdir($views.'/native', 0755, true);
+    file_put_contents($views.'/native/slider-screen.blade.php', <<<'BLADE'
+        <native:column>
+            <firstlight:slider native:model="opacity" :min="0" :max="1" :step="0.1" label="Opacity" />
+            <firstlight:slider :value="$price" :min="0.5" :max="10" :step="0.25" label="Price" @change="setPrice" />
+        </native:column>
+        BLADE);
+    $harness = bootFirstlightScreenHarness(new Illuminate\Container\Container, $views);
+
+    try {
+        $screen = Native\Mobile\Testing\Native::test(SliderRoundingScreen::class)
+            // The renderers send 32-bit Floats: 0.3 arrives as 0.30000001192092896.
+            ->slide("__syncProperty('opacity')", unpack('g', pack('g', 0.3))[1])
+            ->slide('setPrice', unpack('g', pack('g', 2.75))[1] + 0.0000001);
+
+        expect($screen->get('opacity'))->toBe(0.3)
+            ->and($screen->get('price'))->toBe(2.75);
+    } finally {
+        tearDownFirstlightScreenHarness($harness);
+        (new Illuminate\Filesystem\Filesystem)->deleteDirectory($views);
+    }
+});
+
+class SliderRoundingScreen extends FirstlightUI\NativeComponent
+{
+    public float $opacity = 0.5;
+
+    public float $price = 1.0;
+
+    public function setPrice(float $value): void
+    {
+        $this->price = $value;
+    }
+
+    public function render(): Illuminate\View\View
+    {
+        return view('native.slider-screen');
+    }
+}

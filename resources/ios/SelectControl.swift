@@ -31,6 +31,7 @@ struct FirstlightSelectTokens {
 struct FirstlightSelectField: View {
     @State private var searchPresented = false
     @State private var searchQuery = ""
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let labels: [String]
     let values: [String]
@@ -123,7 +124,12 @@ struct FirstlightSelectField: View {
 
     @ViewBuilder
     private var triggerLabel: some View {
-        let row = HStack(spacing: chip ? 8 : 12) {
+        // At accessibility sizes a chip's label, value and chevron cannot share
+        // one line without breaking words, so they stack.
+        let stack = chip && dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+            : AnyLayout(HStackLayout(spacing: chip ? 8 : 12))
+        let row = stack {
             if chip && !label.isEmpty {
                 Text(required ? "\(label) *" : label).foregroundStyle(tokens.secondary)
             }

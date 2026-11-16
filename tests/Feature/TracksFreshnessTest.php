@@ -10,6 +10,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Translation\FileLoader;
 use Illuminate\Translation\Translator;
 use Native\Mobile\Edge\ElementRegistry;
+use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Testing\Native;
 use Native\Mobile\Testing\TestableComponent;
 
@@ -118,6 +119,35 @@ it('says nothing while the data is inside its freshness window, then shows its a
     // After an hour the clock time, which doesn't go out of date while the screen is open.
     CarbonImmutable::setTestNow($this->fetched->addHour());
     expect(freshnessNoticeOf($screen))->toBe(['neutral', 'Updated at 2:05 PM', null]);
+});
+
+it('re-renders an open screen when the notice would change', function () {
+    $screen = freshnessScreen();
+    $screen->instance()->tracker()->showing($this->fetched);
+    $rerenderIn = function () use ($screen): array {
+        NativeElementCollector::takePollIntervals();
+        $screen->instance()->notice();
+
+        return NativeElementCollector::takePollIntervals();
+    };
+
+    // When the data turns stale, then on each minute of its age.
+    CarbonImmutable::setTestNow($this->fetched->addSeconds(20));
+    expect($rerenderIn())->toBe([40_000]);
+    CarbonImmutable::setTestNow($this->fetched->addSeconds(60));
+    expect($rerenderIn())->toBe([60_000]);
+    CarbonImmutable::setTestNow($this->fetched->addMinutes(12)->addSeconds(40));
+    expect($rerenderIn())->toBe([20_000]);
+    // Ages count to the millisecond, as notice() does.
+    CarbonImmutable::setTestNow($this->fetched->addSeconds(80)->addMilliseconds(300));
+    expect($rerenderIn())->toBe([39_700]);
+
+    // A clock time, an offline notice and a failure do not change on their own.
+    CarbonImmutable::setTestNow($this->fetched->addHour());
+    expect($rerenderIn())->toBe([]);
+    CarbonImmutable::setTestNow($this->fetched->addSeconds(90));
+    $screen->instance()->tracker()->failed();
+    expect($rerenderIn())->toBe([]);
 });
 
 it('treats nothing cached as stale but leaves the empty state to the screen while online', function () {

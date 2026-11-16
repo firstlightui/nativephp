@@ -6,6 +6,29 @@ import UIKit
 let firstlightSearchFieldMinimumHeight: CGFloat = 36
 
 final class FirstlightSearchTextField: UISearchTextField {
+    /// Set when a tap lands on the field's own clear button while it is focused. NativePHP
+    /// resigns the keyboard on taps outside the first responder, and the clear button counts
+    /// as outside, so the field turns down that resign until the clear has run.
+    private var keepsFocusUntil: Date?
+
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        if isFirstResponder, let hit, hit !== self, hit is UIButton {
+            keepsFocusUntil = Date().addingTimeInterval(1)
+        }
+        return hit
+    }
+
+    override func resignFirstResponder() -> Bool {
+        if let keepsFocusUntil, Date() < keepsFocusUntil { return false }
+        return super.resignFirstResponder()
+    }
+
+    /// Ends the hold once the clear has run, so the next tap away dismisses the keyboard.
+    func releaseFocusHold() {
+        DispatchQueue.main.async { self.keepsFocusUntil = nil }
+    }
+
     override var intrinsicContentSize: CGSize {
         let size = super.intrinsicContentSize
         return CGSize(
@@ -86,6 +109,7 @@ struct FirstlightSearchFieldControl: UIViewRepresentable {
         }
 
         func textFieldShouldClear(_ textField: UITextField) -> Bool {
+            (textField as? FirstlightSearchTextField)?.releaseFocusHold()
             guard !parent.configuration.disabled else { return false }
             parent.text = ""
             parent.onClear()
@@ -108,7 +132,11 @@ func configureSearchTextField(
     field.isEnabled = !configuration.disabled
     // UISearchTextField keeps full-contrast text when disabled; dim it like other disabled fields.
     field.textColor = configuration.disabled ? .tertiaryLabel : .label
-    field.leftView?.alpha = configuration.disabled ? 0.38 : 1
+    // At the largest text sizes UIKit hides the magnifier, with alpha, once the field has text,
+    // and lays the text over its place. Dim only a magnifier UIKit is showing.
+    if let magnifier = field.leftView, magnifier.alpha > 0 {
+        magnifier.alpha = configuration.disabled ? 0.38 : 1
+    }
     field.clearButtonMode = configuration.disabled ? .never : .whileEditing
     field.returnKeyType = .search
     field.enablesReturnKeyAutomatically = false

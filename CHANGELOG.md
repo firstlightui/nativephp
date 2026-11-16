@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+These come from the iOS device pass on an iPhone 16 Pro running iOS 27.0.1.
+
+- Icon Button and List Item: a disabled or loading control no longer reaches PHP when tapped. Mobile's tap gesture fired the press anyway; Firstlight now publishes no press callback while the control can't be pressed. This applies on both platforms.
+- Slider: values reach PHP rounded to the precision of `min` and `step`. A `0.1` step used to arrive as `0.30000001192093`, because the native value is 32-bit.
+- Data freshness: "Updated N minutes ago" now updates while the screen stays open. It used to change only on the next render.
+- Text Field on iOS:
+  - The trailing clear button and trailing actions respond across their whole 44 pt target. They used to respond only on the glyph, so Email and Search clear and the Recipient action seemed to do nothing.
+  - Clear and password reveal keep the field focused, and reveal no longer sends a `blur` field's value to PHP early.
+  - `readonly` fields reject edits and show no keyboard, while text can still be selected and copied.
+- Search Field on iOS: clearing a focused field keeps the keyboard up. At the largest text sizes, text no longer sits under the magnifier.
+- iOS at accessibility text sizes:
+  - Text Area grows its line height with the text.
+  - List Item monograms show their initials instead of an ellipsis.
+  - Toolbar badges stay small enough to leave their icon visible.
+  - Select and Date Picker chips stack their label, value and chevron instead of breaking words.
+  - The Activity Indicator keeps its size beside long text instead of drawing over it, on both platforms.
+- iOS with Increase Contrast: Text Field and Text Area draw a visible outline.
+- Pill Group on iOS: in right-to-left languages, wrapping groups start from the right edge.
+
 ## 1.1.0-beta12 - 2026-11-15
 
 ### Fixed

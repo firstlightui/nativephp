@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\Elements\Concerns\PublishesPressOnlyWhenActive;
 use FirstlightUI\Support\WarningColors;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
@@ -12,6 +13,13 @@ use Native\Mobile\Icon\IosSymbol;
 
 final class ListItem extends Element
 {
+    use PublishesPressOnlyWhenActive;
+
+    protected function acceptsPress(): bool
+    {
+        return ! $this->listItemProps['disabled'];
+    }
+
     protected string $type = 'firstlight.list-item';
 
     /** @var list<string> */
