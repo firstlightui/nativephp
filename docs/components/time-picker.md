@@ -22,6 +22,10 @@ Time Picker chooses an optional wall-clock time using the platform's native
 time control. The model value is always exact 24-hour `HH:mm` or `null`, even
 when the platform displays a localized 12-hour clock.
 
+On Android, a screen narrower than 392 dp, such as a small phone at its
+largest display size, gets Material's keyboard time entry instead of the clock
+dial, in a dialog that fits the screen.
+
 ```blade
 <firstlight:time-picker
     native:model="appointmentTime"

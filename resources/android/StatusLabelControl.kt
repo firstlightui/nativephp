@@ -142,3 +142,10 @@ internal fun statusLabelContrastRatio(foreground: Color, background: Color): Flo
     val darker = minOf(foreground.luminance(), background.luminance())
     return (lighter + 0.05f) / (darker + 0.05f)
 }
+
+/**
+ * The theme's `outline` is often a divider-weight colour, under the 3:1 that WCAG asks of the
+ * boundary of an input. Unselected input outlines fall back to `onSurfaceVariant` when it is.
+ */
+internal fun firstlightInputOutline(tokens: NativeUITokens): Color =
+    if (statusLabelContrastRatio(tokens.outline, tokens.surface) >= 3f) tokens.outline else tokens.onSurfaceVariant

@@ -3,6 +3,8 @@ package dev.firstlightui.plugins.firstlight_ui.ui
 import com.nativephp.mobile.ui.nativerender.GenericProps
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 import com.nativephp.mobile.ui.nativerender.NativeUITree
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -107,6 +109,17 @@ class TextFieldRendererContractTest {
         assertNull(disabled.clear())
         assertNull(readOnly.userChanged("changed"))
         assertNull(readOnly.clear())
+    }
+
+    @Test
+    fun `read only fields keep their text but follow the selection for copy`() {
+        val readOnly = TextFieldRendererState(node(readOnly = true))
+        val text = readOnly.draft.text
+
+        assertNull(readOnly.userChanged(TextFieldValue(text, TextRange(0, text.length))))
+        assertEquals(TextRange(0, text.length), readOnly.draft.selection)
+        assertNull(readOnly.userChanged(TextFieldValue("changed", TextRange(7))))
+        assertEquals(text, readOnly.draft.text)
     }
 
     private fun node(

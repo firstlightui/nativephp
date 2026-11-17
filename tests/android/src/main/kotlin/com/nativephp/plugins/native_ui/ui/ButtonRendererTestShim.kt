@@ -8,7 +8,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.nativephp.mobile.ui.nativerender.NativeUINode
 
-// Mirrors Mobile UI 0.8's ButtonRenderer for the parts Firstlight wraps: an
+// Mirrors Mobile UI 0.10's ButtonRenderer for the parts Firstlight wraps: an
 // M3 button whose own modifier carries the label and hint (`nuiA11y`).
 object ButtonRenderer {
     @Composable
@@ -20,7 +20,12 @@ object ButtonRenderer {
             onClick = {},
             modifier = if (description.isEmpty()) modifier else modifier.semantics { contentDescription = description },
         ) {
-            Text(node.props.getString("label"))
+            // Like Mobile UI, the label stays on one line, and the trailing icon's name is drawn as text.
+            Text(
+                listOf(node.props.getString("label"), node.props.getString("trailing_icon")).filter { it.isNotEmpty() }.joinToString(" "),
+                maxLines = 1,
+                softWrap = false,
+            )
         }
     }
 }

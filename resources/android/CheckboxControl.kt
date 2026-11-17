@@ -75,7 +75,7 @@ fun FirstlightCheckboxControl(
                 enabled = !disabled,
                 colors = CheckboxDefaults.colors(
                     checkedColor = tokens.primary,
-                    uncheckedColor = tokens.outline,
+                    uncheckedColor = firstlightInputOutline(tokens),
                     checkmarkColor = tokens.onPrimary,
                     disabledCheckedColor = tokens.primary.copy(alpha = 0.38f),
                     disabledUncheckedColor = tokens.outline.copy(alpha = 0.38f),

@@ -26,6 +26,25 @@ These come from the iOS device pass on an iPhone 16 Pro running iOS 27.0.1.
 - Switch on iOS: the whole row toggles, as on Android, so a switch without a label has a full-width 44 pt target instead of only its 51×31 pt track.
 - Stepper on iOS: each segment is a 44 pt target. A tap just above or below the 32 pt system stepper steps by the half it lands on, and VoiceOver reads the stepper's name once.
 
+These come from the Android device pass on a Pixel 3 running Android 12.
+
+- Text Field and Text Area on Android: `readonly` text can be selected and copied. The field dropped every selection change along with edits.
+- Alert Dialog and Confirmation Dialog on Android: a long message scrolls instead of being cut off at large text sizes.
+- Date Picker and Time Picker on Android: on screens narrower than 392 dp the dialog fits the screen and keeps Confirm visible. The calendar becomes Material's date entry and the clock dial its time entry.
+- Android at large text sizes:
+  - List Item moves trailing text under the supporting text, as it already did for a trailing status, so neither breaks mid-word.
+  - Stepper puts its label on its own line above the buttons.
+  - Button labels that would run past the button's edge are scaled down just enough to fit, though never below the default size. Mobile UI draws button labels on one line, so they can't wrap.
+- Android with high contrast text:
+  - Text Field, Text Area, Select and Checkbox outlines use `on-surface-variant` when the theme's `outline` has less than 3:1 contrast with the surface.
+  - Disabled Choice Group options and disabled Stepper buttons fade, where Android had redrawn them in full black.
+  - The Media crop frame has a visible edge on light and dark photos.
+- Android in right-to-left languages: forward and back chevrons and arrows in Button, Icon Button and List Item point the other way. Material's icon font doesn't mirror them.
+
+### Changed
+
+- Settings screen recipe: Digest is a text label with a `chip` Select on the trailing edge, so it reads as a settings row rather than a form field.
+
 ### Known issues
 
 - Toolbar on iOS 26 and later: at the accessibility text sizes the system bar-button badge grows with the text and can cover its item's icon. iOS draws and sizes this badge itself, and capping Dynamic Type in SwiftUI does not reach it on a device. Firstlight keeps the system badge for now; see [Toolbar Item](docs/components/toolbar-item.md#badges).

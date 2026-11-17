@@ -181,7 +181,9 @@ fun FirstlightChoiceGroupControl(
                             )
                         }
                         Spacer(Modifier.width(12.dp))
-                        Column {
+                        // High contrast text redraws text colours in full black or white, so a
+                        // disabled option fades its text layer rather than relying on colour.
+                        Column(Modifier.alpha(if (optionEnabled) 1f else 0.38f)) {
                             prefixes.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let {
                                 Text(it, color = helperColor, style = MaterialTheme.typography.labelLarge)
                             }

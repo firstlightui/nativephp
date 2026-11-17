@@ -138,9 +138,10 @@ Save this as `resources/views/native/settings.blade.php`:
     </native:list-section>
 
     <native:list-section header="Email" footer="A summary of activity you missed.">
-        <native:column class="w-full px-4 py-3 bg-theme-surface">
-            <firstlight:select label="Digest" :options="$digestOptions" native:model="digest" />
-        </native:column>
+        <native:row class="w-full px-4 py-3 gap-3 items-center bg-theme-surface">
+            <native:text class="flex-1 text-base text-theme-on-surface">Digest</native:text>
+            <firstlight:select variant="chip" a11y-label="Digest" :options="$digestOptions" native:model="digest" />
+        </native:row>
     </native:list-section>
 
     <native:list-section header="Account">
@@ -163,15 +164,18 @@ Save this as `resources/views/native/settings.blade.php`:
 | Row insets | The row column's `px-4 py-3` | The row column's `px-4 py-3` inside the card's 16 dp margin |
 | Dividers | Between rows when the list sets `separator` | Always between rows in a card |
 | Switches | SwiftUI `Toggle` | Material 3 `Switch` |
-| Digest | Native menu picker | Material 3 exposed dropdown |
+| Digest | Its label, then a menu picker chip on the trailing edge | Its label, then a Material 3 assist chip that opens the menu |
 | Privacy row | List Item row with the system disclosure chevron | Material list item without a chevron, as Material rows show none |
 
 ## Rules to keep
 
 - Save in `updated{Property}`, not in a Save button. Settings screens apply each
   change immediately.
-- Wrap every control row in a padded `native:column` with
+- Wrap every control row in a padded `native:column` or `native:row` with
   `bg-theme-surface`. Rows placed straight in a section have no insets.
+- Put a choice in a settings row as the `chip` Select after a text label, with
+  `a11y-label` naming it. The `field` Select draws a form field, which looks
+  out of place in a settings list.
 - Keep a section footer short. It explains the section, not each control.
 - Use `firstlight:list` only when every row is a List Item, such as a list of
   records. Settings mix controls, so they use `native:list`.

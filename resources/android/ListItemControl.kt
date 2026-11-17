@@ -377,7 +377,10 @@ private fun FirstlightListItemRow(
     tokens: NativeUITokens,
     isDark: Boolean,
 ) {
-    val stackedStatus = configuration.trailingType == FirstlightListItemTrailingType.Status && LocalDensity.current.fontScale >= 1.5f
+    // At large text a trailing status or text squeezes the supporting line until words break
+    // mid-word, so it moves under the supporting text instead.
+    val stackedStatus = (configuration.trailingType == FirstlightListItemTrailingType.Status ||
+        configuration.trailingType == FirstlightListItemTrailingType.Text) && LocalDensity.current.fontScale >= 1.5f
     ListItem(
         headlineContent = {
             Text(
@@ -431,7 +434,7 @@ private fun firstlightListItemLeadingContent(
     })
     FirstlightListItemLeadingType.Icon -> ({
         MaterialIcon(
-            name = configuration.leadingValue,
+            name = firstlightDirectionalIconName(configuration.leadingValue),
             contentDescription = null,
             modifier = Modifier.size(24.dp),
         )
@@ -480,7 +483,7 @@ private fun firstlightListItemTrailingContent(
     })
     FirstlightListItemTrailingType.Icon -> ({
         MaterialIcon(
-            name = configuration.trailingValue,
+            name = firstlightDirectionalIconName(configuration.trailingValue),
             contentDescription = null,
             modifier = Modifier.size(24.dp),
         )

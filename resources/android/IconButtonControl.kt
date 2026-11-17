@@ -91,7 +91,7 @@ fun FirstlightIconButtonControl(
             // `size`, not `Modifier.size`: the glyph's font size comes from
             // `size` (default 24 dp), so a smaller modifier box clips it.
             MaterialIcon(
-                name = configuration.icon,
+                name = firstlightDirectionalIconName(configuration.icon),
                 contentDescription = null,
                 size = metrics.iconSize,
             )

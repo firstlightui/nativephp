@@ -882,9 +882,10 @@ Save this as `resources/views/native/settings.blade.php`:
     </native:list-section>
 
     <native:list-section header="Email" footer="A summary of activity you missed.">
-        <native:column class="w-full px-4 py-3 bg-theme-surface">
-            <firstlight:select label="Digest" :options="$digestOptions" native:model="digest" />
-        </native:column>
+        <native:row class="w-full px-4 py-3 gap-3 items-center bg-theme-surface">
+            <native:text class="flex-1 text-base text-theme-on-surface">Digest</native:text>
+            <firstlight:select variant="chip" a11y-label="Digest" :options="$digestOptions" native:model="digest" />
+        </native:row>
     </native:list-section>
 
     <native:list-section header="Account">
@@ -907,15 +908,18 @@ Save this as `resources/views/native/settings.blade.php`:
 | Row insets | The row column's `px-4 py-3` | The row column's `px-4 py-3` inside the card's 16 dp margin |
 | Dividers | Between rows when the list sets `separator` | Always between rows in a card |
 | Switches | SwiftUI `Toggle` | Material 3 `Switch` |
-| Digest | Native menu picker | Material 3 exposed dropdown |
+| Digest | Its label, then a menu picker chip on the trailing edge | Its label, then a Material 3 assist chip that opens the menu |
 | Privacy row | List Item row with the system disclosure chevron | Material list item without a chevron, as Material rows show none |
 
 ## Rules to keep
 
 - Save in `updated{Property}`, not in a Save button. Settings screens apply each
   change immediately.
-- Wrap every control row in a padded `native:column` with
+- Wrap every control row in a padded `native:column` or `native:row` with
   `bg-theme-surface`. Rows placed straight in a section have no insets.
+- Put a choice in a settings row as the `chip` Select after a text label, with
+  `a11y-label` naming it. The `field` Select draws a form field, which looks
+  out of place in a settings list.
 - Keep a section footer short. It explains the section, not each control.
 - Use `firstlight:list` only when every row is a List Item, such as a list of
   records. Settings mix controls, so they use `native:list`.
@@ -6038,6 +6042,9 @@ sized to the calendar and actions, which grows with Dynamic Type; on iPad it
 opens in a popover anchored to the field. Android presents the Material 3 `DatePickerDialog` from a
 read-only Material field. Android maps Material's selected UTC-midnight cell
 back to the same canonical date rather than treating it as a local instant.
+Material's calendar needs a screen at least 392 dp wide. On a narrower screen,
+such as a small phone at its largest display size, Android opens Material's
+date entry instead, in a dialog that fits the screen and scrolls.
 
 Date Picker deliberately has no time or datetime mode, picker-style override,
 hour format, clear action, custom presentation labels or icons, range mode, or
@@ -6057,6 +6064,10 @@ visual variant props.
 Time Picker chooses an optional wall-clock time using the platform's native
 time control. The model value is always exact 24-hour `HH:mm` or `null`, even
 when the platform displays a localized 12-hour clock.
+
+On Android, a screen narrower than 392 dp, such as a small phone at its
+largest display size, gets Material's keyboard time entry instead of the clock
+dial, in a dialog that fits the screen.
 
 ```blade
 <firstlight:time-picker

@@ -83,7 +83,12 @@ class TextAreaRendererState(node: NativeUINode) {
     var focused = false; private set
 
     fun userChanged(value: TextFieldValue): TextAreaRendererEvent? {
-        if (configuration.disabled || configuration.readOnly) return null
+        if (configuration.disabled) return null
+        // A read-only area keeps its text but follows the selection, so it can be selected and copied.
+        if (configuration.readOnly) {
+            if (value.text == draft.text) draft = value
+            return null
+        }
         draft = value
         return if (configuration.syncMode == "live") commitIfNeeded() else null
     }

@@ -141,9 +141,9 @@ fun FirstlightSelectControl(
                         focusedBorderColor = when {
                             configuration.error.isNotEmpty() -> tokens.destructive
                             expanded || dialogVisible -> tokens.primary
-                            else -> tokens.outline
+                            else -> firstlightInputOutline(tokens)
                         },
-                        unfocusedBorderColor = if (configuration.error.isEmpty()) tokens.outline else tokens.destructive,
+                        unfocusedBorderColor = if (configuration.error.isEmpty()) firstlightInputOutline(tokens) else tokens.destructive,
                         focusedPlaceholderColor = tokens.onSurfaceVariant,
                         unfocusedPlaceholderColor = tokens.onSurfaceVariant,
                         disabledBorderColor = tokens.outline.copy(alpha = 0.5f),

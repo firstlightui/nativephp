@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -47,7 +48,18 @@ internal fun FirstlightStepperControl(
     ).filter(String::isNotEmpty).joinToString(". ")
     val fieldColor = if (configuration.disabled) tokens.onSurface.copy(alpha = 0.38f) else tokens.onSurface
 
+    // At large text the label would break mid-word beside the buttons, so it takes its own line.
+    val stackLabel = configuration.label.isNotEmpty() && LocalDensity.current.fontScale >= 1.5f
+
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (stackLabel) {
+            Text(
+                text = configuration.label,
+                color = fieldColor,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.clearAndSetSemantics {},
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -61,7 +73,7 @@ internal fun FirstlightStepperControl(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (configuration.label.isNotEmpty()) {
+            if (configuration.label.isNotEmpty() && !stackLabel) {
                 Text(
                     text = configuration.label,
                     color = fieldColor,
@@ -133,7 +145,14 @@ private fun StepperButton(
         // Material icons keep their 24 dp size at every font scale; only text grows.
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
-            MaterialIcon(name = icon, contentDescription = null)
+            // The glyph is text, which Android's high contrast text redraws in full black, so a
+            // disabled button fades the glyph's layer instead of relying on its colour.
+            MaterialIcon(
+                name = icon,
+                contentDescription = null,
+                modifier = if (enabled) Modifier else Modifier.alpha(0.38f),
+                tint = tokens.onSurface,
+            )
         }
     }
 }

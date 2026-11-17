@@ -3,6 +3,7 @@ package dev.firstlightui.plugins.firstlight_ui.ui
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -57,5 +58,6 @@ internal fun FirstlightTextAreaControl(
             }
         },
         keyboardOptions = textAreaKeyboardOptions(configuration),
+        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = firstlightInputOutline(tokens)),
     )
 }

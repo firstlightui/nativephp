@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -120,7 +120,7 @@ internal fun FirstlightTimePickerControl(
             }
 
             CompositionLocalProvider(LocalConfiguration provides localizedConfiguration) {
-                DatePickerDialog(
+                FirstlightPickerDialog(
                     onDismissRequest = onCancel,
                     confirmButton = {
                         TextButton(onClick = {
@@ -132,8 +132,16 @@ internal fun FirstlightTimePickerControl(
                         TextButton(onClick = onCancel) { Text(configuration.cancelLabel) }
                     },
                 ) {
-                    Column(Modifier.padding(24.dp)) {
-                        TimePicker(state = pickerState)
+                    val fits = pickerFitsFullDialog(LocalConfiguration.current.screenWidthDp)
+                    // Material's 12-hour time entry is 280 dp wide, so the narrow dialog keeps
+                    // only 12 dp of side padding to fit it on a 320 dp screen.
+                    Column(Modifier.padding(horizontal = if (fits) 24.dp else 12.dp, vertical = 24.dp)) {
+                        // The clock dial doesn't fit a narrow screen; Material's time entry does.
+                        if (fits) {
+                            TimePicker(state = pickerState)
+                        } else {
+                            TimeInput(state = pickerState)
+                        }
                     }
                 }
             }

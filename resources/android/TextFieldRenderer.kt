@@ -131,7 +131,12 @@ class TextFieldRendererState(node: NativeUINode) {
 
     fun userChanged(value: String): TextFieldRendererEvent? = userChanged(draft.copy(text = value))
     fun userChanged(value: TextFieldValue): TextFieldRendererEvent? {
-        if (configuration.disabled || configuration.readOnly) return null
+        if (configuration.disabled) return null
+        // A read-only field keeps its text but follows the selection, so it can be selected and copied.
+        if (configuration.readOnly) {
+            if (value.text == draft.text) draft = value
+            return null
+        }
         val previous = draft.text
         draft = configuration.mask?.let { mask ->
             val (raw, caret) = mask.edit(draft.text, value.text, value.selection.end)

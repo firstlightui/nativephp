@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
@@ -126,6 +126,12 @@ internal fun FirstlightDatePickerControl(
             val maximum = configuration.max.takeIf(String::isNotEmpty)
             val pickerState = rememberDatePickerState(
                 initialSelectedDateMillis = canonicalDateToUtcMillis(draft),
+                // The calendar needs 360 dp; a narrower screen gets Material's date entry instead.
+                initialDisplayMode = if (pickerFitsFullDialog(LocalConfiguration.current.screenWidthDp)) {
+                    DisplayMode.Picker
+                } else {
+                    DisplayMode.Input
+                },
                 yearRange = (minimum?.take(4)?.toInt() ?: 1)..(maximum?.take(4)?.toInt() ?: 9999),
                 selectableDates = remember(minimum, maximum) { DatePickerBounds(minimum, maximum) },
             )
@@ -138,7 +144,7 @@ internal fun FirstlightDatePickerControl(
             }
 
             CompositionLocalProvider(LocalConfiguration provides localizedConfiguration) {
-                DatePickerDialog(
+                FirstlightPickerDialog(
                     onDismissRequest = onCancel,
                     confirmButton = {
                         TextButton(onClick = {
@@ -150,7 +156,10 @@ internal fun FirstlightDatePickerControl(
                         TextButton(onClick = onCancel) { Text(configuration.cancelLabel) }
                     },
                 ) {
-                    DatePicker(state = pickerState)
+                    DatePicker(
+                        state = pickerState,
+                        showModeToggle = pickerFitsFullDialog(LocalConfiguration.current.screenWidthDp),
+                    )
                 }
             }
         }

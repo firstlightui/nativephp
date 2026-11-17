@@ -8,6 +8,8 @@ class GenericProps(private val values: Map<String, Any> = emptyMap()) {
 
     @Suppress("UNCHECKED_CAST")
     fun getStringList(key: String): List<String> = values[key] as? List<String> ?: emptyList()
+
+    fun with(key: String, value: Any): GenericProps = GenericProps(values + (key to value))
 }
 
 data class NativeUITree(val root: NativeUINode)
