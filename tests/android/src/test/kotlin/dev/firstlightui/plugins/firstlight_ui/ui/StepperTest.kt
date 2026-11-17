@@ -144,6 +144,12 @@ class StepperNarrowLabelTest {
         assertTrue("the controls row starts at $top", top > 32.dp)
     }
 
+    // The Pixel broke "Server-approv"/"ed": a hyphen is not a safe break point.
+    @Test fun `a hyphenated word that doesn't fit beside the controls takes its own line too`() = runComposeUiTest {
+        val top = controlsRowTop("Server-approved quantity")
+        assertTrue("the controls row starts at $top", top > 32.dp)
+    }
+
     @Test fun `a label that fits stays beside the controls`() = runComposeUiTest {
         val top = controlsRowTop("Dose")
         assertTrue("the controls row starts at $top", top < 20.dp)

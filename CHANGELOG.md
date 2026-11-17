@@ -33,7 +33,7 @@ These come from the Android device pass on a Pixel 3 running Android 12.
 - Date Picker and Time Picker on Android: on screens narrower than 392 dp the dialog fits the screen and keeps Confirm visible. The calendar becomes Material's date entry and the clock dial its time entry.
 - Android at large text sizes:
   - List Item moves trailing text under the supporting text, as it already did for a trailing status, so neither breaks mid-word.
-  - Stepper puts its label on its own line above the buttons when its longest word wouldn't fit beside them, so it no longer breaks mid-word, including at Android 12's largest font scale of 1.3 on a narrow screen.
+  - Stepper puts its label on its own line above the buttons when one of its words, counting a hyphenated word as one, wouldn't fit beside them, so it no longer breaks mid-word, including at Android 12's largest font scale of 1.3 on a narrow screen.
   - Button labels that would run past the button's edge are scaled down just enough to fit, though never below the default size. Mobile UI draws button labels on one line, so they can't wrap.
 - Android with high contrast text:
   - Text Field, Text Area, Select and Checkbox outlines use `on-surface-variant` when the theme's `outline` has less than 3:1 contrast with the surface.

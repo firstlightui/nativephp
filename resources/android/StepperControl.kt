@@ -55,7 +55,7 @@ internal fun FirstlightStepperControl(
     val fieldColor = if (configuration.disabled) tokens.onSurface.copy(alpha = 0.38f) else tokens.onSurface
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        // When the label's longest word doesn't fit beside the buttons and value, as at
+        // When the label's widest word doesn't fit beside the buttons and value, as at
         // large text or on a narrow screen, the label takes its own line instead of
         // breaking mid-word. Android 12's largest font scale is only 1.3, so this
         // follows the space left rather than the scale.
@@ -64,14 +64,17 @@ internal fun FirstlightStepperControl(
         val density = LocalDensity.current
         val fontFamilyResolver = LocalFontFamilyResolver.current
         val stackLabel = configuration.label.isNotEmpty() && run {
-            fun width(text: String, style: TextStyle, longestWord: Boolean): Float =
-                ParagraphIntrinsics(text, style, density = density, fontFamilyResolver = fontFamilyResolver)
-                    .let { if (longestWord) it.minIntrinsicWidth else it.maxIntrinsicWidth }
+            fun width(text: String, style: TextStyle): Float =
+                ParagraphIntrinsics(text, style, density = density, fontFamilyResolver = fontFamilyResolver).maxIntrinsicWidth
             with(density) {
                 // Two 48 dp buttons, the value (at least 32 dp) and three 8 dp gaps.
                 // Text lays out in whole pixels, so round against the label.
-                val controls = 2 * 48.dp.toPx() + maxOf(32.dp.toPx(), ceil(width(configuration.displayValue, valueStyle, false))) + 3 * 8.dp.toPx()
-                ceil(width(configuration.label, labelStyle, true)) > floor(maxWidth.toPx() - controls)
+                val controls = 2 * 48.dp.toPx() + maxOf(32.dp.toPx(), ceil(width(configuration.displayValue, valueStyle))) + 3 * 8.dp.toPx()
+                // Whole words between spaces: Android can still break a hyphenated word
+                // such as "Server-approved" mid-word, so a hyphen isn't a safe break.
+                val longestWord = configuration.label.split(Regex("\\s+")).filter(String::isNotEmpty)
+                    .maxOf { ceil(width(it, labelStyle)) }
+                longestWord > floor(maxWidth.toPx() - controls)
             }
         }
 
