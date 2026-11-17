@@ -16,6 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.ParagraphIntrinsics
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -27,6 +31,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import kotlin.math.ceil
+import kotlin.math.floor
 import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
 
@@ -48,78 +54,97 @@ internal fun FirstlightStepperControl(
     ).filter(String::isNotEmpty).joinToString(". ")
     val fieldColor = if (configuration.disabled) tokens.onSurface.copy(alpha = 0.38f) else tokens.onSurface
 
-    // At large text the label would break mid-word beside the buttons, so it takes its own line.
-    val stackLabel = configuration.label.isNotEmpty() && LocalDensity.current.fontScale >= 1.5f
-
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (stackLabel) {
-            Text(
-                text = configuration.label,
-                color = fieldColor,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.clearAndSetSemantics {},
-            )
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        // When the label's longest word doesn't fit beside the buttons and value, as at
+        // large text or on a narrow screen, the label takes its own line instead of
+        // breaking mid-word. Android 12's largest font scale is only 1.3, so this
+        // follows the space left rather than the scale.
+        val labelStyle = MaterialTheme.typography.bodyLarge
+        val valueStyle = MaterialTheme.typography.titleMedium
+        val density = LocalDensity.current
+        val fontFamilyResolver = LocalFontFamilyResolver.current
+        val stackLabel = configuration.label.isNotEmpty() && run {
+            fun width(text: String, style: TextStyle, longestWord: Boolean): Float =
+                ParagraphIntrinsics(text, style, density = density, fontFamilyResolver = fontFamilyResolver)
+                    .let { if (longestWord) it.minIntrinsicWidth else it.maxIntrinsicWidth }
+            with(density) {
+                // Two 48 dp buttons, the value (at least 32 dp) and three 8 dp gaps.
+                // Text lays out in whole pixels, so round against the label.
+                val controls = 2 * 48.dp.toPx() + maxOf(32.dp.toPx(), ceil(width(configuration.displayValue, valueStyle, false))) + 3 * 8.dp.toPx()
+                ceil(width(configuration.label, labelStyle, true)) > floor(maxWidth.toPx() - controls)
+            }
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 48.dp)
-                .semantics(mergeDescendants = true) {
-                    if (description.isNotEmpty()) contentDescription = description
-                    stateDescription = configuration.displayValue
-                    if (configuration.disabled || state.isAwaitingPublication) disabled()
-                    if (configuration.error.isNotEmpty()) error(configuration.error)
-                },
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (configuration.label.isNotEmpty() && !stackLabel) {
+
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (stackLabel) {
                 Text(
                     text = configuration.label,
                     color = fieldColor,
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clearAndSetSemantics {},
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
-            } else {
-                Spacer(Modifier.weight(1f))
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp)
+                    .semantics(mergeDescendants = true) {
+                        if (description.isNotEmpty()) contentDescription = description
+                        stateDescription = configuration.displayValue
+                        if (configuration.disabled || state.isAwaitingPublication) disabled()
+                        if (configuration.error.isNotEmpty()) error(configuration.error)
+                    },
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (configuration.label.isNotEmpty() && !stackLabel) {
+                    Text(
+                        text = configuration.label,
+                        color = fieldColor,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clearAndSetSemantics {},
+                    )
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+
+                StepperButton(
+                    icon = "remove",
+                    actionLabel = "Decrease ${configuration.accessibilityLabel}",
+                    enabled = configuration.canPressDecrement && !state.isAwaitingPublication,
+                    tokens = tokens,
+                    onClick = onDecrement,
+                )
+                Text(
+                    text = configuration.displayValue,
+                    color = fieldColor,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.widthIn(min = 32.dp),
+                )
+                StepperButton(
+                    icon = "add",
+                    actionLabel = "Increase ${configuration.accessibilityLabel}",
+                    enabled = configuration.canPressIncrement && !state.isAwaitingPublication,
+                    tokens = tokens,
+                    onClick = onIncrement,
+                )
             }
 
-            StepperButton(
-                icon = "remove",
-                actionLabel = "Decrease ${configuration.accessibilityLabel}",
-                enabled = configuration.canPressDecrement && !state.isAwaitingPublication,
-                tokens = tokens,
-                onClick = onDecrement,
-            )
-            Text(
-                text = configuration.displayValue,
-                color = fieldColor,
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(min = 32.dp),
-            )
-            StepperButton(
-                icon = "add",
-                actionLabel = "Increase ${configuration.accessibilityLabel}",
-                enabled = configuration.canPressIncrement && !state.isAwaitingPublication,
-                tokens = tokens,
-                onClick = onIncrement,
-            )
-        }
-
-        if (supporting.isNotEmpty()) {
-            Text(
-                text = supporting,
-                color = when {
-                    configuration.error.isNotEmpty() -> tokens.destructive
-                    configuration.disabled -> fieldColor
-                    else -> tokens.onSurfaceVariant
-                },
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.clearAndSetSemantics {},
-            )
+            if (supporting.isNotEmpty()) {
+                Text(
+                    text = supporting,
+                    color = when {
+                        configuration.error.isNotEmpty() -> tokens.destructive
+                        configuration.disabled -> fieldColor
+                        else -> tokens.onSurfaceVariant
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.clearAndSetSemantics {},
+                )
+            }
         }
     }
 }

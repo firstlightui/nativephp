@@ -9,6 +9,7 @@ use FirstlightUI\Concerns\SubmitsForms;
 use FirstlightUI\Concerns\ValidatesFields;
 use FirstlightUI\Elements\Slider;
 use Native\Mobile\Edge\Element;
+use Native\Mobile\Edge\NavigationIntent;
 use Native\Mobile\Edge\NativeComponent as EdgeNativeComponent;
 use Native\Mobile\Edge\NativeElementCollector;
 use Native\Mobile\Edge\Transition;
@@ -30,7 +31,24 @@ class NativeComponent extends EdgeNativeComponent
     /** NativePHP's SLIDER_CHANGE event type. */
     private const SLIDER_CHANGE_EVENT = 9;
 
+    /** NativePHP's SHEET_DISMISS event type, which Bottom Sheet and Modal `@dismiss` use. */
+    private const SHEET_DISMISS_EVENT = 14;
+
     private bool $leavingScreen = false;
+
+    /** @var \WeakReference<self>|null The screen whose frame is being serialized, which overlays report to. */
+    private static ?\WeakReference $recordingScreen = null;
+
+    /**
+     * Whether each Bottom Sheet and Modal, by its dismiss callback, was open
+     * in this screen's last frame. After a deep link, one inside an unchanged
+     * #[Memo] child is missing: its subtree isn't serialized again.
+     *
+     * @var array<int, bool>
+     */
+    private array $overlaysOpen = [];
+
+    private bool $dismissingOverlays = false;
 
     /**
      * True when nothing is below this screen on PHP's navigation stack.
@@ -71,10 +89,81 @@ class NativeComponent extends EdgeNativeComponent
 
     protected function wrapWithChrome(Element $content): Element
     {
+        if ($this->nativeParentComponent === null) {
+            $this->overlaysOpen = [];
+            self::$recordingScreen = \WeakReference::create($this);
+        }
+
         return parent::wrapWithChrome($content)->setProp(
             'firstlight_response_revision',
             $this->leavingScreen ? self::$responseRevision : ++self::$responseRevision,
         );
+    }
+
+    /**
+     * A screen that opens another stays under it on the stack, with the same
+     * state. Its farewell frame closes its open Bottom Sheets and Modals, but
+     * their bound visibility would still be `true`, so going back showed them
+     * again. Running each one's `@dismiss` lets the app set it to `false`, as
+     * Android's navigation does with dialogs. To show one again on return,
+     * set its property in onResume().
+     */
+    public function navigate(string $uri, array $data = [], Transition|string|null $transition = null): static
+    {
+        parent::navigate($uri, $data, $transition);
+
+        if ($this->nativeParentComponent === null) {
+            $this->dismissOverlaysLeftOpen();
+        }
+
+        return $this;
+    }
+
+    /** Deep links and app shortcuts end the loop with a navigation too, without navigate(). */
+    public function runLoop(): void
+    {
+        parent::runLoop();
+
+        $this->dismissOverlaysLeftOpen();
+    }
+
+    /** @internal Bottom Sheet and Modal report whether they are open as they serialize. */
+    public static function recordOverlay(int $dismissCallbackId, bool $open): void
+    {
+        $screen = self::$recordingScreen?->get();
+
+        if ($dismissCallbackId !== 0 && $screen !== null) {
+            $screen->overlaysOpen[$dismissCallbackId] = $open;
+        }
+    }
+
+    private function dismissOverlaysLeftOpen(): void
+    {
+        $intent = $this->getNavigationIntent();
+
+        // A dismiss handler that navigates would come back here for the same overlays.
+        if ($this->dismissingOverlays || $intent?->type !== NavigationIntent::NAVIGATE) {
+            return;
+        }
+
+        $dismissals = array_keys(array_filter($this->overlaysOpen));
+        $this->overlaysOpen = [];
+        $this->dismissingOverlays = true;
+
+        try {
+            foreach ($dismissals as $callbackId) {
+                try {
+                    $this->dispatchUiEvent(['type' => self::SHEET_DISMISS_EVENT, 'callback_id' => $callbackId]);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        } finally {
+            $this->dismissingOverlays = false;
+        }
+
+        // The screen is already leaving for this destination.
+        $this->setNavigationIntent($intent);
     }
 
     /** Rounds a Firstlight Slider's 32-bit native value to its step's precision, then validates as usual. */

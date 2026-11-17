@@ -56,8 +56,30 @@ bound visibility property to `false` in that handler. Dismiss handlers must
 be safe to run more than once because the delegated iOS cover can also notify
 PHP when a programmatic close is published.
 
-When a Firstlight screen navigates away, its farewell response closes the modal,
-including nested modals, without changing the bound visibility property.
+When a Firstlight screen opens another screen while the modal is open, including
+from a deep link or an app shortcut, Firstlight closes the modal and runs its
+`@dismiss` handler, so the handler sets the visibility property to `false`.
+Going back then shows the screen without the modal, as Android does with
+dialogs and bottom sheets. This also covers modals in nested children.
+
+To show the modal again when the user comes back, set the property in
+`onResume()`:
+
+```php
+public bool $reopenOnReturn = false;
+
+public function onResume(): void
+{
+    // Set $reopenOnReturn before navigating away to bring it back here.
+    if ($this->reopenOnReturn) {
+        $this->detailsVisible = true;
+        $this->reopenOnReturn = false;
+    }
+}
+```
+
+Don't navigate from the `@dismiss` handler: the screen is already on its way
+to the new one.
 
 There is no overlay `@press`, `native:model`, or detent API. Actions belong
 on child controls.

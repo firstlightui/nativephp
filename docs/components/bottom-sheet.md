@@ -78,9 +78,30 @@ to use your own wording. A sheet without `title` has no bar or heading.
 outside, uses system back, or taps a titled sheet's close button on iOS. Set the bound visibility property to `false` in
 that handler.
 
-When a Firstlight screen navigates away, its farewell response closes the sheet
-without changing that visibility property. This also covers sheets in nested
-children.
+When a Firstlight screen opens another screen while the sheet is open, including
+from a deep link or an app shortcut, Firstlight closes the sheet and runs its
+`@dismiss` handler, so the handler sets the visibility property to `false`.
+Going back then shows the screen without the sheet, as Android does with
+dialogs and bottom sheets. This also covers sheets in nested children.
+
+To show the sheet again when the user comes back, set the property in
+`onResume()`:
+
+```php
+public bool $reopenOnReturn = false;
+
+public function onResume(): void
+{
+    // Set $reopenOnReturn before navigating away to bring it back here.
+    if ($this->reopenOnReturn) {
+        $this->filtersVisible = true;
+        $this->reopenOnReturn = false;
+    }
+}
+```
+
+Don't navigate from the `@dismiss` handler: the screen is already on its way
+to the new one.
 
 There is no overlay `@press`, `native:model`, `dismissible`, or `detents`
 API. You don't set the height: the sheet measures its content.

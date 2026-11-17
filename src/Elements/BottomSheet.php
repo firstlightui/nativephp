@@ -3,6 +3,7 @@
 namespace FirstlightUI\Elements;
 
 use InvalidArgumentException;
+use FirstlightUI\NativeComponent;
 use FirstlightUI\Support\Chrome;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -132,6 +133,10 @@ class BottomSheet extends \Native\Mobile\UI\Elements\BottomSheet
             );
         }
 
-        return parent::resolveProps($registry);
+        $props = parent::resolveProps($registry);
+
+        NativeComponent::recordOverlay((int) ($props['on_dismiss'] ?? 0), ($props['visible'] ?? false) === true);
+
+        return $props;
     }
 }

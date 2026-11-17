@@ -2,6 +2,7 @@
 
 namespace FirstlightUI\Elements;
 
+use FirstlightUI\NativeComponent;
 use InvalidArgumentException;
 use Native\Mobile\Edge\CallbackRegistry;
 use Native\Mobile\Edge\Element;
@@ -98,6 +99,10 @@ class Modal extends \Native\Mobile\UI\Elements\Modal
             );
         }
 
-        return parent::resolveProps($registry);
+        $props = parent::resolveProps($registry);
+
+        NativeComponent::recordOverlay((int) ($props['on_dismiss'] ?? 0), ($props['visible'] ?? false) === true);
+
+        return $props;
     }
 }

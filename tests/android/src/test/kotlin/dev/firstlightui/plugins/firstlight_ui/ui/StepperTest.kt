@@ -37,6 +37,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
+import org.robolectric.annotation.Config
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.platform.LocalDensity
 
 class StepperRendererContractTest {
     @Test fun `configuration decodes accepted display and metadata`() {
@@ -105,6 +110,43 @@ class StepperRendererContractTest {
         assertNull(maximum.increment())
         assertNull(callbackless.decrement())
         assertNull(callbackless.increment())
+    }
+}
+
+/** A Pixel 3 at its largest display and font sizes: 320 dp wide, font scale 1.3. */
+@OptIn(ExperimentalTestApi::class)
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "w320dp-h640dp")
+class StepperNarrowLabelTest {
+    private fun ComposeUiTest.controlsRowTop(label: String): androidx.compose.ui.unit.Dp {
+        setContent {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, 1.3f)) {
+                MaterialTheme {
+                    FirstlightStepperControl(
+                        state = StepperRendererState(stepperNode(label = label, displayValue = "1,250")),
+                        tokens = NativeUITheme.light,
+                        onDecrement = {},
+                        onIncrement = {},
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+        }
+
+        // The controls row is the node that announces the value.
+        return onNode(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "1,250")).getUnclippedBoundsInRoot().top
+    }
+
+    // A stacked label sits above the controls row; beside the controls it shares the row's top.
+    @Test fun `a label whose longest word doesn't fit beside the controls takes its own line`() = runComposeUiTest {
+        val top = controlsRowTop("Reconciliation quantity")
+        assertTrue("the controls row starts at $top", top > 32.dp)
+    }
+
+    @Test fun `a label that fits stays beside the controls`() = runComposeUiTest {
+        val top = controlsRowTop("Dose")
+        assertTrue("the controls row starts at $top", top < 20.dp)
     }
 }
 
@@ -197,6 +239,7 @@ private fun stepperScreenshotContent(
 
 private fun stepperNode(
     displayValue: String = "5",
+    label: String = "Quantity",
     disabled: Boolean = false,
     canDecrement: Boolean = true,
     canIncrement: Boolean = true,
@@ -208,7 +251,7 @@ private fun stepperNode(
     props = GenericProps(
         mapOf(
             "display_value" to displayValue,
-            "label" to "Quantity",
+            "label" to label,
             "helper" to "Adjust one at a time",
             "error" to error,
             "disabled" to disabled,
