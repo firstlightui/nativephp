@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 1.1.0 - 2026-11-19
+
+First stable 1.1 release. It includes every change from 1.1.0-beta1 to 1.1.0-beta12 below, plus these fixes.
 
 ### Fixed
 
