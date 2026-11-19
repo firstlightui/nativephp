@@ -150,7 +150,7 @@ function documentationFixture(): string
     file_put_contents($root.'/Constitution.md', "# Constitution\n");
     mkdir($root.'/src/Elements', 0777, true);
     file_put_contents($root.'/src/Elements/Segmented.php', "<?php\n");
-    file_put_contents($root.'/README.md', "# Firstlight UI\n\n[Documentation](docs/index.md)\n");
+    file_put_contents($root.'/README.md', "# Firstlight UI\n\n[Documentation](https://firstlightui.dev/docs)\n");
 
     foreach (['write', 'update', 'audit', 'screenshots'] as $skill) {
         file_put_contents(
@@ -229,6 +229,10 @@ it('reports documentation contract failures', function (string $case, string $ex
                 json_encode(['components' => ['segmented' => ['route' => '/captures/segmented', 'test' => 'test', 'outputs' => ['ios-light' => 'one.png']]]], JSON_PRETTY_PRINT)."\n",
             ),
             'stale output' => file_put_contents($root.'/llms.txt', "stale\n"),
+            'relative readme link' => file_put_contents(
+                $root.'/README.md',
+                "# Firstlight UI\n\n| [Form screen](docs/getting-started/install.md) | Recipe |\n\n<img src=\"docs/screenshots/form.png\">\n",
+            ),
         };
 
         $validator = new DocumentationValidator($root, $repository, $builder);
@@ -244,6 +248,8 @@ it('reports documentation contract failures', function (string $case, string $ex
     'undocumented manifest component' => ['undocumented component', 'Picker'],
     'incomplete screenshot manifest' => ['incomplete screenshots', 'android-dark'],
     'stale generated output' => ['stale output', 'llms.txt is stale'],
+    'relative README link' => ['relative readme link', 'absolute URL for the plugin marketplace: docs/getting-started/install.md'],
+    'relative README image' => ['relative readme link', 'absolute URL for the plugin marketplace: docs/screenshots/form.png'],
 ]);
 
 it('defers absent screenshot and review evidence only in development mode', function () {

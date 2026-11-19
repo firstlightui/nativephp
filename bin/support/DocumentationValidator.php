@@ -48,7 +48,7 @@ final class DocumentationValidator
         foreach ($pages as $page) {
             $this->validateLinks($page, $development, $errors);
         }
-        $this->validateStandaloneLinks('README.md', $development, $errors);
+        $this->validateReadmeLinks($errors);
 
         $componentSlugs = $this->validateManifestComponents($errors, $componentName);
         $this->validateScreenshotManifest($componentSlugs, $development, $errors);
@@ -91,15 +91,29 @@ final class DocumentationValidator
     }
 
     /** @param list<string> $errors */
-    private function validateStandaloneLinks(string $path, bool $development, array &$errors): void
+    private function validateReadmeLinks(array &$errors): void
     {
-        if (! is_file($this->root().'/'.$path)) {
-            $errors[] = "Missing documentation landing page: {$path}";
+        if (! is_file($this->root().'/README.md')) {
+            $errors[] = 'Missing documentation landing page: README.md';
 
             return;
         }
 
-        $this->validateMarkdownLinks($path, (string) file_get_contents($this->root().'/'.$path), $development, $errors);
+        // The NativePHP plugin marketplace renders the README away from the repository, so relative
+        // paths and in-page anchors 404 there. Every link and image must be an absolute URL.
+        preg_match_all(
+            '/!?\[[^\]]*\]\(([^)\s]+)[^)]*\)|\b(?:href|src)\s*=\s*["\']([^"\']*)["\']/i',
+            (string) file_get_contents($this->root().'/README.md'),
+            $matches,
+            PREG_SET_ORDER,
+        );
+
+        foreach ($matches as $match) {
+            $target = trim(($match[2] ?? '') ?: $match[1], " <>\t\n\r\0\x0B");
+            if (preg_match('#^(?:https?://|mailto:)#i', $target) !== 1) {
+                $errors[] = "README.md link must be an absolute URL for the plugin marketplace: {$target}";
+            }
+        }
     }
 
     /** @param list<string> $errors */
