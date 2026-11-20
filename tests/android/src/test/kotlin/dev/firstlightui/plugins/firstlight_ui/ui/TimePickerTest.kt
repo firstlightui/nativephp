@@ -111,6 +111,7 @@ class TimePickerTest {
         callback: Int = 41,
     ) = NativeUINode(
         id = 7,
+        type = "firstlight.time-picker",
         props = GenericProps(
             mapOf(
                 "has_value" to hasValue,

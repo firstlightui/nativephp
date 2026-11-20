@@ -130,12 +130,14 @@ class DatePickerRendererState(node: NativeUINode) {
     }
 
     fun serverPublished(tree: NativeUITree) {
-        val node = tree.root.findDatePickerNode(configuration.nodeId) ?: return
+        // Node IDs restart on every screen, so after navigation this ID can name another control
+        // before this one is disposed; its value would not be in this picker's wire format.
+        val node = tree.root.findDatePickerNode(configuration.nodeId)?.takeIf { it.type == NODE_TYPE } ?: return
         publish(DatePickerRendererConfiguration(node))
     }
 
     fun serverPublished(node: NativeUINode) {
-        if (node.id == configuration.nodeId) publish(DatePickerRendererConfiguration(node))
+        if (node.id == configuration.nodeId && node.type == NODE_TYPE) publish(DatePickerRendererConfiguration(node))
     }
 
     private fun publish(published: DatePickerRendererConfiguration) {
@@ -149,6 +151,8 @@ class DatePickerRendererState(node: NativeUINode) {
         .let { candidate -> configuration.max.takeIf(String::isNotEmpty)?.let { minOf(candidate, it) } ?: candidate }
 
     companion object {
+        const val NODE_TYPE = "firstlight.date-picker"
+
         fun localToday(timezone: String): LocalDate = LocalDate.now(
             timezone.takeIf(String::isNotEmpty)?.let(ZoneId::of) ?: ZoneId.systemDefault(),
         )

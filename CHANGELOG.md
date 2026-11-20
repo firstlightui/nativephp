@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 9 Pro.
+
+### Added
+
+- Android tab bar: select it with `TabBar::presentation('firstlight:tabs')`. It hides while the keyboard is up and becomes Material's short bar on short screens such as a phone in landscape. iOS keeps the system tab bar. See [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad).
+
+### Fixed
+
+- Date Picker and Time Picker:
+  - On iPad, the popover shows Cancel and Confirm in both orientations, including for fields near the top of the screen.
+  - On Android in landscape, the header sits beside the calendar and the time beside the clock dial, as in Android's own landscape pickers, in a dialog that fits the screen and scrolls, with Cancel and Confirm always visible, instead of being clipped.
+  - Navigating straight from one picker screen to the other no longer crashes. A picker ignores another control that reuses its node ID after navigation.
+- Media crop: in landscape the controls sit beside the image on both platforms. On iOS the black surround no longer reaches the title bar, which hid the "Crop" title.
+- Code Editor on iPhone: when the keyboard opens, the caret's line scrolls into view even when the whole editor doesn't fit.
+- Confirmation Dialog on iPad: a centred alert with both actions, instead of a popover with no Cancel pointing at nothing. Media's source chooser points at the Choose button.
+- Transient Feedback: the Android snackbar sits above the tab bar instead of over it. On iOS the toast stays inside the side safe areas and is at most 560 pt wide on iPad.
+
 ## 1.1.1 - 2026-11-20
 
 ### Fixed

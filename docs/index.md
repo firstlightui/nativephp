@@ -48,6 +48,7 @@ recipes run inside.
 - [Add your first component](getting-started/first-component.md) — Add a complete Segmented control with server-backed state.
 - [Theming](getting-started/theming.md) — Configure the semantic NativePHP theme tokens inherited by Firstlight components.
 - [Use custom icons](how-to/use-custom-icons.md) — Install SVGs from Lucide, Heroicons, Font Awesome and other sets with `firstlight:icon`, and draw them as native icons in Firstlight controls.
+- [Support landscape and iPad](how-to/support-landscape-and-ipad.md) — Turn on landscape and iPad in NativePHP's config, and use Firstlight's Android tab bar so tabs make room for the keyboard and short landscape screens.
 
 ## Laravel on native screens
 

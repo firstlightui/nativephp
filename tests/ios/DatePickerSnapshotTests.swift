@@ -71,6 +71,26 @@ final class DatePickerSnapshotTests: XCTestCase {
         XCTAssertEqual(state.configuration.acceptedValue, "2026-08-06")
     }
 
+    func testAnotherControlReusingTheNodeIDIsIgnored() {
+        var state = DatePickerRendererState(node: node(value: "2026-08-04"))
+        state.open()
+        let timePicker = NativeUINode(
+            id: 7,
+            type: "firstlight.time-picker",
+            layout: nil,
+            style: nil,
+            props: GenericProps(["has_value": true, "value": "12:40"]),
+            onPress: 0,
+            onLongPress: 0,
+            children: []
+        )
+
+        state.serverPublished(tree(root: timePicker))
+
+        XCTAssertTrue(state.isPresented)
+        XCTAssertEqual(state.configuration.acceptedValue, "2026-08-04")
+    }
+
     func testCalendarMappingPreservesCanonicalWireDates() {
         for value in ["0001-01-01", "2024-02-29", "9999-12-31"] {
             let date = DatePickerCalendar.date(from: value, timezone: "Pacific/Auckland")
@@ -141,7 +161,7 @@ final class DatePickerSnapshotTests: XCTestCase {
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
-            type: "firstlight_date_picker",
+            type: "firstlight.date-picker",
             layout: nil,
             style: nil,
             props: GenericProps([

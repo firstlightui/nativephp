@@ -21,6 +21,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import kotlinx.coroutines.Dispatchers
@@ -232,93 +233,119 @@ internal fun FirstlightMediaCropSheet(
     val currentRect by rememberUpdatedState(rect)
     val currentOnPan by rememberUpdatedState(onPan)
     val currentOnZoomBy by rememberUpdatedState(onZoomBy)
+    // A phone in landscape leaves about 400 dp for the dialog, so the frame shrinks to fit and
+    // the zoom controls move beside it rather than below.
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val compactHeight = screenHeightDp < 600
+    val frameMaxHeight = if (compactHeight) (screenHeightDp - 200).coerceIn(120, 320).dp else 320.dp
+    val cropFrame: @Composable (Modifier) -> Unit = { modifier ->
+        // The frame shows exactly the region Confirm commits: the same
+        // cropRect, drawn to fill the frame.
+        val ratio = policy.aspectRatio
+            ?: image?.let { it.width.toFloat() / it.height }
+            ?: 1f
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .heightIn(max = frameMaxHeight)
+                .aspectRatio(ratio, matchHeightConstraintsFirst = ratio < 1f)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .testTag(MEDIA_CROP_REGION_TAG)
+                .semantics {
+                    contentDescription = cropLabel
+                    customActions = listOf(
+                        CustomAccessibilityAction(moveCropLeftLabel) { onMove(MediaCropDirection.Left); true },
+                        CustomAccessibilityAction(moveCropRightLabel) { onMove(MediaCropDirection.Right); true },
+                        CustomAccessibilityAction(moveCropUpLabel) { onMove(MediaCropDirection.Up); true },
+                        CustomAccessibilityAction(moveCropDownLabel) { onMove(MediaCropDirection.Down); true },
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectTransformGestures { _, pan, zoomChange, _ ->
+                        val region = currentRect ?: return@detectTransformGestures
+                        // Events can arrive faster than recomposition, so the
+                        // state multiplies its own current zoom.
+                        if (zoomChange != 1f) currentOnZoomBy(zoomChange)
+                        // Dragging the photo right moves the region left.
+                        val pixelsPerPx = region.width / size.width.toFloat()
+                        currentOnPan(-pan.x * pixelsPerPx, -pan.y * pixelsPerPx)
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            if (image != null && rect != null) {
+                Canvas(modifier = Modifier.matchParentSize()) {
+                    drawImage(
+                        image = image,
+                        srcOffset = IntOffset(rect.left, rect.top),
+                        srcSize = IntSize(rect.width, rect.height),
+                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                    )
+                    // The frame edge is the crop edge. A dark band with a white line inside
+                    // keeps it visible on light and dark photos alike.
+                    val corner = 12.dp.toPx()
+                    drawRoundRect(
+                        color = Color.Black.copy(alpha = 0.6f),
+                        cornerRadius = CornerRadius(corner),
+                        style = Stroke(width = 4.dp.toPx()),
+                    )
+                    val inset = 3.dp.toPx()
+                    drawRoundRect(
+                        color = Color.White,
+                        topLeft = Offset(inset, inset),
+                        size = Size(size.width - 2 * inset, size.height - 2 * inset),
+                        cornerRadius = CornerRadius(corner - inset),
+                        style = Stroke(width = 2.dp.toPx()),
+                    )
+                }
+            } else {
+                MaterialIcon(name = "image", contentDescription = null)
+            }
+        }
+    }
+    val zoomControls: @Composable (vertical: Boolean) -> Unit = { vertical ->
+        val buttons: @Composable () -> Unit = {
+            IconButton(
+                onClick = onZoomOut,
+                modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
+            ) {
+                MaterialIcon(name = "zoom_out", contentDescription = zoomOutLabel)
+            }
+            IconButton(
+                onClick = onZoomIn,
+                modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
+            ) {
+                MaterialIcon(name = "zoom_in", contentDescription = zoomInLabel)
+            }
+        }
+        if (vertical) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { buttons() }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { buttons() }
+        }
+    }
     AlertDialog(
         onDismissRequest = onCancel,
         title = { Text(cropLabel) },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // The frame shows exactly the region Confirm commits: the same
-                // cropRect, drawn to fill the frame.
-                val ratio = policy.aspectRatio
-                    ?: image?.let { it.width.toFloat() / it.height }
-                    ?: 1f
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 320.dp)
-                        .aspectRatio(ratio, matchHeightConstraintsFirst = ratio < 1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .testTag(MEDIA_CROP_REGION_TAG)
-                        .semantics {
-                            contentDescription = cropLabel
-                            customActions = listOf(
-                                CustomAccessibilityAction(moveCropLeftLabel) { onMove(MediaCropDirection.Left); true },
-                                CustomAccessibilityAction(moveCropRightLabel) { onMove(MediaCropDirection.Right); true },
-                                CustomAccessibilityAction(moveCropUpLabel) { onMove(MediaCropDirection.Up); true },
-                                CustomAccessibilityAction(moveCropDownLabel) { onMove(MediaCropDirection.Down); true },
-                            )
-                        }
-                        .pointerInput(Unit) {
-                            detectTransformGestures { _, pan, zoomChange, _ ->
-                                val region = currentRect ?: return@detectTransformGestures
-                                // Events can arrive faster than recomposition, so the
-                                // state multiplies its own current zoom.
-                                if (zoomChange != 1f) currentOnZoomBy(zoomChange)
-                                // Dragging the photo right moves the region left.
-                                val pixelsPerPx = region.width / size.width.toFloat()
-                                currentOnPan(-pan.x * pixelsPerPx, -pan.y * pixelsPerPx)
-                            }
-                        },
-                    contentAlignment = Alignment.Center,
+            if (compactHeight) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (image != null && rect != null) {
-                        Canvas(modifier = Modifier.matchParentSize()) {
-                            drawImage(
-                                image = image,
-                                srcOffset = IntOffset(rect.left, rect.top),
-                                srcSize = IntSize(rect.width, rect.height),
-                                dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                            )
-                            // The frame edge is the crop edge. A dark band with a white line inside
-                            // keeps it visible on light and dark photos alike.
-                            val corner = 12.dp.toPx()
-                            drawRoundRect(
-                                color = Color.Black.copy(alpha = 0.6f),
-                                cornerRadius = CornerRadius(corner),
-                                style = Stroke(width = 4.dp.toPx()),
-                            )
-                            val inset = 3.dp.toPx()
-                            drawRoundRect(
-                                color = Color.White,
-                                topLeft = Offset(inset, inset),
-                                size = Size(size.width - 2 * inset, size.height - 2 * inset),
-                                cornerRadius = CornerRadius(corner - inset),
-                                style = Stroke(width = 2.dp.toPx()),
-                            )
-                        }
-                    } else {
-                        MaterialIcon(name = "image", contentDescription = null)
-                    }
+                    cropFrame(Modifier.weight(1f, fill = false))
+                    zoomControls(true)
                 }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    IconButton(
-                        onClick = onZoomOut,
-                        modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
-                    ) {
-                        MaterialIcon(name = "zoom_out", contentDescription = zoomOutLabel)
-                    }
-                    IconButton(
-                        onClick = onZoomIn,
-                        modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
-                    ) {
-                        MaterialIcon(name = "zoom_in", contentDescription = zoomInLabel)
-                    }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    cropFrame(Modifier)
+                    zoomControls(false)
                 }
             }
         },

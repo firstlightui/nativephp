@@ -123,7 +123,7 @@ final class TimePickerSnapshotTests: XCTestCase {
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
-            type: "firstlight_time_picker",
+            type: "firstlight.time-picker",
             layout: nil,
             style: nil,
             props: GenericProps([

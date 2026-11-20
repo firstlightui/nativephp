@@ -123,7 +123,10 @@ struct DatePickerRendererState {
     }
 
     mutating func serverPublished(_ tree: NativeUITree) {
-        guard let node = Self.findNode(id: configuration.nodeID, in: tree.root) else { return }
+        // Node IDs restart on every screen, so after navigation this ID can name another control
+        // before this view is torn down; its value would not be in this picker's wire format.
+        guard let node = Self.findNode(id: configuration.nodeID, in: tree.root),
+              node.type == Self.nodeType else { return }
         publish(DatePickerRendererConfiguration(node: node))
     }
 
@@ -137,6 +140,8 @@ struct DatePickerRendererState {
         let aboveMinimum = configuration.minimum.isEmpty ? value : Swift.max(value, configuration.minimum)
         return configuration.maximum.isEmpty ? aboveMinimum : Swift.min(aboveMinimum, configuration.maximum)
     }
+
+    static let nodeType = "firstlight.date-picker"
 
     private static func findNode(id: Int, in node: NativeUINode) -> NativeUINode? {
         if node.id == id { return node }

@@ -66,7 +66,9 @@ struct FirstlightFeedbackCenterHost<Content: View>: View {
                     }
                 )
                 .id(visible.feedbackID)
-                .padding(.horizontal, 12)
+                // Keeps a readable width on iPad, and clear of the side insets in landscape.
+                .frame(maxWidth: 560)
+                .safeAreaPadding(.horizontal, 12)
                 .safeAreaPadding(.bottom, 12)
                 .transition(FeedbackCenterPresentation.transition(
                     reduceMotion: reduceMotion

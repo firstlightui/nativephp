@@ -36,6 +36,7 @@ every control the way they reach the platform's own apps.
 - [Add your first Firstlight component](https://firstlightui.dev/docs/getting-started/first-component): Add a Segmented control whose selected value is managed by PHP.
 - [Theme Firstlight components](https://firstlightui.dev/docs/getting-started/theming): Configure the semantic NativePHP theme tokens that Firstlight components inherit on iOS and Android.
 - [Use custom icons](https://firstlightui.dev/docs/how-to/use-custom-icons): Install SVGs from Lucide, Heroicons, Font Awesome and other sets with firstlight:icon, and draw them as native icons in Firstlight controls.
+- [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad): Turn on landscape and iPad in NativePHP's config, and use Firstlight's Android tab bar so tabs get out of the way of the keyboard and short landscape screens.
 
 ## Laravel on native screens
 

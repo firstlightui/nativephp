@@ -16,9 +16,10 @@ val syncFirstlightAndroidSources = tasks.register<Sync>("syncFirstlightAndroidSo
     into(layout.buildDirectory.dir("generated/firstlightAndroidSources"))
 }
 
-// Exercise the official focus/flush seam, not a test-double implementation.
+// Exercise the official focus/flush and tab-presentation seams, not test-double implementations.
 val syncNativePhpFocusPolicy = tasks.register<Sync>("syncNativePhpFocusPolicy") {
     from("../../vendor/nativephp/mobile/resources/androidstudio/app/src/main/java/com/nativephp/mobile/ui/nativerender/KeyboardFocusPolicy.kt")
+    from("../../vendor/nativephp/mobile/resources/androidstudio/app/src/main/java/com/nativephp/mobile/ui/nativerender/NativeTabPresentationRegistry.kt")
     into(layout.buildDirectory.dir("generated/nativePhpFocusPolicy"))
 }
 

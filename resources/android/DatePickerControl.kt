@@ -3,9 +3,17 @@ package dev.firstlightui.plugins.firstlight_ui.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -127,7 +135,7 @@ internal fun FirstlightDatePickerControl(
             val pickerState = rememberDatePickerState(
                 initialSelectedDateMillis = canonicalDateToUtcMillis(draft),
                 // The calendar needs 360 dp; a narrower screen gets Material's date entry instead.
-                initialDisplayMode = if (pickerFitsFullDialog(LocalConfiguration.current.screenWidthDp)) {
+                initialDisplayMode = if (pickerFitsDialogWidth()) {
                     DisplayMode.Picker
                 } else {
                     DisplayMode.Input
@@ -156,10 +164,37 @@ internal fun FirstlightDatePickerControl(
                         TextButton(onClick = onCancel) { Text(configuration.cancelLabel) }
                     },
                 ) {
-                    DatePicker(
-                        state = pickerState,
-                        showModeToggle = pickerFitsFullDialog(LocalConfiguration.current.screenWidthDp),
-                    )
+                    if (pickerUsesSideBySideLayout()) {
+                        // A phone in landscape is too short for the header above the calendar.
+                        // Beside it, the calendar shows about three weeks instead of one. There's
+                        // no room for the keyboard-entry toggle, which the wide screen doesn't need.
+                        val colors = DatePickerDefaults.colors()
+                        Row {
+                            Column(Modifier.width(200.dp).padding(start = 24.dp, end = 12.dp, top = 16.dp)) {
+                                ProvideTextStyle(MaterialTheme.typography.labelLarge) {
+                                    CompositionLocalProvider(LocalContentColor provides colors.titleContentColor) {
+                                        DatePickerDefaults.DatePickerTitle(pickerState.displayMode)
+                                    }
+                                }
+                                ProvideTextStyle(MaterialTheme.typography.headlineSmall) {
+                                    CompositionLocalProvider(LocalContentColor provides colors.headlineContentColor) {
+                                        DatePickerDefaults.DatePickerHeadline(
+                                            selectedDateMillis = pickerState.selectedDateMillis,
+                                            displayMode = pickerState.displayMode,
+                                            dateFormatter = remember { DatePickerDefaults.dateFormatter() },
+                                            modifier = Modifier.padding(top = 12.dp),
+                                        )
+                                    }
+                                }
+                            }
+                            DatePicker(state = pickerState, title = null, headline = null, showModeToggle = false)
+                        }
+                    } else {
+                        DatePicker(
+                            state = pickerState,
+                            showModeToggle = pickerFitsDialogWidth(),
+                        )
+                    }
                 }
             }
         }

@@ -32,21 +32,16 @@ struct MediaRenderer: View {
                 if let event = state.clear() {
                     events.send(event)
                 }
-            }
+            },
+            chooseAnchor: MediaSourceChooser(
+                configuration: state.configuration,
+                isPresented: sourceChooserBinding,
+                onPhotoLibrary: { photoPickerTrigger = true },
+                onCamera: { showCamera = true },
+                onBrowseFiles: { showDocumentImporter = true },
+                onCancel: { state.dismissSheet() }
+            )
         )
-        .confirmationDialog(
-            state.configuration.chooseMediaLabel,
-            isPresented: sourceChooserBinding,
-            titleVisibility: .visible
-        ) {
-            if state.configuration.mode == .image {
-                Button(state.configuration.photoLibraryLabel) { photoPickerTrigger = true }
-                Button(state.configuration.cameraLabel) { showCamera = true }
-            } else {
-                Button(state.configuration.browseFilesLabel) { showDocumentImporter = true }
-            }
-            Button(state.configuration.cancelLabel, role: .cancel) { state.dismissSheet() }
-        }
         .photosPicker(
             isPresented: $photoPickerTrigger,
             selection: $photoItem,
@@ -260,6 +255,31 @@ private struct MediaCameraPicker: UIViewControllerRepresentable {
             } else {
                 onCancel()
             }
+        }
+    }
+}
+
+private struct MediaSourceChooser: ViewModifier {
+    let configuration: MediaRendererConfiguration
+    let isPresented: Binding<Bool>
+    let onPhotoLibrary: () -> Void
+    let onCamera: () -> Void
+    let onBrowseFiles: () -> Void
+    let onCancel: () -> Void
+
+    func body(content: Content) -> some View {
+        content.confirmationDialog(
+            configuration.chooseMediaLabel,
+            isPresented: isPresented,
+            titleVisibility: .visible
+        ) {
+            if configuration.mode == .image {
+                Button(configuration.photoLibraryLabel, action: onPhotoLibrary)
+                Button(configuration.cameraLabel, action: onCamera)
+            } else {
+                Button(configuration.browseFilesLabel, action: onBrowseFiles)
+            }
+            Button(configuration.cancelLabel, role: .cancel, action: onCancel)
         }
     }
 }

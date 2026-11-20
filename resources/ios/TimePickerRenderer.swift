@@ -114,7 +114,10 @@ struct TimePickerRendererState {
     }
 
     mutating func serverPublished(_ tree: NativeUITree) {
-        guard let node = Self.findNode(id: configuration.nodeID, in: tree.root) else { return }
+        // Node IDs restart on every screen, so after navigation this ID can name another control
+        // before this view is torn down; its value would not be in this picker's wire format.
+        guard let node = Self.findNode(id: configuration.nodeID, in: tree.root),
+              node.type == Self.nodeType else { return }
         publish(TimePickerRendererConfiguration(node: node))
     }
 
@@ -123,6 +126,8 @@ struct TimePickerRendererState {
         configuration = published
         if isPresented && presentationChanged { cancel() }
     }
+
+    static let nodeType = "firstlight.time-picker"
 
     private static func findNode(id: Int, in node: NativeUINode) -> NativeUINode? {
         if node.id == id { return node }

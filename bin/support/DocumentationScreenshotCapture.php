@@ -43,11 +43,14 @@ final class DocumentationScreenshotCapture
         }
 
         $this->assertInstalledPackageRevision($showcaseRoot, $packageRevision);
-        $this->assertIosSimulator($request->iosUdid);
+        $this->assertIosSimulator($request->iosUdid, $manifest['ios-device'] ?? null);
         $this->assertAndroidEmulator($request->androidSerial);
         $this->assertNativeHostProjects($showcaseRoot);
         $androidAppId = $this->nativeAppId($showcaseRoot);
         $this->runFocusedShowcaseTest($manifest, $showcaseRoot);
+        $landscape = ($manifest['orientation'] ?? 'portrait') === 'landscape';
+        $platforms = $manifest['platforms'] ?? ['ios', 'android'];
+        $android = in_array('android', $platforms, true);
 
         $temporaryRoot = sys_get_temp_dir().'/firstlight-docs-capture-'.bin2hex(random_bytes(8));
         if (! mkdir($temporaryRoot, 0700, true)) {
@@ -58,6 +61,8 @@ final class DocumentationScreenshotCapture
         $originalIosReduceMotion = null;
         $originalAndroidAppearance = null;
         $originalAndroidAnimatorScale = false;
+        $originalAndroidRotation = null;
+        $iosRotated = false;
         $environmentPath = $showcaseRoot.'/.env';
         $originalEnvironment = is_file($environmentPath) ? file_get_contents($environmentPath) : false;
         $failure = null;
@@ -79,44 +84,68 @@ final class DocumentationScreenshotCapture
                 ['php', 'artisan', 'native:run', 'ios', $request->iosUdid, '--start-url='.$manifest['route'], '--no-tty'],
                 $showcaseRoot,
             );
-            $this->execute(
-                'terminate-android-before-launch',
-                ['adb', '-s', $request->androidSerial, 'shell', 'am', 'force-stop', $androidAppId],
-            );
-            $this->execute(
-                'launch-android',
-                ['php', 'artisan', 'native:run', 'android', $request->androidSerial, '--start-url='.$manifest['route'], '--no-tty'],
-                $showcaseRoot,
-            );
-            $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, 'after launch');
-            $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $request->component, $manifest);
+            if ($android) {
+                $this->execute(
+                    'terminate-android-before-launch',
+                    ['adb', '-s', $request->androidSerial, 'shell', 'am', 'force-stop', $androidAppId],
+                );
+                $this->execute(
+                    'launch-android',
+                    ['php', 'artisan', 'native:run', 'android', $request->androidSerial, '--start-url='.$manifest['route'], '--no-tty'],
+                    $showcaseRoot,
+                );
+                $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, 'after launch');
+                $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $request->component, $manifest);
+            }
 
             $originalIosAppearance = $this->iosAppearance($request->iosUdid);
-            $originalAndroidAppearance = $this->androidAppearance($request->androidSerial);
-            $originalAndroidAnimatorScale = $this->androidAnimatorScale($request->androidSerial);
-            $this->setAndroidAnimatorScale($request->androidSerial, '0', 'freeze-android-animator-scale');
+            if ($android) {
+                $originalAndroidAppearance = $this->androidAppearance($request->androidSerial);
+                $originalAndroidAnimatorScale = $this->androidAnimatorScale($request->androidSerial);
+                $this->setAndroidAnimatorScale($request->androidSerial, '0', 'freeze-android-animator-scale');
+            }
+
+            if ($landscape) {
+                $iosRotated = true;
+                $this->rotateIos($request->iosUdid, landscape: true, label: 'rotate-ios-landscape');
+                if ($android) {
+                    $originalAndroidRotation = $this->androidRotation($request->androidSerial);
+                    $this->setAndroidRotation($request->androidSerial, ['0', '1'], 'rotate-android-landscape');
+                }
+                $this->execute('rotation-settle', ['sleep', '2']);
+            }
 
             foreach (['light', 'dark'] as $appearance) {
                 $this->execute(
                     "ios-{$appearance}-appearance",
                     ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $appearance],
                 );
-                $this->openIosLongPress($request->iosUdid, $manifest, "ios-{$appearance}");
+                $this->openIosPress($request->iosUdid, $androidAppId, $manifest, "ios-{$appearance}");
                 $this->captureStable(
                     "ios-{$appearance}",
                     ['xcrun', 'simctl', 'io', $request->iosUdid, 'screenshot'],
                     $temporaryRoot.'/ios-'.$appearance.'.png',
                     commandWritesFile: true,
                 );
+                if ($landscape) {
+                    // Simulator writes landscape screenshots portrait-sized with an EXIF rotation.
+                    $path = $temporaryRoot.'/ios-'.$appearance.'.png';
+                    $this->execute("ios-{$appearance}-orient", ['magick', $path, '-auto-orient', '-strip', $path]);
+                }
             }
 
-            foreach (['light' => 'no', 'dark' => 'yes'] as $appearance => $mode) {
+            foreach ($android ? ['light' => 'no', 'dark' => 'yes'] : [] as $appearance => $mode) {
                 $this->execute(
                     "android-{$appearance}-appearance",
                     ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $mode],
                 );
                 $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} capture");
-                $this->openAndroidLongPress($request->androidSerial, $manifest, "android-{$appearance}");
+                if ($landscape) {
+                    // The emulator can drop user_rotation when the app relaunches or changes mode.
+                    $this->setAndroidRotation($request->androidSerial, ['0', '1'], "android-{$appearance}-landscape");
+                    $this->execute("android-{$appearance}-rotation-settle", ['sleep', '2']);
+                }
+                $this->openAndroidPress($request->androidSerial, $manifest, "android-{$appearance}");
                 $this->captureStable(
                     "android-{$appearance}",
                     ['adb', '-s', $request->androidSerial, 'exec-out', 'screencap', '-p'],
@@ -124,7 +153,7 @@ final class DocumentationScreenshotCapture
                 );
             }
 
-            foreach (['ios', 'android'] as $platform) {
+            foreach ($platforms as $platform) {
                 if (hash_file('sha256', $temporaryRoot."/{$platform}-light.png") === hash_file('sha256', $temporaryRoot."/{$platform}-dark.png")) {
                     throw new RuntimeException(ucfirst($platform).' light and dark captures are byte-identical.');
                 }
@@ -135,6 +164,12 @@ final class DocumentationScreenshotCapture
             $failure = $exception;
         } finally {
             try {
+                if ($iosRotated) {
+                    $this->rotateIos($request->iosUdid, landscape: false, label: 'restore-ios-orientation');
+                }
+                if ($originalAndroidRotation !== null) {
+                    $this->setAndroidRotation($request->androidSerial, $originalAndroidRotation, 'restore-android-orientation');
+                }
                 if ($originalIosAppearance !== null) {
                     $this->execute(
                         'restore-ios-appearance',
@@ -206,6 +241,9 @@ final class DocumentationScreenshotCapture
         $components = [];
         foreach ($request->components as $component) {
             [$slug, $manifest] = $this->componentManifest($component, $packageRoot);
+            if (isset($manifest['orientation']) || isset($manifest['ios-device']) || isset($manifest['platforms'])) {
+                throw new RuntimeException("{$component} sets its own orientation or device; capture it on its own with bin/capture-doc-screenshots.");
+            }
             $components[$slug] = [
                 'name' => $component,
                 'manifest' => $manifest,
@@ -329,7 +367,7 @@ final class DocumentationScreenshotCapture
                         ['xcrun', 'simctl', 'launch', $request->iosUdid, $androidAppId],
                     );
                     $this->execute("ios-{$appearance}-{$slug}-route-wait", ['sleep', '3']);
-                    $this->openIosLongPress($request->iosUdid, $component['manifest'], "ios-{$appearance}-{$slug}");
+                    $this->openIosPress($request->iosUdid, $androidAppId, $component['manifest'], "ios-{$appearance}-{$slug}");
                     $this->captureStable(
                         "ios-{$appearance}-{$slug}",
                         ['xcrun', 'simctl', 'io', $request->iosUdid, 'screenshot'],
@@ -366,7 +404,7 @@ final class DocumentationScreenshotCapture
                     );
                     $this->assertAndroidApplicationForeground($request->androidSerial, $androidAppId, "before {$appearance} {$slug} capture");
                     $this->assertAndroidCaptureReady($request->androidSerial, $androidAppId, $component['name'], $component['manifest']);
-                    $this->openAndroidLongPress($request->androidSerial, $component['manifest'], "android-{$appearance}-{$slug}");
+                    $this->openAndroidPress($request->androidSerial, $component['manifest'], "android-{$appearance}-{$slug}");
                     $this->captureStable(
                         "android-{$appearance}-{$slug}",
                         ['adb', '-s', $request->androidSerial, 'exec-out', 'screencap', '-p'],
@@ -515,13 +553,31 @@ final class DocumentationScreenshotCapture
         if (array_key_exists('ready-text', $entry) && (! is_string($entry['ready-text']) || trim($entry['ready-text']) === '')) {
             throw new RuntimeException("Invalid screenshot readiness text for {$slug}.");
         }
-        if (array_key_exists('long-press', $entry)) {
-            $press = $entry['long-press'];
+        foreach (['long-press', 'tap'] as $gesture) {
+            if (! array_key_exists($gesture, $entry)) {
+                continue;
+            }
+            $press = $entry[$gesture];
             foreach (['text', 'until'] as $key) {
                 if (! is_array($press) || ! is_string($press[$key] ?? null) || trim($press[$key]) === '') {
-                    throw new RuntimeException("Screenshot long-press for {$slug} needs non-empty `text` and `until` strings.");
+                    throw new RuntimeException("Screenshot {$gesture} for {$slug} needs non-empty `text` and `until` strings.");
                 }
             }
+        }
+        if (array_key_exists('long-press', $entry) && array_key_exists('tap', $entry)) {
+            throw new RuntimeException("Screenshot entry {$slug} can have a long-press or a tap, not both.");
+        }
+        if (array_key_exists('orientation', $entry) && ! in_array($entry['orientation'], ['portrait', 'landscape'], true)) {
+            throw new RuntimeException("Screenshot orientation for {$slug} must be `portrait` or `landscape`.");
+        }
+        if (array_key_exists('platforms', $entry)) {
+            $platforms = $entry['platforms'];
+            if (! is_array($platforms) || $platforms === [] || array_diff($platforms, ['ios', 'android']) !== [] || count(array_unique($platforms)) !== count($platforms)) {
+                throw new RuntimeException("Screenshot platforms for {$slug} must list `ios`, `android`, or both.");
+            }
+        }
+        if (array_key_exists('ios-device', $entry) && ! in_array($entry['ios-device'], ['iphone', 'ipad'], true)) {
+            throw new RuntimeException("Screenshot ios-device for {$slug} must be `iphone` or `ipad`.");
         }
 
         return [$slug, $entry];
@@ -533,7 +589,12 @@ final class DocumentationScreenshotCapture
     private function outputPaths(array $manifest, string $packageRoot): array
     {
         $paths = [];
-        foreach (['ios-light', 'ios-dark', 'android-light', 'android-dark'] as $variant) {
+        $variants = [];
+        foreach ($manifest['platforms'] ?? ['ios', 'android'] as $platform) {
+            $variants[] = "{$platform}-light";
+            $variants[] = "{$platform}-dark";
+        }
+        foreach ($variants as $variant) {
             $relative = $manifest['outputs'][$variant] ?? null;
             if (! is_string($relative) || preg_match('#^docs/screenshots/[a-z0-9-]+/[a-z0-9-]+\.png$#', $relative) !== 1) {
                 throw new RuntimeException("Invalid screenshot output path for {$variant}.");
@@ -558,7 +619,7 @@ final class DocumentationScreenshotCapture
         }
     }
 
-    private function assertIosSimulator(string $udid): void
+    private function assertIosSimulator(string $udid, ?string $family = null): void
     {
         $result = $this->execute('ios-target', ['xcrun', 'simctl', 'list', 'devices', '-j']);
         try {
@@ -570,6 +631,12 @@ final class DocumentationScreenshotCapture
         foreach ($payload['devices'] ?? [] as $devices) {
             foreach (is_array($devices) ? $devices : [] as $device) {
                 if (($device['udid'] ?? null) === $udid && ($device['isAvailable'] ?? false) === true) {
+                    $type = (string) ($device['deviceTypeIdentifier'] ?? '');
+                    $expected = $family === null ? null : (['iphone' => '.iPhone-', 'ipad' => '.iPad-'][$family] ?? null);
+                    if ($expected !== null && ! str_contains($type, $expected)) {
+                        throw new RuntimeException("This capture needs an {$family} Simulator, but {$udid} is {$type}.");
+                    }
+
                     return;
                 }
             }
@@ -766,7 +833,7 @@ final class DocumentationScreenshotCapture
 
     /**
      * Long-presses the element labelled `long-press.text`, such as a List Item
-     * with a context menu, and waits until `long-press.until`, such as one of
+     * with a context menu, or taps `tap.text`, such as a picker field, and waits until `long-press.until`, such as one of
      * the menu's items, is on screen, so the capture shows the menu open. The
      * Simulator has no input command of its own, so iOS uses AXe
      * (`brew install cameroncooke/axe/axe`). Nothing happens when `until` is
@@ -774,10 +841,22 @@ final class DocumentationScreenshotCapture
      *
      * @param  array<string, mixed>  $manifest
      */
-    private function openIosLongPress(string $udid, array $manifest, string $label): void
+    private function openIosPress(string $udid, string $appId, array $manifest, string $label): void
     {
-        $press = $manifest['long-press'] ?? null;
+        $long = isset($manifest['long-press']);
+        $press = $manifest['long-press'] ?? $manifest['tap'] ?? null;
         if (! is_array($press)) {
+            return;
+        }
+        if (! $long) {
+            // AXe taps do not reach iOS 27 Simulators; the XCUITest driver taps the button labelled
+            // `tap.text` and fails unless `tap.until` appears.
+            $this->runIosDriver($udid, [
+                'FIRSTLIGHT_APP' => $appId,
+                'FIRSTLIGHT_TAP' => $press['text'],
+                'FIRSTLIGHT_UNTIL' => $press['until'],
+            ], "{$label}-tap");
+
             return;
         }
         if ($this->iosElementCenter($udid, $press['until'], "{$label}-long-press-check") !== null) {
@@ -795,10 +874,9 @@ final class DocumentationScreenshotCapture
             throw new RuntimeException("iOS long-press target is not on screen: {$press['text']}");
         }
 
-        $this->execute("{$label}-long-press", [
-            'axe', 'touch', '-x', (string) $center[0], '-y', (string) $center[1],
-            '--down', '--up', '--delay', '1.5', '--udid', $udid,
-        ]);
+        $this->execute("{$label}-long-press", $long
+            ? ['axe', 'touch', '-x', (string) $center[0], '-y', (string) $center[1], '--down', '--up', '--delay', '1.5', '--udid', $udid]
+            : ['axe', 'tap', '-x', (string) $center[0], '-y', (string) $center[1], '--udid', $udid]);
 
         for ($attempt = 1; $attempt <= 10; $attempt++) {
             if ($this->iosElementCenter($udid, $press['until'], "{$label}-long-press-open-{$attempt}") !== null) {
@@ -840,15 +918,16 @@ final class DocumentationScreenshotCapture
     }
 
     /**
-     * Android counterpart of openIosLongPress(): a held `input swipe` on the
+     * Android counterpart of openIosPress(): a held `input swipe` on the
      * centre of the node whose text or content description is
      * `long-press.text`.
      *
      * @param  array<string, mixed>  $manifest
      */
-    private function openAndroidLongPress(string $serial, array $manifest, string $label): void
+    private function openAndroidPress(string $serial, array $manifest, string $label): void
     {
-        $press = $manifest['long-press'] ?? null;
+        $long = isset($manifest['long-press']);
+        $press = $manifest['long-press'] ?? $manifest['tap'] ?? null;
         if (! is_array($press)) {
             return;
         }
@@ -862,7 +941,9 @@ final class DocumentationScreenshotCapture
         }
 
         [$x, $y] = array_map('strval', $center);
-        $this->execute("{$label}-long-press", ['adb', '-s', $serial, 'shell', 'input', 'swipe', $x, $y, $x, $y, '1500']);
+        $this->execute("{$label}-long-press", $long
+            ? ['adb', '-s', $serial, 'shell', 'input', 'swipe', $x, $y, $x, $y, '1500']
+            : ['adb', '-s', $serial, 'shell', 'input', 'tap', $x, $y]);
 
         for ($attempt = 1; $attempt <= 10; $attempt++) {
             if ($this->androidNodeCenter($serial, $press['until'], "{$label}-long-press-open-{$attempt}") !== null) {
@@ -931,10 +1012,17 @@ final class DocumentationScreenshotCapture
 
     private function iosReduceMotion(string $udid): bool
     {
-        $output = strtolower(trim($this->execute(
-            'ios-original-reduce-motion',
-            ['xcrun', 'simctl', 'spawn', $udid, 'defaults', 'read', 'com.apple.Accessibility', 'ReduceMotionEnabled'],
-        )['stdout']));
+        $command = ['xcrun', 'simctl', 'spawn', $udid, 'defaults', 'read', 'com.apple.Accessibility', 'ReduceMotionEnabled'];
+        $this->commands['ios-original-reduce-motion'] = implode(' ', array_map($this->quoteArgument(...), $command));
+        $result = $this->runner->run($command);
+        if ($result['exitCode'] !== 0) {
+            // A Simulator where Reduce Motion was never changed has no key: it is off.
+            if (str_contains($result['stderr'].$result['stdout'], 'does not exist') || str_contains($result['stderr'].$result['stdout'], 'Could not find')) {
+                return false;
+            }
+            throw new RuntimeException('Unable to read iOS Simulator Reduce Motion: '.trim($result['stderr']));
+        }
+        $output = strtolower(trim($result['stdout']));
 
         return match ($output) {
             '1', 'true', 'yes' => true,
@@ -953,6 +1041,72 @@ final class DocumentationScreenshotCapture
                 '-bool', $enabled ? 'true' : 'false',
             ],
         );
+    }
+
+    /**
+     * Simulator has no rotate command, so a one-test XCUITest bundle in
+     * bin/support/ios-orientation sets XCUIDevice.orientation, which lasts
+     * after the test ends. It is generated with XcodeGen and built once per
+     * Simulator, then run without building.
+     */
+    private function rotateIos(string $udid, bool $landscape, string $label): void
+    {
+        $this->runIosDriver($udid, ['FIRSTLIGHT_ORIENTATION' => $landscape ? 'landscape' : 'portrait'], $label);
+    }
+
+    /** @param array<string, string> $environment Passed to the driver as TEST_RUNNER_ variables. */
+    private function runIosDriver(string $udid, array $environment, string $label): void
+    {
+        $source = $this->packageRoot.'/bin/support/ios-orientation';
+        $build = sys_get_temp_dir().'/firstlight-orientation-driver-'.$udid;
+        $products = glob($build.'/Build/Products/*.xctestrun') ?: [];
+        if ($products === []) {
+            if (! is_dir($build) && ! mkdir($build, 0700, true)) {
+                throw new RuntimeException("Unable to create the iOS driver build directory: {$build}");
+            }
+            $this->execute("{$label}-generate", ['xcodegen', 'generate', '--spec', $source.'/project.yml', '--project', $build], $source);
+            $this->execute("{$label}-build", [
+                'xcodebuild', 'build-for-testing', '-project', $build.'/FirstlightOrientationDriver.xcodeproj',
+                '-scheme', 'OrientationDriver', '-destination', "id={$udid}", '-derivedDataPath', $build,
+            ]);
+            $products = glob($build.'/Build/Products/*.xctestrun') ?: [];
+            if ($products === []) {
+                throw new RuntimeException('The iOS orientation driver did not build.');
+            }
+        }
+
+        $variables = [];
+        foreach ($environment as $key => $value) {
+            $variables[] = "TEST_RUNNER_{$key}={$value}";
+        }
+        $this->execute($label, [
+            'env', ...$variables,
+            'xcodebuild', 'test-without-building', '-xctestrun', $products[0],
+            '-destination', "id={$udid}", '-derivedDataPath', $build,
+        ]);
+    }
+
+    /** @return list<string> The accelerometer_rotation and user_rotation settings. */
+    private function androidRotation(string $serial): array
+    {
+        return array_map(
+            fn (string $key): string => trim($this->execute(
+                "android-original-{$key}",
+                ['adb', '-s', $serial, 'shell', 'settings', 'get', 'system', $key],
+            )['stdout']),
+            ['accelerometer_rotation', 'user_rotation'],
+        );
+    }
+
+    /** @param list<string> $values accelerometer_rotation, then user_rotation. */
+    private function setAndroidRotation(string $serial, array $values, string $label): void
+    {
+        foreach (['accelerometer_rotation', 'user_rotation'] as $index => $key) {
+            $value = $values[$index] ?? 'null';
+            $this->execute("{$label}-{$key}", $value === 'null'
+                ? ['adb', '-s', $serial, 'shell', 'settings', 'delete', 'system', $key]
+                : ['adb', '-s', $serial, 'shell', 'settings', 'put', 'system', $key, $value]);
+        }
     }
 
     private function androidAnimatorScale(string $serial): ?string

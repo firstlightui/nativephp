@@ -13,13 +13,22 @@ extension View {
 }
 
 private struct FirstlightPickerPresentation: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var height: CGFloat = 0
 
     func body(content: Content) -> some View {
-        content
-            .fixedSize(horizontal: false, vertical: true)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
-            .presentationDetents([height > 0 ? .height(height) : .large])
-            .presentationCompactAdaptation(.sheet)
+        if horizontalSizeClass == .regular {
+            // A popover takes the content's ideal size. Fixing only the height lets it settle on
+            // the wheel's or calendar's height alone and clip the actions below.
+            content
+                .fixedSize()
+                .presentationCompactAdaptation(.sheet)
+        } else {
+            content
+                .fixedSize(horizontal: false, vertical: true)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+                .presentationDetents([height > 0 ? .height(height) : .large])
+                .presentationCompactAdaptation(.sheet)
+        }
     }
 }

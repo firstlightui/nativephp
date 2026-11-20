@@ -37,6 +37,7 @@ sources:
   - docs/how-to/localize.md
   - src/Support/Chrome.php
   - spec/components/transient-feedback.md
+  - resources/android/FirstlightTabBar.kt
 ---
 
 # What Firstlight Is
@@ -84,7 +85,10 @@ one, and there is no WebView.
 
 - **Not navigation chrome.** Stacks, title bars, back navigation, and tab bars
   come from NativePHP's native chrome. Firstlight runs inside them. Do not use
-  the `custom` attribute on top bars or bottom navs to draw your own.
+  the `custom` attribute on top bars or bottom navs to draw your own. The one
+  exception is an optional Android tab bar presentation that matches what the
+  iOS system tab bar already does; see
+  [Support landscape and iPad](../how-to/support-landscape-and-ipad.md).
 - **Not a design system.** Firstlight does not define a visual style.
   Controls take colours and fonts from the NativePHP theme and keep each
   platform's geometry, motion, and materials.

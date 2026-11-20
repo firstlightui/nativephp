@@ -86,6 +86,35 @@ class DatePickerTest {
         }
     }
 
+    @Test
+    fun `a short but wide screen puts the header beside the calendar`() {
+        // Pixel 9 Pro in landscape, and in portrait.
+        assertTrue(pickerFitsDialogWidth(screenWidthDp = 915))
+        assertFalse(pickerFitsFullDialog(screenWidthDp = 915, screenHeightDp = 387))
+        assertTrue(pickerUsesSideBySideLayout(screenWidthDp = 915, screenHeightDp = 387))
+        assertTrue(pickerFitsFullDialog(screenWidthDp = 411, screenHeightDp = 891))
+        assertFalse(pickerUsesSideBySideLayout(screenWidthDp = 411, screenHeightDp = 891))
+        // Short and too narrow for the header beside the calendar: the calendar scrolls under it.
+        assertFalse(pickerUsesSideBySideLayout(screenWidthDp = 500, screenHeightDp = 387))
+        // A 320 dp screen gets keyboard entry.
+        assertFalse(pickerFitsDialogWidth(screenWidthDp = 320))
+    }
+
+    @Test
+    fun `another control reusing the node id after navigation is ignored`() {
+        val state = DatePickerRendererState(node(value = "2026-08-04"))
+        val timePicker = NativeUINode(
+            id = 7,
+            type = "firstlight.time-picker",
+            props = GenericProps(mapOf("has_value" to true, "value" to "14:30")),
+        )
+
+        state.serverPublished(tree(timePicker))
+        state.serverPublished(timePicker)
+
+        assertEquals("2026-08-04", state.configuration.acceptedValue)
+    }
+
     private fun node(
         hasValue: Boolean = true,
         value: String = "2026-08-04",
@@ -95,6 +124,7 @@ class DatePickerTest {
         callback: Int = 41,
     ) = NativeUINode(
         id = 7,
+        type = "firstlight.date-picker",
         props = GenericProps(
             mapOf(
                 "has_value" to hasValue,

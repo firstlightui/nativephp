@@ -1,0 +1,35 @@
+# Rotates an iOS Simulator for documentation captures. Simulator has no command for it, so a UI
+# test sets XCUIDevice.orientation, which lasts after the test ends. DocumentationScreenshotCapture
+# generates this with XcodeGen (`brew install xcodegen`) and builds it once per run.
+name: FirstlightOrientationDriver
+options:
+  bundleIdPrefix: dev.firstlightui.capture
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+targets:
+  OrientationHost:
+    type: application
+    platform: iOS
+    sources: [Host]
+  OrientationDriver:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Driver]
+    dependencies:
+      - target: OrientationHost
+    settings:
+      base:
+        TEST_TARGET_NAME: OrientationHost
+schemes:
+  OrientationDriver:
+    build:
+      targets:
+        OrientationHost: all
+        OrientationDriver: [test]
+    test:
+      targets: [OrientationDriver]
