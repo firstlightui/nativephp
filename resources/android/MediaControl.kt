@@ -14,6 +14,7 @@ import kotlin.math.roundToInt
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
@@ -246,6 +247,8 @@ internal fun FirstlightMediaCropSheet(
             ?: 1f
         Box(
             modifier = modifier
+                // A width capped by the height cap, so the aspect ratio can keep the frame under it.
+                .widthIn(max = frameMaxHeight * ratio)
                 .fillMaxWidth()
                 .heightIn(max = frameMaxHeight)
                 .aspectRatio(ratio, matchHeightConstraintsFirst = ratio < 1f)

@@ -688,6 +688,54 @@ it('rotates both platforms for a landscape entry and restores their orientation 
     }
 });
 
+it('keeps restoring the devices and showcase when restoring the iOS orientation fails', function () {
+    $fixture = screenshotCaptureFixture();
+    $manifestPath = $fixture['package'].'/spec/screenshots.json';
+    $manifest = json_decode((string) file_get_contents($manifestPath), true);
+    $manifest['components']['segmented']['orientation'] = 'landscape';
+    file_put_contents($manifestPath, json_encode($manifest));
+    $originalEnvironment = file_get_contents($fixture['showcase'].'/.env');
+    $driver = sys_get_temp_dir().'/firstlight-orientation-driver-IOS-1';
+
+    [$normalRunner] = successfulCaptureRunner($fixture);
+    $rotation = ['accelerometer_rotation' => '1', 'user_rotation' => '0'];
+    $runner = new FakeCaptureCommandRunner(function (array $command, ?string $cwd) use ($normalRunner, $driver, &$rotation): array {
+        $ok = fn (string $stdout = ''): array => ['exitCode' => 0, 'stdout' => $stdout, 'stderr' => ''];
+        if (array_slice($command, 0, 2) === ['env', 'TEST_RUNNER_FIRSTLIGHT_ORIENTATION=portrait']) {
+            return ['exitCode' => 1, 'stdout' => '', 'stderr' => 'driver failed'];
+        }
+        if (in_array($command[0], ['xcodegen', 'env', 'magick', 'sleep'], true)) {
+            return $ok();
+        }
+        if (array_slice($command, 0, 2) === ['xcodebuild', 'build-for-testing']) {
+            is_dir($driver.'/Build/Products') || mkdir($driver.'/Build/Products', 0777, true);
+            touch($driver.'/Build/Products/OrientationDriver.xctestrun');
+
+            return $ok();
+        }
+        if (array_slice($command, 4, 3) === ['settings', 'get', 'system']) {
+            return $ok($rotation[$command[7]]."\n");
+        }
+        if (array_slice($command, 4, 3) === ['settings', 'put', 'system']) {
+            $rotation[$command[7]] = $command[8];
+
+            return $ok();
+        }
+
+        return $normalRunner->run($command, $cwd);
+    });
+
+    try {
+        expect(fn () => (new DocumentationScreenshotCapture($runner, $fixture['package']))->capture(captureRequest($fixture)))
+            ->toThrow(RuntimeException::class);
+        expect($rotation)->toBe(['accelerometer_rotation' => '1', 'user_rotation' => '0'])
+            ->and(file_get_contents($fixture['showcase'].'/.env'))->toBe($originalEnvironment);
+    } finally {
+        removeScreenshotCaptureFixture($fixture);
+        @unlink($driver.'/Build/Products/OrientationDriver.xctestrun');
+    }
+});
+
 it('captures multiple components by platform appearance after only one build per platform', function () {
     $fixture = screenshotCaptureFixture();
     $iosContainer = dirname($fixture['package']).'/ios-container';

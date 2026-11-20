@@ -42,15 +42,18 @@ final class DocumentationScreenshotCapture
             throw new RuntimeException('Release capture requires clean package and showcase repositories.');
         }
 
-        $this->assertInstalledPackageRevision($showcaseRoot, $packageRevision);
-        $this->assertIosSimulator($request->iosUdid, $manifest['ios-device'] ?? null);
-        $this->assertAndroidEmulator($request->androidSerial);
-        $this->assertNativeHostProjects($showcaseRoot);
-        $androidAppId = $this->nativeAppId($showcaseRoot);
-        $this->runFocusedShowcaseTest($manifest, $showcaseRoot);
         $landscape = ($manifest['orientation'] ?? 'portrait') === 'landscape';
         $platforms = $manifest['platforms'] ?? ['ios', 'android'];
         $android = in_array('android', $platforms, true);
+
+        $this->assertInstalledPackageRevision($showcaseRoot, $packageRevision);
+        $this->assertIosSimulator($request->iosUdid, $manifest['ios-device'] ?? null);
+        if ($android) {
+            $this->assertAndroidEmulator($request->androidSerial);
+        }
+        $this->assertNativeHostProjects($showcaseRoot, $platforms);
+        $androidAppId = $this->nativeAppId($showcaseRoot);
+        $this->runFocusedShowcaseTest($manifest, $showcaseRoot);
 
         $temporaryRoot = sys_get_temp_dir().'/firstlight-docs-capture-'.bin2hex(random_bytes(8));
         if (! mkdir($temporaryRoot, 0700, true)) {
@@ -163,44 +166,41 @@ final class DocumentationScreenshotCapture
         } catch (Throwable $exception) {
             $failure = $exception;
         } finally {
-            try {
-                if ($iosRotated) {
-                    $this->rotateIos($request->iosUdid, landscape: false, label: 'restore-ios-orientation');
+            // Each step runs even when an earlier one fails, so one failure can't leave the
+            // simulator, emulator or showcase .env changed. The first failure is reported.
+            $restorations = [
+                fn () => $iosRotated && $this->rotateIos($request->iosUdid, landscape: false, label: 'restore-ios-orientation'),
+                fn () => $originalAndroidRotation !== null && $this->setAndroidRotation($request->androidSerial, $originalAndroidRotation, 'restore-android-orientation'),
+                fn () => $originalIosAppearance !== null && $this->execute(
+                    'restore-ios-appearance',
+                    ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $originalIosAppearance],
+                ),
+                fn () => $originalIosReduceMotion !== null && $this->setIosReduceMotion(
+                    $request->iosUdid,
+                    $originalIosReduceMotion,
+                    'restore-ios-reduce-motion',
+                ),
+                fn () => $originalAndroidAppearance !== null && $this->execute(
+                    'restore-android-appearance',
+                    ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $originalAndroidAppearance],
+                ),
+                fn () => $originalAndroidAnimatorScale !== false && $this->setAndroidAnimatorScale(
+                    $request->androidSerial,
+                    $originalAndroidAnimatorScale,
+                    'restore-android-animator-scale',
+                ),
+                function () use ($originalEnvironment, $environmentPath): void {
+                    if (is_string($originalEnvironment) && file_put_contents($environmentPath, $originalEnvironment) === false) {
+                        throw new RuntimeException('Unable to restore showcase .env after screenshot capture.');
+                    }
+                },
+            ];
+            foreach ($restorations as $restore) {
+                try {
+                    $restore();
+                } catch (Throwable $exception) {
+                    $restorationFailure ??= $exception;
                 }
-                if ($originalAndroidRotation !== null) {
-                    $this->setAndroidRotation($request->androidSerial, $originalAndroidRotation, 'restore-android-orientation');
-                }
-                if ($originalIosAppearance !== null) {
-                    $this->execute(
-                        'restore-ios-appearance',
-                        ['xcrun', 'simctl', 'ui', $request->iosUdid, 'appearance', $originalIosAppearance],
-                    );
-                }
-                if ($originalIosReduceMotion !== null) {
-                    $this->setIosReduceMotion(
-                        $request->iosUdid,
-                        $originalIosReduceMotion,
-                        'restore-ios-reduce-motion',
-                    );
-                }
-                if ($originalAndroidAppearance !== null) {
-                    $this->execute(
-                        'restore-android-appearance',
-                        ['adb', '-s', $request->androidSerial, 'shell', 'cmd', 'uimode', 'night', $originalAndroidAppearance],
-                    );
-                }
-                if ($originalAndroidAnimatorScale !== false) {
-                    $this->setAndroidAnimatorScale(
-                        $request->androidSerial,
-                        $originalAndroidAnimatorScale,
-                        'restore-android-animator-scale',
-                    );
-                }
-                if (is_string($originalEnvironment) && file_put_contents($environmentPath, $originalEnvironment) === false) {
-                    throw new RuntimeException('Unable to restore showcase .env after screenshot capture.');
-                }
-            } catch (Throwable $exception) {
-                $restorationFailure = $exception;
             }
 
             if (! $request->keepFailed || $failure === null) {
@@ -263,7 +263,7 @@ final class DocumentationScreenshotCapture
         $this->assertInstalledPackageRevision($showcaseRoot, $packageRevision);
         $this->assertIosSimulator($request->iosUdid);
         $this->assertAndroidEmulator($request->androidSerial);
-        $this->assertNativeHostProjects($showcaseRoot);
+        $this->assertNativeHostProjects($showcaseRoot, ['ios', 'android']);
         $androidAppId = $this->nativeAppId($showcaseRoot);
 
         foreach ($components as $component) {
@@ -572,8 +572,9 @@ final class DocumentationScreenshotCapture
         }
         if (array_key_exists('platforms', $entry)) {
             $platforms = $entry['platforms'];
-            if (! is_array($platforms) || $platforms === [] || array_diff($platforms, ['ios', 'android']) !== [] || count(array_unique($platforms)) !== count($platforms)) {
-                throw new RuntimeException("Screenshot platforms for {$slug} must list `ios`, `android`, or both.");
+            // Every capture includes iOS; an entry can leave out Android, such as an iPad-only one.
+            if (! in_array($platforms, [['ios'], ['ios', 'android'], ['android', 'ios']], true)) {
+                throw new RuntimeException("Screenshot platforms for {$slug} must list `ios`, or `ios` and `android`.");
             }
         }
         if (array_key_exists('ios-device', $entry) && ! in_array($entry['ios-device'], ['iphone', 'ipad'], true)) {
@@ -658,9 +659,10 @@ final class DocumentationScreenshotCapture
         }
     }
 
-    private function assertNativeHostProjects(string $showcaseRoot): void
+    /** @param list<string> $platforms */
+    private function assertNativeHostProjects(string $showcaseRoot, array $platforms): void
     {
-        foreach (['ios', 'android'] as $platform) {
+        foreach ($platforms as $platform) {
             if (! is_dir($showcaseRoot.'/nativephp/'.$platform)) {
                 throw new RuntimeException("Missing generated NativePHP {$platform} host. Run `php artisan native:install both` in the showcase.");
             }

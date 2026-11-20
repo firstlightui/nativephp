@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -168,6 +169,9 @@ internal fun FirstlightDatePickerControl(
                         // A phone in landscape is too short for the header above the calendar.
                         // Beside it, the calendar shows about three weeks instead of one. There's
                         // no room for the keyboard-entry toggle, which the wide screen doesn't need.
+                        // A picker switched to keyboard entry before rotating returns to the
+                        // calendar here, keeping its date; otherwise it would have no way back.
+                        LaunchedEffect(Unit) { pickerState.displayMode = DisplayMode.Picker }
                         val colors = DatePickerDefaults.colors()
                         Row {
                             Column(Modifier.width(200.dp).padding(start = 24.dp, end = 12.dp, top = 16.dp)) {

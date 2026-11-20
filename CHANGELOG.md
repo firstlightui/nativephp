@@ -8,7 +8,7 @@ Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 
 
 ### Added
 
-- Android tab bar: select it with `TabBar::presentation('firstlight:tabs')`. It hides while the keyboard is up and becomes Material's short bar on short screens such as a phone in landscape. iOS keeps the system tab bar. See [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad).
+- Android tab bar: select it with `TabBar::make()->presentation('firstlight:tabs')`. It hides while the keyboard is up and becomes Material's short bar on short screens such as a phone in landscape. iOS keeps the system tab bar. See [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad).
 
 ### Fixed
 
