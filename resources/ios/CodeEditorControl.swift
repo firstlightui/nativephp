@@ -1007,9 +1007,11 @@ final class CodeEditorKeyRow: UIInputView {
     private let stack = UIStackView()
     /// System material behind the keys, so the page never shows through the row.
     let backgroundView: UIVisualEffectView = {
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             return UIVisualEffectView(effect: UIGlassEffect())
         }
+        #endif
         return UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
     }()
     private var canUndo = false

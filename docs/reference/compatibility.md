@@ -27,9 +27,23 @@ This documentation covers Firstlight **1.1.0**, the current stable release.
 | iOS application target | iOS 18.2 or later |
 | Android application target | API 29 or later |
 | Firstlight Swift package | iOS 18.2 or later |
+| Xcode for iOS app builds | Xcode 16.4 or later, through Xcode 27.3 |
 | Swift tools | Swift 6.2 |
 
 These are the package's current declared floors. Firstlight does not promise support for earlier versions. Both the iOS and Android renderers are required for a public component; the same documented EDGE example works on both platforms.
+
+### Xcode
+
+Firstlight's iOS sources are checked against every Xcode from 16.4 to 27.3:
+16.4, 26.0 to 26.6, and 27.0 to 27.3. Firstlight 1.1.0 itself needs Xcode 27:
+its Toolbar does not compile with Xcode 26, and its Code Editor does not
+compile with Xcode 16. Use a later Firstlight release with an older Xcode.
+
+The iOS SDK an app is built with decides which iOS 26 features it contains.
+Built with Xcode 26 or later, Liquid Glass surfaces and the Toolbar's glass
+group appear on iOS 26 and later devices, the same as with Xcode 27.
+Built with Xcode 16, the app has the pre-iOS 26 design on every device. The
+Swift package's own tests need Xcode 26 or later for Swift tools 6.2.
 
 After changing NativePHP versions, run `composer update` and `php artisan native:install --force` so bundled PHP binaries, native project files, and plugin copies match the resolved release.
 

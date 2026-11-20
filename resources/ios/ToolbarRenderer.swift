@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-struct ToolbarRendererConfiguration: Equatable {
+struct ToolbarRendererConfiguration: Hashable {
     let nodeID: Int
     let items: [ToolbarItemConfiguration]
     let primary: ToolbarItemConfiguration?

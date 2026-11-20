@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- iOS apps build with Xcode 16.4 to 26.6. 1.1.0 needed Xcode 27: on Xcode 26 the Toolbar failed with "static method 'buildExpression' requires that 'ToolbarItem<(), some View>' conform to 'View'", because `ForEach` is toolbar content only in the iOS 27 SDK, and on Xcode 16 the Code Editor used `UIGlassEffect` without a compiler check. Built with Xcode 26, the Toolbar keeps its iOS 26 glass group, separate primary action, badge values and in-place updates. Builds with Xcode 27 are unchanged.
+- `bin/typecheck-ios` typechecks the iOS sources with every installed Xcode, so a newer-SDK symbol is caught before release.
+
 ## 1.1.0 - 2026-11-19
 
 First stable 1.1 release. It includes every change from 1.1.0-beta1 to 1.1.0-beta12 below, plus these fixes.

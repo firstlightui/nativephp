@@ -59,7 +59,11 @@ JAVA_HOME=<jdk-21> tests/android/gradlew \
 
 bin/check-component <Name> --development
 bin/check-docs --development
+
+bin/typecheck-ios
 ```
+
+`bin/typecheck-ios` typechecks `resources/ios` the way a NativePHP host compiles it, in Swift 5 mode against the iOS 18.2 floor, with every Xcode in `/Applications`; pass Xcode.app paths to check only those. Run it on a Mac before any change to iOS sources lands, on a `macos-26` satellite (Xcode 16.4 and 26.0 to 26.3) and a `macos-27` one (Xcode 26.6 and 27.x), because the package tests build only with the newest SDK. A symbol from a newer SDK needs `#if compiler(>=…)` as well as `#available`: the iOS 26 SDK ships with Swift 6.2, and the iOS 27 SDK with Swift 6.4.
 
 ### iOS snapshot references
 

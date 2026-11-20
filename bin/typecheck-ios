@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Typechecks Firstlight's iOS sources the way a NativePHP host compiles them:
+# Swift 5 language mode against the iOS 18.2 deployment floor. The package's
+# NativePHPTestShims.swift stands in for the host app's types.
+#
+# With no arguments it checks every Xcode in /Applications, so a symbol that
+# only exists in a newer SDK, or one missing its `#if compiler` gate, fails
+# here instead of in an app. Pass Xcode.app paths to check only those, or set
+# DEVELOPER_DIR and pass --active for the selected Xcode.
+set -euo pipefail
+
+sources="$(cd "$(dirname "$0")/../resources/ios" && pwd)"
+
+if [[ "${1:-}" == "--active" ]]; then
+    developer_dirs=("$(xcode-select -p)")
+    [[ -n "${DEVELOPER_DIR:-}" ]] && developer_dirs=("$DEVELOPER_DIR")
+elif (($#)); then
+    developer_dirs=()
+    for app in "$@"; do developer_dirs+=("$app/Contents/Developer"); done
+else
+    developer_dirs=()
+    for app in /Applications/Xcode*.app; do
+        [[ -L "$app" ]] || developer_dirs+=("$app/Contents/Developer")
+    done
+fi
+
+failed=()
+for developer_dir in "${developer_dirs[@]}"; do
+    version="$(DEVELOPER_DIR="$developer_dir" xcodebuild -version | head -1)"
+    sdk="$(DEVELOPER_DIR="$developer_dir" xcrun --sdk iphonesimulator --show-sdk-version)"
+    if DEVELOPER_DIR="$developer_dir" xcrun --sdk iphonesimulator swiftc -typecheck \
+        -swift-version 5 \
+        -D SWIFT_PACKAGE \
+        -target arm64-apple-ios18.2-simulator \
+        "$sources"/*.swift; then
+        echo "PASS $version (iOS $sdk SDK)"
+    else
+        echo "FAIL $version (iOS $sdk SDK)"
+        failed+=("$version")
+    fi
+done
+
+if ((${#failed[@]})); then
+    echo "iOS sources failed to typecheck on: ${failed[*]}" >&2
+    exit 1
+fi
+echo "iOS sources typecheck."
