@@ -17,7 +17,7 @@ sources:
 
 # Compatibility
 
-This documentation covers Firstlight **1.1.0**, the current stable release.
+This documentation covers Firstlight **1.1.1**, the current stable release.
 
 | Dependency or platform | Current requirement |
 | --- | --- |
@@ -37,7 +37,7 @@ These are the package's current declared floors. Firstlight does not promise sup
 Firstlight's iOS sources are checked against every Xcode from 16.4 to 27.3:
 16.4, 26.0 to 26.6, and 27.0 to 27.3. Firstlight 1.1.0 itself needs Xcode 27:
 its Toolbar does not compile with Xcode 26, and its Code Editor does not
-compile with Xcode 16. Use a later Firstlight release with an older Xcode.
+compile with Xcode 16. Use 1.1.1 or later with an older Xcode.
 
 The iOS SDK an app is built with decides which iOS 26 features it contains.
 Built with Xcode 26 or later, Liquid Glass surfaces and the Toolbar's glass
