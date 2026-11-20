@@ -73,10 +73,15 @@ internal fun FirstlightPickerDialog(
 
     // A short screen can't show the whole calendar, and keyboard entry opens the keyboard, which
     // would cover the actions. The dialog draws edge to edge and pads for the system bars and the
-    // keyboard, so its content shrinks and scrolls.
+    // keyboard, so its content shrinks and scrolls. The platform caps a dialog window at about
+    // 320 dp on a phone in landscape, too narrow for the header beside the calendar, so that
+    // layout uses the whole window and BasicAlertDialog's own 560 dp limit instead.
     BasicAlertDialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(decorFitsSystemWindows = false),
+        properties = DialogProperties(
+            decorFitsSystemWindows = false,
+            usePlatformDefaultWidth = !pickerUsesSideBySideLayout(),
+        ),
         modifier = Modifier.safeDrawingPadding(),
     ) {
         Surface(
