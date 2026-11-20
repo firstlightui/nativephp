@@ -29,10 +29,10 @@ extend `FirstlightUI\NativeComponent` for the
 
 ## Install and register the plugin
 
-Install Firstlight as a normal Composer dependency:
+Install Firstlight 1.1.0, the current stable release, as a normal Composer dependency:
 
 ```bash
-composer require firstlightui/nativephp
+composer require "firstlightui/nativephp:^1.1.0"
 ```
 
 Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:

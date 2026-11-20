@@ -1813,10 +1813,10 @@ extend `FirstlightUI\NativeComponent` for the
 
 ## Install and register the plugin
 
-Install Firstlight as a normal Composer dependency:
+Install Firstlight 1.1.0, the current stable release, as a normal Composer dependency:
 
 ```bash
-composer require firstlightui/nativephp
+composer require "firstlightui/nativephp:^1.1.0"
 ```
 
 Laravel discovers `FirstlightUI\FirstlightServiceProvider` from the package metadata. Register the native plugin explicitly so NativePHP adds the renderers declared in `nativephp.json` to the application:
@@ -5773,6 +5773,10 @@ from a deep link or an app shortcut, Firstlight closes the modal and runs its
 Going back then shows the screen without the modal, as Android does with
 dialogs and bottom sheets. This also covers modals in nested children.
 
+Keep navigation-sensitive modals outside unchanged `#[Memo]` children: their
+subtrees can be skipped, so a deep link or app shortcut may not run the modal's
+dismiss handler. See the [runtime response contract](../reference/compatibility.md#runtime-response-contract).
+
 To show the modal again when the user comes back, set the property in
 `onResume()`:
 
@@ -5880,6 +5884,10 @@ from a deep link or an app shortcut, Firstlight closes the sheet and runs its
 `@dismiss` handler, so the handler sets the visibility property to `false`.
 Going back then shows the screen without the sheet, as Android does with
 dialogs and bottom sheets. This also covers sheets in nested children.
+
+Keep navigation-sensitive sheets outside unchanged `#[Memo]` children: their
+subtrees can be skipped, so a deep link or app shortcut may not run the sheet's
+dismiss handler. See the [runtime response contract](../reference/compatibility.md#runtime-response-contract).
 
 To show the sheet again when the user comes back, set the property in
 `onResume()`:
@@ -9051,6 +9059,8 @@ The command is registered only when the application runs in the console.
 
 # Compatibility
 
+This documentation covers Firstlight **1.1.0**, the current stable release.
+
 | Dependency or platform | Current requirement |
 | --- | --- |
 | PHP | `^8.4` |
@@ -9116,10 +9126,18 @@ This is a screen-rendering contract, not a replacement for NativePHP's generic
 publisher: framework-owned loading placeholders and error/dump overlays are
 outside it.
 
-On navigation, the farewell response also closes Firstlight Bottom Sheets and
-Modals, including nested overlays, without changing the screen's bound
-visibility properties. Mobile's cleanup handles its own overlay types;
-Firstlight extends it to its namespaced types.
+When opening another screen, Firstlight also runs each open Bottom Sheet and
+Modal's required `@dismiss` handler, including nested overlays. The handler
+must reset the bound visibility property to `false`, so Back returns without
+the overlay. Reopen deliberately in `onResume()` as shown in the
+[Bottom Sheet](../components/bottom-sheet.md#events) and
+[Modal](../components/modal.md#events) references. The farewell response closes
+their native presentation as well as Mobile's own overlay types.
+
+An overlay inside an unchanged `#[Memo]` child is not recorded again when its
+subtree is skipped. On a deep-link or app-shortcut navigation, its dismiss
+handler may therefore not run. Keep navigation-sensitive overlays outside
+memoized children.
 
 ### Upstream context and qualification
 

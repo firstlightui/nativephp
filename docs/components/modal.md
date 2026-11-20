@@ -8,7 +8,9 @@ sources:
   - nativephp.json
   - src/Components/Modal.php
   - src/Elements/Modal.php
+  - src/NativeComponent.php
   - tests/Feature/ModalElementTest.php
+  - tests/Feature/OverlayNavigationTest.php
 ---
 
 # Modal
@@ -61,6 +63,10 @@ from a deep link or an app shortcut, Firstlight closes the modal and runs its
 `@dismiss` handler, so the handler sets the visibility property to `false`.
 Going back then shows the screen without the modal, as Android does with
 dialogs and bottom sheets. This also covers modals in nested children.
+
+Keep navigation-sensitive modals outside unchanged `#[Memo]` children: their
+subtrees can be skipped, so a deep link or app shortcut may not run the modal's
+dismiss handler. See the [runtime response contract](../reference/compatibility.md#runtime-response-contract).
 
 To show the modal again when the user comes back, set the property in
 `onResume()`:

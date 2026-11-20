@@ -8,9 +8,11 @@ sources:
   - nativephp.json
   - src/Components/BottomSheet.php
   - src/Elements/BottomSheet.php
+  - src/NativeComponent.php
   - resources/ios/BottomSheetControl.swift
   - resources/android/BottomSheetControl.kt
   - tests/Feature/BottomSheetElementTest.php
+  - tests/Feature/OverlayNavigationTest.php
 ---
 
 # Bottom Sheet
@@ -83,6 +85,10 @@ from a deep link or an app shortcut, Firstlight closes the sheet and runs its
 `@dismiss` handler, so the handler sets the visibility property to `false`.
 Going back then shows the screen without the sheet, as Android does with
 dialogs and bottom sheets. This also covers sheets in nested children.
+
+Keep navigation-sensitive sheets outside unchanged `#[Memo]` children: their
+subtrees can be skipped, so a deep link or app shortcut may not run the sheet's
+dismiss handler. See the [runtime response contract](../reference/compatibility.md#runtime-response-contract).
 
 To show the sheet again when the user comes back, set the property in
 `onResume()`:

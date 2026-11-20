@@ -55,8 +55,10 @@ See [Compatibility](https://firstlightui.dev/docs/reference/compatibility) for t
 
 ## Installation
 
+Firstlight **1.1.0** is the current stable release.
+
 ```bash
-composer require firstlightui/nativephp
+composer require "firstlightui/nativephp:^1.1.0"
 php artisan native:plugin:register
 php artisan native:install --force
 ```

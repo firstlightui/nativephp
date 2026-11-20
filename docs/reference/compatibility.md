@@ -9,12 +9,15 @@ sources:
   - Package.swift
   - src/NativeComponent.php
   - tests/Feature/NativeComponentResponseTest.php
+  - tests/Feature/OverlayNavigationTest.php
   - resources/android/SegmentedRenderer.kt
   - resources/android/SwitchRenderer.kt
   - resources/android/PillGroupRenderer.kt
 ---
 
 # Compatibility
+
+This documentation covers Firstlight **1.1.0**, the current stable release.
 
 | Dependency or platform | Current requirement |
 | --- | --- |
@@ -81,10 +84,18 @@ This is a screen-rendering contract, not a replacement for NativePHP's generic
 publisher: framework-owned loading placeholders and error/dump overlays are
 outside it.
 
-On navigation, the farewell response also closes Firstlight Bottom Sheets and
-Modals, including nested overlays, without changing the screen's bound
-visibility properties. Mobile's cleanup handles its own overlay types;
-Firstlight extends it to its namespaced types.
+When opening another screen, Firstlight also runs each open Bottom Sheet and
+Modal's required `@dismiss` handler, including nested overlays. The handler
+must reset the bound visibility property to `false`, so Back returns without
+the overlay. Reopen deliberately in `onResume()` as shown in the
+[Bottom Sheet](../components/bottom-sheet.md#events) and
+[Modal](../components/modal.md#events) references. The farewell response closes
+their native presentation as well as Mobile's own overlay types.
+
+An overlay inside an unchanged `#[Memo]` child is not recorded again when its
+subtree is skipped. On a deep-link or app-shortcut navigation, its dismiss
+handler may therefore not run. Keep navigation-sensitive overlays outside
+memoized children.
 
 ### Upstream context and qualification
 
