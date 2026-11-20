@@ -33,7 +33,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.nativephp.mobile.ui.nativerender.NativeUINode
 import com.nativephp.plugins.native_ui.NativeUITheme
 import com.nativephp.plugins.native_ui.NativeUITokens
 
@@ -86,6 +88,20 @@ data class FeedbackCenterRenderingPolicy(val tone: FeedbackCenterTone) {
 
         fun actionOnNewLine(maxWidthDp: Int, fontScale: Float): Boolean =
             maxWidthDp < ConstrainedWidthDp || fontScale >= ReflowFontScale
+
+        /**
+         * The tab bar NativePHP draws inside the content this host wraps: Material's 80 dp
+         * navigation bar, or Firstlight's tab bar when the layout selects it. The snackbar sits
+         * above it.
+         */
+        fun tabBarHeight(root: NativeUINode, imeVisible: Boolean, screenHeightDp: Int): Dp {
+            val tabs = root.takeIf { it.type == "native_root_tabs" } ?: return 0.dp
+            val hidden = tabs.props.getBool("hide_tab_bar") || tabs.children.none { it.type == "bottom_nav_item" }
+            if (tabs.props.getString("tab_presentation_id") == FirstlightTabBar.IDENTIFIER) {
+                return FirstlightTabBar.form(hidden, imeVisible, screenHeightDp).height
+            }
+            return if (hidden) 0.dp else 80.dp
+        }
     }
 }
 

@@ -357,11 +357,14 @@ struct MediaRendererState {
     }
 }
 
-struct FirstlightMediaControl: View {
+/// `chooseAnchor` attaches to the Choose button, so presentations it adds, such as the iPad
+/// source chooser popover, point at the button rather than the middle of the card.
+struct FirstlightMediaControl<ChooseAnchor: ViewModifier>: View {
     let configuration: MediaRendererConfiguration
     let tokens: NativeUITokens
     let onPick: () -> Void
     let onClear: () -> Void
+    let chooseAnchor: ChooseAnchor
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -390,6 +393,7 @@ struct FirstlightMediaControl: View {
                     .disabled(!configuration.isInteractive)
                     .frame(minHeight: 44)
                     .firstlightValidationFocusTarget()
+                    .modifier(chooseAnchor)
 
                     if configuration.canClear {
                         Button(configuration.clearLabel, role: .destructive, action: onClear)
@@ -456,6 +460,17 @@ struct FirstlightMediaControl: View {
                     .foregroundStyle(tokens.onSurfaceVariant)
             }
         }
+    }
+}
+
+extension FirstlightMediaControl where ChooseAnchor == EmptyModifier {
+    init(
+        configuration: MediaRendererConfiguration,
+        tokens: NativeUITokens,
+        onPick: @escaping () -> Void,
+        onClear: @escaping () -> Void
+    ) {
+        self.init(configuration: configuration, tokens: tokens, onPick: onPick, onClear: onClear, chooseAnchor: EmptyModifier())
     }
 }
 
@@ -536,6 +551,7 @@ struct FirstlightMediaCropSheet: View {
     var moveCropUpLabel: String = "Move crop up"
     var moveCropDownLabel: String = "Move crop down"
 
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var lastDrag: CGSize = .zero
     @State private var pinchBase: CGFloat?
 
@@ -547,59 +563,87 @@ struct FirstlightMediaCropSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                // The frame shows exactly the region Confirm commits: the same
-                // cropRect, scaled to the frame width.
-                Color.clear
-                    .aspectRatio(previewAspect, contentMode: .fit)
-                    .overlay { region }
-                    .clipped()
-                    .accessibilityElement()
-                    .accessibilityLabel(cropLabel)
-                    .accessibilityAddTraits(.isImage)
-                    // SwiftUI lists the last-applied action first, so this
-                    // reads Left, Right, Up, Down in the actions rotor.
-                    .accessibilityAction(named: moveCropDownLabel) { onMove(.down) }
-                    .accessibilityAction(named: moveCropUpLabel) { onMove(.up) }
-                    .accessibilityAction(named: moveCropRightLabel) { onMove(.right) }
-                    .accessibilityAction(named: moveCropLeftLabel) { onMove(.left) }
-                    .padding(24)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black)
-
-                HStack(spacing: 16) {
-                    Button(action: onZoomOut) {
-                        Image(systemName: "minus.magnifyingglass")
-                            .frame(minWidth: 44, minHeight: 44)
+            Group {
+                // A phone in landscape is too short for the frame above the controls, so they
+                // sit beside it.
+                if verticalSizeClass == .compact {
+                    HStack(spacing: 16) {
+                        frame
+                        VStack(spacing: 16) {
+                            zoomControls
+                            Spacer(minLength: 0)
+                            actions(VStackLayout(alignment: .trailing, spacing: 8))
+                        }
+                        .fixedSize(horizontal: true, vertical: false)
+                        .padding(.vertical)
+                        .padding(.trailing)
                     }
-                    .accessibilityLabel(zoomOutLabel)
-
-                    Button(action: onZoomIn) {
-                        Image(systemName: "plus.magnifyingglass")
-                            .frame(minWidth: 44, minHeight: 44)
+                } else {
+                    VStack(spacing: 16) {
+                        frame
+                        zoomControls
+                        actions(HStackLayout())
+                            .padding(.horizontal)
+                            .padding(.bottom)
                     }
-                    .accessibilityLabel(zoomInLabel)
                 }
-
-                HStack {
-                    Button(cancelLabel, action: onCancel)
-                        .firstlightGlassButtonStyle(prominent: false, bordered: false)
-                        .frame(minHeight: 44)
-                    Spacer()
-                    if policy.allowsSkip {
-                        Button(skipLabel, action: onSkip)
-                            .firstlightGlassButtonStyle(prominent: false, bordered: false)
-                            .frame(minHeight: 44)
-                    }
-                    Button(confirmLabel, action: onConfirm)
-                        .firstlightGlassButtonStyle(prominent: true)
-                        .frame(minHeight: 44)
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
             }
             .navigationTitle(cropLabel)
             .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    // The frame shows exactly the region Confirm commits: the same cropRect, scaled to the frame
+    // width. Its black surround stays inside the safe area, so it never darkens the title bar.
+    private var frame: some View {
+        Color.clear
+            .aspectRatio(previewAspect, contentMode: .fit)
+            .overlay { region }
+            .clipped()
+            .accessibilityElement()
+            .accessibilityLabel(cropLabel)
+            .accessibilityAddTraits(.isImage)
+            // SwiftUI lists the last-applied action first, so this
+            // reads Left, Right, Up, Down in the actions rotor.
+            .accessibilityAction(named: moveCropDownLabel) { onMove(.down) }
+            .accessibilityAction(named: moveCropUpLabel) { onMove(.up) }
+            .accessibilityAction(named: moveCropRightLabel) { onMove(.right) }
+            .accessibilityAction(named: moveCropLeftLabel) { onMove(.left) }
+            .padding(verticalSizeClass == .compact ? 12 : 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black, ignoresSafeAreaEdges: [])
+    }
+
+    private var zoomControls: some View {
+        HStack(spacing: 16) {
+            Button(action: onZoomOut) {
+                Image(systemName: "minus.magnifyingglass")
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel(zoomOutLabel)
+
+            Button(action: onZoomIn) {
+                Image(systemName: "plus.magnifyingglass")
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel(zoomInLabel)
+        }
+    }
+
+    private func actions(_ layout: some Layout) -> some View {
+        layout {
+            Button(cancelLabel, action: onCancel)
+                .firstlightGlassButtonStyle(prominent: false, bordered: false)
+                .frame(minHeight: 44)
+            if layout is HStackLayout { Spacer() }
+            if policy.allowsSkip {
+                Button(skipLabel, action: onSkip)
+                    .firstlightGlassButtonStyle(prominent: false, bordered: false)
+                    .frame(minHeight: 44)
+            }
+            Button(confirmLabel, action: onConfirm)
+                .firstlightGlassButtonStyle(prominent: true)
+                .frame(minHeight: 44)
         }
     }
 

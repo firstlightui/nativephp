@@ -13,8 +13,10 @@ enum FirstlightConfirmationDialogTone: String {
 /// Presents the decision as a UIKit action sheet. SwiftUI `confirmationDialog`
 /// anchors to the view it modifies on iOS 26; this element has no visible
 /// trigger, so the sheet would hang off a zero-size placeholder and hide its
-/// cancel action. Without a source view, iPhone presents from the bottom edge;
-/// iPad (regular width) requires an anchor, so it is centred without an arrow.
+/// cancel action. Without a source view, iPhone presents from the bottom edge.
+/// On iPad (regular width) an action sheet is a popover that needs an anchor and
+/// drops its cancel action, so with no trigger to point at it is an alert, as
+/// the Human Interface Guidelines recommend.
 struct ConfirmationDialogControl: View {
     @Binding var state: ConfirmationDialogRendererState
     let onConfirm: () -> Void
@@ -33,13 +35,14 @@ struct ConfirmationDialogControl: View {
 
     static func makeActionSheet(
         for configuration: ConfirmationDialogRendererConfiguration,
+        style: UIAlertController.Style = .actionSheet,
         onConfirm: @escaping () -> Void,
         onDismiss: @escaping () -> Void
     ) -> UIAlertController {
         let sheet = UIAlertController(
             title: configuration.title,
             message: configuration.message,
-            preferredStyle: .actionSheet
+            preferredStyle: style
         )
         sheet.addAction(UIAlertAction(title: configuration.confirmLabel, style: configuration.tone.actionStyle) { _ in
             onConfirm()
@@ -129,6 +132,7 @@ private struct ConfirmationActionSheetPresenter: UIViewControllerRepresentable {
 
             let sheet = ConfirmationDialogControl.makeActionSheet(
                 for: configuration,
+                style: presenter.traitCollection.horizontalSizeClass == .regular ? .alert : .actionSheet,
                 onConfirm: { [weak self] in
                     self?.sheet = nil
                     self?.onConfirm()
@@ -138,15 +142,6 @@ private struct ConfirmationActionSheetPresenter: UIViewControllerRepresentable {
                     self?.onDismiss()
                 }
             )
-            // Only regular width needs (and must have) an anchor. On iPhone an anchor turns the
-            // iOS 26 action sheet into a popover that drops the cancel action.
-            if presenter.traitCollection.horizontalSizeClass == .regular,
-               let popover = sheet.popoverPresentationController {
-                popover.sourceView = presenter.view
-                popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
-                popover.permittedArrowDirections = []
-            }
-
             self.sheet = sheet
             presentedConfiguration = configuration
             presenter.present(sheet, animated: true)

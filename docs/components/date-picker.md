@@ -133,7 +133,10 @@ read-only Material field. Android maps Material's selected UTC-midnight cell
 back to the same canonical date rather than treating it as a local instant.
 Material's calendar needs a screen at least 392 dp wide. On a narrower screen,
 such as a small phone at its largest display size, Android opens Material's
-date entry instead, in a dialog that fits the screen and scrolls.
+date entry instead, in a dialog that fits the screen and scrolls. A screen that
+is wide enough but short, such as a phone in landscape, keeps the calendar and
+puts the header beside it, as Android's own landscape picker does, in a dialog
+that scrolls, with Cancel and Confirm always visible.
 
 Date Picker deliberately has no time or datetime mode, picker-style override,
 hour format, clear action, custom presentation labels or icons, range mode, or

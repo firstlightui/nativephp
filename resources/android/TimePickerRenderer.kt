@@ -122,12 +122,14 @@ class TimePickerRendererState(node: NativeUINode) {
     }
 
     fun serverPublished(tree: NativeUITree) {
-        val node = tree.root.findTimePickerNode(configuration.nodeId) ?: return
+        // Node IDs restart on every screen, so after navigation this ID can name another control
+        // before this one is disposed; its value would not be in this picker's wire format.
+        val node = tree.root.findTimePickerNode(configuration.nodeId)?.takeIf { it.type == NODE_TYPE } ?: return
         publish(TimePickerRendererConfiguration(node))
     }
 
     fun serverPublished(node: NativeUINode) {
-        if (node.id == configuration.nodeId) publish(TimePickerRendererConfiguration(node))
+        if (node.id == configuration.nodeId && node.type == NODE_TYPE) publish(TimePickerRendererConfiguration(node))
     }
 
     private fun publish(published: TimePickerRendererConfiguration) {
@@ -137,6 +139,8 @@ class TimePickerRendererState(node: NativeUINode) {
     }
 
     companion object {
+        const val NODE_TYPE = "firstlight.time-picker"
+
         fun localCurrentTime(timezone: String): LocalTime = LocalTime.now(
             timezone.takeIf(String::isNotEmpty)?.let(ZoneId::of) ?: ZoneId.systemDefault(),
         ).withSecond(0).withNano(0)

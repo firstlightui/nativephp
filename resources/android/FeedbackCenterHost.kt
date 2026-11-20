@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -81,6 +82,7 @@ internal class FeedbackCenterHostRuntime(
 @Composable
 fun FirstlightFeedbackCenterHost(
     centerNode: NativeUINode?,
+    tabBarHeight: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -95,13 +97,14 @@ fun FirstlightFeedbackCenterHost(
             nowMillis = ::nowMillis,
         )
     }
-    FirstlightFeedbackCenterHost(centerNode, runtime, content)
+    FirstlightFeedbackCenterHost(centerNode, runtime, tabBarHeight, content)
 }
 
 @Composable
 internal fun FirstlightFeedbackCenterHost(
     centerNode: NativeUINode?,
     runtime: FeedbackCenterHostRuntime,
+    tabBarHeight: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -184,6 +187,8 @@ internal fun FirstlightFeedbackCenterHost(
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
                     .imePadding()
+                    // Material places a snackbar above the navigation bar, not over it.
+                    .padding(bottom = tabBarHeight)
                     .padding(horizontal = 12.dp, vertical = 12.dp),
             ) { snackbarData ->
                 val current = runtime.visible

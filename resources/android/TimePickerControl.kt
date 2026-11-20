@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerLayoutType
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -132,13 +133,25 @@ internal fun FirstlightTimePickerControl(
                         TextButton(onClick = onCancel) { Text(configuration.cancelLabel) }
                     },
                 ) {
-                    val fits = pickerFitsFullDialog(LocalConfiguration.current.screenWidthDp)
+                    val fits = pickerFitsDialogWidth()
                     // Material's 12-hour time entry is 280 dp wide, so the narrow dialog keeps
                     // only 12 dp of side padding to fit it on a 320 dp screen.
-                    Column(Modifier.padding(horizontal = if (fits) 24.dp else 12.dp, vertical = 24.dp)) {
+                    val sideBySide = pickerUsesSideBySideLayout()
+                    // On a phone in landscape the dial sits beside the time; the smaller top and
+                    // bottom padding leaves the 256 dp dial room above the actions.
+                    Column(
+                        Modifier.padding(
+                            horizontal = if (fits) 24.dp else 12.dp,
+                            vertical = if (sideBySide) 12.dp else 24.dp,
+                        ),
+                    ) {
                         // The clock dial doesn't fit a narrow screen; Material's time entry does.
-                        if (fits) {
-                            TimePicker(state = pickerState)
+                        if (sideBySide) {
+                            TimePicker(state = pickerState, layoutType = TimePickerLayoutType.Horizontal)
+                        } else if (fits) {
+                            // The dialog is 360 dp wide, too narrow for the dial's side-by-side
+                            // layout that Material picks on a wide screen.
+                            TimePicker(state = pickerState, layoutType = TimePickerLayoutType.Vertical)
                         } else {
                             TimeInput(state = pickerState)
                         }

@@ -133,6 +133,24 @@ final class FirstlightCodeEditorView: UIView, UITextViewDelegate {
             view.applyTextAttributes()
             view.setNeedsLayout()
         }
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardDidShow),
+            name: UIResponder.keyboardDidShowNotification,
+            object: nil
+        )
+    }
+
+    /// The screen scrolls a focused field into view only when all of it fits above the keyboard and
+    /// key row. In landscape on iPhone an editor taller than that space stays covered, so bring the
+    /// caret's line into view in the page instead.
+    @objc private func keyboardDidShow() {
+        guard textView.isFirstResponder, let caret = textView.selectedTextRange?.end else { return }
+        var ancestor = superview
+        while let view = ancestor, !(view is UIScrollView) { ancestor = view.superview }
+        guard let page = ancestor as? UIScrollView else { return }
+        let line = textView.caretRect(for: caret).insetBy(dx: 0, dy: -lineHeight)
+        page.scrollRectToVisible(textView.convert(line, to: page), animated: true)
     }
 
     @available(*, unavailable)

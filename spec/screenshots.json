@@ -378,6 +378,50 @@
                 "android-light": "docs/screenshots/toolbar-item/android-light.png",
                 "android-dark": "docs/screenshots/toolbar-item/android-dark.png"
             }
+        },
+        "landscape-tab-bar": {
+            "route": "/captures/landscape-tab-bar",
+            "test": "php artisan test tests/Feature/LandscapeTabBarCaptureTest.php",
+            "orientation": "landscape",
+            "outputs": {
+                "ios-light": "docs/screenshots/landscape-tab-bar/ios-light.png",
+                "ios-dark": "docs/screenshots/landscape-tab-bar/ios-dark.png",
+                "android-light": "docs/screenshots/landscape-tab-bar/android-light.png",
+                "android-dark": "docs/screenshots/landscape-tab-bar/android-dark.png"
+            }
+        },
+        "landscape-date-picker": {
+            "route": "/captures/date-picker",
+            "test": "php artisan test tests/Feature/DatePickerCaptureTest.php",
+            "ready-text": "Firstlight Date Picker",
+            "orientation": "landscape",
+            "tap": {
+                "text": "Appointment date",
+                "until": "Confirm"
+            },
+            "outputs": {
+                "ios-light": "docs/screenshots/landscape-date-picker/ios-light.png",
+                "ios-dark": "docs/screenshots/landscape-date-picker/ios-dark.png",
+                "android-light": "docs/screenshots/landscape-date-picker/android-light.png",
+                "android-dark": "docs/screenshots/landscape-date-picker/android-dark.png"
+            }
+        },
+        "ipad-date-picker": {
+            "route": "/captures/date-picker",
+            "test": "php artisan test tests/Feature/DatePickerCaptureTest.php",
+            "ios-device": "ipad",
+            "platforms": [
+                "ios"
+            ],
+            "orientation": "landscape",
+            "tap": {
+                "text": "Appointment date",
+                "until": "Confirm"
+            },
+            "outputs": {
+                "ios-light": "docs/screenshots/ipad-date-picker/ios-light.png",
+                "ios-dark": "docs/screenshots/ipad-date-picker/ios-dark.png"
+            }
         }
     }
 }

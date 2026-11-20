@@ -51,8 +51,11 @@ struct FirstlightTimePickerControl: View {
                     get: { state.isPresented },
                     set: { if !$0 { state.cancel() } }
                 ),
+                // No fixed arrow edge: iPad places the popover on whichever side of the field
+                // has room for all of it. Forcing it above a field near the top squeezed it and
+                // clipped the actions.
                 attachmentAnchor: .rect(.bounds),
-                arrowEdge: .bottom
+                arrowEdge: nil
             ) {
                 pickerPresentation
                     .firstlightPickerPresentation()
