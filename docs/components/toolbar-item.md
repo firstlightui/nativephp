@@ -102,8 +102,10 @@ itself disabled.
 
 ## Badges
 
-On iOS 26 and later the badge is the system badge on the bar button; earlier
-iOS does not draw it. Android draws a Material badge on the icon, and TalkBack
+On iOS 27 and later the badge is the system badge on the bar button. iOS 26
+does not draw it, whichever Xcode builds the app, and earlier iOS does not draw
+it either; VoiceOver on iOS 26 still reads the count as the item's value, so
+show the count elsewhere on the screen too when it matters. Android draws a Material badge on the icon, and TalkBack
 reads its text after the action name. Keep badge text short, such as a count,
 because it cannot be given separate spoken wording.
 

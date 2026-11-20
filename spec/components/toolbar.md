@@ -59,8 +59,12 @@ The Toolbar node renders a zero-size view carrying `.toolbar` items with
 `NavigationStack` destination, so the items reach that stack's bottom bar.
 iOS 26: one `ToolbarItem` per action (so each carries the view-level `.badge`,
 which becomes `UIBarButtonItem.badge`), then `ToolbarSpacer(.flexible)` and the
-primary item. Earlier iOS: one `ToolbarItemGroup` with a `Spacer` before the
-primary item; badges are not drawn. A menu item is a SwiftUI `Menu`, which
+primary item. iOS 26 runtimes keep the badge as the item's accessibility value
+but do not draw it: seen on iOS 26.2 (Xcode 26.3 build) and iOS 26.5 (Xcode
+27.3 build) simulators on 2026-11-20; iOS 27 draws it. With Xcode 26 the items
+are five fixed slots plus the primary, because `ForEach` is toolbar content
+only from the iOS 27 SDK. Earlier iOS: one `ToolbarItemGroup` with a `Spacer`
+before the primary item; badges are not drawn. A menu item is a SwiftUI `Menu`, which
 becomes the bar item's `menu`. `ToolbarRendererTests` checks the
 `UIBarButtonItem`s, menu and badge in a hosted `NavigationStack`.
 SwiftUI keeps a bar button whose `ForEach` identity is unchanged, with its old
