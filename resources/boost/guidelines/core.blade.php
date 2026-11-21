@@ -15,6 +15,8 @@ Build new screens from these recipes rather than from scratch:
 - Settings screen: https://firstlightui.dev/docs/how-to/build-a-settings-screen
 - Photo upload screen: https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen
 - App lock screen: https://firstlightui.dev/docs/how-to/build-an-app-lock-screen
+- Document scanning with on-device text recognition (`firstlightui/local-ocr`): https://firstlightui.dev/docs/how-to/scan-documents
+- On-device text generation (`firstlightui/local-ai`): https://firstlightui.dev/docs/how-to/generate-text-on-device
 
 Scaffold a screen with `php artisan make:firstlight-screen Name --form|--list|--destroy --test`.
 

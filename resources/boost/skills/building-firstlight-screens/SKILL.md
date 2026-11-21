@@ -18,6 +18,8 @@ Firstlight renders genuine SwiftUI and Jetpack Compose controls from one Blade v
 | Changes preferences one at a time | [Settings screen](https://firstlightui.dev/docs/how-to/build-a-settings-screen) |
 | Uploads a photo or document | [Photo upload](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen) |
 | Locks private data behind Face ID or a fingerprint | [App lock](https://firstlightui.dev/docs/how-to/build-an-app-lock-screen) |
+| Scans paper documents and reads their text | [Scan documents](https://firstlightui.dev/docs/how-to/scan-documents) |
+| Drafts, summarises or answers with on-device AI | [Generate text on the device](https://firstlightui.dev/docs/how-to/generate-text-on-device) |
 | Must only open for a signed-in or unlocked user | [Guard screens](https://firstlightui.dev/docs/how-to/guard-screens) |
 
 Copy the recipe, then change names, models and fields. Or scaffold with `php artisan make:firstlight-screen Name [--form] [--list] [--destroy] [--test]` and replace every `TODO`.
@@ -32,6 +34,7 @@ Copy the recipe, then change names, models and fields. Or scaffold with `php art
    - Booleans: `switch` (settings, applies now), `checkbox` (forms and consent)
    - Numbers and dates: `stepper`, `slider`, `date-picker`, `time-picker`
    - Files: `media` (image or document mode)
+   - Order: `reorder-list` (drag handles, optional sections, locked rows; PHP decides each move)
    - Rows: `list`, `list-section`, `list-item` (with `navigates`, `trailing-actions`, `leading-actions`, `context-menu`)
    - Status: `status-label`, `badge`, `metric`, `progress`, `activity-indicator`, `callout`
    - Overlays: `confirmation-dialog`, `alert-dialog`, `bottom-sheet`, `modal`

@@ -74,7 +74,7 @@ it('rejects a plan that would build a broken app, naming the problem', function 
     'one tab' => [['layout.tabs' => [['label' => 'Work orders', 'url' => '/work-orders']]], 'two to five tabs'],
     'list without a detail screen' => [['screens' => [['recipe' => 'how-to/build-a-searchable-list-screen', 'record' => 'WorkOrder'], ['recipe' => 'how-to/build-a-settings-screen']]], 'a list but no detail screen'],
     'recipe that is not a how-to page' => [['screens.5' => ['recipe' => 'how-to/build-a-map-screen', 'record' => 'WorkOrder']], 'is not a Firstlight how-to page'],
-    'accepted unreleased plugin' => [['plugins' => [['package' => 'firstlightui/app-shortcuts', 'accepted' => true]]], 'is unreleased'],
+    'accepted plugin that is not out yet' => [['plugins' => [['package' => 'firstlightui/custom-tabs', 'accepted' => true]]], 'firstlightui/custom-tabs is preview and can\'t be installed yet'],
     'plugin outside the index' => [['plugins' => [['package' => 'acme/unknown', 'accepted' => true]]], 'is not in the plugin index'],
     'minimum SDK under an accepted plugin' => [['android_min_sdk' => 26], 'android_min_sdk must be at least 29'],
     'sharing without a deep link scheme' => [['app.deeplink_scheme' => null], 'deeplink_scheme is required with nativephp/mobile-share'],
