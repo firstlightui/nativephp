@@ -1793,6 +1793,733 @@ bridge functions, which `Native::fakeBridge()` can answer and record.
   action can run much later.
 - Don't promise voice shortcuts on Android in your app's copy.
 
+--- Source: docs/how-to/scan-documents.md ---
+
+# Scan Documents and Read Their Text
+
+This recipe adds a screen that scans a paper document and shows its text. The
+user taps Scan, the system document scanner opens, and once they have scanned
+their pages the screen reads the text and shows it. The images and the text
+never leave the phone.
+
+## Before you start
+
+The recipe uses
+[`firstlightui/local-ocr`](https://github.com/firstlightui/local-ocr) 1.0,
+free and MIT licensed:
+
+```bash
+composer require firstlightui/local-ocr:^1.0
+php artisan native:plugin:register firstlightui/local-ocr
+```
+
+Rebuild the app with `php artisan native:run` after installing.
+
+| | iOS | Android |
+| --- | --- | --- |
+| Scanner | VisionKit's document camera | ML Kit Document Scanner, which runs in Google Play services |
+| Text recognition | Apple Vision, in many languages | ML Kit Text Recognition, Latin-script text only |
+| Needs | iOS 18 or later, on a real device: the scanner doesn't run in the Simulator | Android 8 (API 26) or later, with Google Play services |
+| Permissions | Camera, which the plugin adds | None |
+
+The plugin's camera purpose string is generic. Word it for your app in
+`config/nativephp.php`, which overrides plugins:
+
+```php
+'permissions' => [
+    'NSCameraUsageDescription' => 'Scan letters so their text can be read on this device.',
+],
+```
+
+## How the pieces fit
+
+- `LocalOcr::capture()` opens the scanner. The user scans as many pages as they
+  need, and the pages are saved as JPEGs in the app's private temporary storage.
+- `LocalOcr::recognize($pages)` reads the pages and returns their text, with
+  blocks, lines, words, confidence scores and bounding boxes for each page.
+- `LocalOcr::discard($pages)` deletes the page images once you are done with
+  them.
+
+Capture and recognition return straight away. Their outcome arrives later as an
+event carrying the request's `id`, which the screen receives with `#[On]`.
+
+## 1. Build the scan screen
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use FirstlightUI\LocalOcr\Events\CaptureCancelled;
+use FirstlightUI\LocalOcr\Events\CaptureFailed;
+use FirstlightUI\LocalOcr\Events\PagesCaptured;
+use FirstlightUI\LocalOcr\Events\TextRecognitionFailed;
+use FirstlightUI\LocalOcr\Events\TextRecognized;
+use FirstlightUI\LocalOcr\Facades\LocalOcr;
+use FirstlightUI\NativeComponent;
+use Illuminate\View\View;
+use Native\Mobile\Attributes\On;
+
+class ScanScreen extends NativeComponent
+{
+    public bool $canScan = false;
+
+    public bool $working = false;
+
+    public string $text = '';
+
+    public ?string $error = null;
+
+    public ?string $requestId = null;
+
+    public function mount(): void
+    {
+        // null off the device, so the button stays disabled in a browser.
+        $this->canScan = LocalOcr::capabilities()['capture']['available'] ?? false;
+    }
+
+    public function navTitle(): string
+    {
+        return 'Scan';
+    }
+
+    public function scan(): void
+    {
+        $this->error = null;
+        $this->working = true;
+        $this->requestId = LocalOcr::capture()->getId();
+    }
+
+    #[On(PagesCaptured::class)]
+    public function pagesCaptured(string $id, array $pages): void
+    {
+        if ($id !== $this->requestId) {
+            return;
+        }
+
+        $this->requestId = LocalOcr::recognize($pages)->getId();
+    }
+
+    #[On(TextRecognized::class)]
+    public function textRecognized(string $id, array $result): void
+    {
+        if ($id !== $this->requestId) {
+            return;
+        }
+
+        $this->text = $result['text'];
+        $this->finish();
+
+        LocalOcr::discard(array_column($result['pages'], 'path'));
+    }
+
+    #[On(CaptureCancelled::class)]
+    public function captureCancelled(string $id): void
+    {
+        if ($id === $this->requestId) {
+            $this->finish();
+        }
+    }
+
+    #[On(CaptureFailed::class)]
+    #[On(TextRecognitionFailed::class)]
+    public function failed(string $id, string $code, string $message): void
+    {
+        if ($id === $this->requestId) {
+            $this->error = "Couldn't read the document. {$message}";
+            $this->finish();
+        }
+    }
+
+    public function render(): View
+    {
+        return view('native.scan');
+    }
+
+    private function finish(): void
+    {
+        $this->working = false;
+        $this->requestId = null;
+    }
+}
+```
+
+The builder from `capture()` or `recognize()` starts its request when it goes
+out of scope, so the screen only keeps its `id`. Matching on the `id` keeps a
+late result from an earlier scan from replacing the current one.
+
+Save the view as `resources/views/native/scan.blade.php`:
+
+```blade
+<native:scroll-view class="w-full flex-1 bg-theme-background">
+    <native:column class="w-full p-4 gap-4">
+        @if (! $canScan)
+            <firstlight:callout message="Scanning needs a device with a camera and, on Android, Google Play services." tone="info" />
+        @endif
+
+        @if ($error)
+            <firstlight:callout :message="$error" tone="warning" />
+        @endif
+
+        <firstlight:button :loading="$working" :disabled="! $canScan" @press="scan">Scan a document</firstlight:button>
+
+        @if ($text !== '')
+            <native:text class="text-base text-theme-on-background">{{ $text }}</native:text>
+        @endif
+    </native:column>
+</native:scroll-view>
+```
+
+## 2. Use the structure, not just the text
+
+`$result['text']` joins every page's text with blank lines. Each entry of
+`$result['pages']` also has its `blocks`, their `lines` and `words`, each with a
+`confidence` from 0 to 1 and a `boundingBox` normalised to the upright page,
+origin top-left. Use them to pick out a field by where it sits on the page, or
+to ignore low-confidence lines.
+
+Two platform differences matter when you do:
+
+- iOS scores lines only, so each word repeats its line's confidence. Android
+  scores words.
+- iOS makes each line its own block. Android groups lines into blocks.
+
+Recognition is the same API on both platforms. On iOS you can pass
+`->languages(['en-AU'])` to `recognize()`, or `->fast()` to trade accuracy for
+speed; in fast mode every line reports a confidence of 0.5, so don't filter on
+it there.
+
+## 3. Clean up the pages
+
+Captured pages stay until you call `discard()`. The screen above discards them
+once their text is read. Anything left over, for example because the app closed
+between capture and recognition, is deleted on the next capture after 24 hours,
+and iOS also clears its temporary directory when it needs space.
+
+`discard()` only deletes files the plugin captured. If you need to keep a page,
+copy it somewhere else first.
+
+## Failures
+
+| Event | Codes |
+| --- | --- |
+| `CaptureFailed` | `INVALID_PARAMETERS`, `CAPTURE_UNAVAILABLE`, `CAPTURE_FAILED`, `SAVE_FAILED` |
+| `TextRecognitionFailed` | `INVALID_PARAMETERS`, `FILE_NOT_FOUND`, `DECODE_FAILED`, `RECOGNITION_FAILED` |
+
+A failure on any page fails the whole recognition, and the message names the
+page. If Android ends the app while the scanner is open, which can happen on a
+device that is low on memory, that capture's event never arrives; the next scan
+starts fresh.
+
+## Test the screen
+
+Deliver the plugin's events with `emitNative()` and check what the screen
+shows:
+
+```php
+use App\NativeComponents\ScanScreen;
+use FirstlightUI\LocalOcr\Events\TextRecognized;
+use Native\Mobile\Testing\Native;
+
+it('shows the text it read', function () {
+    Native::test(ScanScreen::class)
+        ->set('requestId', 'scan-1')
+        ->set('working', true)
+        ->emitNative(TextRecognized::class, [
+            'id' => 'scan-1',
+            'result' => ['text' => 'Ward 4B', 'pages' => []],
+        ])
+        ->assertSet('text', 'Ward 4B')
+        ->assertSet('working', false)
+        ->assertSee('Ward 4B');
+});
+
+it('ignores a result for an earlier scan', function () {
+    Native::test(ScanScreen::class)
+        ->set('requestId', 'scan-2')
+        ->emitNative(TextRecognized::class, [
+            'id' => 'scan-1',
+            'result' => ['text' => 'Old page', 'pages' => []],
+        ])
+        ->assertSet('text', '')
+        ->assertDontSee('Old page');
+});
+```
+
+See [Test screens](test-screens.md) for more of `Native::test()`.
+
+The plugin's
+[README](https://github.com/firstlightui/local-ocr#readme) has the full
+capability report, the result contract, and the JavaScript library for
+Inertia apps.
+
+--- Source: docs/how-to/generate-text-on-device.md ---
+
+# Generate Text on the Device
+
+This recipe adds a screen that asks the phone's own language model a question
+and shows the answer as it streams in. The prompt and the answer never leave
+the phone. On a phone without a supported model, the screen says why and the
+rest of the app carries on.
+
+## Before you start
+
+The recipe uses
+[`firstlightui/local-ai`](https://github.com/firstlightui/local-ai) 1.0, free
+and MIT licensed:
+
+```bash
+composer require firstlightui/local-ai:^1.0
+php artisan native:plugin:register firstlightui/local-ai
+```
+
+Rebuild the app with `php artisan native:run` after installing. It needs no
+permissions, API keys or environment variables.
+
+| | iOS | Android |
+| --- | --- | --- |
+| Model | Apple Foundation Models | Gemini Nano, through the ML Kit GenAI Prompt API (a Google beta) |
+| Generates on | iOS 26 or later, on a device that supports Apple Intelligence, with it turned on | Devices on Google's Prompt API list, such as a Pixel 9 or a Galaxy S25 or later |
+| Installs on | iOS 18 or later | Android 10 (API 29) or later |
+
+The app installs and runs on every version in the last row. Where the model
+can't run, Local AI reports `unavailable` with a reason instead.
+
+## How the pieces fit
+
+- `LocalAI::availability()` says whether the model can be used now:
+  `available`, `downloadable`, `downloading` or `unavailable`, with a `reason`
+  such as `not_enabled` when Apple Intelligence is turned off.
+- `LocalAI::generate()` and `LocalAI::chat()` queue a generation and return a
+  `Generation` straight away. Its `id` ties together the events that follow.
+- The text arrives as `TextDeltaGenerated` events, then one
+  `GenerationCompleted`, `GenerationFailed` or `GenerationCancelled`.
+- Events reach only the screen that is live when they arrive. After the user
+  navigates away and back, read the generation's text again by its `id`.
+
+## 1. Build the screen
+
+```php
+<?php
+
+namespace App\NativeComponents;
+
+use FirstlightUI\LocalAI\Events\GenerationCancelled;
+use FirstlightUI\LocalAI\Events\GenerationCompleted;
+use FirstlightUI\LocalAI\Events\GenerationFailed;
+use FirstlightUI\LocalAI\Events\TextDeltaGenerated;
+use FirstlightUI\LocalAI\Facades\LocalAI;
+use FirstlightUI\LocalAI\LocalAIException;
+use FirstlightUI\NativeComponent;
+use Illuminate\View\View;
+use Native\Mobile\Attributes\On;
+
+class AskScreen extends NativeComponent
+{
+    public bool $available = false;
+
+    public string $question = '';
+
+    public string $answer = '';
+
+    public ?string $generationId = null;
+
+    public ?string $error = null;
+
+    public function mount(): void
+    {
+        try {
+            $this->available = LocalAI::availability()->isAvailable();
+        } catch (LocalAIException) {
+            // Off the device, or the plugin isn't registered.
+            $this->available = false;
+        }
+    }
+
+    public function navTitle(): string
+    {
+        return 'Ask';
+    }
+
+    public function ask(): void
+    {
+        $this->answer = '';
+        $this->error = null;
+
+        try {
+            $this->generationId = LocalAI::generate(
+                $this->question,
+                instructions: 'Answer in two or three sentences.',
+                options: ['maxTokens' => 256],
+            )->id;
+        } catch (LocalAIException $exception) {
+            $this->error = $exception->getMessage();
+        }
+    }
+
+    public function stop(): void
+    {
+        if ($this->generationId !== null) {
+            LocalAI::cancel($this->generationId);
+        }
+    }
+
+    #[On(TextDeltaGenerated::class)]
+    public function delta(string $id, int $sequence, string $delta): void
+    {
+        if ($id === $this->generationId) {
+            $this->answer .= $delta;
+        }
+    }
+
+    #[On(GenerationCompleted::class)]
+    public function completed(string $id, string $text): void
+    {
+        if ($id === $this->generationId) {
+            // The authoritative text replaces the streamed deltas.
+            $this->answer = $text;
+            $this->generationId = null;
+        }
+    }
+
+    #[On(GenerationFailed::class)]
+    public function failed(string $id, string $code, string $message, string $text = ''): void
+    {
+        if ($id === $this->generationId) {
+            $this->answer = $text;
+            $this->error = $code === 'guardrail'
+                ? "That question can't be answered here."
+                : "Couldn't finish the answer. {$message}";
+            $this->generationId = null;
+        }
+    }
+
+    #[On(GenerationCancelled::class)]
+    public function cancelled(string $id, string $text = ''): void
+    {
+        if ($id === $this->generationId) {
+            $this->answer = $text;
+            $this->generationId = null;
+        }
+    }
+
+    public function render(): View
+    {
+        return view('native.ask');
+    }
+}
+```
+
+Save the view as `resources/views/native/ask.blade.php`:
+
+```blade
+<native:scroll-view class="w-full flex-1 bg-theme-background">
+    <native:column class="w-full p-4 gap-4">
+        @if (! $available)
+            <firstlight:callout message="Answers need a phone with Apple Intelligence or Gemini Nano." tone="info" />
+        @endif
+
+        <firstlight:text-area
+            label="Question"
+            :min-lines="2"
+            :disabled="! $available"
+            native:model.blur="question"
+        />
+
+        @if ($generationId)
+            <firstlight:button variant="secondary" @press="stop">Stop</firstlight:button>
+        @else
+            <firstlight:button :disabled="! $available || $question === ''" @press="ask">Ask</firstlight:button>
+        @endif
+
+        @if ($error)
+            <firstlight:callout :message="$error" tone="warning" />
+        @endif
+
+        @if ($answer !== '')
+            <native:text class="text-base text-theme-on-background">{{ $answer }}</native:text>
+        @endif
+    </native:column>
+</native:scroll-view>
+```
+
+`cancel()` is a request: the answer keeps streaming until
+`GenerationCancelled` arrives with any partial text.
+
+## 2. Offer the download on Android
+
+When Gemini Nano is supported but not yet on the phone, `availability()`
+reports `downloadable`. `LocalAI::download()` asks the system for it and
+reports `downloading`; progress arrives as `ModelDownloadProgress` events with
+a `status` of `started`, `downloading`, `completed` or `failed`. iOS manages
+Apple Intelligence itself, so there `download()` only reports availability.
+
+## 3. Catch up after navigation
+
+Events don't queue for a screen that isn't showing. Read the text again when
+the screen comes back:
+
+```php
+public function onResume(): void
+{
+    if ($this->generationId !== null) {
+        $snapshot = LocalAI::snapshot($this->generationId);
+        $this->answer = $snapshot['text'];
+
+        if (in_array($snapshot['status'], ['completed', 'failed', 'cancelled'], true)) {
+            $this->generationId = null;
+        }
+    }
+}
+```
+
+The runtime keeps the last 32 finished generations in memory. An older `id`,
+or any `id` after the app restarts, throws a `LocalAIException` with the code
+`unknown_operation`.
+
+## Continue a conversation
+
+`LocalAI::chat()` takes the whole conversation. System messages may only come
+first, and the last message must come from the user:
+
+```php
+$generation = LocalAI::chat([
+    ['role' => 'system', 'content' => 'Be brief.'],
+    ['role' => 'user', 'content' => 'Hi'],
+    ['role' => 'assistant', 'content' => 'Hello.'],
+    ['role' => 'user', 'content' => 'Name a colour.'],
+], ['temperature' => 0.7, 'maxTokens' => 128]);
+```
+
+The only options are `temperature`, from 0 to 2, and `maxTokens`. Any other
+option, an unknown role or an empty message throws `InvalidArgumentException`
+before any native call.
+
+## Failures and limits
+
+| Code | What to tell the user |
+| --- | --- |
+| `unavailable` | The model can't be used on this phone now. Check `availability()`. |
+| `busy` | 8 generations are already waiting. Try again shortly. |
+| `context_exceeded` | The question and history are too long. Shorten them. |
+| `guardrail` | The system's safety checks blocked the question or the answer. |
+| `rate_limited` | The system is busy or the app's quota is used up. Try again later. |
+| `background_blocked` | Android blocked generation while the app was in the background. |
+
+The plugin's [README](https://github.com/firstlightui/local-ai#readme) lists
+every code and availability reason. Generations run one at a time, and queued
+ones wait while the app is in the background. Both models take about 4,000
+tokens of input.
+
+## Test the screen
+
+Deliver the plugin's events with `emitNative()`:
+
+```php
+use App\NativeComponents\AskScreen;
+use FirstlightUI\LocalAI\Events\GenerationCompleted;
+use FirstlightUI\LocalAI\Events\TextDeltaGenerated;
+use Native\Mobile\Testing\Native;
+
+it('streams the answer, then shows the final text', function () {
+    Native::test(AskScreen::class)
+        ->set('generationId', 'gen-1')
+        ->emitNative(TextDeltaGenerated::class, ['id' => 'gen-1', 'sequence' => 1, 'delta' => 'Io, '])
+        ->assertSet('answer', 'Io, ')
+        ->emitNative(GenerationCompleted::class, ['id' => 'gen-1', 'text' => 'Io, Europa and Ganymede.'])
+        ->assertSet('answer', 'Io, Europa and Ganymede.')
+        ->assertSet('generationId', null)
+        ->assertSee('Io, Europa and Ganymede.');
+});
+
+it('ignores text from an earlier question', function () {
+    Native::test(AskScreen::class)
+        ->set('generationId', 'gen-2')
+        ->emitNative(TextDeltaGenerated::class, ['id' => 'gen-1', 'sequence' => 1, 'delta' => 'Old'])
+        ->assertSet('answer', '');
+});
+```
+
+Generation itself needs a device or simulator. The iOS 26 and later Simulator
+uses the Mac's own Apple Intelligence model; Android emulators have no model
+and report `unavailable`. See [Test screens](test-screens.md) for more of
+`Native::test()`.
+
+--- Source: docs/how-to/let-people-customise-tabs.md ---
+
+# Let People Customise Their Tabs
+
+This recipe gives an app a tab bar that people arrange themselves. You declare
+which tabs exist, which stay put and how many fit. Tabs that don't fit go to a
+More screen, and an editor lets people drag tabs between the bar and More, like
+the iPhone's own More tab editing.
+
+This recipe runs in the
+[showcase app](https://github.com/firstlightui/showcase), where
+[`CustomTabsRecipeTest`](https://github.com/firstlightui/showcase/blob/main/tests/Feature/Recipes/CustomTabsRecipeTest.php)
+exercises it.
+
+## Before you start
+
+The recipe uses
+[`firstlightui/custom-tabs`](https://github.com/firstlightui/custom-tabs),
+free and MIT licensed. It is not released yet: it is planned alongside
+Firstlight 1.2 and needs Firstlight's [Reorder List](../components/reorder-list.md),
+which is on Firstlight's `main` branch. Until then, install both from `main`:
+
+```json
+// composer.json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/firstlightui/custom-tabs" }
+],
+```
+
+```bash
+composer require firstlightui/nativephp:dev-main firstlightui/custom-tabs:dev-main
+```
+
+Custom Tabs is PHP only, so it needs no `native:plugin:register` and no
+rebuild beyond Firstlight's own.
+
+## How the pieces fit
+
+- `CustomTabs::define()` declares one bar's tabs and rules, once, in a service
+  provider.
+- `CustomTabs::bar()` returns the person's bar as a NativePHP `TabBar`, ready
+  for a layout's `tabBar()`.
+- `Route::customTabs()` adds the More screen at the More tab's URL and the
+  editor below it.
+- The person's choice is saved in a JSON file in the app's storage, so it
+  needs no migration and goes away with the app. Bind your own
+  `TabPreferenceStore` to keep it somewhere else.
+
+## 1. Declare the tabs
+
+```php
+// app/Providers/AppServiceProvider.php
+use FirstlightUI\CustomTabs\Facades\CustomTabs;
+use FirstlightUI\CustomTabs\TabSet;
+use Native\Mobile\Edge\Layouts\Builders\Tab;
+
+public function boot(): void
+{
+    CustomTabs::define('main', fn (TabSet $tabs) => $tabs
+        ->tab('home', Tab::link('Home', '/home', icon: 'home', ios: 'house', android: 'home'))->locked()
+        ->tab('inbox', Tab::link('Inbox', '/inbox', icon: 'inbox', ios: 'tray', android: 'inbox'))
+        ->tab('calendar', Tab::link('Calendar', '/calendar', icon: 'calendar_month', ios: 'calendar', android: 'calendar_month'))
+        ->tab('reports', Tab::link('Reports', '/reports', icon: 'bar_chart', ios: 'chart.bar', android: 'bar_chart'))->can('view-reports')
+        ->tab('files', Tab::link('Files', '/files', icon: 'folder', ios: 'folder', android: 'folder'))->inMoreByDefault()
+        ->more(Tab::link('More', '/more', icon: 'more_horiz', ios: 'ellipsis', android: 'more_horiz')));
+}
+```
+
+Declaration order is the default order. Each modifier applies to the tab
+added just before it:
+
+| Method | Meaning |
+| --- | --- |
+| `tab($id, $tab)` | Adds a tab. The id is what saved choices refer to: lowercase letters and digits joined by hyphens. Keep it stable; it replaces the id `Tab::link()` derives from the label, which changes when the label is translated. `more` is reserved. |
+| `locked()` | Keeps the tab in the bar at its declared place. Locked tabs must be declared before or after every movable tab. |
+| `inMoreByDefault()` | Starts the tab in More instead of the bar. A locked tab can't. |
+| `can($ability, $arguments)` | Shows the tab only to people the Gate allows. While hidden it keeps its saved place. |
+| `more($tab)` | The tab that opens the More screen. It shows only while More holds a tab. Required when any tab can move. |
+| `maxInBar($count)` | Most tabs in the bar, counting More: 2 to 5. Defaults to 5, the most Material 3 and the iPhone tab bar allow. |
+| `minInBar($count)` | Fewest tabs in the bar, not counting More. Defaults to 2, and must leave room for More. |
+
+A definition the rules can't fill, such as more locked tabs than fit, throws
+at the first render rather than drawing a broken bar.
+
+## 2. Show the bar and add its screens
+
+Return the person's bar from the layout. Every `TabBar` option still works on
+it:
+
+```php
+use FirstlightUI\CustomTabs\Facades\CustomTabs;
+use Native\Mobile\Edge\Layouts\Builders\TabBar;
+use Native\Mobile\Edge\NativeComponent;
+
+public function tabBar(NativeComponent $screen): ?TabBar
+{
+    return CustomTabs::bar('main')->presentation('firstlight:tabs');
+}
+```
+
+`presentation('firstlight:tabs')` is optional; see
+[Tabs](../components/tabs.md). Then register the More screen and the editor in
+`routes/native.php`, with the layout that shows the bar:
+
+```php
+Route::customTabs('main', TabsLayout::class);
+```
+
+With the declaration above, the More screen opens at `/more` and the editor at
+`/more/edit`, so the editor opens inside the More tab. While a screen from
+More is open, the bar highlights More.
+
+## 3. What people see
+
+- **More screen.** Lists the tabs that are in More, in the person's order, with
+  Edit in the navigation bar.
+- **Editor.** Shows the bar and More as two sections of a Reorder List. People
+  drag tabs with the handles, or use the VoiceOver and TalkBack actions: Move
+  up, Move down, and Move to the other section. Locked tabs show a lock and
+  don't move.
+- **Rules apply at once.** Each move is checked against the declaration
+  immediately, without saving. A tab dropped into a full bar pushes the last
+  movable tab into More.
+- **Done saves.** The real bar changes only on Done. Leaving without Done
+  discards the draft. Reset to default asks first, then puts the declared
+  order back.
+
+## Use your own settings screen
+
+To put the editor in an existing settings screen, extend
+`FirstlightUI\CustomTabs\Screens\EditorScreen`, or build it from the facade:
+
+| Method | Returns |
+| --- | --- |
+| `CustomTabs::arrangement($name)` | Where each tab the person may see sits now: `bar`, `more`, and where More goes. |
+| `CustomTabs::preview($name, $bar, $more)` | What a choice would become under the rules, without saving it. |
+| `CustomTabs::save($name, $bar, $more)` | Checks and saves a choice, and dispatches `TabsCustomized`. |
+| `CustomTabs::reset($name)` | Forgets the choice and returns the declared defaults. |
+| `CustomTabs::tabs($name)` | Each visible tab's id, label, icon, badge, URL and whether it is locked. |
+
+Bind `preview()` to a `<firstlight:reorder-list>`'s `@change` so every drop
+shows the corrected arrangement, and call `save()` from your own Done action.
+Listen for `FirstlightUI\CustomTabs\Events\TabsCustomized` to react to a new
+choice.
+
+The strings are in the package's `lang/en/tabs.php`. Publish them to
+translate or reword them:
+
+```bash
+php artisan vendor:publish --tag=custom-tabs-lang
+```
+
+## Test the bar
+
+Visit a screen with `Native::visit()` and read the labels in its tab bar:
+
+```php
+use FirstlightUI\CustomTabs\Facades\CustomTabs;
+use Native\Mobile\Testing\Native;
+
+beforeEach(fn () => CustomTabs::reset('main'));
+
+it('changes the bar only when the editor saves', function () {
+    $editor = Native::visit('/more/edit');
+    $editor->call('move', ['bar' => ['home', 'files', 'inbox', 'calendar'], 'more' => ['reports']]);
+    $editor->call('done');
+
+    expect(CustomTabs::arrangement('main')->bar)->toBe(['home', 'files', 'inbox', 'calendar']);
+});
+```
+
+Reset the bar before each test, because the choice is saved in storage. See
+[Test screens](test-screens.md) for more of `Native::test()` and
+`Native::visit()`.
+
 --- Source: docs/getting-started/installation.md ---
 
 # Install Firstlight UI

@@ -40,6 +40,9 @@ recipes run inside.
 - [Build a photo upload screen](how-to/build-a-photo-upload-screen.md) — Crop, validate, and save a photo to a model only when the user taps Save.
 - [Build an app lock screen](how-to/build-an-app-lock-screen.md) — Hide the app in the app switcher, lock it after time away, and unlock with Face ID, Touch ID, or a fingerprint.
 - [Add Siri and app icon shortcuts](how-to/add-app-shortcuts.md) — Open screens or run PHP from Siri, Spotlight, the Shortcuts app, and the app icon's long-press menu, even when the app is closed.
+- [Scan documents and read their text](how-to/scan-documents.md) — Scan paper documents with the system scanner and read their text on the device with Local OCR.
+- [Generate text on the device](how-to/generate-text-on-device.md) — Stream answers from the phone's own language model with Local AI, and fall back where it can't run.
+- [Let people customise their tabs](how-to/let-people-customise-tabs.md) — Let people rearrange the tab bar with a More screen and a drag-and-drop editor, within the tabs, locks and limits you declare.
 
 ## Get started
 

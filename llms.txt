@@ -28,6 +28,9 @@ every control the way they reach the platform's own apps.
 - [Build a photo upload screen](https://firstlightui.dev/docs/how-to/build-a-photo-upload-screen): Recipe for a Media field that crops a photo, validates it with Laravel rules, and saves it to a model only when the user taps Save.
 - [Build an app lock screen](https://firstlightui.dev/docs/how-to/build-an-app-lock-screen): Recipe for a lock screen that covers the app in the app switcher, locks it after time in the background, and unlocks with Face ID, Touch ID, or a fingerprint.
 - [Add Siri and app icon shortcuts](https://firstlightui.dev/docs/how-to/add-app-shortcuts): Recipe for shortcuts that open a screen or run PHP from Siri, Spotlight, the Shortcuts app, and the app icon's long-press menu, even when the app is closed.
+- [Scan documents and read their text](https://firstlightui.dev/docs/how-to/scan-documents): Recipe for a screen that scans paper documents with the system document scanner and reads their text on the device with Local OCR.
+- [Generate text on the device](https://firstlightui.dev/docs/how-to/generate-text-on-device): Recipe for a screen that streams an answer from the phone's own language model with Local AI, and falls back cleanly where the model can't run.
+- [Let people customise their tabs](https://firstlightui.dev/docs/how-to/let-people-customise-tabs): Recipe for a tab bar people rearrange themselves, with a More screen and a drag-and-drop editor, within the tabs, locks and limits you declare.
 
 ## Get started
 
