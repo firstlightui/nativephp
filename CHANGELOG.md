@@ -8,6 +8,7 @@ Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 
 
 ### Added
 
+- Reorder List, `<firstlight:reorder-list>`: people put items in their own order, optionally across named sections such as "Tab bar" and "More", by dragging or with VoiceOver and TalkBack actions. Locked items stay put, and PHP stays authoritative over the order. See [Reorder List](https://firstlightui.dev/docs/components/reorder-list).
 - Date Picker `first-day-of-week` (`monday` … `sunday`) sets the weekday the calendar starts on.
 - Android tab bar: select it with `TabBar::make()->presentation('firstlight:tabs')`. It hides while the keyboard is up and becomes Material's short bar on short screens such as a phone in landscape. iOS keeps the system tab bar. See [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad).
 
