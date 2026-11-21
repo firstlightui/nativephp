@@ -115,7 +115,7 @@ class AskScreen extends NativeComponent
         }
     }
 
-    public function stop(): void
+    public function cancel(): void
     {
         if ($this->generationId !== null) {
             LocalAI::cancel($this->generationId);
@@ -185,7 +185,7 @@ Save the view as `resources/views/native/ask.blade.php`:
         />
 
         @if ($generationId)
-            <firstlight:button variant="secondary" @press="stop">Stop</firstlight:button>
+            <firstlight:button variant="secondary" @press="cancel">Stop</firstlight:button>
         @else
             <firstlight:button :disabled="! $available || $question === ''" @press="ask">Ask</firstlight:button>
         @endif
@@ -202,7 +202,9 @@ Save the view as `resources/views/native/ask.blade.php`:
 ```
 
 `cancel()` is a request: the answer keeps streaming until
-`GenerationCancelled` arrives with any partial text.
+`GenerationCancelled` arrives with any partial text. Don't name the action
+`stop()`: the screen's own `stop()` ends it when the user leaves, so
+overriding it leaves Back doing nothing.
 
 ## 2. Offer the download on Android
 
