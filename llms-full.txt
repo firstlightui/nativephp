@@ -6133,6 +6133,7 @@ public ?string $appointmentDate = null;
 | `disabled` | `bool` | Prevents opening and confirmation. |
 | `locale` | BCP-47 string | Formats the field and native calendar without changing the wire date. Omission inherits the application translator locale. |
 | `timezone` | IANA timezone string | Determines today and Swift date mapping without shifting the wire date. Omission inherits `config('app.timezone')` when it is a valid IANA identifier. |
+| `first-day-of-week` | `monday` … `sunday` | The weekday the calendar's weeks start on. Omission follows the device's region and its first-day-of-week setting, not `locale`. |
 | `a11y-label` | `string` | Explicit accessible name when no visible label is appropriate. |
 | `a11y-hint` | `string` | Additional VoiceOver and TalkBack guidance. |
 | `class` | `string` | External EDGE layout for the complete field. |

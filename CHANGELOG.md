@@ -8,10 +8,12 @@ Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 
 
 ### Added
 
+- Date Picker `first-day-of-week` (`monday` … `sunday`) sets the weekday the calendar starts on.
 - Android tab bar: select it with `TabBar::make()->presentation('firstlight:tabs')`. It hides while the keyboard is up and becomes Material's short bar on short screens such as a phone in landscape. iOS keeps the system tab bar. See [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad).
 
 ### Fixed
 
+- Date Picker: the calendar starts weeks on the device's first weekday, such as Monday in Australia. On iOS it always started on Sunday; on Android it now also follows the device's first-day-of-week setting with any `locale`, and its weekday names follow `locale`.
 - Date Picker and Time Picker:
   - On iPad, the popover shows Cancel and Confirm in both orientations, including for fields near the top of the screen.
   - On Android in landscape, the header sits beside the calendar and the time beside the clock dial, as in Android's own landscape pickers, in a dialog that fits the screen and scrolls, with Cancel and Confirm always visible, instead of being clipped.

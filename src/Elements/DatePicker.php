@@ -83,6 +83,9 @@ final class DatePicker extends Element
         if (array_key_exists('timezone', $attrs)) {
             $this->timezone($attrs['timezone']);
         }
+        if (array_key_exists('first-day-of-week', $attrs) || array_key_exists('firstDayOfWeek', $attrs)) {
+            $this->firstDayOfWeek($attrs['first-day-of-week'] ?? $attrs['firstDayOfWeek']);
+        }
 
         if (array_key_exists('sync-mode', $attrs) || array_key_exists('syncMode', $attrs)) {
             $this->syncMode($this->strictString('sync-mode', $attrs['sync-mode'] ?? $attrs['syncMode']));
@@ -218,6 +221,22 @@ final class DatePicker extends Element
         }
 
         $this->inputProps['timezone'] = $value;
+
+        return $this;
+    }
+
+    /**
+     * The weekday the calendar's weeks start on. Without it, the calendar follows the device's
+     * region and first-day-of-week setting, not `locale`.
+     */
+    public function firstDayOfWeek(mixed $value): static
+    {
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        if (! in_array($value, $days, true)) {
+            throw new InvalidArgumentException('Date Picker `first-day-of-week` must be a lowercase English weekday name, such as `monday`.');
+        }
+
+        $this->inputProps['first_day_of_week'] = $value;
 
         return $this;
     }

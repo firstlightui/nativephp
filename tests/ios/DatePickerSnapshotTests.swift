@@ -98,6 +98,30 @@ final class DatePickerSnapshotTests: XCTestCase {
         }
     }
 
+    func testPickerCalendarStartsWeeksOnTheDeviceOrAuthoredFirstWeekday() {
+        func device(_ identifier: String) -> Calendar {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.locale = Locale(identifier: identifier)
+            return calendar
+        }
+        func firstWeekday(_ authored: String, device identifier: String) -> Int {
+            DatePickerCalendar.pickerCalendar(timezone: "Australia/Sydney", firstDayOfWeek: authored, device: device(identifier))
+                .firstWeekday
+        }
+
+        // The wire calendar is en_US_POSIX, which always starts on Sunday.
+        XCTAssertEqual(DatePickerCalendar.calendar(timezone: "Australia/Sydney").firstWeekday, 1)
+        XCTAssertEqual(firstWeekday("", device: "en_AU"), 2)
+        XCTAssertEqual(firstWeekday("", device: "en_US"), 1)
+        XCTAssertEqual(firstWeekday("", device: "en_US@fw=mon"), 2)
+        XCTAssertEqual(firstWeekday("saturday", device: "en_AU"), 7)
+        XCTAssertEqual(firstWeekday("sunday", device: "en_AU"), 1)
+
+        let calendar = DatePickerCalendar.pickerCalendar(timezone: "Australia/Sydney", firstDayOfWeek: "monday")
+        XCTAssertEqual(calendar.timeZone.identifier, "Australia/Sydney")
+        XCTAssertEqual(DatePickerRendererConfiguration(node: node(firstDayOfWeek: "monday")).firstDayOfWeek, "monday")
+    }
+
     func testRendererCompilesAgainstNativePHPContractShims() {
         let renderer = DatePickerRenderer(node: node(), events: DatePickerRendererEvents { _ in })
         XCTAssertNotNil(renderer.body)
@@ -157,7 +181,8 @@ final class DatePickerSnapshotTests: XCTestCase {
         minimum: String = "0001-01-01",
         maximum: String = "9999-12-31",
         disabled: Bool = false,
-        callback: Int = 41
+        callback: Int = 41,
+        firstDayOfWeek: String = ""
     ) -> NativeUINode {
         NativeUINode(
             id: 7,
@@ -177,6 +202,7 @@ final class DatePickerSnapshotTests: XCTestCase {
                 "timezone": "Australia/Sydney",
                 "on_change": callback,
                 "disabled": disabled,
+                "first_day_of_week": firstDayOfWeek,
             ]),
             onPress: 0,
             onLongPress: 0,

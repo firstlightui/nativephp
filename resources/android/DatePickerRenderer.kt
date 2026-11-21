@@ -61,11 +61,13 @@ data class DatePickerRendererConfiguration(
     val onChangeCallback: Int,
     val variant: String = "field",
     val displayText: String = "",
+    val firstDayOfWeek: String = "",
 ) {
     constructor(node: NativeUINode) : this(
         nodeId = node.id,
         variant = node.props.getString("variant", "field"),
         displayText = node.props.getString("display_text"),
+        firstDayOfWeek = node.props.getString("first_day_of_week"),
         hasValue = node.props.getBool("has_value"),
         value = node.props.getString("value"),
         min = node.props.getString("min"),

@@ -38,6 +38,7 @@ struct DatePickerRendererConfiguration: Equatable {
     let onChangeCallback: Int
     let variant: String
     let displayText: String
+    let firstDayOfWeek: String
 
     init(node: NativeUINode) {
         let props = node.props
@@ -62,6 +63,7 @@ struct DatePickerRendererConfiguration: Equatable {
         onChangeCallback = props.getCallbackId("on_change")
         variant = props.getString("variant", default: "field")
         displayText = props.getString("display_text")
+        firstDayOfWeek = props.getString("first_day_of_week")
     }
 
     var acceptedValue: String? { hasValue ? value : nil }
@@ -157,6 +159,16 @@ enum DatePickerCalendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = Locale(identifier: "en_US_POSIX")
         calendar.timeZone = TimeZone(identifier: timezone) ?? .current
+        return calendar
+    }
+
+    /// The calendar the picker shows. `calendar(timezone:)` maps the wire date in `en_US_POSIX`,
+    /// whose weeks always start on Sunday, so the first weekday comes from `first_day_of_week`
+    /// or else from the device, which follows its region and its First Day of Week setting.
+    static func pickerCalendar(timezone: String, firstDayOfWeek: String, device: Calendar = .current) -> Calendar {
+        var calendar = calendar(timezone: timezone)
+        let weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+        calendar.firstWeekday = weekdays.firstIndex(of: firstDayOfWeek).map { $0 + 1 } ?? device.firstWeekday
         return calendar
     }
 

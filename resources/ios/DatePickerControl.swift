@@ -146,7 +146,10 @@ struct FirstlightDatePickerControl: View {
         }
         .tint(tokens.primary)
         .id(state.presentationVersion)
-        .environment(\.calendar, DatePickerCalendar.calendar(timezone: configuration.timezone))
+        .environment(\.calendar, DatePickerCalendar.pickerCalendar(
+            timezone: configuration.timezone,
+            firstDayOfWeek: configuration.firstDayOfWeek
+        ))
         .environment(\.timeZone, TimeZone(identifier: configuration.timezone) ?? .current)
         .environment(\.locale, configuration.locale.isEmpty ? .current : Locale(identifier: configuration.locale))
         .frame(minWidth: 320)

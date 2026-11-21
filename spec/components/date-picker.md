@@ -56,6 +56,7 @@ proposal is being handled.
 | `disabled` | Prevents opening and confirmation. An already-open presentation is dismissed when disabled changes. |
 | `locale` | Optional nonblank, well-formed BCP-47 display locale. It never changes the wire value. |
 | `timezone` | Optional IANA timezone used to determine today, the null draft seed, and Swift date mapping. It never shifts the wire value. |
+| `first-day-of-week` | Optional lowercase English weekday name, `monday` through `sunday`, that starts the calendar's weeks. Omission follows the device. |
 | `a11y-label` | Explicit field name when a visible label is inappropriate. |
 | `a11y-hint` | Supplementary VoiceOver and TalkBack guidance. |
 | `class` | External EDGE layout only. |
@@ -155,6 +156,11 @@ Cancel/Confirm flow and bounds are unchanged.
   display timezone. Bounds use `SelectableDates` and an inclusive year range.
 
 Locale affects displayed month, weekday, and formatted trigger text only.
+The calendar's first weekday is `first-day-of-week`, or else the device's:
+its region and, where the platform has one, its First Day of Week setting
+(iOS `Calendar.current`, Android's `fw` locale keyword). It never comes from
+`locale`, because the inherited application locale is usually a bare
+language such as `en`, whose default region would start every week on Sunday.
 Timezone affects today and the null seed only. The authored API and accepted
 wire value are identical on both platforms.
 

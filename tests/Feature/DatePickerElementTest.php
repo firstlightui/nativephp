@@ -177,6 +177,21 @@ it('passes validated display locale and IANA timezone without shifting the wire 
     ]);
 })->with(['en-AU', 'de-DE', 'zh-Hant-TW']);
 
+it('publishes an authored first day of week and omits it by default', function () {
+    $authored = collectFirstlightDatePicker(['label' => 'Date', 'first-day-of-week' => 'monday'])['props'];
+    NativeElementCollector::reset();
+    $default = collectFirstlightDatePicker(['label' => 'Date', 'locale' => 'en-US'])['props'];
+
+    expect($authored['first_day_of_week'])->toBe('monday')
+        ->and($default)->not->toHaveKey('first_day_of_week')
+        ->and(DatePicker::make()->label('Date')->firstDayOfWeek('saturday')->toArray(new CallbackRegistry)['props']['first_day_of_week'])
+        ->toBe('saturday');
+});
+
+it('rejects a first day of week that is not a lowercase weekday name', function (mixed $day) {
+    collectFirstlightDatePicker(['label' => 'Date', 'first-day-of-week' => $day]);
+})->with(['Monday', 'mon', '1', 1, ''])->throws(InvalidArgumentException::class, 'first-day-of-week');
+
 it('rejects blank malformed or non BCP-47 locales', function (mixed $locale) {
     collectFirstlightDatePicker([
         'value' => null,

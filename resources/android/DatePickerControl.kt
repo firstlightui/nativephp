@@ -39,11 +39,13 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.nativephp.mobile.ui.MaterialIcon
 import com.nativephp.plugins.native_ui.NativeUITokens
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.time.temporal.WeekFields
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,26 +135,33 @@ internal fun FirstlightDatePickerControl(
             val draft = requireNotNull(state.draft)
             val minimum = configuration.min.takeIf(String::isNotEmpty)
             val maximum = configuration.max.takeIf(String::isNotEmpty)
-            val pickerState = rememberDatePickerState(
-                initialSelectedDateMillis = canonicalDateToUtcMillis(draft),
-                // The calendar needs 360 dp; a narrower screen gets Material's date entry instead.
-                initialDisplayMode = if (pickerFitsDialogWidth()) {
-                    DisplayMode.Picker
-                } else {
-                    DisplayMode.Input
-                },
-                yearRange = (minimum?.take(4)?.toInt() ?: 1)..(maximum?.take(4)?.toInt() ?: 9999),
-                selectableDates = remember(minimum, maximum) { DatePickerBounds(minimum, maximum) },
-            )
             val platformConfiguration = LocalConfiguration.current
-            val locale = remember(configuration.locale) {
-                configuration.locale.takeIf(String::isNotEmpty)?.let(Locale::forLanguageTag) ?: Locale.getDefault()
-            }
-            val localizedConfiguration = remember(platformConfiguration, locale) {
-                Configuration(platformConfiguration).apply { setLocale(locale) }
+            val localizedConfiguration = remember(platformConfiguration, configuration.locale, configuration.firstDayOfWeek) {
+                Configuration(platformConfiguration).apply {
+                    setLocale(
+                        datePickerCalendarLocale(
+                            configuration.locale,
+                            configuration.firstDayOfWeek,
+                            device = platformConfiguration.locales[0] ?: Locale.getDefault(),
+                        ),
+                    )
+                }
             }
 
+            // Material's state reads the calendar's locale, and with it the first weekday, when
+            // it is created, so it is created inside the localized configuration.
             CompositionLocalProvider(LocalConfiguration provides localizedConfiguration) {
+                val pickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = canonicalDateToUtcMillis(draft),
+                    // The calendar needs 360 dp; a narrower screen gets Material's date entry instead.
+                    initialDisplayMode = if (pickerFitsDialogWidth()) {
+                        DisplayMode.Picker
+                    } else {
+                        DisplayMode.Input
+                    },
+                    yearRange = (minimum?.take(4)?.toInt() ?: 1)..(maximum?.take(4)?.toInt() ?: 9999),
+                    selectableDates = remember(minimum, maximum) { DatePickerBounds(minimum, maximum) },
+                )
                 FirstlightPickerDialog(
                     onDismissRequest = onCancel,
                     confirmButton = {
@@ -215,6 +224,22 @@ private class DatePickerBounds(private val minimum: String?, private val maximum
     override fun isSelectableYear(year: Int): Boolean =
         (minimum == null || year >= minimum.take(4).toInt()) &&
             (maximum == null || year <= maximum.take(4).toInt())
+}
+
+/**
+ * Material's calendar starts its weeks on the first weekday of its locale's region. The display
+ * `locale` is often a bare language, such as Laravel's `en`, whose region would start every week
+ * on Sunday, so the first weekday comes from `first_day_of_week` or else from the device's locale,
+ * which also carries Android's own first-day-of-week setting as its `fw` keyword.
+ */
+internal fun datePickerCalendarLocale(displayLocale: String, firstDayOfWeek: String, device: Locale): Locale {
+    val display = displayLocale.takeIf(String::isNotEmpty)?.let(Locale::forLanguageTag) ?: device
+    val firstDay = DayOfWeek.entries.firstOrNull { it.name.equals(firstDayOfWeek, ignoreCase = true) }
+        ?: WeekFields.of(device).firstDayOfWeek
+    return Locale.Builder()
+        .setLocale(display)
+        .setUnicodeLocaleKeyword("fw", firstDay.name.take(3).lowercase(Locale.ROOT))
+        .build()
 }
 
 internal fun canonicalDateToUtcMillis(value: String): Long =
