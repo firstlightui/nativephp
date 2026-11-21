@@ -80,6 +80,16 @@
                 "android-dark": "docs/screenshots/choice-group/android-dark.png"
             }
         },
+        "reorder-list": {
+            "route": "/captures/reorder-list",
+            "test": "php artisan test tests/Feature/ReorderListCaptureTest.php",
+            "outputs": {
+                "ios-light": "docs/screenshots/reorder-list/ios-light.png",
+                "ios-dark": "docs/screenshots/reorder-list/ios-dark.png",
+                "android-light": "docs/screenshots/reorder-list/android-light.png",
+                "android-dark": "docs/screenshots/reorder-list/android-dark.png"
+            }
+        },
         "date-picker": {
             "route": "/captures/date-picker",
             "test": "php artisan test tests/Feature/DatePickerCaptureTest.php",

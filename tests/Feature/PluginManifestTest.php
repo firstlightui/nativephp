@@ -68,6 +68,14 @@ it('registers the production component catalogue with canonical renderers', func
             'self_closing' => true,
         ],
         [
+            'type' => 'firstlight.reorder-list',
+            'element' => 'FirstlightUI\\Elements\\ReorderList',
+            'blade' => 'FirstlightUI\\Components\\ReorderList',
+            'android_renderer' => 'dev.firstlightui.plugins.firstlight_ui.ui.ReorderListRenderer',
+            'ios_renderer' => 'ReorderListRenderer',
+            'self_closing' => true,
+        ],
+        [
             'type' => 'firstlight.segmented',
             'element' => 'FirstlightUI\\Elements\\Segmented',
             'blade' => 'FirstlightUI\\Components\\Segmented',

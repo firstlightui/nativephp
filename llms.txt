@@ -69,6 +69,7 @@ every control the way they reach the platform's own apps.
 - [Badge](https://firstlightui.dev/docs/components/badge): Public API, count formatting, tones, accessibility, validation, compatibility, and visual evidence for Firstlight Badge.
 - [Checkbox](https://firstlightui.dev/docs/components/checkbox): Strict Boolean form and checklist state, field metadata, server-authoritative proposals, accessibility, and native platform behaviour.
 - [Choice Group](https://firstlightui.dev/docs/components/choice-group): Public API, selection modes, state timing, accessibility, and platform behaviour for Firstlight Choice Group.
+- [Reorder List](https://firstlightui.dev/docs/components/reorder-list): Public API, values, moves, state timing, accessibility, and platform behaviour for Firstlight Reorder List.
 - [Media](https://firstlightui.dev/docs/components/media): One image or document field with Storage-backed MediaValue, optional Firstlight crop, and ValidatesFields participation.
 - [Alert Dialog](https://firstlightui.dev/docs/components/alert-dialog): Present one native acknowledgement with a single action and server-controlled visibility.
 - [Confirmation Dialog](https://firstlightui.dev/docs/components/confirmation-dialog): Ask for one native confirmation with explicit cancellation and destructive action semantics.
