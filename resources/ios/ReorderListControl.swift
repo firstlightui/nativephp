@@ -88,6 +88,8 @@ struct FirstlightReorderListField: View {
         let icon = configuration.rowIcons.indices.contains(row) ? configuration.rowIcons[row] : ""
         let supporting = configuration.rowSupporting.indices.contains(row) ? configuration.rowSupporting[row] : ""
         let place = location(of: row)
+        let first = place?.position == 0
+        let last = place.map { $0.position == sections[$0.section].count - 1 } ?? false
 
         return HStack(spacing: 12) {
             if !icon.isEmpty {
@@ -112,7 +114,8 @@ struct FirstlightReorderListField: View {
                     .accessibilityHidden(true)
             }
         }
-        .frame(minHeight: 44)
+        .listRowBackground(rowBackground(first: first, last: last))
+        .listRowSeparator(last ? .hidden : .automatic, edges: .bottom)
         .moveDisabled(locked)
         .accessibilityElement(children: .combine)
         .accessibilityValue(spokenValue(row: row, locked: locked, place: place))
@@ -133,6 +136,20 @@ struct FirstlightReorderListField: View {
                 }
             }
         }
+    }
+
+    /// Headers are rows, so the system sees one section and cannot round each card. Each row
+    /// draws its own card slice instead, rounding the outer corners of its section.
+    private func rowBackground(first: Bool, last: Bool) -> some View {
+        let radius: CGFloat = if #available(iOS 26, *) { 26 } else { 10 }
+        return UnevenRoundedRectangle(
+            topLeadingRadius: first ? radius : 0,
+            bottomLeadingRadius: last ? radius : 0,
+            bottomTrailingRadius: last ? radius : 0,
+            topTrailingRadius: first ? radius : 0,
+            style: .continuous
+        )
+        .fill(theme.surface)
     }
 
     private func location(of row: Int) -> (section: Int, position: Int)? {
