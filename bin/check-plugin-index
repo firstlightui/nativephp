@@ -1,0 +1,135 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Compares resources/starter/plugins.json with the NativePHP plugin repository and Packagist, and
+ * optionally with the website's plugin list, and exits 1 listing every difference. It needs the
+ * network, so it runs on a schedule and before a release, not in composer test.
+ */
+
+$arguments = array_slice($argv, 1);
+$site = null;
+
+foreach ($arguments as $argument) {
+    if (str_starts_with($argument, '--site=')) {
+        $site = substr($argument, strlen('--site='));
+
+        continue;
+    }
+
+    fwrite(STDERR, "Usage: bin/check-plugin-index [--site=path/to/firstlight-public/config/plugins.php]\n\n");
+    fwrite(STDERR, "Checks each plugin's free or paid listing, release status and iOS and Android minimums.\n");
+    exit($argument === '--help' ? 0 : 2);
+}
+
+$root = dirname(__DIR__);
+$index = json_decode((string) file_get_contents($root.'/resources/starter/plugins.json'), true, flags: JSON_THROW_ON_ERROR);
+$problems = [];
+
+/** Fetch JSON, or null on a 404. Any other failure stops the check, because it would hide drift. */
+function fetchJson(string $url): ?array
+{
+    $context = stream_context_create(['http' => ['timeout' => 20, 'ignore_errors' => true, 'header' => "User-Agent: firstlight-check-plugin-index\r\n"]]);
+    $body = @file_get_contents($url, false, $context);
+    $status = (int) (preg_match('#^HTTP/\S+ (\d{3})#', $http_response_header[0] ?? '', $match) === 1 ? $match[1] : 0);
+
+    if ($status === 404) {
+        return null;
+    }
+
+    if ($body === false || $status !== 200) {
+        fwrite(STDERR, "Could not read {$url} (HTTP {$status}). Check the network and try again.\n");
+        exit(2);
+    }
+
+    return json_decode($body, true, flags: JSON_THROW_ON_ERROR);
+}
+
+// The NativePHP plugin repository serves paid plugins; its package list is public.
+$repository = fetchJson('https://plugins.nativephp.com/packages.json') ?? [];
+$paid = [];
+foreach (array_keys($repository['includes'] ?? []) as $include) {
+    foreach (array_keys(fetchJson('https://plugins.nativephp.com/'.$include)['packages'] ?? []) as $package) {
+        $paid[$package] = true;
+    }
+}
+
+if ($paid === []) {
+    fwrite(STDERR, "The NativePHP plugin repository listed no packages; its format may have changed.\n");
+    exit(2);
+}
+
+foreach ($index['plugins'] as $plugin) {
+    $name = $plugin['package'];
+    $releases = fetchJson("https://repo.packagist.org/p2/{$name}.json")['packages'][$name] ?? [];
+    $stable = array_values(array_filter($releases, fn (array $release): bool => preg_match('/^v?\d+(\.\d+)*$/', $release['version']) === 1));
+
+    // A paid plugin on sale before the repository serves it stays preview, so the skill never installs it.
+    if ($plugin['pricing'] === 'paid' && $plugin['status'] === 'available' && ! isset($paid[$name])) {
+        $problems[] = "{$name} is paid in the index but not in the NativePHP plugin repository. It may be free now, renamed or delisted.";
+    }
+
+    if ($plugin['pricing'] === 'paid' && $plugin['status'] !== 'available' && isset($paid[$name])) {
+        $problems[] = "{$name} is {$plugin['status']} in the index but the NativePHP plugin repository now serves it. Review it, then mark it available.";
+    }
+
+    if ($plugin['pricing'] === 'free' && isset($paid[$name])) {
+        $problems[] = "{$name} is free in the index but is now served by the NativePHP plugin repository, so it may be paid.";
+    }
+
+    if ($plugin['pricing'] === 'free' && $plugin['status'] === 'available' && $stable === []) {
+        $problems[] = "{$name} is available in the index but has no stable release on Packagist.";
+    }
+
+    if ($plugin['status'] !== 'available' && $stable !== []) {
+        $problems[] = "{$name} is {$plugin['status']} in the index but released {$stable[0]['version']} on Packagist. Review it, then mark it available.";
+    }
+
+    // Free plugins publish their source, so their manifest's OS floors can be compared.
+    $latest = $stable[0] ?? null;
+    $source = $latest['source']['url'] ?? '';
+    if ($latest !== null && preg_match('#^https://github\.com/([^/]+/[^/]+?)(?:\.git)?$#', $source, $match) === 1) {
+        $manifest = fetchJson("https://raw.githubusercontent.com/{$match[1]}/{$latest['source']['reference']}/nativephp.json");
+
+        foreach (['ios' => (string) $plugin['ios']['min'], 'android' => (int) $plugin['android']['min']] as $platform => $listed) {
+            $actual = $manifest[$platform]['min_version'] ?? null;
+
+            if ($actual !== null && (string) $actual !== (string) $listed) {
+                $problems[] = "{$name} {$latest['version']} needs {$platform} {$actual}; the index says {$listed}.";
+            }
+        }
+    }
+}
+
+if ($site !== null) {
+    $listed = [];
+    foreach ((require $site)['plugins'] ?? [] as $entry) {
+        $listed[$entry['package']] = $entry['status'];
+    }
+
+    foreach ($index['plugins'] as $plugin) {
+        if ($plugin['source'] !== 'firstlight') {
+            continue;
+        }
+
+        $name = $plugin['package'];
+        $expected = $plugin['status'] === 'available' ? 'available' : 'coming_soon';
+
+        if (! isset($listed[$name])) {
+            if ($plugin['status'] !== 'unreleased') {
+                $problems[] = "{$name} is {$plugin['status']} in the index but not on the website's plugins page.";
+            }
+        } elseif ($listed[$name] !== $expected) {
+            $problems[] = "{$name} is {$plugin['status']} in the index but {$listed[$name]} on the website's plugins page.";
+        }
+    }
+}
+
+if ($problems !== []) {
+    fwrite(STDERR, "The plugin index differs from what is published (checked against the index's \"checked\": {$index['checked']}):\n- ".implode("\n- ", $problems)."\n");
+    exit(1);
+}
+
+echo 'The plugin index matches the NativePHP plugin repository and Packagist'.($site !== null ? ' and the website' : '').".\n";

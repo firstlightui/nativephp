@@ -1,0 +1,25 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\__Model__;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<__Model__>
+ */
+class __Model__Factory extends Factory
+{
+    protected $model = __Model__::class;
+
+    public function definition(): array
+    {
+        $body = fake()->paragraph();
+
+        return [
+            'title' => fake()->unique()->sentence(3),
+            'excerpt' => str($body)->limit(60)->toString(),
+            'body' => $body,
+        ];
+    }
+}

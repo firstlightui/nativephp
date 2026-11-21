@@ -7,6 +7,10 @@ sources:
   - resources/boost/guidelines/core.blade.php
   - resources/boost/skills/firstlight-init/SKILL.md
   - resources/boost/skills/building-firstlight-screens/SKILL.md
+  - resources/starter/plugins.json
+  - src/Console/StarterCommand.php
+  - src/Starter/StarterPlan.php
+  - src/Starter/StarterBuilder.php
   - llms.txt
   - llms-full.txt
   - src/Console/MakeScreenCommand.php
@@ -47,7 +51,7 @@ and skills match the installed version.
 | Resource | When the agent reads it | What it contains |
 | --- | --- | --- |
 | Guideline | Always, as part of the agent's instructions | The rules every Firstlight screen follows, the six recipes, the screen generator, and a tested example |
-| `firstlight-init` skill | When asked to set up or scaffold a Firstlight app | An interview, an install check, the theme, the native-chrome layout, and the chosen recipe screens with tests |
+| `firstlight-init` skill | When asked to start, set up, or scaffold a Firstlight app | An interview about the app, a proposed layout, recipe screens and plugins, the app's name, ID, colours, icon and locale, and the confirmed screens with tests |
 | `building-firstlight-screens` skill | When adding or changing a screen, form, list, or settings page | Which recipe to start from, which control fits each value, the workflow, and what never to do |
 | [`llms.txt`](https://firstlightui.dev/llms.txt) | When the agent needs a page | Every documentation page with a one-line summary |
 | [`llms-full.txt`](https://firstlightui.dev/llms-full.txt) | When the agent needs the whole reference | The full text of every documentation page in one file |
@@ -71,16 +75,43 @@ The guideline keeps an agent on the same path as the recipes:
 
 ## Ask for an app
 
-With Boost installed, describe the app rather than the controls. For example:
+With Boost installed, describe the app rather than the controls.
+[Start a new app](start-a-new-app.md) walks through the whole process. For
+example:
 
-> Set up this app with Firstlight. The main record is a job. I want a
-> searchable list of jobs, a form to create one, and a settings screen.
+> Start a Firstlight app for field technicians. They see the day's jobs, add
+> photos and notes, and keep working without signal.
 
-The `firstlight-init` skill asks about the record, the recipes, brand colours,
-tabs, deletion rules, and locale one question at a time, and makes no change
-you have not agreed to. It then scaffolds each chosen
-[recipe](../how-to/build-a-list-detail-flow.md) with a Pest test and runs the
-test suite.
+The `firstlight-init` skill asks what the app does, then proposes tabs or a
+single stack, a screen for each part of the app built from a
+[recipe](../how-to/build-a-list-detail-flow.md), and the NativePHP plugins that
+fit. It then proposes the app name, app ID, brand colour, icon, splash, locale,
+and minimum OS, and you change any of them in your reply. It writes the plan to
+`firstlight-starter.json` and builds nothing until you confirm it. Then it runs:
+
+```bash
+php artisan firstlight:starter
+```
+
+The command installs the plugins you accepted, sets the app's name, ID,
+colours, locale, timezone and permission text, and writes the native-chrome
+layout and each screen with its Pest test. It lists what is left for you in
+`STARTER.md`, such as signing, store listings, and any screen it has no
+template for yet, which the agent then builds from its recipe. Running it again
+keeps files you have changed unless you pass `--force`. You can also write the
+plan yourself, starting from
+`vendor/firstlightui/nativephp/resources/starter/firstlight-starter.example.json`,
+and run the command without an agent.
+
+The skill picks plugins from a list shipped with Firstlight at
+`vendor/firstlightui/nativephp/resources/starter/plugins.json`, which says
+what each plugin does on iOS and Android and which Firstlight features make a
+plugin unnecessary. Free plugins are included when the app needs them. Paid
+plugins are only offered, marked as paid, and installed only when you say yes;
+NativePHP serves them only to an account that has bought them, so buy one
+before you accept it, or the skill builds the app without it and leaves you
+the steps to add it. Community plugins come with a notice that neither
+Firstlight nor NativePHP maintains or warrants them.
 
 For later screens, ask for the outcome, such as "add a screen to edit a job".
 The `building-firstlight-screens` skill picks the matching recipe, or starts

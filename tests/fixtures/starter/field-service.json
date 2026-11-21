@@ -1,0 +1,30 @@
+{
+    "description": "Field-service jobs with photos that works offline: technicians see the day's site visits, add notes and a photo to each, and keep working with no signal.",
+    "app": {"name": "Sitework", "id": "com.example.sitework", "deeplink_scheme": "sitework", "appearance": "system"},
+    "theme": {"light": {"primary": "#1D4ED8", "on-primary": "#FFFFFF"}, "dark": null},
+    "icon": null,
+    "locale": {"locale": "en", "fallback": "en", "timezone": "Australia/Sydney"},
+    "android_min_sdk": 29,
+    "layout": {
+        "type": "tabs",
+        "tabs": [
+            {"label": "Visits", "url": "/visits", "icon": "list"},
+            {"label": "Settings", "url": "/settings", "icon": "settings"}
+        ]
+    },
+    "records": [{"model": "Visit", "deletable": false}],
+    "screens": [
+        {"recipe": "how-to/build-a-searchable-list-screen", "record": "Visit"},
+        {"recipe": "how-to/build-a-list-detail-flow", "record": "Visit"},
+        {"recipe": "how-to/build-a-form-screen", "record": "Visit"},
+        {"recipe": "how-to/keep-drafts", "record": "Visit"},
+        {"recipe": "how-to/build-a-photo-upload-screen", "record": "Visit"},
+        {"recipe": "how-to/show-connectivity"},
+        {"recipe": "how-to/build-a-settings-screen"}
+    ],
+    "plugins": [{"package": "nativephp/mobile-network", "accepted": true}],
+    "permissions": {
+        "NSCameraUsageDescription": "Sitework uses the camera to add a photo to a site visit.",
+        "NSPhotoLibraryUsageDescription": "Sitework adds photos you choose to a site visit."
+    }
+}

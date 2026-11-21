@@ -1,0 +1,45 @@
+<?php
+
+use App\Models\__Model__;
+use Native\Mobile\Testing\Native;
+
+it('shows the __label__ with its title in the nav bar', function () {
+    $__model__ = __Model__::factory()->create([
+        'title' => '__A_label__ to read',
+        'body' => 'The whole body of the __label__.',
+    ]);
+
+    $screen = Native::visit('/__route__/'.$__model__->id)
+        ->assertSee('The whole body of the __label__.');
+
+    expect($screen->instance()->navTitle())->toBe('__A_label__ to read');
+});
+
+it('does not open __a_label__ that does not exist', function () {
+    Native::visit('/__route__/999');
+})->throws(Illuminate\Database\Eloquent\ModelNotFoundException::class);
+@starter(edit)
+
+it('shows saved changes when the edit screen closes', function () {
+    $__model__ = __Model__::factory()->create(['body' => 'The first body of the __label__.']);
+
+    Native::visit('/__route__/'.$__model__->id)
+        ->call('edit')
+        ->assertNavigatedTo('/__route__/'.$__model__->id.'/edit')
+        ->follow()
+        ->set('body', 'A changed body for the __label__.')
+        ->call('save')
+        ->goBack()
+        ->assertSee('A changed body for the __label__.');
+});
+@endstarter
+@starter(share)
+
+it('shares a link that opens the __label__ in the app', function () {
+    $__model__ = __Model__::factory()->create();
+
+    Native::visit('/__route__/'.$__model__->id)->call('share');
+
+    Native::fakeBridge()->assertSharedUrl(config('nativephp.deeplink_scheme').'://__route__/'.$__model__->id);
+});
+@endstarter

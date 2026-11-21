@@ -69,7 +69,9 @@ the agent receives.
 
 ## Next step
 
-Build the app shell with the
+To have your coding agent build the whole starter app from a description of
+it, follow [Start a new app](start-a-new-app.md). To build it yourself, start
+by building the app shell from the
 [list and detail recipe](../how-to/build-a-list-detail-flow.md), then add the
 [searchable list](../how-to/build-a-searchable-list-screen.md),
 [form](../how-to/build-a-form-screen.md), and

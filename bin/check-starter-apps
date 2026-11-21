@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Builds each fixture plan in tests/fixtures/starter into a fresh Laravel app with this checkout's
+# Firstlight, then runs the generated app's own tests. With --android it also builds an unsigned
+# Android release APK and checks its app ID, label and minimum SDK. It needs the network and takes
+# minutes per app, so it runs before a release, not in composer test.
+#
+#   bin/check-starter-apps [--android] [--keep] [fixture ...]
+#
+# Fixtures are file names without .json, such as private-journal; the default is all of them.
+# Apps are built under ${FIRSTLIGHT_STARTER_WORK:-/tmp/firstlight-starter-apps}; --keep leaves them there.
+set -euo pipefail
+
+repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+work="${FIRSTLIGHT_STARTER_WORK:-/tmp/firstlight-starter-apps}"
+android=false
+keep=false
+fixtures=()
+
+for argument in "$@"; do
+    case "$argument" in
+    --android) android=true ;;
+    --keep) keep=true ;;
+    --help | -h) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -*) echo "Unknown option $argument. See --help." >&2; exit 2 ;;
+    *) fixtures+=("$argument") ;;
+    esac
+done
+
+if [[ ${#fixtures[@]} -eq 0 ]]; then
+    for file in "$repo"/tests/fixtures/starter/*.json; do fixtures+=("$(basename "$file" .json)"); done
+fi
+
+rm -rf -- "$work"
+mkdir -p "$work"
+
+# A plain copy of the committed package: a path-repository symlink would pull the checkout's build
+# caches into each app, and uncommitted edits would make the result unrepeatable.
+git -C "$repo" diff --quiet HEAD -- src resources composer.json nativephp.json ||
+    echo "Note: uncommitted changes in src, resources, composer.json or nativephp.json are not tested; commit them first." >&2
+mkdir "$work/firstlight"
+git -C "$repo" archive HEAD | tar -x -C "$work/firstlight"
+
+failed=()
+
+check() {
+    local name="$1" app="$work/$1" plan="$repo/tests/fixtures/starter/$1.json"
+    [[ -f "$plan" ]] || { echo "No fixture $plan." >&2; return 1; }
+
+    echo "==> $name: new Laravel app"
+    composer create-project laravel/laravel "$app" --prefer-dist --no-progress --no-interaction --quiet
+    cd -- "$app"
+
+    composer config repositories.firstlight "{\"type\":\"path\",\"url\":\"$work/firstlight\",\"options\":{\"symlink\":false,\"versions\":{\"firstlightui/nativephp\":\"dev-starter-check\"}}}"
+    composer require 'firstlightui/nativephp:dev-starter-check@dev' -W --no-progress --no-interaction --quiet
+    php artisan vendor:publish --tag=nativephp-plugins-provider --no-interaction >/dev/null
+    php artisan native:plugin:register nativephp/mobile-ui --no-interaction >/dev/null
+    php artisan native:plugin:register firstlightui/nativephp --no-interaction >/dev/null
+
+    # The generated tests are Pest tests.
+    composer remove phpunit/phpunit --dev --no-progress --no-interaction --quiet
+    composer require pestphp/pest pestphp/pest-plugin-laravel --dev -W --no-progress --no-interaction --quiet
+    vendor/bin/pest --init >/dev/null
+
+    echo "==> $name: firstlight:starter"
+    cp -- "$plan" firstlight-starter.json
+    php artisan firstlight:starter --no-interaction
+    php artisan migrate:fresh --seed --force --no-interaction >/dev/null
+
+    echo "==> $name: the app's tests"
+    vendor/bin/pest
+
+    if $android; then
+        echo "==> $name: Android release build"
+        php artisan native:install android --no-interaction >"$app/android-install.log" 2>&1
+        php artisan native:run android --build=release --no-tty >"$app/android-build.log" 2>&1
+        local apk="nativephp/android/app/build/outputs/apk/release/app-release-unsigned.apk"
+        local aapt
+        aapt="$(ls "${ANDROID_HOME:-$HOME/.local/share/firstlight/android-sdk}"/build-tools/*/aapt | tail -1)"
+        local badging
+        badging="$("$aapt" dump badging "$apk")"
+        local id label sdk
+        id="$(jq -r '.app.id' "$plan")"
+        label="$(jq -r '.app.name' "$plan")"
+        sdk="$(jq -r '.android_min_sdk' "$plan")"
+        grep -q "^package: name='$id'" <<<"$badging" || { echo "$apk is not $id." >&2; return 1; }
+        grep -q "^application-label:'$label'" <<<"$badging" || { echo "$apk is not labelled $label." >&2; return 1; }
+        grep -q "^sdkVersion:'$sdk'" <<<"$badging" || { echo "$apk does not have minSdk $sdk." >&2; return 1; }
+        echo "    $apk: $id, \"$label\", minSdk $sdk"
+    fi
+}
+
+for name in "${fixtures[@]}"; do
+    if ! (check "$name"); then
+        failed+=("$name")
+    fi
+done
+
+$keep || rm -rf -- "$work"
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+    echo "Failed: ${failed[*]}" >&2
+    exit 1
+fi
+
+echo "All starter apps built and passed their tests: ${fixtures[*]}."

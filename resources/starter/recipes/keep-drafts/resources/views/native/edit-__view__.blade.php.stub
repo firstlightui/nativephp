@@ -1,0 +1,21 @@
+<native:scroll-view class="w-full flex-1 bg-theme-background">
+    <native:column class="w-full p-4 gap-4">
+        <firstlight:text-field
+            label="Title"
+            autocapitalize="sentences"
+            submit-label="next"
+            native:model="title"
+            required
+        />
+
+        <firstlight:text-area
+            label="Body"
+            native:model="body"
+            required
+        />
+
+        <firstlight:button variant="primary" :loading="$submitting" @press="save">
+            Save __label__
+        </firstlight:button>
+    </native:column>
+</native:scroll-view>

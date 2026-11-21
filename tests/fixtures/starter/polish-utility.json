@@ -1,0 +1,25 @@
+{
+    "description": "Settings-heavy utility in Polish: a habit tracker whose main screen is its settings, used by Polish speakers.",
+    "app": {"name": "Nawyk", "id": "pl.example.nawyk", "deeplink_scheme": "nawyk", "appearance": "system"},
+    "theme": {"light": {"primary": "#047857", "on-primary": "#FFFFFF"}, "dark": null},
+    "icon": null,
+    "locale": {"locale": "pl", "fallback": "en", "timezone": "Europe/Warsaw"},
+    "android_min_sdk": 29,
+    "layout": {
+        "type": "tabs",
+        "tabs": [
+            {"label": "Ustawienia", "url": "/settings", "icon": "settings"},
+            {"label": "Nawyki", "url": "/habits", "icon": "list"}
+        ]
+    },
+    "records": [{"model": "Habit", "deletable": true, "delete_rule": "anyone."}],
+    "screens": [
+        {"recipe": "how-to/build-a-settings-screen"},
+        {"recipe": "how-to/build-a-searchable-list-screen", "record": "Habit"},
+        {"recipe": "how-to/build-a-list-detail-flow", "record": "Habit"},
+        {"recipe": "how-to/build-a-form-screen", "record": "Habit"},
+        {"recipe": "how-to/localize"}
+    ],
+    "plugins": [],
+    "permissions": {}
+}

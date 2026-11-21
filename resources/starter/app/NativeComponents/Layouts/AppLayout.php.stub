@@ -1,0 +1,54 @@
+<?php
+
+namespace App\NativeComponents\Layouts;
+
+use FirstlightUI\NativeComponent as FirstlightScreen;
+use Native\Mobile\Edge\Layouts\Builders\NavBar;
+@starter(tabs)
+use Native\Mobile\Edge\Layouts\Builders\Tab;
+use Native\Mobile\Edge\Layouts\Builders\TabBar;
+@endstarter
+use Native\Mobile\Edge\Layouts\NativeLayout;
+use Native\Mobile\Edge\NativeComponent;
+
+class AppLayout extends NativeLayout
+{
+    public function usesNativeChrome(): bool
+    {
+        return true;
+    }
+
+    public function navBar(NativeComponent $screen): ?NavBar
+    {
+        $isRoot = $screen instanceof FirstlightScreen && $screen->isRootScreen();
+
+        $bar = NavBar::make()
+            ->title($screen->navTitle())
+            ->displayMode($isRoot ? 'large' : 'inline')
+            ->back(! $isRoot);
+
+        // Screens list their own bar buttons, such as "New" on a list or "Edit" on a detail screen.
+        foreach (method_exists($screen, 'navActions') ? $screen->navActions() : [] as $action) {
+            $bar->action($action);
+        }
+
+        return $bar;
+    }
+@starter(tabs)
+
+    public function tabBar(NativeComponent $screen): ?TabBar
+    {
+        if (! $screen instanceof FirstlightScreen || ! $screen->isRootScreen()) {
+            return null;
+        }
+
+        $tabs = TabBar::make()
+__tab_links__;
+
+        // The selected tab takes the brand colour from config/native-ui.php, in light and dark mode.
+        $primary = theme('primary');
+
+        return is_string($primary) ? $tabs->activeColor($primary) : $tabs;
+    }
+@endstarter
+}

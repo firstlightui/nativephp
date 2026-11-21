@@ -1,0 +1,53 @@
+<?php
+
+namespace App\NativeComponents;
+
+use App\Http\Requests\Store__Model__Request;
+use App\Models\__Model__;
+use FirstlightUI\NativeComponent;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+
+class Create__Model__Screen extends NativeComponent
+{
+    public string $title = '';
+
+    public string $body = '';
+
+    public function save(): void
+    {
+        $saved = $this->submit(
+            action: function (): void {
+                $this->validate(Store__Model__Request::class);
+
+                if (__Model__::query()->where('title', $this->title)->exists()) {
+                    throw ValidationException::withMessages([
+                        'form' => '__A_label__ with this title already exists.',
+                    ]);
+                }
+
+                __Model__::query()->create([
+                    'title' => $this->title,
+                    'excerpt' => str($this->body)->limit(60)->toString(),
+                    'body' => $this->body,
+                ]);
+            },
+            successMessage: '__Label__ created',
+            validate: false,
+        );
+
+        if ($saved) {
+            $this->back();
+        }
+    }
+
+    public function navTitle(): string
+    {
+        return 'New __label__';
+    }
+
+    public function render(): View
+    {
+        return view('native.create-__view__');
+    }
+}

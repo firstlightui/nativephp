@@ -1,0 +1,46 @@
+<?php
+
+use App\Models\__Model__;
+use FirstlightUI\Facades\Feedback;
+use Native\Mobile\Testing\Native;
+
+it('shows Form Request errors on each native field and saves nothing', function () {
+    Feedback::fake();
+
+    Native::visit('/__route__/create')
+        ->set('title', 'Hi')
+        ->set('body', 'Short')
+        ->call('save')
+        ->assertFieldError('title', 'The title field must be at least 3 characters.')
+        ->assertFieldError('body', 'Write at least a sentence.')
+        ->assertNoFeedbackSent();
+
+    expect(__Model__::count())->toBe(0);
+});
+
+it('shows a form-level error for a duplicate title', function () {
+    __Model__::factory()->create(['title' => 'Already here']);
+
+    Native::visit('/__route__/create')
+        ->set('title', 'Already here')
+        ->set('body', 'A body long enough to pass.')
+        ->call('save')
+        ->assertNoFieldError('title')
+        ->assertElement('firstlight.callout', fn (array $node) => ($node['props']['message'] ?? null) === '__A_label__ with this title already exists.');
+
+    expect(__Model__::count())->toBe(1);
+});
+
+it('creates the __label__, sends Feedback, and goes back', function () {
+    Feedback::fake();
+
+    Native::visit('/__route__/create')
+        ->set('title', 'A real title')
+        ->set('body', 'A body long enough to pass.')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertFeedbackSent('__Label__ created')
+        ->assertWentBack();
+
+    expect(__Model__::where('title', 'A real title')->value('excerpt'))->toBe('A body long enough to pass.');
+});

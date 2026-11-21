@@ -1,0 +1,55 @@
+<?php
+
+namespace App\NativeComponents;
+
+use FirstlightUI\NativeComponent;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\View\View;
+
+class SettingsScreen extends NativeComponent
+{
+    public bool $notifications = true;
+
+    public bool $marketing = false;
+
+    public string $digest = 'weekly';
+
+    /** @var array<string, string> */
+    public array $digestOptions = [
+        'daily' => 'Daily',
+        'weekly' => 'Weekly',
+        'never' => 'Never',
+    ];
+
+    public function mount(): void
+    {
+        $this->notifications = Cache::get('settings.notifications', true);
+        $this->marketing = Cache::get('settings.marketing', false);
+        $this->digest = Cache::get('settings.digest', 'weekly');
+    }
+
+    public function updatedNotifications(bool $value): void
+    {
+        Cache::forever('settings.notifications', $value);
+    }
+
+    public function updatedMarketing(bool $value): void
+    {
+        Cache::forever('settings.marketing', $value);
+    }
+
+    public function updatedDigest(string $value): void
+    {
+        Cache::forever('settings.digest', $value);
+    }
+
+    public function navTitle(): string
+    {
+        return 'Settings';
+    }
+
+    public function render(): View
+    {
+        return view('native.settings');
+    }
+}

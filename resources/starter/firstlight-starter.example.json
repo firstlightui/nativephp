@@ -1,0 +1,42 @@
+{
+    "description": "Field technicians see the day's work orders, add notes to one, and keep working without signal.",
+    "app": {
+        "name": "Fieldwork",
+        "id": "com.acme.fieldwork",
+        "deeplink_scheme": "fieldwork",
+        "appearance": "system"
+    },
+    "theme": {
+        "light": {"primary": "#0F766E", "on-primary": "#FFFFFF"},
+        "dark": null
+    },
+    "icon": null,
+    "locale": {"locale": "en", "fallback": "en", "timezone": "Australia/Sydney"},
+    "android_min_sdk": 29,
+    "layout": {
+        "type": "tabs",
+        "tabs": [
+            {"label": "Work orders", "url": "/work-orders", "icon": "list"},
+            {"label": "Settings", "url": "/settings", "icon": "settings"}
+        ]
+    },
+    "records": [
+        {"model": "WorkOrder", "deletable": true, "delete_rule": "Only the technician assigned to the work order."}
+    ],
+    "screens": [
+        {"recipe": "how-to/build-a-searchable-list-screen", "record": "WorkOrder"},
+        {"recipe": "how-to/build-a-form-screen", "record": "WorkOrder"},
+        {"recipe": "how-to/build-a-list-detail-flow", "record": "WorkOrder"},
+        {"recipe": "how-to/keep-drafts", "record": "WorkOrder"},
+        {"recipe": "how-to/build-a-settings-screen"}
+    ],
+    "plugins": [
+        {"package": "nativephp/mobile-network", "accepted": true},
+        {"package": "nativephp/mobile-share", "accepted": true},
+        {"package": "firstlightui/app-guard", "accepted": false},
+        {"package": "nativephp/mobile-biometrics", "accepted": false}
+    ],
+    "permissions": {
+        "NSCameraUsageDescription": "Fieldwork uses the camera to add photos to a work order."
+    }
+}

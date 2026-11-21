@@ -1,0 +1,16 @@
+<native:list class="w-full flex-1 bg-theme-background" separator>
+    <native:list-section header="Notifications" footer="Alerts for replies and mentions.">
+        <native:column class="w-full px-4 py-3 bg-theme-surface">
+            <firstlight:switch label="Push notifications" native:model="notifications" />
+        </native:column>
+        <native:column class="w-full px-4 py-3 bg-theme-surface">
+            <firstlight:switch label="Product news" native:model="marketing" />
+        </native:column>
+    </native:list-section>
+
+    <native:list-section header="Email" footer="A summary of activity you missed.">
+        <native:column class="w-full px-4 py-3 bg-theme-surface">
+            <firstlight:select label="Digest" :options="$digestOptions" native:model="digest" />
+        </native:column>
+    </native:list-section>
+</native:list>

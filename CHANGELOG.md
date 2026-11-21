@@ -4,13 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 9 Pro.
+Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 9 Pro, the Reorder List, and a starter that builds a new app from a description.
 
 ### Added
 
 - Reorder List, `<firstlight:reorder-list>`: people put items in their own order, optionally across named sections such as "Tab bar" and "More", by dragging or with VoiceOver and TalkBack actions. Locked items stay put, and PHP stays authoritative over the order. See [Reorder List](https://firstlightui.dev/docs/components/reorder-list).
 - Date Picker `first-day-of-week` (`monday` … `sunday`) sets the weekday the calendar starts on.
 - Android tab bar: select it with `TabBar::make()->presentation('firstlight:tabs')`. It hides while the keyboard is up and becomes Material's short bar on short screens such as a phone in landscape. iOS keeps the system tab bar. See [Support landscape and iPad](https://firstlightui.dev/docs/how-to/support-landscape-and-ipad).
+- The `firstlight-init` skill starts a new app from a description. It proposes tabs or a single stack, recipe screens and NativePHP plugins, then collects the app name, app ID, brand colour, icon, splash, locale and minimum OS, writes the plan to `firstlight-starter.json`, and builds only after the developer confirms. It picks plugins from `resources/starter/plugins.json`, which lists what each Firstlight, NativePHP and community plugin does on iOS and Android and which Firstlight features make a plugin unnecessary. Free plugins are included when the app needs them; paid plugins are only offered and installed after a yes, and the app works without them; community plugins come with a no-warranty notice. Without a NativePHP plugins licence, an accepted paid plugin is left out and `STARTER.md` gives the steps to buy and add it.
+- `php artisan firstlight:starter` builds the confirmed plan, so the skill or a developer gets the same app every time. It checks the whole plan first and lists every problem, such as an app ID Android or iOS would reject, a brand pair under 4.5:1 contrast, or a model whose table Laravel already uses. It then installs and registers the accepted plugins, restoring `composer.json` and `composer.lock` when a paid one is refused; writes the app identity, theme, timezone and permission text; draws a placeholder icon and splash; and writes the layout and, from recipe templates, the searchable list, detail, form, kept-drafts edit and settings screens for each record, with their model, migration, factory, Policy, seeder and Pest tests. Recipes without a template are listed in `STARTER.md` to build next. Running it again keeps files you have changed unless you pass `--force`. In a tab layout the selected tab takes the brand colour, in light and dark mode.
+- `bin/check-plugin-index` compares the plugin index with the NativePHP plugin repository, Packagist and each free plugin's `nativephp.json`, and with `--site=` the website's plugin list, and lists every difference: a paid plugin that went free, a free one now sold, a preview plugin that has shipped, or an iOS or Android minimum that changed. It needs the network, so it is not part of `composer test`. A paid plugin that is on sale before the NativePHP plugin repository serves it, such as Share Sheet today, stays `preview`, so the skill mentions it and never installs it.
+- A "Start a new app" guide walks through the starter from `composer create-project` to running on a device. `bin/check-starter-apps` builds four fixture plans (offline field service, a private journal with an app lock, event check-in for thousands of attendees, and a Polish settings-first utility) into fresh Laravel apps, runs each app's tests and, with `--android`, checks an unsigned release APK.
+
+### Changed
+
+- `firstlight-init` starts a new app from `laravel/laravel` with Pest, not from `nativephp/mobile-starter`, whose current release requires NativePHP Mobile 3.
 
 ### Fixed
 
@@ -23,6 +31,7 @@ Landscape and iPad support, from a landscape pass on iPhone, iPad Air and Pixel 
 - Code Editor on iPhone: when the keyboard opens, the caret's line scrolls into view even when the whole editor doesn't fit.
 - Confirmation Dialog on iPad: a centred alert with both actions, instead of a popover with no Cancel pointing at nothing. Media's source chooser points at the Choose button.
 - Transient Feedback: the Android snackbar sits above the tab bar instead of over it. On iOS the toast stays inside the side safe areas and is at most 560 pt wide on iPad.
+- `firstlight-init` sets the app timezone through `config('app.timezone')`, which Laravel's default `config/app.php` hard-codes to UTC, so Date and Time pickers now follow the timezone the developer chose.
 
 ## 1.1.1 - 2026-11-20
 

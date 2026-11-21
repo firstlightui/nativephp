@@ -1,0 +1,15 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\__Model__;
+use Illuminate\Database\Seeder;
+
+class __Model__Seeder extends Seeder
+{
+    /** Example __labels__, so the first run of the app shows a list. */
+    public function run(): void
+    {
+        __Model__::factory()->count(12)->create();
+    }
+}
