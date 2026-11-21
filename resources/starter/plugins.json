@@ -61,7 +61,7 @@
             "setup": [],
             "marketplace": null,
             "repository": "https://github.com/firstlightui/local-ocr",
-            "tested_with_firstlight": null
+            "tested_with_firstlight": "2026-11-20"
         },
         {
             "package": "firstlightui/local-ai",
